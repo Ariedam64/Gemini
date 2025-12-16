@@ -1,0 +1,20 @@
+{
+  "name": "gemini",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main",
+  "scripts": {
+    "build": "node esbuild.config.mjs build",
+    "release": "node esbuild.config.mjs release",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/tampermonkey": "^5.0.4",
+    "esbuild": "^0.27.1",
+    "typescript": "^5.9.3"
+  }
+}

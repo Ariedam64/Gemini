@@ -1,0 +1,101 @@
+export const badgeCss = `
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:var(--badge-py, 6px) var(--badge-px, 12px);
+  border-radius:var(--badge-radius, 12px);
+  border:1px solid var(--border);
+  background-color: color-mix(in oklab, var(--soft) 80%, transparent);
+  color: var(--fg);
+  font-size: var(--badge-fs, 13px);
+  line-height:1.1;
+  font-weight:600;
+  white-space:nowrap;
+  opacity:.98;
+  transition:
+    background-color .28s ease,
+    border-color .28s ease,
+    color .28s ease,
+    box-shadow .28s ease;
+}
+
+.badge--pill{ border-radius:999px; }
+
+.badge--sm{ --badge-py:4px; --badge-px:10px; --badge-fs:12px; --badge-radius:10px; }
+.badge--md{ --badge-py:6px; --badge-px:12px; --badge-fs:13px; --badge-radius:12px; }
+.badge--lg,.badge--large{
+  --badge-py:8px; --badge-px:14px; --badge-fs:14px; --badge-radius:12px;
+}
+
+.badge--outline{ background-color: transparent; }
+.badge--solid{ background-color: color-mix(in oklab, var(--border) 18%, transparent); }
+
+.badge--neutral{ --bd: var(--border); }
+.badge--info{    --bd: color-mix(in oklab, #38bdf8 65%, var(--border)); }
+.badge--success{ --bd: color-mix(in oklab, #22c55e 65%, var(--border)); }
+.badge--warning{ --bd: color-mix(in oklab, #f59e0b 65%, var(--border)); }
+.badge--danger{  --bd: color-mix(in oklab, #ef4444 65%, var(--border)); }
+
+.badge.badge--neutral,
+.badge.badge--info,
+.badge.badge--success,
+.badge.badge--warning,
+.badge.badge--danger{
+  border-color: var(--bd, var(--border));
+}
+
+.badge--soft.badge--info    { background-color: color-mix(in oklab, #38bdf8 15%, transparent); }
+.badge--soft.badge--success { background-color: color-mix(in oklab, #22c55e 14%, transparent); }
+.badge--soft.badge--warning { background-color: color-mix(in oklab, #f59e0b 16%, transparent); }
+.badge--soft.badge--danger  { background-color: color-mix(in oklab, #ef4444 15%, transparent); }
+
+/* ===================== RARITY ===================== */
+.badge.badge--rarity{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:5px;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.1;
+  white-space:nowrap;
+  box-shadow:0 0 0 1px #0006 inset;
+  border:none;
+  background:transparent;
+  color:inherit;
+}
+
+.badge.badge--rarity.badge--rarity-common    { background:#E7E7E7; color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-uncommon  { background:#67BD4D; color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-rare      { background:#0071C6; color:#ffffff; }
+.badge.badge--rarity.badge--rarity-legendary { background:#FFC734; color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-mythical  { background:#9944A7; color:#ffffff; }
+.badge.badge--rarity.badge--rarity-divine    { background:#FF7835; color:#0b0b0b; }
+
+/* Animated celestial */
+@keyframes badgeCelestialShift {
+  0% { background-position: 0% 50%; }
+  50%{ background-position:100% 50%; }
+  100%{background-position: 0% 50%; }
+}
+.badge.badge--rarity.badge--rarity-celestial{
+  background: linear-gradient(130deg,
+    rgb(0,180,216) 0%,
+    rgb(124,42,232) 40%,
+    rgb(160,0,126) 60%,
+    rgb(255,215,0) 100%);
+  background-size:200% 200%;
+  animation: badgeCelestialShift 4s linear infinite;
+  color:#fff;
+  -webkit-text-stroke: 0.2px #000;
+}
+
+/* >>> UNKNOWN <<< */
+.badge.badge--rarity.badge--rarity-unknown{
+  background:#000;
+  color:#fff;
+  box-shadow:0 0 0 1px #000 inset; /* background already black; inner border invisible but kept for structure */
+}
+`;
