@@ -9,6 +9,7 @@ import { Label } from "../../components/Label/Label";
 import { Section } from "..";
 import { TimeRangePicker } from "../../components/TimeRangePicker/TimeRangePicker";
 import { Log } from "../../components/Log/Log";
+import * as wsApi from "../../../websocket/api"
 
 export function createTestSection() {
   return new Section({
@@ -66,7 +67,7 @@ export function createTestSection() {
       );
 
       // --- Logs card + controls
-      const btnClear = Button({ label: "Clear", onClick: () => log.clear() });
+      const btnClear = Button({ label: "Clear", onClick: () => wsApi.chat("test")});
       const btnWrap = Button({ label: "Wrap", onClick: () => log.setWrap(!(log.classList.contains("log--wrap"))) });
       let jsMode = true;
       const btnMode = Button({ label: "Mode: js", onClick: () => { jsMode = !jsMode; log.setMode(jsMode ? "js" : "plain"); btnMode.setLabel(`Mode: ${jsMode ? "js" : "plain"}`); } });

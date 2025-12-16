@@ -4,10 +4,13 @@ import { startAutoReloadOnVersionExpired } from "./core/wsMonitor"
 import { buildSections } from "./ui/sections";
 import { createHUD } from "./ui/HUD"
 import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
+import { initWebSocket } from "./websocket/bootstrap";
+
 
 (async function () {
     "use strict";
 
+    initWebSocket({ debug: false });
     const state = loadState();
     startAutoReloadOnVersionExpired();
 
