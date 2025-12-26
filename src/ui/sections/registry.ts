@@ -1,23 +1,17 @@
-import type { Section } from "./base/Section";
-
-export type SectionsDeps = {
-  // Theme: initial + apply. No global HUD setters here.
-  applyTheme: (name: string) => void;
-  initialTheme: string;
-  getCurrentTheme: () => string;
-};
+import type { BaseSection } from "./core/BaseSection";
+import type { SectionsDeps } from "./core/sectionTypes";
 
 // Concrete sections
-import { createSettingsSection } from "./Settings/settings";
-import { createTestSection } from "./Test/test";
+import { SettingsSection } from "./Settings/Settings";
+import { TestSection } from "./Test/Test";
 
-export function buildSections(deps: SectionsDeps): Section[] {
+/**
+ * Build all available sections
+ * Add new sections here to register them in the HUD
+ */
+export function buildSections(deps: SectionsDeps): BaseSection[] {
   return [
-    createSettingsSection({
-      applyTheme: deps.applyTheme,
-      initialTheme: deps.initialTheme,
-      getCurrentTheme: deps.getCurrentTheme,
-    }),
-    createTestSection(),
+    new SettingsSection(deps),
+    new TestSection(),
   ];
 }

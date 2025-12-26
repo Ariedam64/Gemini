@@ -1,16 +1,16 @@
-import { getV, setV } from "../../hudState";
+import { loadFromTampermonkey, saveToTampermonkey } from "../../hud/state/storage";
 
 // Storage (sections namespace)
-const K_SECTIONS = "sections";
+const K_SECTIONS = "gemini.sections";
 type SectionsStorage = Record<string, unknown>;
 
 function readSectionsStorage(): SectionsStorage {
-  const raw = getV<SectionsStorage>(K_SECTIONS, {});
+  const raw = loadFromTampermonkey<SectionsStorage>(K_SECTIONS, {});
   return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
 }
 
 function writeSectionsStorage(next: SectionsStorage) {
-  setV<SectionsStorage>(K_SECTIONS, next);
+  saveToTampermonkey<SectionsStorage>(K_SECTIONS, next);
 }
 
 export async function readSectionRaw<T = any>(path: string): Promise<T | undefined> {

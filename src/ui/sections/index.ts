@@ -1,6 +1,21 @@
-export { Section, type SectionConfig, type MountResult } from "./base/Section";
-export { SectionManager, type SectionsThemeDeps } from "./base/SectionManager";
+/**
+ * Sections module exports
+ * Centralized exports for all sections functionality
+ */
 
+// Core classes
+export { BaseSection } from "./core/BaseSection";
+export { SectionManager } from "./core/sectionManager";
+
+// Types
+export type {
+  SectionConfig,
+  MountResult,
+  SectionsDeps,
+  SectionsThemeDeps,
+} from "./core/sectionTypes";
+
+// State management utilities
 export {
   readSectionRaw,
   writeSection,
@@ -16,6 +31,7 @@ export {
   createSectionStore,
   type SectionStateConfig,
   type SectionStateController,
-} from "./state/sectionState";
+} from "./core/sectionState";
 
-export { buildSections, type SectionsDeps } from "./registry";
+// Registry
+export { buildSections } from "./registry";

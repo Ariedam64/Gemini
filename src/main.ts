@@ -1,8 +1,8 @@
-import { K, DEF, loadState, setV, getV } from "./ui/hudState";
+import { loadHudState, saveHudStateValue } from "./ui/hud";
 import { THEMES } from "./ui/theme";
 import { startAutoReloadOnVersionExpired } from "./core/wsMonitor"
 import { buildSections } from "./ui/sections";
-import { createHUD } from "./ui/HUD"
+import { createHUD } from "./ui/hud"
 import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
 import { initWebSocket } from "./websocket/bootstrap";
 
@@ -11,19 +11,19 @@ import { initWebSocket } from "./websocket/bootstrap";
     "use strict";
 
     initWebSocket({ debug: false });
-    const state = loadState();
+    const state = loadHudState();
     startAutoReloadOnVersionExpired();
 
     const hud = createHUD({
-      hostId: "lg-slideout-root",
+      hostId: "gemini-hud-root",
       initialWidth: state.width,
-        initialOpen: state.open,
-        onWidthChange: (px) => setV(K.width, px),
-        onOpenChange: (open) => setV(K.open, open),
+        initialOpen: state.isOpen,
+        onWidthChange: (px) => saveHudStateValue("width", px),
+        onOpenChange: (isOpen) => saveHudStateValue("isOpen", isOpen),
 
         themes: THEMES,
         initialTheme: state.theme,
-        onThemeChange: (name) => setV(K.theme, name),
+        onThemeChange: (name) => saveHudStateValue("theme", name),
 
         buildSections: (deps) =>
         buildSections({
@@ -32,8 +32,8 @@ import { initWebSocket } from "./websocket/bootstrap";
             getCurrentTheme: deps.getCurrentTheme,
         }),
 
-        initialTab: state.tab,
-        onTabChange: (id) => setV(K.tab, id),
+        initialTab: state.activeTab,
+        onTabChange: (id) => saveHudStateValue("activeTab", id),
     });
 
     startInjectGamePanelButton({ onClick: () => hud.setOpen(true) });

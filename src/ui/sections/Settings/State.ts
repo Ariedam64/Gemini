@@ -1,5 +1,9 @@
-// src/store/settings/settingsState.ts
-import { createSectionStore, mergeExpanded } from "..";
+/**
+ * Settings Section State
+ * Manages persistent state for Settings section (expanded cards, etc.)
+ */
+
+import { createSectionStore, mergeExpanded } from "../core/sectionState";
 
 /* -------------------------------------------------------------------------
  * Types
@@ -10,41 +14,48 @@ export type SettingUI = {
   expandedCards: Record<SettingsCardKey, boolean>;
 };
 
-export type SettingState = { ui: SettingUI };
+export type SettingState = {
+  ui: SettingUI;
+};
 
 /* -------------------------------------------------------------------------
  * Defaults
  * ------------------------------------------------------------------------- */
-export const defaultSettingState: SettingState = {
-  ui: { expandedCards: { style: false, license: false, system: false } },
+export const DEFAULT_SETTINGS_STATE: SettingState = {
+  ui: {
+    expandedCards: {
+      style: false,
+      license: false,
+      system: false,
+    },
+  },
 };
 
 /* -------------------------------------------------------------------------
- * Storage
- * ------------------------------------------------------------------------- */
-const SECTION_ID = "tab-settings";
-
-/* -------------------------------------------------------------------------
- * API
+ * State Controller
  * ------------------------------------------------------------------------- */
 export type SettingsStateController = {
   get(): SettingState;
   set(next: SettingState): void;
   save(): void;
-
-  // UI helpers
   setUI(patch: Partial<SettingUI>): void;
   setCardExpanded(card: SettingsCardKey, v: boolean): void;
   toggleCard(card: SettingsCardKey): void;
 };
 
+/**
+ * Initialize Settings state with persistence
+ */
 export async function initSettingsState(): Promise<SettingsStateController> {
-  const base = await createSectionStore<SettingState>(SECTION_ID, {
+  const base = await createSectionStore<SettingState>("tab-settings", {
     version: 1,
-    defaults: defaultSettingState,
+    defaults: DEFAULT_SETTINGS_STATE,
     sanitize: (s) => ({
       ui: {
-        expandedCards: mergeExpanded(defaultSettingState.ui.expandedCards, s.ui?.expandedCards),
+        expandedCards: mergeExpanded(
+          DEFAULT_SETTINGS_STATE.ui.expandedCards,
+          s.ui?.expandedCards
+        ),
       },
     }),
   });

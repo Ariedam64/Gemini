@@ -10,7 +10,9 @@
 // @inject-into  page
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
-// @grant        GM_openInTab 
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_openInTab
 // @grant        GM_registerMenuCommand
 // @resource     ICON https://imgur.com/a/nf1ZKbp
 // ==/UserScript==
