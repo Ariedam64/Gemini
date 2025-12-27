@@ -76,10 +76,8 @@ async function _autobootOnce() {
 
 
   // Declare every module to boot here
-  const modules = [
-    () => import("../atoms/shops/shops.actions"),   
-    () => import("../atoms/players/players.action"),
-    // add other modules here
+  const modules: Array<() => Promise<unknown>> = [
+    // Add modules to autoboot here
   ];
 
   type Starter = (() => Promise<void>) | (() => void) | undefined;

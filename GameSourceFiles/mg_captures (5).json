@@ -1,0 +1,282 @@
+{
+  "sprite/plant/Banana::Wet::Wet": {
+    "itKey": "sprite/plant/Banana",
+    "muts": [
+      "Wet"
+    ],
+    "overlayMuts": [
+      "Wet"
+    ],
+    "layers": [
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 128,
+          "y": 113
+        },
+        "scale": {
+          "x": 0.6461937716262975,
+          "y": 0.6461937716262975
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ]
+  },
+  "sprite/plant/Banana::Frozen::Frozen": {
+    "itKey": "sprite/plant/Banana",
+    "muts": [
+      "Frozen"
+    ],
+    "overlayMuts": [
+      "Frozen"
+    ],
+    "layers": [
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 128,
+          "y": 113
+        },
+        "scale": {
+          "x": 0.6484375,
+          "y": 0.6484375
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ]
+  },
+  "sprite/plant/Banana::Chilled::Chilled": {
+    "itKey": "sprite/plant/Banana",
+    "muts": [
+      "Chilled"
+    ],
+    "overlayMuts": [
+      "Chilled"
+    ],
+    "layers": [
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 128,
+          "y": 113
+        },
+        "scale": {
+          "x": 0.6102941176470589,
+          "y": 0.6102941176470589
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ]
+  },
+  "sprite/plant/Lily::Frozen::Frozen": {
+    "itKey": "sprite/plant/Lily",
+    "muts": [
+      "Frozen"
+    ],
+    "overlayMuts": [
+      "Frozen"
+    ],
+    "layers": [
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 124.5,
+          "y": 176.5
+        },
+        "scale": {
+          "x": 0.6354166666666666,
+          "y": 0.6354166666666666
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ]
+  },
+  "sprite/plant/Lily::Wet::Wet": {
+    "itKey": "sprite/plant/Lily",
+    "muts": [
+      "Wet"
+    ],
+    "overlayMuts": [
+      "Wet"
+    ],
+    "layers": [
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1
+        },
+        "anchor": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "texKey": "",
+        "pos": {
+          "x": 124.5,
+          "y": 176.5
+        },
+        "scale": {
+          "x": 0.6332179930795847,
+          "y": 0.6332179930795847
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    ]
+  }
+}

@@ -82,6 +82,9 @@ export function playerPosition(x: number, y: number, win: any = pageWindow): Sen
   return send(T.PlayerPosition, { x, y }, win);
 }
 
+/** Alias for playerPosition (legacy compatibility) */
+export const move = playerPosition;
+
 export function teleport(x: number, y: number, win: any = pageWindow): SendResult {
   return send(T.Teleport, { x, y }, win);
 }

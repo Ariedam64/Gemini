@@ -1,0 +1,3298 @@
+{
+  "sprite/ui/FrostIcon": {
+    "label": "sprite/ui/FrostIcon",
+    "frame": {
+      "x": 4028.0,
+      "y": 264.0,
+      "width": 64.0,
+      "height": 76.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 10.0,
+      "y": 16.0,
+      "width": 76.0,
+      "height": 64.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/MoonCelestialPlatform": {
+    "label": "sprite/tallplant/MoonCelestialPlatform",
+    "frame": {
+      "x": 265.0,
+      "y": 1274.0,
+      "width": 210.0,
+      "height": 600.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 620.0,
+      "height": 620.0
+    },
+    "trim": {
+      "x": 207.0,
+      "y": 10.0,
+      "width": 210.0,
+      "height": 600.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/ui/EggsRestocked": {
+    "label": "sprite/ui/EggsRestocked",
+    "frame": {
+      "x": 3051.0,
+      "y": 3468.0,
+      "width": 76.0,
+      "height": 91.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 10.0,
+      "width": 91.0,
+      "height": 76.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/ui/ActivityLog": {
+    "label": "sprite/ui/ActivityLog",
+    "frame": {
+      "x": 2185.0,
+      "y": 4033.0,
+      "width": 66.0,
+      "height": 56.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 20.0,
+      "y": 18.0,
+      "width": 56.0,
+      "height": 66.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/StoneGnome": {
+    "label": "sprite/decor/StoneGnome",
+    "frame": {
+      "x": 2014.0,
+      "y": 3327.0,
+      "width": 245.0,
+      "height": 178.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 178.0,
+      "height": 245.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.506173,
+      "y": 0.8
+    }
+  },
+  "sprite/object/Gazebo": {
+    "label": "sprite/object/Gazebo",
+    "frame": {
+      "x": 255.0,
+      "y": 3071.0,
+      "width": 449.0,
+      "height": 485.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 449.0,
+      "height": 485.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/MiniFairyKeep": {
+    "label": "sprite/decor/MiniFairyKeep",
+    "frame": {
+      "x": 2759.0,
+      "y": 2412.0,
+      "width": 204.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 204.0,
+      "height": 252.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.514706,
+      "y": 0.79
+    }
+  },
+  "sprite/pet/Butterfly": {
+    "label": "sprite/pet/Butterfly",
+    "frame": {
+      "x": 3718.0,
+      "y": 2303.0,
+      "width": 296.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 296.0,
+      "height": 256.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.47973,
+      "y": 0.976563
+    }
+  },
+  "sprite/item/AmberlitPotion": {
+    "label": "sprite/item/AmberlitPotion",
+    "frame": {
+      "x": 2867.0,
+      "y": 3973.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/object/CollectorsClub": {
+    "label": "sprite/object/CollectorsClub",
+    "frame": {
+      "x": 2545.0,
+      "y": 473.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/pet/Snail": {
+    "label": "sprite/pet/Snail",
+    "frame": {
+      "x": 2224.0,
+      "y": 2388.0,
+      "width": 225.0,
+      "height": 297.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 236.0,
+      "height": 305.0
+    },
+    "trim": {
+      "x": 2.0,
+      "y": 8.0,
+      "width": 225.0,
+      "height": 297.0
+    },
+    "defaultAnchor": {
+      "x": 0.40678,
+      "y": 0.986885
+    }
+  },
+  "sprite/decor/WoodBench": {
+    "label": "sprite/decor/WoodBench",
+    "frame": {
+      "x": 1133.0,
+      "y": 3856.0,
+      "width": 258.0,
+      "height": 236.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 258.0,
+      "height": 236.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.496124,
+      "y": 0.766949
+    }
+  },
+  "sprite/tallplant/Bamboo": {
+    "label": "sprite/tallplant/Bamboo",
+    "frame": {
+      "x": 4.0,
+      "y": 1274.0,
+      "width": 253.0,
+      "height": 1280.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 281.0,
+      "height": 1280.0
+    },
+    "trim": {
+      "x": 21.0,
+      "y": 0.0,
+      "width": 253.0,
+      "height": 1280.0
+    },
+    "defaultAnchor": {
+      "x": 0.519573,
+      "y": 0.964063
+    }
+  },
+  "sprite/plant/PassionFruit": {
+    "label": "sprite/plant/PassionFruit",
+    "frame": {
+      "x": 3913.0,
+      "y": 3910.0,
+      "width": 167.0,
+      "height": 168.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 168.0,
+      "height": 168.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 168.0,
+      "height": 167.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/Cactus": {
+    "label": "sprite/tallplant/Cactus",
+    "frame": {
+      "x": 4.0,
+      "y": 4.0,
+      "width": 437.0,
+      "height": 1262.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 446.0,
+      "height": 1280.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 18.0,
+      "width": 437.0,
+      "height": 1262.0
+    },
+    "defaultAnchor": {
+      "x": 0.517937,
+      "y": 0.952344
+    }
+  },
+  "sprite/plant/Lychee": {
+    "label": "sprite/plant/Lychee",
+    "frame": {
+      "x": 1619.0,
+      "y": 3990.0,
+      "width": 93.0,
+      "height": 94.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 94.0,
+      "height": 98.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 4.0,
+      "width": 93.0,
+      "height": 94.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/DawnCelestialPlatform": {
+    "label": "sprite/tallplant/DawnCelestialPlatform",
+    "frame": {
+      "x": 3066.0,
+      "y": 473.0,
+      "width": 231.0,
+      "height": 541.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 596.0,
+      "height": 596.0
+    },
+    "trim": {
+      "x": 182.0,
+      "y": 42.0,
+      "width": 231.0,
+      "height": 541.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/plant/SproutVine": {
+    "label": "sprite/plant/SproutVine",
+    "frame": {
+      "x": 3303.0,
+      "y": 3648.0,
+      "width": 244.0,
+      "height": 225.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 244.0,
+      "height": 225.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.504098,
+      "y": 0.826667
+    }
+  },
+  "sprite/seed/Strawberry": {
+    "label": "sprite/seed/Strawberry",
+    "frame": {
+      "x": 2792.0,
+      "y": 3391.0,
+      "width": 68.0,
+      "height": 69.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 128.0,
+      "height": 128.0
+    },
+    "trim": {
+      "x": 32.0,
+      "y": 27.0,
+      "width": 68.0,
+      "height": 69.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/StrawScarecrow": {
+    "label": "sprite/decor/StrawScarecrow",
+    "frame": {
+      "x": 3081.0,
+      "y": 1022.0,
+      "width": 244.0,
+      "height": 390.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 246.0,
+      "height": 398.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 8.0,
+      "width": 244.0,
+      "height": 390.0
+    },
+    "defaultAnchor": {
+      "x": 0.477124,
+      "y": 0.945378
+    }
+  },
+  "sprite/decor/MarbleBenchSideways": {
+    "label": "sprite/decor/MarbleBenchSideways",
+    "frame": {
+      "x": 859.0,
+      "y": 2429.0,
+      "width": 340.0,
+      "height": 123.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 123.0,
+      "height": 340.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.504065,
+      "y": 0.614706
+    }
+  },
+  "sprite/decor/PetHutch": {
+    "label": "sprite/decor/PetHutch",
+    "frame": {
+      "x": 2545.0,
+      "y": 1053.0,
+      "width": 528.0,
+      "height": 361.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 361.0,
+      "height": 528.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.488971,
+      "y": 0.723618
+    }
+  },
+  "sprite/decor/MarbleBenchBackwards": {
+    "label": "sprite/decor/MarbleBenchBackwards",
+    "frame": {
+      "x": 3915.0,
+      "y": 3435.0,
+      "width": 170.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 196.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 26.0,
+      "width": 256.0,
+      "height": 170.0
+    },
+    "defaultAnchor": {
+      "x": 0.503906,
+      "y": 0.719388
+    }
+  },
+  "sprite/ui/DawnIcon": {
+    "label": "sprite/ui/DawnIcon",
+    "frame": {
+      "x": 3555.0,
+      "y": 3753.0,
+      "width": 96.0,
+      "height": 65.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 11.0,
+      "width": 96.0,
+      "height": 65.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/pet/Chicken": {
+    "label": "sprite/pet/Chicken",
+    "frame": {
+      "x": 3742.0,
+      "y": 1377.0,
+      "width": 348.0,
+      "height": 404.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 348.0,
+      "height": 404.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.497126,
+      "y": 0.987624
+    }
+  },
+  "sprite/plant/Lily": {
+    "label": "sprite/plant/Lily",
+    "frame": {
+      "x": 3738.0,
+      "y": 2051.0,
+      "width": 351.0,
+      "height": 244.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 249.0,
+      "height": 353.0
+    },
+    "trim": {
+      "x": 2.0,
+      "y": 1.0,
+      "width": 244.0,
+      "height": 351.0
+    },
+    "defaultAnchor": {
+      "x": 0.519531,
+      "y": 0.773438
+    }
+  },
+  "sprite/item/ChilledPotion": {
+    "label": "sprite/item/ChilledPotion",
+    "frame": {
+      "x": 2958.0,
+      "y": 3973.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-9": {
+    "label": "sprite/animation/CelestialActive-9",
+    "frame": {
+      "x": 2019.0,
+      "y": 3513.0,
+      "width": 247.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 247.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/Tree": {
+    "label": "sprite/plant/Tree",
+    "frame": {
+      "x": 2513.0,
+      "y": 4.0,
+      "width": 741.0,
+      "height": 461.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 477.0,
+      "height": 743.0
+    },
+    "trim": {
+      "x": 14.0,
+      "y": 0.0,
+      "width": 461.0,
+      "height": 741.0
+    },
+    "defaultAnchor": {
+      "x": 0.507338,
+      "y": 0.915209
+    }
+  },
+  "sprite/plant/BabyCarrot": {
+    "label": "sprite/plant/BabyCarrot",
+    "frame": {
+      "x": 3854.0,
+      "y": 2863.0,
+      "width": 238.0,
+      "height": 191.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 191.0,
+      "height": 238.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.424084,
+      "y": 0.756303
+    }
+  },
+  "sprite/animation/CelestialActive-1": {
+    "label": "sprite/animation/CelestialActive-1",
+    "frame": {
+      "x": 2617.0,
+      "y": 2970.0,
+      "width": 253.0,
+      "height": 255.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 1.0,
+      "width": 253.0,
+      "height": 255.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialGrowing-3": {
+    "label": "sprite/animation/CelestialGrowing-3",
+    "frame": {
+      "x": 2334.0,
+      "y": 3128.0,
+      "width": 253.0,
+      "height": 251.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 253.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/mutation/Wet": {
+    "label": "sprite/mutation/Wet",
+    "frame": {
+      "x": 2120.0,
+      "y": 2716.0,
+      "width": 222.0,
+      "height": 289.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 310.0,
+      "height": 226.0
+    },
+    "trim": {
+      "x": 7.0,
+      "y": 3.0,
+      "width": 289.0,
+      "height": 222.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.486726
+    }
+  },
+  "sprite/decor/HayBale": {
+    "label": "sprite/decor/HayBale",
+    "frame": {
+      "x": 3807.0,
+      "y": 437.0,
+      "width": 270.0,
+      "height": 472.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 271.0,
+      "height": 472.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 270.0,
+      "height": 472.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.74
+    }
+  },
+  "sprite/decor/StoneBenchSideways": {
+    "label": "sprite/decor/StoneBenchSideways",
+    "frame": {
+      "x": 2099.0,
+      "y": 2402.0,
+      "width": 117.0,
+      "height": 306.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 117.0,
+      "height": 306.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.504274,
+      "y": 0.578431
+    }
+  },
+  "sprite/object/ToolShop": {
+    "label": "sprite/object/ToolShop",
+    "frame": {
+      "x": 1524.0,
+      "y": 1265.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/WoodBridge": {
+    "label": "sprite/decor/WoodBridge",
+    "frame": {
+      "x": 2457.0,
+      "y": 2412.0,
+      "width": 294.0,
+      "height": 286.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 286.0,
+      "height": 300.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 6.0,
+      "width": 286.0,
+      "height": 294.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.78
+    }
+  },
+  "sprite/decor/MediumRock": {
+    "label": "sprite/decor/MediumRock",
+    "frame": {
+      "x": 3915.0,
+      "y": 3699.0,
+      "width": 162.0,
+      "height": 203.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 203.0,
+      "height": 162.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.502463,
+      "y": 0.65
+    }
+  },
+  "sprite/mutation/Ambercharged": {
+    "label": "sprite/mutation/Ambercharged",
+    "frame": {
+      "x": 712.0,
+      "y": 3061.0,
+      "width": 389.0,
+      "height": 470.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 389.0,
+      "height": 488.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 10.0,
+      "width": 389.0,
+      "height": 470.0
+    },
+    "defaultAnchor": {
+      "x": 0.501285,
+      "y": 0.795082
+    }
+  },
+  "sprite/pet/Capybara": {
+    "label": "sprite/pet/Capybara",
+    "frame": {
+      "x": 298.0,
+      "y": 3564.0,
+      "width": 418.0,
+      "height": 498.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 419.0,
+      "height": 498.0
+    },
+    "trim": {
+      "x": 1.0,
+      "y": 0.0,
+      "width": 418.0,
+      "height": 498.0
+    },
+    "defaultAnchor": {
+      "x": 0.501193,
+      "y": 0.977912
+    }
+  },
+  "sprite/plant/Echeveria": {
+    "label": "sprite/plant/Echeveria",
+    "frame": {
+      "x": 1109.0,
+      "y": 3215.0,
+      "width": 308.0,
+      "height": 313.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 308.0,
+      "height": 316.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 308.0,
+      "height": 313.0
+    },
+    "defaultAnchor": {
+      "x": 0.503247,
+      "y": 0.688312
+    }
+  },
+  "sprite/plant/Hedge": {
+    "label": "sprite/plant/Hedge",
+    "frame": {
+      "x": 3435.0,
+      "y": 1340.0,
+      "width": 299.0,
+      "height": 445.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 317.0,
+      "height": 462.0
+    },
+    "trim": {
+      "x": 7.0,
+      "y": 17.0,
+      "width": 299.0,
+      "height": 445.0
+    },
+    "defaultAnchor": {
+      "x": 0.496094,
+      "y": 0.726563
+    }
+  },
+  "sprite/plant/FavaBean": {
+    "label": "sprite/plant/FavaBean",
+    "frame": {
+      "x": 2036.0,
+      "y": 4033.0,
+      "width": 141.0,
+      "height": 58.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 65.0,
+      "height": 141.0
+    },
+    "trim": {
+      "x": 6.0,
+      "y": 0.0,
+      "width": 58.0,
+      "height": 141.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/Trellis": {
+    "label": "sprite/plant/Trellis",
+    "frame": {
+      "x": 3915.0,
+      "y": 3237.0,
+      "width": 177.0,
+      "height": 190.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 205.0,
+      "height": 195.0
+    },
+    "trim": {
+      "x": 7.0,
+      "y": 6.0,
+      "width": 190.0,
+      "height": 177.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.804688
+    }
+  },
+  "sprite/decor/LargeGravestone": {
+    "label": "sprite/decor/LargeGravestone",
+    "frame": {
+      "x": 2295.0,
+      "y": 3901.0,
+      "width": 231.0,
+      "height": 155.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 155.0,
+      "height": 231.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.512987,
+      "y": 0.88
+    }
+  },
+  "sprite/decor/MarbleBench": {
+    "label": "sprite/decor/MarbleBench",
+    "frame": {
+      "x": 1741.0,
+      "y": 3313.0,
+      "width": 265.0,
+      "height": 197.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 265.0,
+      "height": 197.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.501887,
+      "y": 0.720812
+    }
+  },
+  "sprite/decor/WoodBenchBackwards": {
+    "label": "sprite/decor/WoodBenchBackwards",
+    "frame": {
+      "x": 2350.0,
+      "y": 2970.0,
+      "width": 259.0,
+      "height": 150.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 259.0,
+      "height": 150.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.646667
+    }
+  },
+  "sprite/plant/MoonCelestialCrop": {
+    "label": "sprite/plant/MoonCelestialCrop",
+    "frame": {
+      "x": 2534.0,
+      "y": 3901.0,
+      "width": 199.0,
+      "height": 178.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 208.0,
+      "height": 206.0
+    },
+    "trim": {
+      "x": 16.0,
+      "y": 2.0,
+      "width": 178.0,
+      "height": 199.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.878641
+    }
+  },
+  "sprite/object/Petstore": {
+    "label": "sprite/object/Petstore",
+    "frame": {
+      "x": 2541.0,
+      "y": 1422.0,
+      "width": 572.0,
+      "height": 512.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/StemFlower": {
+    "label": "sprite/plant/StemFlower",
+    "frame": {
+      "x": 3911.0,
+      "y": 3062.0,
+      "width": 181.0,
+      "height": 167.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 167.0,
+      "height": 183.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 2.0,
+      "width": 167.0,
+      "height": 181.0
+    },
+    "defaultAnchor": {
+      "x": 0.48503,
+      "y": 0.85
+    }
+  },
+  "sprite/seed/Cactus": {
+    "label": "sprite/seed/Cactus",
+    "frame": {
+      "x": 3435.0,
+      "y": 1793.0,
+      "width": 85.0,
+      "height": 80.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 128.0,
+      "height": 128.0
+    },
+    "trim": {
+      "x": 22.0,
+      "y": 22.0,
+      "width": 85.0,
+      "height": 80.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/MarbleBridge": {
+    "label": "sprite/decor/MarbleBridge",
+    "frame": {
+      "x": 3555.0,
+      "y": 2567.0,
+      "width": 293.0,
+      "height": 286.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 286.0,
+      "height": 300.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 7.0,
+      "width": 286.0,
+      "height": 293.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.78
+    }
+  },
+  "sprite/pet/Turkey": {
+    "label": "sprite/pet/Turkey",
+    "frame": {
+      "x": 702.0,
+      "y": 2567.0,
+      "width": 430.0,
+      "height": 486.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 453.0,
+      "height": 486.0
+    },
+    "trim": {
+      "x": 11.0,
+      "y": 0.0,
+      "width": 430.0,
+      "height": 486.0
+    },
+    "defaultAnchor": {
+      "x": 0.485651,
+      "y": 0.99177
+    }
+  },
+  "sprite/plant/Tulip": {
+    "label": "sprite/plant/Tulip",
+    "frame": {
+      "x": 3399.0,
+      "y": 3125.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 1.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.695313
+    }
+  },
+  "sprite/animation/CelestialActive-5": {
+    "label": "sprite/animation/CelestialActive-5",
+    "frame": {
+      "x": 3139.0,
+      "y": 3359.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/ui/Leaderboard": {
+    "label": "sprite/ui/Leaderboard",
+    "frame": {
+      "x": 4028.0,
+      "y": 348.0,
+      "width": 60.0,
+      "height": 67.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 15.0,
+      "y": 18.0,
+      "width": 67.0,
+      "height": 60.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialGrowing-2": {
+    "label": "sprite/animation/CelestialGrowing-2",
+    "frame": {
+      "x": 2878.0,
+      "y": 3208.0,
+      "width": 253.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 3.0,
+      "width": 252.0,
+      "height": 253.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/Chrysanthemum": {
+    "label": "sprite/plant/Chrysanthemum",
+    "frame": {
+      "x": 3139.0,
+      "y": 2681.0,
+      "width": 105.0,
+      "height": 132.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 132.0,
+      "height": 105.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.570313
+    }
+  },
+  "sprite/mutation/Frozen": {
+    "label": "sprite/mutation/Frozen",
+    "frame": {
+      "x": 3856.0,
+      "y": 2567.0,
+      "width": 228.0,
+      "height": 288.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 290.0,
+      "height": 232.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 4.0,
+      "width": 288.0,
+      "height": 228.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.474138
+    }
+  },
+  "sprite/object/PetSeller": {
+    "label": "sprite/object/PetSeller",
+    "frame": {
+      "x": 483.0,
+      "y": 1269.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 513.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/Banana": {
+    "label": "sprite/plant/Banana",
+    "frame": {
+      "x": 2295.0,
+      "y": 3644.0,
+      "width": 225.0,
+      "height": 249.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 226.0
+    },
+    "trim": {
+      "x": 4.0,
+      "y": 0.0,
+      "width": 249.0,
+      "height": 225.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/pet/Squirrel": {
+    "label": "sprite/pet/Squirrel",
+    "frame": {
+      "x": 1140.0,
+      "y": 2949.0,
+      "width": 282.0,
+      "height": 258.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 258.0,
+      "height": 282.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.391473,
+      "y": 0.98227
+    }
+  },
+  "sprite/plant/Starweaver": {
+    "label": "sprite/plant/Starweaver",
+    "frame": {
+      "x": 3253.0,
+      "y": 2556.0,
+      "width": 294.0,
+      "height": 271.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 309.0,
+      "height": 309.0
+    },
+    "trim": {
+      "x": 13.0,
+      "y": 18.0,
+      "width": 294.0,
+      "height": 271.0
+    },
+    "defaultAnchor": {
+      "x": 0.4895,
+      "y": 0.459547
+    }
+  },
+  "sprite/seed/BurrosTail": {
+    "label": "sprite/seed/BurrosTail",
+    "frame": {
+      "x": 3333.0,
+      "y": 1340.0,
+      "width": 73.0,
+      "height": 72.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 128.0,
+      "height": 128.0
+    },
+    "trim": {
+      "x": 28.0,
+      "y": 28.0,
+      "width": 73.0,
+      "height": 72.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/StoneBridge": {
+    "label": "sprite/decor/StoneBridge",
+    "frame": {
+      "x": 4.0,
+      "y": 3798.0,
+      "width": 286.0,
+      "height": 294.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 286.0,
+      "height": 300.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 6.0,
+      "width": 286.0,
+      "height": 294.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.78
+    }
+  },
+  "sprite/plant/Blueberry": {
+    "label": "sprite/plant/Blueberry",
+    "frame": {
+      "x": 2741.0,
+      "y": 3973.0,
+      "width": 118.0,
+      "height": 119.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 118.0,
+      "height": 120.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 1.0,
+      "width": 118.0,
+      "height": 119.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/WoodWindmill": {
+    "label": "sprite/decor/WoodWindmill",
+    "frame": {
+      "x": 1140.0,
+      "y": 2560.0,
+      "width": 283.0,
+      "height": 381.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 283.0,
+      "height": 381.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.502222,
+      "y": 0.834437
+    }
+  },
+  "sprite/pet/Cow": {
+    "label": "sprite/pet/Cow",
+    "frame": {
+      "x": 1639.0,
+      "y": 1845.0,
+      "width": 495.0,
+      "height": 549.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 496.0,
+      "height": 549.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 495.0,
+      "height": 549.0
+    },
+    "defaultAnchor": {
+      "x": 0.491935,
+      "y": 0.985428
+    }
+  },
+  "sprite/object/Well": {
+    "label": "sprite/object/Well",
+    "frame": {
+      "x": 1430.0,
+      "y": 2958.0,
+      "width": 322.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 258.0,
+      "height": 322.0
+    },
+    "trim": {
+      "x": 2.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 322.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/PalmTree": {
+    "label": "sprite/plant/PalmTree",
+    "frame": {
+      "x": 3262.0,
+      "y": 4.0,
+      "width": 758.0,
+      "height": 425.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 425.0,
+      "height": 758.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.501176,
+      "y": 0.961741
+    }
+  },
+  "sprite/decor/MiniFairyForge": {
+    "label": "sprite/decor/MiniFairyForge",
+    "frame": {
+      "x": 3659.0,
+      "y": 2861.0,
+      "width": 187.0,
+      "height": 240.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 187.0,
+      "height": 240.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.492188,
+      "y": 0.74
+    }
+  },
+  "sprite/tallplant/DawnCelestialPlantActive": {
+    "label": "sprite/tallplant/DawnCelestialPlantActive",
+    "frame": {
+      "x": 2142.0,
+      "y": 1823.0,
+      "width": 325.0,
+      "height": 557.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 596.0,
+      "height": 596.0
+    },
+    "trim": {
+      "x": 133.0,
+      "y": 39.0,
+      "width": 325.0,
+      "height": 557.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/mutation/Chilled": {
+    "label": "sprite/mutation/Chilled",
+    "frame": {
+      "x": 1760.0,
+      "y": 3070.0,
+      "width": 306.0,
+      "height": 235.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 306.0,
+      "height": 235.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.501961,
+      "y": 0.543147
+    }
+  },
+  "sprite/pet/Goat": {
+    "label": "sprite/pet/Goat",
+    "frame": {
+      "x": 724.0,
+      "y": 3539.0,
+      "width": 401.0,
+      "height": 502.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 401.0,
+      "height": 502.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.503741,
+      "y": 0.992032
+    }
+  },
+  "sprite/decor/LargeGravestoneSideways": {
+    "label": "sprite/decor/LargeGravestoneSideways",
+    "frame": {
+      "x": 4028.0,
+      "y": 4.0,
+      "width": 64.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 64.0,
+      "height": 252.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.757937
+    }
+  },
+  "sprite/animation/CelestialGrowing-5": {
+    "label": "sprite/animation/CelestialGrowing-5",
+    "frame": {
+      "x": 2528.0,
+      "y": 3645.0,
+      "width": 250.0,
+      "height": 248.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 250.0,
+      "height": 248.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/item/DawnlitPotion": {
+    "label": "sprite/item/DawnlitPotion",
+    "frame": {
+      "x": 1207.0,
+      "y": 2429.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 83.0,
+      "height": 119.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/SproutFruit": {
+    "label": "sprite/plant/SproutFruit",
+    "frame": {
+      "x": 1399.0,
+      "y": 3856.0,
+      "width": 212.0,
+      "height": 231.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 231.0,
+      "height": 212.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.506494,
+      "y": 0.53
+    }
+  },
+  "sprite/plant/BushyTree": {
+    "label": "sprite/plant/BushyTree",
+    "frame": {
+      "x": 1441.0,
+      "y": 3534.0,
+      "width": 295.0,
+      "height": 307.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 308.0,
+      "height": 308.0
+    },
+    "trim": {
+      "x": 6.0,
+      "y": 0.0,
+      "width": 295.0,
+      "height": 307.0
+    },
+    "defaultAnchor": {
+      "x": 0.493506,
+      "y": 0.55
+    }
+  },
+  "sprite/tallplant/StarweaverPlant": {
+    "label": "sprite/tallplant/StarweaverPlant",
+    "frame": {
+      "x": 3257.0,
+      "y": 1881.0,
+      "width": 267.0,
+      "height": 428.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 273.0,
+      "height": 516.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 85.0,
+      "width": 267.0,
+      "height": 428.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/animation/CelestialActive-8": {
+    "label": "sprite/animation/CelestialActive-8",
+    "frame": {
+      "x": 3659.0,
+      "y": 3635.0,
+      "width": 248.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 248.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialGrowing-4": {
+    "label": "sprite/animation/CelestialGrowing-4",
+    "frame": {
+      "x": 2274.0,
+      "y": 3387.0,
+      "width": 251.0,
+      "height": 249.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 249.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialGrowing-9": {
+    "label": "sprite/animation/CelestialGrowing-9",
+    "frame": {
+      "x": 2786.0,
+      "y": 3721.0,
+      "width": 251.0,
+      "height": 244.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 244.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-4": {
+    "label": "sprite/animation/CelestialActive-4",
+    "frame": {
+      "x": 3139.0,
+      "y": 3099.0,
+      "width": 252.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 252.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/object/Tile_SeedShop": {
+    "label": "sprite/object/Tile_SeedShop",
+    "frame": {
+      "x": 265.0,
+      "y": 1882.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/MoonCelestialPlant": {
+    "label": "sprite/tallplant/MoonCelestialPlant",
+    "frame": {
+      "x": 4.0,
+      "y": 2562.0,
+      "width": 243.0,
+      "height": 610.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 620.0,
+      "height": 620.0
+    },
+    "trim": {
+      "x": 188.0,
+      "y": 10.0,
+      "width": 243.0,
+      "height": 610.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/animation/CelestialGrowing-7": {
+    "label": "sprite/animation/CelestialGrowing-7",
+    "frame": {
+      "x": 2533.0,
+      "y": 3391.0,
+      "width": 251.0,
+      "height": 246.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 246.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/MarbleBlobling": {
+    "label": "sprite/decor/MarbleBlobling",
+    "frame": {
+      "x": 3257.0,
+      "y": 2317.0,
+      "width": 294.0,
+      "height": 231.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 231.0,
+      "height": 294.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.484043,
+      "y": 0.86
+    }
+  },
+  "sprite/pet/Dragonfly": {
+    "label": "sprite/pet/Dragonfly",
+    "frame": {
+      "x": 1744.0,
+      "y": 3518.0,
+      "width": 267.0,
+      "height": 305.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 345.0,
+      "height": 272.0
+    },
+    "trim": {
+      "x": 20.0,
+      "y": 2.0,
+      "width": 305.0,
+      "height": 267.0
+    },
+    "defaultAnchor": {
+      "x": 0.498551,
+      "y": 0.955882
+    }
+  },
+  "sprite/item/PlanterPot": {
+    "label": "sprite/item/PlanterPot",
+    "frame": {
+      "x": 1305.0,
+      "y": 2414.0,
+      "width": 118.0,
+      "height": 114.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 118.0,
+      "height": 114.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/mutation-overlay/FrozenTallPlant": {
+    "label": "sprite/mutation-overlay/FrozenTallPlant",
+    "frame": {
+      "x": 449.0,
+      "y": 664.0,
+      "width": 1024.0,
+      "height": 597.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 1024.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 597.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/mutation/Frozen-1": {
+    "label": "sprite/mutation/Frozen-1",
+    "frame": {
+      "x": 3856.0,
+      "y": 2567.0,
+      "width": 228.0,
+      "height": 288.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 290.0,
+      "height": 232.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 4.0,
+      "width": 288.0,
+      "height": 228.0
+    },
+    "defaultAnchor": {
+      "x": 0.52,
+      "y": 0.974576
+    }
+  },
+  "sprite/animation/CelestialActive-7": {
+    "label": "sprite/animation/CelestialActive-7",
+    "frame": {
+      "x": 2074.0,
+      "y": 3070.0,
+      "width": 252.0,
+      "height": 249.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 249.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/DawnCelestialPlant": {
+    "label": "sprite/tallplant/DawnCelestialPlant",
+    "frame": {
+      "x": 1305.0,
+      "y": 1849.0,
+      "width": 326.0,
+      "height": 557.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 596.0,
+      "height": 596.0
+    },
+    "trim": {
+      "x": 135.0,
+      "y": 39.0,
+      "width": 326.0,
+      "height": 557.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/decor/StoneBench": {
+    "label": "sprite/decor/StoneBench",
+    "frame": {
+      "x": 2595.0,
+      "y": 3233.0,
+      "width": 257.0,
+      "height": 150.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 257.0,
+      "height": 150.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.498054,
+      "y": 0.646667
+    }
+  },
+  "sprite/mutation/Dawncharged": {
+    "label": "sprite/mutation/Dawncharged",
+    "frame": {
+      "x": 3333.0,
+      "y": 908.0,
+      "width": 401.0,
+      "height": 424.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 401.0,
+      "height": 466.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 35.0,
+      "width": 401.0,
+      "height": 424.0
+    },
+    "defaultAnchor": {
+      "x": 0.518703,
+      "y": 0.796137
+    }
+  },
+  "sprite/pet/Peacock": {
+    "label": "sprite/pet/Peacock",
+    "frame": {
+      "x": 1481.0,
+      "y": 657.0,
+      "width": 608.0,
+      "height": 600.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 653.0,
+      "height": 600.0
+    },
+    "trim": {
+      "x": 21.0,
+      "y": 0.0,
+      "width": 608.0,
+      "height": 600.0
+    },
+    "defaultAnchor": {
+      "x": 0.497703,
+      "y": 0.993333
+    }
+  },
+  "sprite/pet/Turtle": {
+    "label": "sprite/pet/Turtle",
+    "frame": {
+      "x": 3305.0,
+      "y": 437.0,
+      "width": 494.0,
+      "height": 463.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 494.0,
+      "height": 463.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.491903,
+      "y": 0.991361
+    }
+  },
+  "sprite/mutation-overlay/WetTallPlant": {
+    "label": "sprite/mutation-overlay/WetTallPlant",
+    "frame": {
+      "x": 1481.0,
+      "y": 4.0,
+      "width": 1024.0,
+      "height": 645.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 1024.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 645.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/tallplant/MoonCelestialPlantActive": {
+    "label": "sprite/tallplant/MoonCelestialPlantActive",
+    "frame": {
+      "x": 4.0,
+      "y": 3180.0,
+      "width": 243.0,
+      "height": 610.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 620.0,
+      "height": 620.0
+    },
+    "trim": {
+      "x": 188.0,
+      "y": 10.0,
+      "width": 243.0,
+      "height": 610.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.87
+    }
+  },
+  "sprite/ui/Stats": {
+    "label": "sprite/ui/Stats",
+    "frame": {
+      "x": 2475.0,
+      "y": 1823.0,
+      "width": 56.0,
+      "height": 70.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 96.0,
+      "height": 96.0
+    },
+    "trim": {
+      "x": 20.0,
+      "y": 10.0,
+      "width": 56.0,
+      "height": 70.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/ui/CoinBag": {
+    "label": "sprite/ui/CoinBag",
+    "frame": {
+      "x": 3121.0,
+      "y": 1881.0,
+      "width": 48.0,
+      "height": 47.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 48.0,
+      "height": 48.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 1.0,
+      "width": 48.0,
+      "height": 47.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/MiniWizardTower": {
+    "label": "sprite/decor/MiniWizardTower",
+    "frame": {
+      "x": 3532.0,
+      "y": 1793.0,
+      "width": 198.0,
+      "height": 423.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 198.0,
+      "height": 423.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.82
+    }
+  },
+  "sprite/decor/MediumGravestone": {
+    "label": "sprite/decor/MediumGravestone",
+    "frame": {
+      "x": 3750.0,
+      "y": 3895.0,
+      "width": 155.0,
+      "height": 187.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 155.0,
+      "height": 187.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.86
+    }
+  },
+  "sprite/decor/StoneBirdBath": {
+    "label": "sprite/decor/StoneBirdBath",
+    "frame": {
+      "x": 3559.0,
+      "y": 2224.0,
+      "width": 151.0,
+      "height": 305.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 151.0,
+      "height": 305.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.517483,
+      "y": 0.87
+    }
+  },
+  "sprite/pet/Bee": {
+    "label": "sprite/pet/Bee",
+    "frame": {
+      "x": 1744.0,
+      "y": 3831.0,
+      "width": 284.0,
+      "height": 261.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 267.0,
+      "height": 293.0
+    },
+    "trim": {
+      "x": 4.0,
+      "y": 9.0,
+      "width": 261.0,
+      "height": 284.0
+    },
+    "defaultAnchor": {
+      "x": 0.494382,
+      "y": 0.976109
+    }
+  },
+  "sprite/pet/Bunny": {
+    "label": "sprite/pet/Bunny",
+    "frame": {
+      "x": 3738.0,
+      "y": 1793.0,
+      "width": 354.0,
+      "height": 250.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 250.0,
+      "height": 354.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.504,
+      "y": 0.974576
+    }
+  },
+  "sprite/plant/Daffodil": {
+    "label": "sprite/plant/Daffodil",
+    "frame": {
+      "x": 2875.0,
+      "y": 2681.0,
+      "width": 256.0,
+      "height": 255.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 1.0,
+      "width": 256.0,
+      "height": 255.0
+    },
+    "defaultAnchor": {
+      "x": 0.507813,
+      "y": 0.636719
+    }
+  },
+  "sprite/plant/Mushroom": {
+    "label": "sprite/plant/Mushroom",
+    "frame": {
+      "x": 1133.0,
+      "y": 3536.0,
+      "width": 300.0,
+      "height": 312.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 312.0,
+      "height": 302.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 2.0,
+      "width": 312.0,
+      "height": 300.0
+    },
+    "defaultAnchor": {
+      "x": 0.503205,
+      "y": 0.82
+    }
+  },
+  "sprite/animation/CelestialGrowing-0": {
+    "label": "sprite/animation/CelestialGrowing-0",
+    "frame": {
+      "x": 3399.0,
+      "y": 2861.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/Cauldron": {
+    "label": "sprite/decor/Cauldron",
+    "frame": {
+      "x": 1771.0,
+      "y": 2765.0,
+      "width": 341.0,
+      "height": 297.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 297.0,
+      "height": 341.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.75
+    }
+  },
+  "sprite/decor/HayBaleSideways": {
+    "label": "sprite/decor/HayBaleSideways",
+    "frame": {
+      "x": 2979.0,
+      "y": 1942.0,
+      "width": 270.0,
+      "height": 472.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 271.0,
+      "height": 472.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 270.0,
+      "height": 472.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.74
+    }
+  },
+  "sprite/decor/SmallGravestoneSideways": {
+    "label": "sprite/decor/SmallGravestoneSideways",
+    "frame": {
+      "x": 4022.0,
+      "y": 2303.0,
+      "width": 64.0,
+      "height": 194.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 64.0,
+      "height": 194.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.751295
+    }
+  },
+  "sprite/decor/LargeRock": {
+    "label": "sprite/decor/LargeRock",
+    "frame": {
+      "x": 3051.0,
+      "y": 3618.0,
+      "width": 244.0,
+      "height": 213.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 244.0,
+      "height": 213.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.7
+    }
+  },
+  "sprite/plant/DragonFruit": {
+    "label": "sprite/plant/DragonFruit",
+    "frame": {
+      "x": 3540.0,
+      "y": 3895.0,
+      "width": 202.0,
+      "height": 193.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 205.0,
+      "height": 205.0
+    },
+    "trim": {
+      "x": 6.0,
+      "y": 1.0,
+      "width": 193.0,
+      "height": 202.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/SproutFlower": {
+    "label": "sprite/plant/SproutFlower",
+    "frame": {
+      "x": 3049.0,
+      "y": 3839.0,
+      "width": 244.0,
+      "height": 244.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 3.0,
+      "width": 244.0,
+      "height": 244.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.53125
+    }
+  },
+  "sprite/animation/CelestialGrowing-8": {
+    "label": "sprite/animation/CelestialGrowing-8",
+    "frame": {
+      "x": 2792.0,
+      "y": 3468.0,
+      "width": 251.0,
+      "height": 245.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 245.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/object/GazeboDome": {
+    "label": "sprite/object/GazeboDome",
+    "frame": {
+      "x": 3742.0,
+      "y": 917.0,
+      "width": 347.0,
+      "height": 452.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 452.0,
+      "height": 347.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-0": {
+    "label": "sprite/animation/CelestialActive-0",
+    "frame": {
+      "x": 2614.0,
+      "y": 2706.0,
+      "width": 253.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 253.0,
+      "height": 256.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-6": {
+    "label": "sprite/animation/CelestialActive-6",
+    "frame": {
+      "x": 3399.0,
+      "y": 3389.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/object/Billboard": {
+    "label": "sprite/object/Billboard",
+    "frame": {
+      "x": 2045.0,
+      "y": 1330.0,
+      "width": 488.0,
+      "height": 485.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 498.0,
+      "height": 506.0
+    },
+    "trim": {
+      "x": 10.0,
+      "y": 21.0,
+      "width": 488.0,
+      "height": 485.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialGrowing-1": {
+    "label": "sprite/animation/CelestialGrowing-1",
+    "frame": {
+      "x": 2036.0,
+      "y": 3773.0,
+      "width": 251.0,
+      "height": 252.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 5.0,
+      "width": 252.0,
+      "height": 251.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-2": {
+    "label": "sprite/animation/CelestialActive-2",
+    "frame": {
+      "x": 2878.0,
+      "y": 2944.0,
+      "width": 253.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 253.0,
+      "height": 256.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/CelestialActive-3": {
+    "label": "sprite/animation/CelestialActive-3",
+    "frame": {
+      "x": 3139.0,
+      "y": 2835.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 252.0,
+      "height": 256.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/SmallRock": {
+    "label": "sprite/decor/SmallRock",
+    "frame": {
+      "x": 1619.0,
+      "y": 3849.0,
+      "width": 115.0,
+      "height": 133.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 133.0,
+      "height": 115.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.496241,
+      "y": 0.65
+    }
+  },
+  "sprite/pet/Pig": {
+    "label": "sprite/pet/Pig",
+    "frame": {
+      "x": 2475.0,
+      "y": 1942.0,
+      "width": 496.0,
+      "height": 462.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 462.0,
+      "height": 496.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.506494,
+      "y": 0.989919
+    }
+  },
+  "sprite/mutation-overlay/ChilledTallPlant": {
+    "label": "sprite/mutation-overlay/ChilledTallPlant",
+    "frame": {
+      "x": 449.0,
+      "y": 4.0,
+      "width": 1024.0,
+      "height": 652.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 1024.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1024.0,
+      "height": 652.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/CacaoTree": {
+    "label": "sprite/plant/CacaoTree",
+    "frame": {
+      "x": 2097.0,
+      "y": 657.0,
+      "width": 440.0,
+      "height": 665.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 457.0,
+      "height": 666.0
+    },
+    "trim": {
+      "x": 7.0,
+      "y": 0.0,
+      "width": 440.0,
+      "height": 665.0
+    },
+    "defaultAnchor": {
+      "x": 0.507659,
+      "y": 0.921922
+    }
+  },
+  "sprite/decor/Birdhouse": {
+    "label": "sprite/decor/Birdhouse",
+    "frame": {
+      "x": 1431.0,
+      "y": 2798.0,
+      "width": 332.0,
+      "height": 152.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 152.0,
+      "height": 336.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 4.0,
+      "width": 152.0,
+      "height": 332.0
+    },
+    "defaultAnchor": {
+      "x": 0.513043,
+      "y": 0.89
+    }
+  },
+  "sprite/plant/SproutVegetable": {
+    "label": "sprite/plant/SproutVegetable",
+    "frame": {
+      "x": 3301.0,
+      "y": 3881.0,
+      "width": 231.0,
+      "height": 209.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 231.0,
+      "height": 209.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.493506,
+      "y": 0.574163
+    }
+  },
+  "sprite/plant/Carrot": {
+    "label": "sprite/plant/Carrot",
+    "frame": {
+      "x": 1425.0,
+      "y": 3222.0,
+      "width": 308.0,
+      "height": 304.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 304.0,
+      "height": 308.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/animation/MoonCelestialActivationTile": {
+    "label": "sprite/animation/MoonCelestialActivationTile",
+    "frame": {
+      "x": 2350.0,
+      "y": 2706.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/mutation/Puddle": {
+    "label": "sprite/mutation/Puddle",
+    "frame": {
+      "x": 3121.0,
+      "y": 1420.0,
+      "width": 306.0,
+      "height": 453.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 464.0,
+      "height": 314.0
+    },
+    "trim": {
+      "x": 4.0,
+      "y": 6.0,
+      "width": 453.0,
+      "height": 306.0
+    },
+    "defaultAnchor": {
+      "x": 0.49061,
+      "y": 0.506944
+    }
+  },
+  "sprite/decor/WoodArch": {
+    "label": "sprite/decor/WoodArch",
+    "frame": {
+      "x": 1431.0,
+      "y": 2414.0,
+      "width": 296.0,
+      "height": 376.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 296.0,
+      "height": 376.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.496622,
+      "y": 0.816489
+    }
+  },
+  "sprite/object/DecorShop": {
+    "label": "sprite/object/DecorShop",
+    "frame": {
+      "x": 1004.0,
+      "y": 1269.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/object/Tile_SellShop": {
+    "label": "sprite/object/Tile_SellShop",
+    "frame": {
+      "x": 785.0,
+      "y": 1849.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 512.0,
+      "height": 572.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/StoneArch": {
+    "label": "sprite/decor/StoneArch",
+    "frame": {
+      "x": 1735.0,
+      "y": 2402.0,
+      "width": 356.0,
+      "height": 355.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 356.0,
+      "height": 355.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.8
+    }
+  },
+  "sprite/pet/Worm": {
+    "label": "sprite/pet/Worm",
+    "frame": {
+      "x": 2971.0,
+      "y": 2422.0,
+      "width": 274.0,
+      "height": 251.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 251.0,
+      "height": 274.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.390438,
+      "y": 0.985401
+    }
+  },
+  "sprite/plant/DragonfruitTree": {
+    "label": "sprite/plant/DragonfruitTree",
+    "frame": {
+      "x": 255.0,
+      "y": 2567.0,
+      "width": 439.0,
+      "height": 496.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 443.0,
+      "height": 499.0
+    },
+    "trim": {
+      "x": 2.0,
+      "y": 3.0,
+      "width": 439.0,
+      "height": 496.0
+    },
+    "defaultAnchor": {
+      "x": 0.52,
+      "y": 0.974576
+    }
+  },
+  "sprite/plant/Grape": {
+    "label": "sprite/plant/Grape",
+    "frame": {
+      "x": 3659.0,
+      "y": 3109.0,
+      "width": 244.0,
+      "height": 256.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 247.0
+    },
+    "trim": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 244.0
+    },
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/decor/MarbleArchSideways": {
+    "label": "sprite/decor/MarbleArchSideways",
+    "frame": {
+      "x": 265.0,
+      "y": 2462.0,
+      "width": 586.0,
+      "height": 97.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 97.0,
+      "height": 586.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.494845,
+      "y": 0.737201
+    }
+  },
+  "sprite/ui/Dirt": {
+    "label": "sprite/ui/Dirt",
+    "frame": {
+      "x": 3555.0,
+      "y": 3648.0,
+      "width": 96.0,
+      "height": 97.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 97.0,
+      "height": 96.0
+    },
+    "trim": {},
+    "defaultAnchor": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  "sprite/plant/Sunflower": {
+    "label": "sprite/plant/Sunflower",
+    "frame": {
+      "x": 3659.0,
+      "y": 3373.0,
+      "width": 248.0,
+      "height": 254.0
+    },
+    "orig": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 256.0,
+      "height": 256.0
+    },
+    "trim": {
+      "x": 4.0,
+      "y": 0.0,
+      "width": 248.0,
+      "height": 254.0
+    },
+    "defaultAnchor": {
+      "x": 0.492188,
+      "y": 0.5
+    }
+  },
+  "__proto__": {}
+}

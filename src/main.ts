@@ -1,10 +1,9 @@
 import { loadHudState, saveHudStateValue } from "./ui/hud";
 import { THEMES } from "./ui/theme";
-import { startAutoReloadOnVersionExpired } from "./core/wsMonitor"
 import { buildSections } from "./ui/sections";
 import { createHUD } from "./ui/hud"
 import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
-import { initWebSocket } from "./websocket/bootstrap";
+import { initWebSocket, startAutoReloadOnVersionExpired } from "./websocket/bootstrap";
 
 
 (async function () {

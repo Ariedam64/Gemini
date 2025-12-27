@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <script type="module" crossorigin src="/version/gg-preview-pr-2307-app/assets/polyfills-Bf26O-t8.js"></script>
+
+  <!-- 👁️🟣👁️ -->
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/webp" href="/version/gg-preview-pr-2307-app/circle_favicon.webp" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- HTML Meta Tags -->
+  <title>Magic Garden</title>
+  <meta name="description" content="Design your dream garden, collect rare pets, & hang with friends!" />
+  <link rel="canonical" href="https://magicgarden.gg" />
+
+  <!-- Facebook Meta Tags -->
+  <meta property="og:url" content="https://magicgarden.gg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Magic Garden" />
+  <meta property="og:description" content="Design your dream garden, collect rare pets, & hang with friends!" />
+  <meta property="og:image" content="https://magicgarden.gg/version/gg-preview-pr-2307-app/thumbnail_share_2x1.webp" />
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="twitter:domain" content="magicgarden.gg" />
+  <meta property="twitter:url" content="https://magicgarden.gg" />
+  <meta name="twitter:title" content="Magic Garden" />
+  <meta name="twitter:description" content="Design your dream garden, collect rare pets, & hang with friends!" />
+  <meta name="twitter:image" content="/version/gg-preview-pr-2307-app/thumbnail_share_2x1.webp" />
+
+  <!-- iOS Web App Icons -->
+  <link rel="apple-touch-icon" href="/version/gg-preview-pr-2307-app/app_icon.webp" />
+  <meta name="theme-color" content="#652E91" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/version/gg-preview-pr-2307-app/assets/index-DAwDlNDO.js"></script>
+</head>
+
+
+<body style="background-color: #301543; padding: 0; margin: 0">
+  <div class="titlebar"></div>
+  <div id="root"></div>
+
+  <div id="background-fade-overlay"></div>
+
+  <div id="preloading-spinner-container">
+    <div id="preloading-spinner"></div>
+  </div>
+
+  <style>
+    #background-fade-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100dvw;
+      height: 100dvh;
+      background-color: rgb(26, 11, 37);
+      opacity: 1;
+      z-index: 7998;
+      pointer-events: none;
+      animation: fadeOut cubic-bezier(0.45, 0.05, 0.55, 0.95) 2s forwards;
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+      }
+    }
+
+    #preloading-spinner-container {
+      position: absolute;
+      width: 100dvw;
+      height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      z-index: 7999;
+    }
+
+    #preloading-spinner {
+      position: absolute;
+      background-color: #ffffff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      scale: 0;
+      opacity: 0;
+      animation:
+        initialZoom cubic-bezier(0.45, 0.05, 0.55, 0.95) 2s forwards,
+        pulse cubic-bezier(0.45, 0.05, 0.55, 0.95) 0.8s infinite 2s;
+    }
+
+    @keyframes initialZoom {
+      to {
+        scale: 1;
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        scale: 1;
+        opacity: 1;
+      }
+
+      50% {
+        scale: 0.5;
+        opacity: 0.5;
+      }
+    }
+  </style>
+  <script>
+    document.documentElement.style.setProperty('--app-height', '100dvh');
+
+    if (!window.OffscreenCanvas) {
+      console.warn('OffscreenCanvas not supported, adding polyfill');
+      window.OffscreenCanvas = class OffscreenCanvas {
+        constructor(width, height) {
+          this.canvas = document.createElement("canvas");
+          this.canvas.width = width;
+          this.canvas.height = height;
+
+          this.canvas.convertToBlob = () => {
+            return new Promise(resolve => {
+              this.canvas.toBlob(resolve);
+            });
+          };
+
+          return this.canvas;
+        }
+      };
+    }
+
+    // For the DIY electron app
+    if (navigator.userAgent.includes('McDesktopClient')) {
+      const style = document.createElement('style');
+      style.textContent = `
+        :root {
+          --sait: 40px !important;
+        }
+          .titlebar {
+            height: 40px;
+            background: #2b3035;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            app-region: drag;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10000000000; /* Ensure it's on top of other elements */
+            font-family: Arial, serif;
+          }
+      `;
+      document.head.appendChild(style);
+    }
+  </script>
+</body>
+
+</html>
