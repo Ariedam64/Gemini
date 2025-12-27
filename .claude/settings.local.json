@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}

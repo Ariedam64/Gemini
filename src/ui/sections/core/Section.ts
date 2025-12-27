@@ -4,7 +4,7 @@
  */
 
 import { el } from "../../../core/dom";
-import type { SectionConfig, MountResult } from "./sectionTypes";
+import type { SectionConfig, MountResult } from "./Types";
 
 export abstract class BaseSection {
   readonly id: string;

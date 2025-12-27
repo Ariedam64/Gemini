@@ -3,12 +3,12 @@
  * Manages persistent state for Settings section (expanded cards, etc.)
  */
 
-import { createSectionStore, mergeExpanded } from "../core/sectionState";
+import { createSectionStore, mergeExpanded } from "../core/State";
 
 /* -------------------------------------------------------------------------
  * Types
  * ------------------------------------------------------------------------- */
-export type SettingsCardKey = "style" | "license" | "system";
+export type SettingsCardKey = "style" | "system";
 
 export type SettingUI = {
   expandedCards: Record<SettingsCardKey, boolean>;
@@ -25,7 +25,6 @@ export const DEFAULT_SETTINGS_STATE: SettingState = {
   ui: {
     expandedCards: {
       style: false,
-      license: false,
       system: false,
     },
   },

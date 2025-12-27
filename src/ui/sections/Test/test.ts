@@ -5,7 +5,7 @@
  */
 
 import { el } from "../../../core/dom";
-import { BaseSection } from "../core/BaseSection";
+import { BaseSection } from "../core/Section";
 import { Button } from "../../components/Button/Button";
 import { Card, CardFooter } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";

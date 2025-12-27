@@ -4,8 +4,8 @@
  */
 
 // Core classes
-export { BaseSection } from "./core/BaseSection";
-export { SectionManager } from "./core/sectionManager";
+export { BaseSection } from "./core/Section";
+export { SectionManager } from "./core/Manager";
 
 // Types
 export type {
@@ -13,7 +13,7 @@ export type {
   MountResult,
   SectionsDeps,
   SectionsThemeDeps,
-} from "./core/sectionTypes";
+} from "./core/Types";
 
 // State management utilities
 export {
@@ -31,7 +31,7 @@ export {
   createSectionStore,
   type SectionStateConfig,
   type SectionStateController,
-} from "./core/sectionState";
+} from "./core/State";
 
 // Registry
 export { buildSections } from "./registry";

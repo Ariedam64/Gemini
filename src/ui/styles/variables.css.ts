@@ -1,4 +1,4 @@
-export const tokensCss = `
+export const variablesCss = `
 @layer tokens {
   /* --- Animatable properties --- */
   @property --bg{        syntax:'<color>';inherits:true;initial-value:rgba(10,12,18,.6)}

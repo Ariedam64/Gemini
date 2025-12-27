@@ -3,7 +3,7 @@
  * Manages persistent state for Test section (time range, log settings, etc.)
  */
 
-import { createSectionStore } from "../core/sectionState";
+import { createSectionStore } from "../core/State";
 
 /* -------------------------------------------------------------------------
  * Types

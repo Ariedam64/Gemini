@@ -1,5 +1,5 @@
-import { BaseSection } from "./BaseSection";
-import type { SectionsThemeDeps } from "./sectionTypes";
+import { BaseSection } from "./Section";
+import type { SectionsThemeDeps } from "./Types";
 
 /**
  * Section Manager

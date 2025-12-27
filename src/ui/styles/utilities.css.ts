@@ -1,4 +1,4 @@
-export const utilsCss = `
+export const utilitiesCss = `
 @layer utilities {
   /* Generic utilities, without component styling */
 

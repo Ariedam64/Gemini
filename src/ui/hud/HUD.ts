@@ -18,13 +18,8 @@ import { setupKeyboardShortcuts } from "./keyboard";
 import { createThemeManager } from "../theme";
 
 // Styles
-import { hudCss } from "../styles/hud.css";
-
-// Style imports
-import { injectStyleOnce } from "../styles/injectStyle";
-import { tokensCss } from "../styles/token.css";
-import { utilsCss } from "../styles/utils.css";
-import { baseCss } from "../styles/base.css";
+import { hudCss } from "./styles.css";
+import { injectStyleOnce, variablesCss, primitivesCss, utilitiesCss } from "../styles";
 
 // Component styles
 import { cardCss } from "../components/Card/card.css";
@@ -43,6 +38,9 @@ import { sliderCss } from "../components/Slider/slider.css";
 import { reorderableListCss } from "../components/ReorderableList/reorderableList.css";
 import { colorPickerCss } from "../components/ColorPicker/colorPicker.css";
 import { logCss } from "../components/Log/log.css";
+
+// Section styles
+import { settingsCss } from "../sections/Settings/styles.css";
 
 /**
  * Create and initialize the HUD
@@ -74,9 +72,9 @@ export function createHUD(opts: HudOptions): Hud {
   const { host, shadow } = attachHost(hostId);
 
   // Inject all styles
-  injectStyleOnce(shadow, tokensCss, "tokens");
-  injectStyleOnce(shadow, baseCss, "base");
-  injectStyleOnce(shadow, utilsCss, "utils");
+  injectStyleOnce(shadow, variablesCss, "variables");
+  injectStyleOnce(shadow, primitivesCss, "primitives");
+  injectStyleOnce(shadow, utilitiesCss, "utilities");
   injectStyleOnce(shadow, hudCss, "hud");
 
   // Inject component styles
@@ -96,6 +94,9 @@ export function createHUD(opts: HudOptions): Hud {
   injectStyleOnce(shadow, reorderableListCss, "reorderableList");
   injectStyleOnce(shadow, colorPickerCss, "colorPicker");
   injectStyleOnce(shadow, logCss, "log");
+
+  // Inject section styles
+  injectStyleOnce(shadow, settingsCss, "settings");
 
   // ===== 2. Create DOM Structure =====
   const { panel, tabbar, content, resizer, closeButton, wrapper } = createHudLayout({

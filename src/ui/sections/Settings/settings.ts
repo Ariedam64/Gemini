@@ -4,8 +4,8 @@
  */
 
 import { el } from "../../../core/dom";
-import { BaseSection } from "../core/BaseSection";
-import type { SectionsDeps } from "../core/sectionTypes";
+import { BaseSection } from "../core/Section";
+import type { SectionsDeps } from "../core/Types";
 import { Card } from "../../components/Card/Card";
 import { Select, SelectOption } from "../../components/Select/Select";
 import { Label } from "../../components/Label/Label";

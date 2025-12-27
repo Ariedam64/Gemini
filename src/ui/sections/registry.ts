@@ -1,5 +1,5 @@
-import type { BaseSection } from "./core/BaseSection";
-import type { SectionsDeps } from "./core/sectionTypes";
+import type { BaseSection } from "./core/Section";
+import type { SectionsDeps } from "./core/Types";
 
 // Concrete sections
 import { SettingsSection } from "./Settings/Settings";
