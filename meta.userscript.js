@@ -15,4 +15,5 @@
 // @grant        GM_openInTab
 // @grant        GM_registerMenuCommand
 // @resource     ICON https://imgur.com/a/nf1ZKbp
+// @connect      i.imgur.com
 // ==/UserScript==

@@ -1,39 +1,38 @@
-import { loadHudState, saveHudStateValue } from "./ui/hud";
-import { THEMES } from "./ui/theme";
-import { buildSections } from "./ui/sections";
-import { createHUD } from "./ui/hud"
-import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
-import { initWebSocket } from "./websocket/bootstrap";
-
+import { createLoader } from "./loader";
+import {
+  initWebSocketCapture,
+  initAtoms,
+  initHUD,
+  initModules,
+  startInjectGamePanelButton,
+} from "./bootstrap";
 
 (async function () {
-    "use strict";
+  "use strict";
 
-    initWebSocket({ debug: false });
-    const state = loadHudState();
+  const loader = createLoader({
+    title: "Gemini is loading",
+    subtitle: "Connecting and preparing modules...",
+  });
 
-    const hud = createHUD({
-      hostId: "gemini-hud-root",
-      initialWidth: state.width,
-        initialOpen: state.isOpen,
-        onWidthChange: (px) => saveHudStateValue("width", px),
-        onOpenChange: (isOpen) => saveHudStateValue("isOpen", isOpen),
+  let cleanupWebSocket: (() => void) | null = null;
+  let hud: ReturnType<typeof initHUD> | null = null;
 
-        themes: THEMES,
-        initialTheme: state.theme,
-        onThemeChange: (name) => saveHudStateValue("theme", name),
+  try {
+    cleanupWebSocket = initWebSocketCapture(loader);
+    await initAtoms(loader);
+    hud = initHUD(loader);
+    await initModules(loader);
 
-        buildSections: (deps) =>
-        buildSections({
-            applyTheme: deps.applyTheme,
-            initialTheme: deps.initialTheme,
-            getCurrentTheme: deps.getCurrentTheme,
-        }),
+    loader.succeed("Gemini is ready!");
+  } catch (e) {
+    loader.fail("Failed to initialize the mod.", e);
+  } finally {
+    cleanupWebSocket?.();
+  }
 
-        initialTab: state.activeTab,
-        onTabChange: (id) => saveHudStateValue("activeTab", id),
-    });
-
-    startInjectGamePanelButton({ onClick: () => hud.setOpen(true) });
-
+  if (hud) {
+    const hudRef = hud;
+    startInjectGamePanelButton({ onClick: () => hudRef.setOpen(true) });
+  }
 })();

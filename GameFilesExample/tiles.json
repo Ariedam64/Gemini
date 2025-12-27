@@ -1,0 +1,916 @@
+{
+    "frames": {
+        "tile/Cement": {
+            "frame": {
+                "x": 2166,
+                "y": 1453,
+                "w": 256,
+                "h": 278
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 278
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 278
+            }
+        },
+        "tile/Cobblestone_A": {
+            "frame": {
+                "x": 16,
+                "y": 2896,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_B": {
+            "frame": {
+                "x": 304,
+                "y": 2896,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_N": {
+            "frame": {
+                "x": 592,
+                "y": 2896,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_NE": {
+            "frame": {
+                "x": 880,
+                "y": 2896,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_NW": {
+            "frame": {
+                "x": 1168,
+                "y": 2896,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_S": {
+            "frame": {
+                "x": 1744,
+                "y": 2826,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_SE": {
+            "frame": {
+                "x": 2454,
+                "y": 816,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Cobblestone_SW": {
+            "frame": {
+                "x": 2454,
+                "y": 1104,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Dirt_A": {
+            "frame": {
+                "x": 2454,
+                "y": 1392,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Dirt_B": {
+            "frame": {
+                "x": 2742,
+                "y": 816,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Dirt_C": {
+            "frame": {
+                "x": 2742,
+                "y": 1104,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/DirtPath_NS": {
+            "frame": {
+                "x": 2742,
+                "y": 1392,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/DirtPath_NS_Wide": {
+            "frame": {
+                "x": 2454,
+                "y": 1680,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/DirtPath_S": {
+            "frame": {
+                "x": 2742,
+                "y": 1680,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/DirtPath_SW": {
+            "frame": {
+                "x": 1904,
+                "y": 1763,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/GazeboPlatform": {
+            "frame": {
+                "x": 16,
+                "y": 1584,
+                "w": 1280,
+                "h": 1280
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1280,
+                "h": 1280
+            },
+            "sourceSize": {
+                "w": 1280,
+                "h": 1280
+            }
+        },
+        "tile/Grass_A": {
+            "frame": {
+                "x": 1904,
+                "y": 2051,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Grass_B": {
+            "frame": {
+                "x": 1904,
+                "y": 2339,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Grass_C": {
+            "frame": {
+                "x": 2192,
+                "y": 1968,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Grass_D": {
+            "frame": {
+                "x": 2192,
+                "y": 2256,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Grass_E": {
+            "frame": {
+                "x": 2480,
+                "y": 1968,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/Hedge_A": {
+            "frame": {
+                "x": 1328,
+                "y": 1809,
+                "w": 256,
+                "h": 341
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 341
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 341
+            }
+        },
+        "tile/Hedge_B": {
+            "frame": {
+                "x": 1328,
+                "y": 2182,
+                "w": 256,
+                "h": 341
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 341
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 341
+            }
+        },
+        "tile/Hedge_C": {
+            "frame": {
+                "x": 1616,
+                "y": 2112,
+                "w": 256,
+                "h": 340
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 340
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 340
+            }
+        },
+        "tile/Hedge_Top": {
+            "frame": {
+                "x": 1616,
+                "y": 1739,
+                "w": 256,
+                "h": 341
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 341
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 341
+            }
+        },
+        "tile/PineTree": {
+            "frame": {
+                "x": 1584,
+                "y": 16,
+                "w": 512,
+                "h": 1024
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 512,
+                "h": 1024
+            },
+            "sourceSize": {
+                "w": 512,
+                "h": 1024
+            }
+        },
+        "tile/PlanterBush": {
+            "frame": {
+                "x": 2166,
+                "y": 1037,
+                "w": 256,
+                "h": 384
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 384
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 384
+            }
+        },
+        "tile/Rectangle 81": {
+            "frame": {
+                "x": 2600,
+                "y": 2832,
+                "w": 240,
+                "h": 240
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 240,
+                "h": 240
+            },
+            "sourceSize": {
+                "w": 240,
+                "h": 240
+            }
+        },
+        "tile/RedSpace": {
+            "frame": {
+                "x": 2480,
+                "y": 2256,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/RockBoulder_01": {
+            "frame": {
+                "x": 1584,
+                "y": 1072,
+                "w": 550,
+                "h": 635
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 550,
+                "h": 635
+            },
+            "sourceSize": {
+                "w": 550,
+                "h": 635
+            }
+        },
+        "tile/RockPile_A": {
+            "frame": {
+                "x": 2768,
+                "y": 1968,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/RockPile_B": {
+            "frame": {
+                "x": 2320,
+                "y": 2832,
+                "w": 248,
+                "h": 250
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 248,
+                "h": 250
+            },
+            "sourceSize": {
+                "w": 248,
+                "h": 250
+            }
+        },
+        "tile/Sky": {
+            "frame": {
+                "x": 2768,
+                "y": 2256,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/SkyTile": {
+            "frame": {
+                "x": 16,
+                "y": 16,
+                "w": 1536,
+                "h": 1536
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 1536,
+                "h": 1536
+            },
+            "sourceSize": {
+                "w": 1536,
+                "h": 1536
+            }
+        },
+        "tile/Star 6": {
+            "frame": {
+                "x": 2128,
+                "y": 816,
+                "w": 198,
+                "h": 189
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 198,
+                "h": 189
+            },
+            "sourceSize": {
+                "w": 198,
+                "h": 189
+            }
+        },
+        "tile/StarsTile": {
+            "frame": {
+                "x": 2128,
+                "y": 16,
+                "w": 768,
+                "h": 768
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 768,
+                "h": 768
+            },
+            "sourceSize": {
+                "w": 768,
+                "h": 768
+            }
+        },
+        "tile/TallGrass_A": {
+            "frame": {
+                "x": 1616,
+                "y": 2484,
+                "w": 256,
+                "h": 310
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 310
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 310
+            }
+        },
+        "tile/WoodFence_CornerT": {
+            "frame": {
+                "x": 2192,
+                "y": 2544,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/WoodFence_CornerTopRight": {
+            "frame": {
+                "x": 2480,
+                "y": 2544,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/WoodFence_Horizontal": {
+            "frame": {
+                "x": 2768,
+                "y": 2544,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/WoodFence_Vertical": {
+            "frame": {
+                "x": 2032,
+                "y": 2832,
+                "w": 256,
+                "h": 256
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 256
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 256
+            }
+        },
+        "tile/WoodPlatform_A": {
+            "frame": {
+                "x": 1328,
+                "y": 2555,
+                "w": 256,
+                "h": 278
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 278
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 278
+            }
+        },
+        "tile/WoodPlatform_B": {
+            "frame": {
+                "x": 1456,
+                "y": 2865,
+                "w": 256,
+                "h": 278
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 256,
+                "h": 278
+            },
+            "sourceSize": {
+                "w": 256,
+                "h": 278
+            }
+        },
+        "tile/X": {
+            "frame": {
+                "x": 1328,
+                "y": 1584,
+                "w": 194,
+                "h": 193
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 0,
+                "w": 194,
+                "h": 193
+            },
+            "sourceSize": {
+                "w": 194,
+                "h": 193
+            }
+        }
+    },
+    "meta": {
+        "app": "https://www.codeandweb.com/texturepacker",
+        "version": "1.1",
+        "image": "tiles.webp",
+        "format": "RGBA8888",
+        "size": {
+            "w": 3040,
+            "h": 3168
+        },
+        "scale": "1",
+        "smartupdate": "$TexturePacker:SmartUpdate:010cb8a35054f84df39652910f9c35b5:f9d16e66f514b85b15d3f1d5a061d0a3:bcaf75f7949b7286f20d4b1a6bdb65ae$"
+    }
+}
