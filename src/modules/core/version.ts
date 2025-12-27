@@ -1,9 +1,17 @@
 // src/modules/core/version.ts
 // MGVersion - Detects the game version from script tags
 
+import { pageWindow } from "../../utils/pageContext";
 import { sleep } from "../utils/helpers";
 
 let gameVersion: string | null = null;
+
+/**
+ * Get the document from the page context
+ */
+function getDoc(): Document | null {
+  return pageWindow?.document ?? (typeof document !== "undefined" ? document : null);
+}
 
 /**
  * Scan script tags to find the game version
@@ -12,7 +20,7 @@ let gameVersion: string | null = null;
 function init(doc?: Document): void {
   if (gameVersion !== null) return;
 
-  const d = doc ?? (typeof document !== "undefined" ? document : null);
+  const d = doc ?? getDoc();
   if (!d) return;
 
   const scripts = d.scripts;
@@ -33,7 +41,7 @@ function init(doc?: Document): void {
  * Get the current game version (initializes if needed)
  */
 function get(): string | null {
-  init(document);
+  init();
   return gameVersion;
 }
 
@@ -43,7 +51,7 @@ function get(): string | null {
 async function wait(timeoutMs = 15000): Promise<string> {
   const t0 = performance.now();
   while (performance.now() - t0 < timeoutMs) {
-    init(document);
+    init();
     if (gameVersion) return gameVersion;
     await sleep(50);
   }

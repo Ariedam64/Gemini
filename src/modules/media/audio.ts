@@ -1,11 +1,14 @@
 // src/modules/media/audio.ts
 // MGAudio - Audio management (SFX, music, ambience)
 
+import { pageWindow } from "../../utils/pageContext";
 import { clamp, clamp01 } from "../utils/helpers";
-import { gmGet, getJSON } from "../utils/network";
+import { getBlob, getJSON } from "../utils/network";
 import { joinPath } from "../utils/path";
 import { MGAssets } from "../core/assets";
 import { MGManifest } from "../core/manifest";
+
+const win = pageWindow ?? window;
 
 // Types
 type AudioCategory = "sfx" | "music" | "ambience";
@@ -156,7 +159,7 @@ async function ensureAudioContext(): Promise<AudioContext> {
   const existing = state.ctx;
   if (existing) return existing;
 
-  const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+  const Ctx = (win as any).AudioContext || (win as any).webkitAudioContext;
   if (!Ctx) throw new Error("WebAudio not supported");
 
   const ctx = new Ctx();
@@ -220,8 +223,8 @@ async function loadSfxBuffer(): Promise<AudioBuffer> {
   const ctx = await ensureAudioContext();
   await resumeIfNeeded();
 
-  const response = await gmGet(state.sfx.mp3Url, "arraybuffer");
-  const arrayBuffer = response.response;
+  const blob = await getBlob(state.sfx.mp3Url);
+  const arrayBuffer = await blob.arrayBuffer();
 
   const buffer = await new Promise<AudioBuffer>((resolve, reject) => {
     const promise = ctx.decodeAudioData(arrayBuffer, resolve, reject);

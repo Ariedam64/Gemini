@@ -1,9 +1,12 @@
 // src/modules/media/cosmetic.ts
 // MGCosmetic - Cosmetic image management (HTML images)
 
+import { pageWindow } from "../../utils/pageContext";
 import { joinPath } from "../utils/path";
 import { MGAssets } from "../core/assets";
 import { MGManifest } from "../core/manifest";
+
+const doc = pageWindow?.document ?? document;
 
 // Types
 interface CreateOptions {
@@ -52,7 +55,7 @@ const state = {
 function ensureOverlay(): HTMLDivElement {
   if (state.overlay) return state.overlay;
 
-  const div = document.createElement("div");
+  const div = doc.createElement("div");
   div.id = "MG_COSMETIC_OVERLAY";
   div.style.cssText = [
     "position:fixed",
@@ -64,7 +67,7 @@ function ensureOverlay(): HTMLDivElement {
     "z-index:99999999",
   ].join(";");
 
-  document.documentElement.appendChild(div);
+  doc.documentElement.appendChild(div);
   state.overlay = div;
   return div;
 }
@@ -156,7 +159,7 @@ function create(a: string, b?: string | CreateOptions, c?: CreateOptions): HTMLI
   }
 
   const u = assetB !== undefined ? url(a, assetB) : url(a);
-  const img = document.createElement("img");
+  const img = doc.createElement("img");
   img.decoding = "async";
   img.loading = "eager";
   img.src = u;
