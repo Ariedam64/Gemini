@@ -6,6 +6,49 @@ import { pageWindow } from "../../utils/pageContext";
 import type { Unsubscribe } from "../types";
 import { getAtomCache } from "./lookup";
 
+/* ========================= React DevTools Hook ========================= */
+
+/**
+ * Install a minimal React DevTools hook if not present.
+ * This allows us to capture React Fiber roots even without the extension.
+ * Must be called BEFORE React loads (at document-start).
+ */
+export function installReactDevToolsHook(): void {
+  const win = pageWindow as any;
+
+  // Already installed
+  if (win.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+    return;
+  }
+
+  // Create minimal hook structure that React will populate
+  const renderers = new Map<number, any>();
+  const fiberRoots = new Map<number, Set<any>>();
+
+  win.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+    renderers,
+    supportsFiber: true,
+    inject: (renderer: any) => {
+      const id = renderers.size + 1;
+      renderers.set(id, renderer);
+      fiberRoots.set(id, new Set());
+      return id;
+    },
+    onCommitFiberRoot: (id: number, root: any) => {
+      const roots = fiberRoots.get(id);
+      if (roots) {
+        roots.add(root);
+      }
+    },
+    onCommitFiberUnmount: () => {},
+    onPostCommitFiberRoot: () => {},
+    getFiberRoots: (id: number) => fiberRoots.get(id),
+    // Minimal stubs for compatibility
+    checkDCE: () => {},
+    isDisabled: false,
+  };
+}
+
 /* ================================ Types ================================ */
 
 export type JotaiStore = {
@@ -44,23 +87,19 @@ type GlobalState = {
   mirror?: MirrorAPI;
 };
 
-/* ============================ Global Singleton ============================ */
+/* ============================ Module State ============================ */
 
-const GLOBAL_KEY = "__JOTAI_MIRROR_SINGLETON__";
+// Use local module state instead of pageWindow global to avoid Firefox context issues
+const _state: GlobalState = {
+  baseStore: null,
+  captureInProgress: false,
+  captureError: null,
+  lastCapturedVia: null,
+  mirror: undefined,
+};
 
 function getGlobal(): GlobalState {
-  const w = pageWindow as any;
-  if (!w[GLOBAL_KEY]) {
-    w[GLOBAL_KEY] = {
-      baseStore: null,
-      captureInProgress: false,
-      captureError: null,
-      lastCapturedVia: null,
-      mirror: undefined,
-      atomByLabelCache: new Map(),
-    } as GlobalState;
-  }
-  return w[GLOBAL_KEY] as GlobalState;
+  return _state;
 }
 
 /* ============================== Ready Event ============================== */
@@ -82,7 +121,8 @@ function notifyReadyOnce(): void {
   }
 
   try {
-    pageWindow.dispatchEvent?.(new pageWindow.CustomEvent(READY_EVENT));
+    const CustomEventCtor = (pageWindow as any).CustomEvent || CustomEvent;
+    pageWindow.dispatchEvent?.(new CustomEventCtor(READY_EVENT));
   } catch {
     // Ignore dispatch errors
   }
@@ -157,7 +197,8 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function triggerVisibilityChange(): void {
   try {
-    pageWindow.dispatchEvent?.(new pageWindow.Event("visibilitychange"));
+    const EventCtor = (pageWindow as any).Event || Event;
+    pageWindow.dispatchEvent?.(new EventCtor("visibilitychange"));
   } catch {
     // Ignore dispatch errors
   }
@@ -165,11 +206,67 @@ function triggerVisibilityChange(): void {
 
 /* ========================== Capture via Fiber ========================== */
 
+// Helper to check if something looks like a Jotai store
+function isJotaiStore(v: any): v is JotaiStore {
+  return (
+    v &&
+    typeof v === "object" &&
+    typeof v.get === "function" &&
+    typeof v.set === "function" &&
+    typeof v.sub === "function"
+  );
+}
+
+// Helper to recursively search an object for a store (with depth limit)
+function findStoreInObject(obj: any, depth = 0, seen = new WeakSet()): JotaiStore | null {
+  if (depth > 3 || !obj || typeof obj !== "object") return null;
+  if (seen.has(obj)) return null;
+  try {
+    seen.add(obj);
+  } catch {
+    return null;
+  }
+
+  if (isJotaiStore(obj)) return obj;
+
+  // Check common property names where store might be
+  const keysToCheck = ["store", "value", "current", "state", "s", "baseStore"];
+  for (const key of keysToCheck) {
+    try {
+      const val = obj[key];
+      if (isJotaiStore(val)) return val;
+    } catch {
+      // Ignore access errors
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Capture the store by scanning React Fiber roots for a Jotai store.
+ * Looks in multiple locations:
+ * 1. Provider value (pendingProps.value)
+ * 2. useStore hook state (memoizedState)
+ * 3. Any object with get/set/sub signature
+ */
 function findStoreViaFiber(): JotaiStore | null {
   const g = getGlobal();
   const hook: any = (pageWindow as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-  if (!hook?.renderers?.size) return null;
+  if (!hook?.renderers?.size) {
+    return null;
+  }
+
+  // Check if we have any fiber roots yet
+  let totalRoots = 0;
+  for (const [rid] of hook.renderers) {
+    const roots = hook.getFiberRoots?.(rid);
+    if (roots) totalRoots += roots.size || 0;
+  }
+  if (totalRoots === 0) {
+    return null;
+  }
 
   for (const [rid] of hook.renderers) {
     const roots = hook.getFiberRoots?.(rid);
@@ -180,24 +277,61 @@ function findStoreViaFiber(): JotaiStore | null {
       const stack = [root.current];
 
       while (stack.length) {
-        const fiber = stack.pop();
-        if (!fiber || seen.has(fiber)) continue;
-        seen.add(fiber);
+        const f = stack.pop();
+        if (!f || seen.has(f)) continue;
+        seen.add(f);
 
-        const value = fiber?.pendingProps?.value;
-        if (
-          value &&
-          typeof value.get === "function" &&
-          typeof value.set === "function" &&
-          typeof value.sub === "function"
-        ) {
-          g.lastCapturedVia = "fiber";
-          return value as JotaiStore;
+        // 1. Check pendingProps.value (Provider pattern)
+        try {
+          const v = f?.pendingProps?.value;
+          if (isJotaiStore(v)) {
+            g.lastCapturedVia = "fiber";
+            return v;
+          }
+        } catch {
+          // Ignore access errors
         }
 
-        if (fiber.child) stack.push(fiber.child);
-        if (fiber.sibling) stack.push(fiber.sibling);
-        if (fiber.alternate) stack.push(fiber.alternate);
+        // 2. Check memoizedState chain (hooks)
+        try {
+          let state = f?.memoizedState;
+          let stateCount = 0;
+          while (state && stateCount < 15) {
+            stateCount++;
+            // Check the state itself
+            const storeInState = findStoreInObject(state);
+            if (storeInState) {
+              g.lastCapturedVia = "fiber";
+              return storeInState;
+            }
+            // Check memoizedState property
+            const storeInMemo = findStoreInObject(state.memoizedState);
+            if (storeInMemo) {
+              g.lastCapturedVia = "fiber";
+              return storeInMemo;
+            }
+            state = state.next;
+          }
+        } catch {
+          // Ignore access errors
+        }
+
+        // 3. Check stateNode (class components)
+        try {
+          if (f?.stateNode) {
+            const storeInNode = findStoreInObject(f.stateNode);
+            if (storeInNode) {
+              g.lastCapturedVia = "fiber";
+              return storeInNode;
+            }
+          }
+        } catch {
+          // Ignore access errors
+        }
+
+        if (f.child) stack.push(f.child);
+        if (f.sibling) stack.push(f.sibling);
+        if (f.alternate) stack.push(f.alternate);
       }
     }
   }
@@ -221,9 +355,16 @@ function createPolyfillStore(): JotaiStore {
 }
 
 async function captureViaWritePatch(timeoutMs = 5000): Promise<JotaiStore> {
-  const cache = getAtomCache();
+  // Wait for jotaiAtomCache to be available
+  const cacheWaitStart = Date.now();
+  let cache = getAtomCache();
+
+  while (!cache && Date.now() - cacheWaitStart < timeoutMs) {
+    await sleep(100);
+    cache = getAtomCache();
+  }
+
   if (!cache) {
-    console.warn("[jotai-bridge] jotaiAtomCache.cache not found");
     throw new Error("jotaiAtomCache.cache not found");
   }
 
@@ -277,7 +418,6 @@ async function captureViaWritePatch(timeoutMs = 5000): Promise<JotaiStore> {
   if (!capturedSet) {
     restorePatched();
     g.lastCapturedVia = "polyfill";
-    console.warn("[jotai-bridge] write-patch: timeout → polyfill");
     return createPolyfillStore();
   }
 
@@ -321,7 +461,7 @@ async function captureViaWritePatch(timeoutMs = 5000): Promise<JotaiStore> {
 
 /* ============================ Capture Fallback ============================ */
 
-async function captureWithFiberPolling(timeoutMs = 2000): Promise<JotaiStore> {
+async function captureWithFiberPolling(timeoutMs = 10000): Promise<JotaiStore> {
   const g = getGlobal();
 
   triggerVisibilityChange();
@@ -329,7 +469,9 @@ async function captureWithFiberPolling(timeoutMs = 2000): Promise<JotaiStore> {
   const startTime = Date.now();
   while (Date.now() - startTime < timeoutMs) {
     const store = findStoreViaFiber();
-    if (store) return store;
+    if (store) {
+      return store;
+    }
     await sleep(50);
   }
 

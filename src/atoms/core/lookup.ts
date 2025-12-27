@@ -5,15 +5,11 @@ import { pageWindow } from "../../utils/pageContext";
 
 /* ================================= Cache ================================= */
 
-// Global cache for atom label lookups (shared across scripts)
-const CACHE_KEY = "__ATOM_LABEL_CACHE__";
+// Use local module cache instead of pageWindow global to avoid Firefox context issues
+const _labelCache = new Map<string, any>();
 
 function getLabelCache(): Map<string, any> {
-  const w = pageWindow as any;
-  if (!w[CACHE_KEY]) {
-    w[CACHE_KEY] = new Map<string, any>();
-  }
-  return w[CACHE_KEY];
+  return _labelCache;
 }
 
 /* ================================= Lookup ================================= */

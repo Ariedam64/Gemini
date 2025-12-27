@@ -1,3 +1,8 @@
+// Install React DevTools hook IMMEDIATELY before anything else loads
+// This must happen before React initializes to capture Fiber roots
+import { installReactDevToolsHook } from "./atoms";
+installReactDevToolsHook();
+
 import { createLoader } from "./loader";
 import {
   initWebSocketCapture,

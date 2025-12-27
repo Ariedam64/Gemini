@@ -97,6 +97,7 @@ export type {
 // =============================================================================
 
 export { Store, prewarm, waitForStore } from "./store";
+export { installReactDevToolsHook } from "./core/bridge";
 
 // =============================================================================
 // CORE UTILITIES

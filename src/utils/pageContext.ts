@@ -6,8 +6,31 @@ declare const unsafeWindow:
   | undefined;
 
 const sandboxWin = window;
-const pageWin =
-  typeof unsafeWindow !== "undefined" && unsafeWindow ? unsafeWindow : sandboxWin;
+
+/**
+ * Get the actual page window, handling different userscript managers:
+ * - Tampermonkey/Violentmonkey: use unsafeWindow
+ * - Firefox/Greasemonkey: use window.wrappedJSObject
+ * - Fallback: use current window
+ */
+function getPageWindow(): Window & typeof globalThis & { [key: string]: any } {
+  // 1. Try unsafeWindow (Tampermonkey/Violentmonkey standard)
+  if (typeof unsafeWindow !== "undefined" && unsafeWindow) {
+    return unsafeWindow;
+  }
+
+  // 2. Try wrappedJSObject (Firefox/Greasemonkey specific)
+  // This gives direct access to the page's window object in Firefox
+  const wrapped = (window as any).wrappedJSObject;
+  if (wrapped && wrapped !== window) {
+    return wrapped;
+  }
+
+  // 3. Fallback to current window
+  return sandboxWin;
+}
+
+const pageWin = getPageWindow();
 
 /** Reference to the actual page window (falls back to the current window). */
 export const pageWindow = pageWin;

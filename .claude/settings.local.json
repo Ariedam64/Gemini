@@ -6,7 +6,12 @@
       "Bash(npm run build:*)",
       "Bash(tree:*)",
       "Bash(find:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(findstr:*)",
+      "Bash(del \"\\\\?\\\\C:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\GameSourceFiles\\\\nul\")",
+      "Bash(cmd /c 'del \"\"\\\\\\\\?\\\\C:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\GameSourceFiles\\\\nul\"\"')"
     ]
   }
 }
