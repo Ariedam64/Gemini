@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type Align = "left" | "center" | "right";
 export type ColDef<T = any> = {
@@ -71,16 +71,16 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     : false;
   const enableAnim = !!animations && !(respectReducedMotion && prefersReduce);
 
-  const root = el("div", { className: "lg-table-wrap", id }) as HTMLDivElement;
+  const root = element("div", { className: "lg-table-wrap", id }) as HTMLDivElement;
   if (maxHeight != null) {
     const v = typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
     root.style.setProperty("--tbl-max-h", v);
   }
 
-  const table = el("div", { className: "lg-table" }) as HTMLDivElement;
-  const head = el("div", { className: "lg-thead" }) as HTMLDivElement;
-  const body = el("div", { className: "lg-tbody" }) as HTMLDivElement;
-  const foot = el("div", { className: "lg-tfoot" }) as HTMLDivElement;
+  const table = element("div", { className: "lg-table" }) as HTMLDivElement;
+  const head = element("div", { className: "lg-thead" }) as HTMLDivElement;
+  const body = element("div", { className: "lg-tbody" }) as HTMLDivElement;
+  const foot = element("div", { className: "lg-tfoot" }) as HTMLDivElement;
 
   if (stickyHeader) root.classList.add("sticky");
   if (zebra) root.classList.add("zebra");
@@ -149,11 +149,11 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
   function renderHead() {
     head.replaceChildren();
-    const row = el("div", { className: "lg-tr lg-tr-head" }) as HTMLDivElement;
+    const row = element("div", { className: "lg-tr lg-tr-head" }) as HTMLDivElement;
 
     if (selectable) {
-      const cell = el("div", { className: "lg-th lg-th-check" }) as HTMLDivElement;
-      headerCheck = el("input", { type: "checkbox" }) as HTMLInputElement;
+      const cell = element("div", { className: "lg-th lg-th-check" }) as HTMLDivElement;
+      headerCheck = element("input", { type: "checkbox" }) as HTMLInputElement;
       headerCheck.addEventListener("change", () => {
         const rows = pageSlice();
         const check = headerCheck!.checked;
@@ -168,7 +168,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     }
 
     columns.forEach(col => {
-      const th = el("button", { className: "lg-th", type: "button", title: col.title || col.header }) as HTMLButtonElement;
+      const th = element("button", { className: "lg-th", type: "button", title: col.title || col.header }) as HTMLButtonElement;
       th.textContent = col.header;
       if (col.align) th.style.setProperty("--col-align", col.align);
       if (col.sortable) th.classList.add("sortable");
@@ -334,11 +334,11 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
   function buildRow(rowData: T, absIndex: number): HTMLDivElement {
     const rid = getRowId(rowData, absIndex);
-    const tr = el("div", { className: "lg-tr lg-tr-body", "data-id": rid }) as HTMLDivElement;
+    const tr = element("div", { className: "lg-tr lg-tr-body", "data-id": rid }) as HTMLDivElement;
 
     if (selectable) {
-      const td = el("div", { className: "lg-td lg-td-check" }) as HTMLDivElement;
-      const cb = el("input", { type: "checkbox", className: "lg-row-check" }) as HTMLInputElement;
+      const td = element("div", { className: "lg-td lg-td-check" }) as HTMLDivElement;
+      const cb = element("input", { type: "checkbox", className: "lg-row-check" }) as HTMLInputElement;
       cb.checked = selected.has(rid);
       cb.addEventListener("change", () => { if (cb.checked) selected.add(rid); else selected.delete(rid); updateHeaderCheckbox(); });
       td.appendChild(cb);
@@ -346,7 +346,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     }
 
     columns.forEach(col => {
-      const td = el("div", { className: "lg-td" }) as HTMLDivElement;
+      const td = element("div", { className: "lg-td" }) as HTMLDivElement;
       if (col.align) td.style.setProperty("--col-align", col.align);
       let node: Node | string = col.render ? col.render(rowData, absIndex) : String((rowData as any)[col.key] ?? "");
       if (typeof node === "string") td.textContent = node; else td.appendChild(node);
@@ -368,10 +368,10 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     foot.replaceChildren();
     if (!pageSize) return;
     const totalPages = pageCount();
-    const wrap = el("div", { className: "lg-pager" }) as HTMLDivElement;
-    const btnPrev = el("button", { className: "btn", type: "button" }, "←") as HTMLButtonElement;
-    const btnNext = el("button", { className: "btn", type: "button" }, "→") as HTMLButtonElement;
-    const info = el("span", { className: "lg-pager-info" }, `${page} / ${totalPages}`) as HTMLSpanElement;
+    const wrap = element("div", { className: "lg-pager" }) as HTMLDivElement;
+    const btnPrev = element("button", { className: "btn", type: "button" }, "←") as HTMLButtonElement;
+    const btnNext = element("button", { className: "btn", type: "button" }, "→") as HTMLButtonElement;
+    const info = element("span", { className: "lg-pager-info" }, `${page} / ${totalPages}`) as HTMLSpanElement;
     btnPrev.disabled = page <= 1; btnNext.disabled = page >= totalPages;
     btnPrev.addEventListener("click", () => setPage(page - 1));
     btnNext.addEventListener("click", () => setPage(page + 1));

@@ -3,10 +3,40 @@
  * Refactored for better modularity and clarity
  */
 
-import { attachHost } from "../dom";
 import { createNavTabs } from "../components/NavTabs/NavTabs";
 import { SectionManager } from "../sections";
 import { pageWindow } from "../../utils/pageContext";
+
+/* ================================ Shadow DOM Host ================================ */
+
+const DEFAULT_HOST_STYLES: Partial<CSSStyleDeclaration> = {
+  all: "initial",
+  position: "fixed",
+  top: "0",
+  right: "0",
+  zIndex: "2147483647",
+  pointerEvents: "auto",
+  fontFamily:
+    'system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif',
+  fontSize: "13px",
+  lineHeight: "1.35",
+};
+
+function attachHost(id = "gemini-root"): {
+  host: HTMLDivElement;
+  shadow: ShadowRoot;
+} {
+  const host = document.createElement("div");
+  host.id = id;
+  Object.assign(host.style, DEFAULT_HOST_STYLES);
+
+  (document.body || document.documentElement).appendChild(host);
+  const shadow = host.attachShadow({ mode: "open" });
+
+  return { host, shadow };
+}
+
+/* ================================ Imports ================================ */
 
 // HUD modules
 import { Hud, HudOptions } from "./types";

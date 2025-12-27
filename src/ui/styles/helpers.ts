@@ -1,5 +1,5 @@
-// src/ui/dom.ts
-// DOM utilities for UI components
+// src/ui/styles/helpers.ts
+// DOM element creation helper
 
 /* ================================ Types ================================ */
 
@@ -15,7 +15,7 @@ export type ElementProps<K extends keyof HTMLElementTagNameMap> =
 /**
  * Create an HTML element with props and children (JSX-like syntax)
  */
-export function el<K extends keyof HTMLElementTagNameMap>(
+export function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   props: ElementProps<K> | null = null,
   ...children: Child[]
@@ -50,36 +50,4 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   }
 
   return node;
-}
-
-/* ================================ Shadow DOM ================================ */
-
-const DEFAULT_HOST_STYLES: Partial<CSSStyleDeclaration> = {
-  all: "initial",
-  position: "fixed",
-  top: "0",
-  right: "0",
-  zIndex: "2147483647",
-  pointerEvents: "auto",
-  fontFamily:
-    'system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif',
-  fontSize: "13px",
-  lineHeight: "1.35",
-};
-
-/**
- * Create and attach a shadow DOM host element
- */
-export function attachHost(id = "gemini-root"): {
-  host: HTMLDivElement;
-  shadow: ShadowRoot;
-} {
-  const host = document.createElement("div");
-  host.id = id;
-  Object.assign(host.style, DEFAULT_HOST_STYLES);
-
-  (document.body || document.documentElement).appendChild(host);
-  const shadow = host.attachShadow({ mode: "open" });
-
-  return { host, shadow };
 }

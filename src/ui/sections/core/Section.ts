@@ -3,7 +3,7 @@
  * Provides lifecycle management, cleanup utilities, and common helpers
  */
 
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import type { SectionConfig, MountResult } from "./Types";
 
 export abstract class BaseSection {
@@ -71,7 +71,7 @@ export abstract class BaseSection {
       ? `gemini-section ${additionalClasses}`
       : "gemini-section";
 
-    return el("section", {
+    return element("section", {
       id,
       className: classes,
     }) as HTMLElement;
@@ -89,7 +89,7 @@ export abstract class BaseSection {
    * Helper: Create a grid container for section content
    */
   protected createGrid(gap = "12px"): HTMLElement {
-    const grid = el("div") as HTMLDivElement;
+    const grid = element("div") as HTMLDivElement;
     grid.style.display = "grid";
     grid.style.gap = gap;
     return grid;

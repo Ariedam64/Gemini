@@ -1,5 +1,5 @@
 // ui/components/Select.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 export type SelectSize = "sm" | "md" | "lg";
@@ -77,13 +77,13 @@ export function Select(cfg: SelectOptions): SelectHandle {
     onOpenChange,
   } = cfg;
 
-  const root = el("div", { className: "select", id }) as HTMLDivElement;
-  const trigger = el("button", { className: "select-trigger", type: "button" }) as HTMLButtonElement;
-  const valSpan = el("span", { className: "select-value" }, placeholder) as HTMLSpanElement;
-  const caret = el("span", { className: "select-caret" }, "▾") as HTMLSpanElement;
+  const root = element("div", { className: "select", id }) as HTMLDivElement;
+  const trigger = element("button", { className: "select-trigger", type: "button" }) as HTMLButtonElement;
+  const valSpan = element("span", { className: "select-value" }, placeholder) as HTMLSpanElement;
+  const caret = element("span", { className: "select-caret" }, "▾") as HTMLSpanElement;
   trigger.append(valSpan, caret);
 
-  const menu = el("div", { className: "select-menu", role: "listbox", tabindex: "-1", "aria-hidden": "true" }) as HTMLDivElement;
+  const menu = element("div", { className: "select-menu", role: "listbox", tabindex: "-1", "aria-hidden": "true" }) as HTMLDivElement;
 
   root.classList.add(`select--${size}`);
 
@@ -111,7 +111,7 @@ export function Select(cfg: SelectOptions): SelectHandle {
   function renderOptions(list: SelectOption[]) {
     menu.replaceChildren();
     list.forEach((opt) => {
-      const item = el("button", {
+      const item = element("button", {
         className: "select-option" + (opt.disabled ? " disabled" : ""),
         type: "button",
         role: "option",

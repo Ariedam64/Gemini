@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import { Select, SelectHandle } from "../Select/Select";
 import { detectEnvironment, type EnvironmentInfo } from "../../../utils/api";
 
@@ -120,7 +120,7 @@ export function TimeRangePicker(opts: TimeRangePickerOptions = {}): TimeRangePic
     end: clampStep(end, stepMinutes),
   };
 
-  const root = el("div", { className: "time-range", id }) as HTMLDivElement;
+  const root = element("div", { className: "time-range", id }) as HTMLDivElement;
   root.classList.add("time-range--stacked");
 
   /* Decide path: native or custom */
@@ -138,18 +138,18 @@ export function TimeRangePicker(opts: TimeRangePickerOptions = {}): TimeRangePic
   /* Native path                                                             */
   /* ──────────────────────────────────────────────────────────────────────── */
   function mountNative(): TimeRangePickerHandle {
-  const fromWrap = el("div", { className: "time-range-field", role: "group" }) as HTMLDivElement;
-  const fromLab  = el("span", { className: "time-range-label" }, labels.from || "From");
-  const inputFrom = el("input", {
+  const fromWrap = element("div", { className: "time-range-field", role: "group" }) as HTMLDivElement;
+  const fromLab  = element("span", { className: "time-range-label" }, labels.from || "From");
+  const inputFrom = element("input", {
     className: "input time-range-input",
     type: "time",
     step: String(stepMinutes * 60),
     value: value.start,
   }) as HTMLInputElement;
 
-  const toWrap   = el("div", { className: "time-range-field", role: "group" }) as HTMLDivElement;
-  const toLab   = el("span", { className: "time-range-label" }, labels.to || "To");
-  const inputTo = el("input", {
+  const toWrap   = element("div", { className: "time-range-field", role: "group" }) as HTMLDivElement;
+  const toLab   = element("span", { className: "time-range-label" }, labels.to || "To");
+  const inputTo = element("input", {
     className: "input time-range-input",
     type: "time",
     step: String(stepMinutes * 60),
@@ -220,11 +220,11 @@ export function TimeRangePicker(opts: TimeRangePickerOptions = {}): TimeRangePic
   /* ──────────────────────────────────────────────────────────────────────── */
 
   function mountCustom(): TimeRangePickerHandle {
-  const fromWrap = el("label", { className: "time-range-field" }) as HTMLLabelElement;
-  const fromLab  = el("span", { className: "time-range-label" }, labels.from || "From");
+  const fromWrap = element("label", { className: "time-range-field" }) as HTMLLabelElement;
+  const fromLab  = element("span", { className: "time-range-label" }, labels.from || "From");
 
-  const toWrap = el("label", { className: "time-range-field" }) as HTMLLabelElement;
-  const toLab  = el("span", { className: "time-range-label" }, labels.to || "To");
+  const toWrap = element("label", { className: "time-range-field" }) as HTMLLabelElement;
+  const toLab  = element("span", { className: "time-range-label" }, labels.to || "To");
 
   const wants12h = format === "12h" || (format === "auto" && prefers12h());
 
@@ -305,7 +305,7 @@ export function TimeRangePicker(opts: TimeRangePickerOptions = {}): TimeRangePic
   };
 
 function buildFields(initial24h: string, wants12h: boolean): FieldSet {
-  const container = el("div", { className: "time-picker" }) as HTMLDivElement;
+  const container = element("div", { className: "time-picker" }) as HTMLDivElement;
 
   // helper pour compacter un Select
   const makeCompact = (selRoot: HTMLDivElement, minCh = 2) => {

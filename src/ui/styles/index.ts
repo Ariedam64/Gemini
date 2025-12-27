@@ -8,5 +8,7 @@ export { variablesCss } from "./variables.css";
 export { primitivesCss } from "./primitives.css";
 export { utilitiesCss } from "./utilities.css";
 
-// Helper
+// Helpers
 export { injectStyleOnce } from "./inject";
+export { element } from "./helpers";
+export type { Child, ElementProps } from "./helpers";

@@ -1,5 +1,5 @@
 // ui/components/Card.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 let cardCollapseSeq = 0;
 const expandedStateById = new Map<string, boolean>();
@@ -45,7 +45,7 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
     stateKey,
   } = opts;
 
-  const root = el("div", { className: "card", id, tabIndex: interactive ? 0 : undefined }) as HTMLDivElement;
+  const root = element("div", { className: "card", id, tabIndex: interactive ? 0 : undefined }) as HTMLDivElement;
   root.classList.add(`card--${variant}`, `card--p-${padding}`);
   if (interactive) root.classList.add("card--interactive");
   if (tone !== "neutral") root.classList.add(`card--tone-${tone}`);
@@ -215,37 +215,37 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
 
   // Media top
   if (mediaTop) {
-    const m = el("div", { className: "card-media" }) as HTMLDivElement;
+    const m = element("div", { className: "card-media" }) as HTMLDivElement;
     m.append(mediaTop);
     root.appendChild(m);
   }
 
   const shouldRenderHeader = Boolean(title || subtitle || badge || (actions && actions.length) || expandable);
   if (shouldRenderHeader) {
-    header = el("div", { className: "card-header" }) as HTMLDivElement;
+    header = element("div", { className: "card-header" }) as HTMLDivElement;
 
-    const left = el("div", { className: "card-headline", style: "min-width:0;display:flex;flex-direction:column;gap:2px;" });
+    const left = element("div", { className: "card-headline", style: "min-width:0;display:flex;flex-direction:column;gap:2px;" });
     if (title) {
-      const h = el("h3", {
+      const h = element("h3", {
         className: "card-title",
         style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;"
       }, title) as HTMLHeadingElement;
-      if (badge) h.append(typeof badge === "string" ? el("span", { className: "badge" }, badge) : badge);
+      if (badge) h.append(typeof badge === "string" ? element("span", { className: "badge" }, badge) : badge);
       left.appendChild(h);
     }
     if (subtitle) {
-      const sub = el("div", { className: "card-subtitle", style: "opacity:.85;font-size:12px;color:color-mix(in oklab, var(--fg) 80%, #9ca3af)" }, subtitle);
+      const sub = element("div", { className: "card-subtitle", style: "opacity:.85;font-size:12px;color:color-mix(in oklab, var(--fg) 80%, #9ca3af)" }, subtitle);
       left.appendChild(sub);
     }
     if (left.childNodes.length || expandable) header.appendChild(left);
 
-    const right = el("div", { className: "card-header-right", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }) as HTMLDivElement;
-    const actionsWrap = el("div", { className: "card-actions", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }) as HTMLDivElement;
+    const right = element("div", { className: "card-header-right", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }) as HTMLDivElement;
+    const actionsWrap = element("div", { className: "card-actions", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }) as HTMLDivElement;
     actions?.forEach(action => actionsWrap.appendChild(action));
     if (actionsWrap.childNodes.length) right.appendChild(actionsWrap);
 
     if (expandable) {
-      toggleBtn = el("button", {
+      toggleBtn = element("button", {
         className: "card-toggle",
         type: "button",
         ariaExpanded: String(expanded),
@@ -272,7 +272,7 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
 
   }
 
-  collapse = el("div", {
+  collapse = element("div", {
     className: "card-collapse",
     id: collapseId,
     ariaHidden: expandable ? String(!expanded) : "false",
@@ -280,18 +280,18 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
   root.appendChild(collapse);
 
   if (divider && shouldRenderHeader) {
-    collapse.appendChild(el("div", { className: "card-divider" }) as HTMLDivElement);
+    collapse.appendChild(element("div", { className: "card-divider" }) as HTMLDivElement);
   }
 
-  const body = el("div", { className: "card-body" }) as HTMLDivElement;
+  const body = element("div", { className: "card-body" }) as HTMLDivElement;
   body.append(...children);
   collapse.appendChild(body);
 
   if (footer) {
     if (divider) {
-      collapse.appendChild(el("div", { className: "card-divider" }) as HTMLDivElement);
+      collapse.appendChild(element("div", { className: "card-divider" }) as HTMLDivElement);
     }
-    const footerEl = el("div", { className: "card-footer" }) as HTMLDivElement;
+    const footerEl = element("div", { className: "card-footer" }) as HTMLDivElement;
     footerEl.append(footer);
     collapse.appendChild(footerEl);
   }
@@ -306,27 +306,27 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
 
 /** Subcomponents (API unchanged) */
 export function CardHeader(...children: (Node | string)[]) {
-  return el("div", { className: "card-header" }, ...children) as HTMLDivElement;
+  return element("div", { className: "card-header" }, ...children) as HTMLDivElement;
 }
 export function CardBody(...children: (Node | string)[]) {
-  return el("div", { className: "card-body" }, ...children) as HTMLDivElement;
+  return element("div", { className: "card-body" }, ...children) as HTMLDivElement;
 }
 export function CardFooter(...children: (Node | string)[]) {
-  return el("div", { className: "card-footer" }, ...children) as HTMLDivElement;
+  return element("div", { className: "card-footer" }, ...children) as HTMLDivElement;
 }
 export function CardTitle(text: string, badge?: Node | string) {
-  const h = el("h3", { className: "card-title", style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" }, text) as HTMLHeadingElement;
-  if (badge) h.append(typeof badge === "string" ? el("span", { className: "badge" }, badge) : badge);
+  const h = element("h3", { className: "card-title", style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" }, text) as HTMLHeadingElement;
+  if (badge) h.append(typeof badge === "string" ? element("span", { className: "badge" }, badge) : badge);
   return h;
 }
 export function CardSubtitle(text: string) {
-  return el("div", { className: "card-subtitle", style: "opacity:.85;font-size:12px;color:color-mix(in oklab, var(--fg) 80%, #9ca3af)" }, text) as HTMLDivElement;
+  return element("div", { className: "card-subtitle", style: "opacity:.85;font-size:12px;color:color-mix(in oklab, var(--fg) 80%, #9ca3af)" }, text) as HTMLDivElement;
 }
 export function CardActions(...children: (Node | string)[]) {
-  return el("div", { className: "card-actions", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }, ...children) as HTMLDivElement;
+  return element("div", { className: "card-actions", style: "display:flex;gap:8px;flex:0 0 auto;align-items:center;" }, ...children) as HTMLDivElement;
 }
 export function CardMedia(node: Node) {
-  const m = el("div", { className: "card-media" }) as HTMLDivElement;
+  const m = element("div", { className: "card-media" }) as HTMLDivElement;
   m.append(node);
   return m;
 }

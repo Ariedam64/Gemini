@@ -1,5 +1,5 @@
 // ui/components/Input.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type InputMode = "any" | "digits" | "alpha" | "alphanumeric";
 
@@ -135,14 +135,14 @@ export function Input(opts: InputOptions = {}): InputHandle {
     label,
   } = opts;
 
-  const wrap = el("div", { className: "lg-input-wrap" }) as HTMLDivElement;
-  const input = el("input", { className: "input", id, placeholder }) as HTMLInputElement;
+  const wrap = element("div", { className: "lg-input-wrap" }) as HTMLDivElement;
+  const input = element("input", { className: "input", id, placeholder }) as HTMLInputElement;
 
   if (typeof maxLength === "number" && maxLength > 0) input.maxLength = maxLength;
   if (value) input.value = value;
 
   if (label) {
-    const lab = el("div", { className: "lg-input-label" }, label);
+    const lab = element("div", { className: "lg-input-label" }, label);
     wrap.appendChild(lab);
   }
   wrap.appendChild(input);

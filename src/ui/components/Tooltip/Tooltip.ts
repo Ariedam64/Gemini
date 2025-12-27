@@ -1,5 +1,5 @@
 // ui/components/Tooltip/Tooltip.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type TooltipPlacement = "top" | "bottom" | "left" | "right";
 export type TooltipTrigger = "hover" | "click" | "focus" | "manual";
@@ -46,7 +46,7 @@ export function Tooltip(target: HTMLElement, opts: TooltipOptions): TooltipHandl
   } = opts || {} as TooltipOptions;
 
   // Create the tooltip element (inserted next to the target in the same shadow root)
-  const tip = el("div", { className: "lg-tip", id }) as HTMLDivElement;
+  const tip = element("div", { className: "lg-tip", id }) as HTMLDivElement;
   tip.appendChild(toNode(content));
   if (accent) tip.classList.add("lg-tip--accent");
 

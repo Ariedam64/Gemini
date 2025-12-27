@@ -3,7 +3,7 @@
  * Manages theme customization and system environment display
  */
 
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import { BaseSection } from "../core/Section";
 import type { SectionsDeps } from "../core/Types";
 import { Card } from "../../components/Card/Card";
@@ -101,7 +101,7 @@ export class SettingsSection extends BaseSection {
       },
     });
 
-    const themeGrid = el("div", { className: "settings-theme-grid" }) as HTMLDivElement;
+    const themeGrid = element("div", { className: "settings-theme-grid" }) as HTMLDivElement;
 
     const themeCard = Card(
       {
@@ -111,7 +111,7 @@ export class SettingsSection extends BaseSection {
         defaultExpanded: !!currentState.ui.expandedCards.style,
         onExpandChange: (v) => state.setCardExpanded("style", v),
       },
-      el("div", { className: "kv settings-theme-row" }, themeLabel.root, themeSelect.root),
+      element("div", { className: "kv settings-theme-row" }, themeLabel.root, themeSelect.root),
       themeGrid
     );
 
@@ -178,21 +178,21 @@ export class SettingsSection extends BaseSection {
     const onExpandChange = params?.onExpandChange;
 
     const row = (k: string, vNode: Node | string) => {
-      const wrap = el("div", { className: "kv kv--inline-mobile" }) as HTMLDivElement;
-      const lab = el("label", {}, k);
-      const val = el("div", { className: "ro" }) as HTMLDivElement;
+      const wrap = element("div", { className: "kv kv--inline-mobile" }) as HTMLDivElement;
+      const lab = element("label", {}, k);
+      const val = element("div", { className: "ro" }) as HTMLDivElement;
       if (typeof vNode === "string") val.textContent = vNode;
       else val.append(vNode);
       wrap.append(lab, val);
       return wrap;
     };
 
-    const hostVal = el("code", {}, "—") as HTMLElement;
-    const iframeVal = el("span", {}, "—") as HTMLElement;
-    const surfaceVal = el("span", {}, "—") as HTMLElement;
-    const platformVal = el("span", {}, "—") as HTMLElement;
-    const browserVal = el("span", {}, "—") as HTMLElement;
-    const osVal = el("span", {}, "—") as HTMLElement;
+    const hostVal = element("code", {}, "—") as HTMLElement;
+    const iframeVal = element("span", {}, "—") as HTMLElement;
+    const surfaceVal = element("span", {}, "—") as HTMLElement;
+    const platformVal = element("span", {}, "—") as HTMLElement;
+    const browserVal = element("span", {}, "—") as HTMLElement;
+    const osVal = element("span", {}, "—") as HTMLElement;
 
     const renderEnv = () => {
       const env = detectEnvironment() as any;
@@ -215,7 +215,7 @@ export class SettingsSection extends BaseSection {
       return JSON.stringify(env, null, 2);
     });
 
-    const footerCentered = el(
+    const footerCentered = element(
       "div",
       { style: "width:100%;display:flex;justify-content:center;" },
       copyJsonBtn

@@ -1,5 +1,5 @@
 // ui/components/Slider/Slider.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type SliderOptions = {
   id?: string;
@@ -25,13 +25,13 @@ export type SliderHandle = {
 export function Slider(opts: SliderOptions = {}): SliderHandle {
   const { id, min = 0, max = 100, step = 1, value = min, label, showValue = true, disabled = false, onInput, onChange } = opts;
 
-  const root = el("div", { className: "slider" }) as HTMLDivElement;
-  const row = el("div", { className: "slider-row" }) as HTMLDivElement;
-  const track = el("div", { className: "slider-track" }) as HTMLDivElement;
-  const fill = el("div", { className: "slider-range" }) as HTMLDivElement;
+  const root = element("div", { className: "slider" }) as HTMLDivElement;
+  const row = element("div", { className: "slider-row" }) as HTMLDivElement;
+  const track = element("div", { className: "slider-track" }) as HTMLDivElement;
+  const fill = element("div", { className: "slider-range" }) as HTMLDivElement;
   track.appendChild(fill);
 
-  const input = el("input", { id, type: "range", min: String(min), max: String(max), step: String(step), value: String(value), disabled }) as HTMLInputElement;
+  const input = element("input", { id, type: "range", min: String(min), max: String(max), step: String(step), value: String(value), disabled }) as HTMLInputElement;
   input.addEventListener("input", (ev) => { update(); onInput?.(getValue(), ev); });
   input.addEventListener("change", (ev) => onChange?.(getValue(), ev));
 
@@ -54,11 +54,11 @@ export function Slider(opts: SliderOptions = {}): SliderHandle {
 
   let labelEl: HTMLSpanElement | null = null;
   let valueEl: HTMLSpanElement | null = null;
-  if (label){ labelEl = el("span", { className: "slider-label" }, label) as HTMLSpanElement; row.appendChild(labelEl); }
+  if (label){ labelEl = element("span", { className: "slider-label" }, label) as HTMLSpanElement; row.appendChild(labelEl); }
   // position the native input inside the track for perfect alignment
   track.appendChild(input);
   row.appendChild(track);
-  if (showValue){ valueEl = el("span", { className: "slider-value" }, String(value)) as HTMLSpanElement; row.appendChild(valueEl); }
+  if (showValue){ valueEl = element("span", { className: "slider-value" }, String(value)) as HTMLSpanElement; row.appendChild(valueEl); }
 
   root.append(row);
   update();
@@ -96,13 +96,13 @@ export function RangeSlider(opts: RangeSliderOptions = {}): RangeSliderHandle {
   const stepSize = Number.isFinite(step) && step > 0 ? step : 1;
   const gap = span <= 0 ? 0 : Math.min(stepSize, span);
 
-  const root = el("div", { className: "slider slider--range" }) as HTMLDivElement;
-  const row = el("div", { className: "slider-row" }) as HTMLDivElement;
-  const track = el("div", { className: "slider-track" }) as HTMLDivElement;
-  const fill = el("div", { className: "slider-range" }) as HTMLDivElement;
+  const root = element("div", { className: "slider slider--range" }) as HTMLDivElement;
+  const row = element("div", { className: "slider-row" }) as HTMLDivElement;
+  const track = element("div", { className: "slider-track" }) as HTMLDivElement;
+  const fill = element("div", { className: "slider-range" }) as HTMLDivElement;
   track.appendChild(fill);
 
-  const inputMin = el("input", {
+  const inputMin = element("input", {
     type: "range",
     min: String(min),
     max: String(max),
@@ -110,7 +110,7 @@ export function RangeSlider(opts: RangeSliderOptions = {}): RangeSliderHandle {
     value: String(initialLo),
     disabled,
   }) as HTMLInputElement;
-  const inputMax = el("input", {
+  const inputMax = element("input", {
     type: "range",
     min: String(min),
     max: String(max),
@@ -179,7 +179,7 @@ export function RangeSlider(opts: RangeSliderOptions = {}): RangeSliderHandle {
 
   let labelEl: HTMLSpanElement | null = null;
   if (label) {
-    labelEl = el("span", { className: "slider-label" }, label) as HTMLSpanElement;
+    labelEl = element("span", { className: "slider-label" }, label) as HTMLSpanElement;
     row.appendChild(labelEl);
   }
 
@@ -189,7 +189,7 @@ export function RangeSlider(opts: RangeSliderOptions = {}): RangeSliderHandle {
 
   let valuesEl: HTMLSpanElement | null = null;
   if (showValues) {
-    valuesEl = el("span", { className: "slider-value slider-value-range" }) as HTMLSpanElement;
+    valuesEl = element("span", { className: "slider-value slider-value-range" }) as HTMLSpanElement;
     row.appendChild(valuesEl);
   }
 

@@ -1,5 +1,5 @@
 // ui/components/Label.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type LabelTone = "default" | "muted" | "info" | "success" | "warning" | "danger";
 export type LabelSize = "sm" | "md" | "lg";
@@ -52,9 +52,9 @@ export function Label(opts: LabelOptions = {}): LabelHandle {
     onClick,
   } = opts;
 
-  const root = el("div", { className: "lg-label-wrap", id }) as HTMLDivElement;
+  const root = element("div", { className: "lg-label-wrap", id }) as HTMLDivElement;
 
-  const labelEl = el("label", {
+  const labelEl = element("label", {
     className: "lg-label",
     ...(htmlFor ? { htmlFor } : {}),
     ...(tooltip ? { title: tooltip } : {}),
@@ -62,29 +62,29 @@ export function Label(opts: LabelOptions = {}): LabelHandle {
 
   // icon
   if (icon) {
-    const ic = typeof icon === "string" ? el("span", { className: "lg-label-ico" }, icon) : icon;
+    const ic = typeof icon === "string" ? element("span", { className: "lg-label-ico" }, icon) : icon;
     (ic as HTMLElement).classList?.add?.("lg-label-ico");
     labelEl.appendChild(ic as Node);
   }
 
-  const textSpan = el("span", { className: "lg-label-text" }, text) as HTMLSpanElement;
+  const textSpan = element("span", { className: "lg-label-text" }, text) as HTMLSpanElement;
   labelEl.appendChild(textSpan);
 
   // required mark
-  const req = el("span", { className: "lg-label-req", ariaHidden: "true" }, " *") as HTMLSpanElement;
+  const req = element("span", { className: "lg-label-req", ariaHidden: "true" }, " *") as HTMLSpanElement;
   if (required) labelEl.appendChild(req);
 
   // suffix slot (badge, etc.)
   let suffixNode: Node | null = null;
   if (suffix != null) {
     suffixNode = typeof suffix === "string" ? document.createTextNode(suffix) : suffix;
-    const box = el("span", { className: "lg-label-suffix" }) as HTMLSpanElement;
+    const box = element("span", { className: "lg-label-suffix" }) as HTMLSpanElement;
     box.appendChild(suffixNode);
     labelEl.appendChild(box);
   }
 
   // hint text (below)
-  const hintEl = hint ? el("div", { className: "lg-label-hint" }, hint) as HTMLDivElement : null;
+  const hintEl = hint ? element("div", { className: "lg-label-hint" }, hint) as HTMLDivElement : null;
 
   // classes
   root.classList.add(`lg-label--${layout}`);
@@ -116,7 +116,7 @@ export function Label(opts: LabelOptions = {}): LabelHandle {
   function setHint(h?: string) {
     if (!h && hintEl && hintEl.isConnected) hintEl.remove();
     else if (h && hintEl) hintEl.textContent = h;
-    else if (h && !hintEl) root.appendChild(el("div", { className: "lg-label-hint" }, h));
+    else if (h && !hintEl) root.appendChild(element("div", { className: "lg-label-hint" }, h));
   }
 
   return { root, labelEl, hintEl, setText, setTone, setRequired, setDisabled, setHint };

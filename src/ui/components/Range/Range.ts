@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type RangeOptions = {
   id?: string;
@@ -11,7 +11,7 @@ export type RangeOptions = {
 
 export function Range(opts: RangeOptions = {}) {
   const { id, min = 420, max = 720, step = 10, value, onInput } = opts;
-  const input = el("input", { id, type: "range", min: String(min), max: String(max), step: String(step) }) as HTMLInputElement;
+  const input = element("input", { id, type: "range", min: String(min), max: String(max), step: String(step) }) as HTMLInputElement;
   if (value != null) input.value = String(value);
   if (onInput) input.addEventListener("input", onInput);
   return input;

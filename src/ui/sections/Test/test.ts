@@ -4,7 +4,7 @@
  * State is persisted across sessions (timeRange, logSettings)
  */
 
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import { BaseSection } from "../core/Section";
 import { Button } from "../../components/Button/Button";
 import { Card, CardFooter } from "../../components/Card/Card";
@@ -67,7 +67,7 @@ export class TestSection extends BaseSection {
       },
     });
 
-    const kvRow = el("div", lblTime.root, timeRange.root);
+    const kvRow = element("div", lblTime.root, timeRange.root);
 
     // --- Log Component ---
     const log = Log({

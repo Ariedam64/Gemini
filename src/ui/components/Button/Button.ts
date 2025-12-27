@@ -1,5 +1,5 @@
 // ui/components/Button.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type ButtonVariant = "default" | "primary";
 export type ButtonSize = "md" | "sm";
@@ -95,7 +95,7 @@ export function Button(opts: ButtonOptions = {}): ButtonHandle {
   } = opts;
 
   // structure: [spinner][iconLeft][label][iconRight]
-  const btn = el("button", { className: "btn", id }) as HTMLButtonElement;
+  const btn = element("button", { className: "btn", id }) as HTMLButtonElement;
   btn.type = type;
   if (variant === "primary") btn.classList.add("primary");
   if (size === "sm") btn.classList.add("btn--sm");

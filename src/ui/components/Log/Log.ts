@@ -1,5 +1,5 @@
 // ui/components/Log/Log.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type LogMode = "plain" | "js";
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -103,12 +103,12 @@ export function Log(opts: LogOptions = {}): LogHandle {
     autoScroll = true,
   } = opts;
 
-  const root = el("div", { className: "log", id }) as HTMLDivElement;
+  const root = element("div", { className: "log", id }) as HTMLDivElement;
   if (className) root.classList.add(...className.split(" ").filter(Boolean));
   if (wrap) root.classList.add("log--wrap");
 
-  const viewport = el("div", { className: "log-viewport" }) as HTMLDivElement;
-  const lines = el("div", { className: "log-lines" }) as HTMLDivElement;
+  const viewport = element("div", { className: "log-viewport" }) as HTMLDivElement;
+  const lines = element("div", { className: "log-lines" }) as HTMLDivElement;
   viewport.appendChild(lines);
   root.appendChild(viewport);
 

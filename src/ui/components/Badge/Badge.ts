@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type BadgeType = "neutral" | "info" | "success" | "warning" | "danger";
 export type BadgeTone = "soft" | "outline" | "solid";
@@ -67,7 +67,7 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
     rarity = null,
   } = opts;
 
-  const root = el("span", { className: "badge", id }) as HTMLSpanElement;
+  const root = element("span", { className: "badge", id }) as HTMLSpanElement;
 
   if (pill) root.classList.add("badge--pill");
   if (size === "sm") root.classList.add("badge--sm");

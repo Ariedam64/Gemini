@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import { TimeRangePicker, type TimeRangePickerOptions, type TimeRangePickerHandle } from "./TimeRangePicker";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -75,7 +75,7 @@ function describeArc(cx: number, cy: number, radius: number, startAngle: number,
 }
 
 function createRangeClock() {
-  const root = el("div", { className: "trp-clock" }) as HTMLDivElement;
+  const root = element("div", { className: "trp-clock" }) as HTMLDivElement;
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 100 100");
   svg.setAttribute("class", "trp-clock-svg");
@@ -201,9 +201,9 @@ export function TimeRangePickerWithSummary(opts: TimeRangePickerOptions): TimeRa
   const picker = TimeRangePicker({ ...opts, onChange: (rng) => { update(); onChange?.(rng); } });
   const clock = createRangeClock();
 
-  const wrapper = el("div", { className: "trp-inline" }) as HTMLDivElement;
-  const summary = el("div", { className: "trp-summary" }) as HTMLDivElement;
-  const duration = el("span", { className: "trp-clock-duration" }, "") as HTMLSpanElement;
+  const wrapper = element("div", { className: "trp-inline" }) as HTMLDivElement;
+  const summary = element("div", { className: "trp-summary" }) as HTMLDivElement;
+  const duration = element("span", { className: "trp-clock-duration" }, "") as HTMLSpanElement;
   summary.append(clock.root, duration);
   wrapper.append(picker.root, summary);
 

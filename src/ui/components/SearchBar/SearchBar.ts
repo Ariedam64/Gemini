@@ -1,5 +1,5 @@
 // ui/components/SearchBar.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type SearchSize = "sm" | "md" | "lg";
 
@@ -190,10 +190,10 @@ export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
   } = opts;
 
   // Racine
-  const root = el("div", { className: "search" + (size ? ` search--${size}` : ""), id }) as HTMLDivElement;
+  const root = element("div", { className: "search" + (size ? ` search--${size}` : ""), id }) as HTMLDivElement;
 
   // Left icon
-  const left = el("span", { className: "search-ico search-ico--left" }) as HTMLSpanElement;
+  const left = element("span", { className: "search-ico search-ico--left" }) as HTMLSpanElement;
   if (iconLeft) {
     const n = toNode(iconLeft);
     if (n) left.appendChild(n);
@@ -203,7 +203,7 @@ export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
   }
 
   // Input
-  const input = el("input", {
+  const input = element("input", {
     className: "input search-input",
     type: "text",
     placeholder,
@@ -212,7 +212,7 @@ export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
   }) as HTMLInputElement;
 
   // Customizable right icon
-  const right = el("span", { className: "search-ico search-ico--right" }) as HTMLSpanElement;
+  const right = element("span", { className: "search-ico search-ico--right" }) as HTMLSpanElement;
   if (iconRight) {
     const n = toNode(iconRight);
     if (n) right.appendChild(n);
@@ -224,16 +224,16 @@ export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
 
   // Clear
   const clearBtn = withClear
-    ? (el("button", { className: "search-clear", type: "button", title: clearTitle }, "×") as HTMLButtonElement)
+    ? (element("button", { className: "search-clear", type: "button", title: clearTitle }, "×") as HTMLButtonElement)
     : null;
 
   // Submit
   const submitBtn = submitLabel != null
-    ? (el("button", { className: "btn search-submit", type: "button" }, submitLabel) as HTMLButtonElement)
+    ? (element("button", { className: "btn search-submit", type: "button" }, submitLabel) as HTMLButtonElement)
     : null;
 
   // Assemblage
-  const field = el("div", { className: "search-field" }, left, input, right, spinner, ...(clearBtn ? [clearBtn] : [])) as HTMLDivElement;
+  const field = element("div", { className: "search-field" }, left, input, right, spinner, ...(clearBtn ? [clearBtn] : [])) as HTMLDivElement;
   root.append(field, ...(submitBtn ? [submitBtn] : []));
 
   // State

@@ -1,5 +1,5 @@
 // ui/components/Switch.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type SwitchSize = "sm" | "md" | "lg";
 export type LabelSide = "left" | "right" | "none";
@@ -36,9 +36,9 @@ export function Switch(opts: SwitchOptions = {}): SwitchHandle {
     onChange,
   } = opts;
 
-  const root = el("div", { className: "lg-switch-wrap" }) as HTMLDivElement;
+  const root = element("div", { className: "lg-switch-wrap" }) as HTMLDivElement;
 
-  const btn = el("button", {
+  const btn = element("button", {
     className: `lg-switch lg-switch--${size}`,
     id,
     type: "button",
@@ -48,13 +48,13 @@ export function Switch(opts: SwitchOptions = {}): SwitchHandle {
     title: label ?? "Basculer",
   }) as HTMLButtonElement;
 
-  const track = el("span", { className: "lg-switch-track" });
-  const thumb = el("span", { className: "lg-switch-thumb" });
+  const track = element("span", { className: "lg-switch-track" });
+  const thumb = element("span", { className: "lg-switch-thumb" });
   btn.append(track, thumb);
 
   let lblEl: HTMLSpanElement | null = null;
   if (label && labelSide !== "none") {
-    lblEl = el("span", { className: "lg-switch-label" }, label) as HTMLSpanElement;
+    lblEl = element("span", { className: "lg-switch-label" }, label) as HTMLSpanElement;
   }
 
   // layout label
@@ -118,7 +118,7 @@ export function Switch(opts: SwitchOptions = {}): SwitchHandle {
       return;
     }
     if (!lblEl) {
-      lblEl = el("span", { className: "lg-switch-label" }, t) as HTMLSpanElement;
+      lblEl = element("span", { className: "lg-switch-label" }, t) as HTMLSpanElement;
       // default on right if added later
       root.append(lblEl);
     } else {

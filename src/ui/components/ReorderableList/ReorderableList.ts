@@ -1,4 +1,4 @@
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type ReorderableTone = "neutral" | "accent" | "info" | "success" | "warning" | "danger";
 
@@ -182,13 +182,13 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
 
   const effectiveGrabArea = showHandle ? grabArea : "item";
 
-  const root = el("div", { className: "reorderable-list", id }) as HTMLDivElement;
+  const root = element("div", { className: "reorderable-list", id }) as HTMLDivElement;
   root.dataset.variant = variant;
   root.dataset.grab = effectiveGrabArea;
   root.dataset.density = density;
   if (className) root.classList.add(...className.split(" ").filter(Boolean));
 
-  const track = el("div", { className: "reorderable-track", role: "list", "aria-label": ariaLabel }) as HTMLDivElement;
+  const track = element("div", { className: "reorderable-track", role: "list", "aria-label": ariaLabel }) as HTMLDivElement;
   root.appendChild(track);
 
   const handleMap = new Map<string, HTMLButtonElement>();
@@ -204,7 +204,7 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
     itemMap.clear();
 
     if (!list.length) {
-      const empty = el("div", { className: "rl-empty" });
+      const empty = element("div", { className: "rl-empty" });
       const emptyNode = toNode(emptyLabel);
       if (emptyNode) empty.appendChild(emptyNode);
       track.replaceChildren(empty);
@@ -228,7 +228,7 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
   }
 
   function createItemElement(item: ReorderableListItem<T>, index: number) {
-    const itemEl = el("div", {
+    const itemEl = element("div", {
       className: "rl-item",
       role: "listitem",
       "data-id": item.id,
@@ -240,7 +240,7 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
     if (item.className) itemEl.classList.add(...item.className.split(" ").filter(Boolean));
     if (item.disabled) itemEl.classList.add("is-disabled");
 
-    const handleWrap = showHandle ? el("button", {
+    const handleWrap = showHandle ? element("button", {
       className: "rl-handle",
       type: "button",
       tabIndex: item.disabled ? -1 : 0,
@@ -266,7 +266,7 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
       handleMap.set(item.id, handleWrap);
     }
 
-    const body = el("div", { className: "rl-body" }) as HTMLDivElement;
+    const body = element("div", { className: "rl-body" }) as HTMLDivElement;
 
     if (renderItem) {
       const active = dragState?.id === item.id;
@@ -275,35 +275,35 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
       if (node) body.appendChild(node);
     } else {
       if (showIndex) {
-        const indexBadge = el("span", { className: "rl-index" }, String(index + 1));
+        const indexBadge = element("span", { className: "rl-index" }, String(index + 1));
         body.appendChild(indexBadge);
       }
 
       if (item.icon) {
-        const leading = el("div", { className: "rl-leading" });
+        const leading = element("div", { className: "rl-leading" });
         const ic = toNode(item.icon);
         if (ic) leading.appendChild(ic);
         body.appendChild(leading);
       }
 
-      const textWrap = el("div", { className: "rl-text" });
-      const title = el("div", { className: "rl-title" }, item.label);
+      const textWrap = element("div", { className: "rl-text" });
+      const title = element("div", { className: "rl-title" }, item.label);
       textWrap.appendChild(title);
       if (item.description) {
-        const subtitle = el("div", { className: "rl-subtitle" }, item.description);
+        const subtitle = element("div", { className: "rl-subtitle" }, item.description);
         textWrap.appendChild(subtitle);
       }
       body.appendChild(textWrap);
 
       if (item.meta) {
-        const meta = el("div", { className: "rl-meta" });
+        const meta = element("div", { className: "rl-meta" });
         const metaNode = toNode(item.meta);
         if (metaNode) meta.appendChild(metaNode);
         body.appendChild(meta);
       }
 
       if (item.trailing) {
-        const trailing = el("div", { className: "rl-trailing" });
+        const trailing = element("div", { className: "rl-trailing" });
         const tr = toNode(item.trailing);
         if (tr) trailing.appendChild(tr);
         body.appendChild(trailing);
@@ -425,7 +425,7 @@ export function ReorderableList<T = unknown>(options: ReorderableListOptions<T>)
     const fromIndex = items.findIndex((it) => it.id === itemId);
     if (fromIndex === -1) return;
 
-    const placeholder = el("div", {
+    const placeholder = element("div", {
       className: "rl-item rl-placeholder",
       style: `height:${rect.height}px;width:${rect.width}px;`,
     }) as HTMLDivElement;

@@ -1,4 +1,4 @@
-import { el } from "../dom";
+import { element } from "../styles/helpers";
 import { HudLayoutElements } from "./types";
 
 /**
@@ -12,31 +12,31 @@ export function createHudLayout(options: {
   const { shadow, initialOpen } = options;
 
   // Main panel container
-  const panel = el("div", {
+  const panel = element("div", {
     className: "gemini-panel",
     id: "panel",
     ariaHidden: String(!initialOpen),
   }) as HTMLDivElement;
 
   // Tab bar at the top
-  const tabbar = el("div", {
+  const tabbar = element("div", {
     className: "gemini-tabbar",
   }) as HTMLDivElement;
 
   // Content area for sections
-  const content = el("div", {
+  const content = element("div", {
     className: "gemini-content",
     id: "content",
   }) as HTMLDivElement;
 
   // Resize handle
-  const resizer = el("div", {
+  const resizer = element("div", {
     className: "gemini-resizer",
     title: "Resize",
   }) as HTMLDivElement;
 
   // Close button (cross) aligned to the right in the tab bar
-  const closeButton = el(
+  const closeButton = element(
     "button",
     {
       className: "gemini-close",
@@ -50,7 +50,7 @@ export function createHudLayout(options: {
   panel.append(tabbar, content, resizer);
 
   // Wrapper for the entire HUD
-  const wrapper = el("div", {
+  const wrapper = element("div", {
     className: "gemini-wrapper",
   }, panel) as HTMLDivElement;
 

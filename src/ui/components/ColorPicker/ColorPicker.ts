@@ -1,5 +1,5 @@
 // ui/components/ColorPicker/ColorPicker.ts
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 import { Card } from "../Card/Card";
 import { detectEnvironment } from "../../../utils/api";
 import { Input } from "../Input/Input";
@@ -206,7 +206,7 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
   if (header) header.classList.add("color-picker__header");
   const titleEl = header?.querySelector(".card-title") as HTMLElement | null;
 
-  const preview = el("button", {
+  const preview = element("button", {
     className: "color-picker__preview",
     type: "button",
     title: `Preview ${label}`,
@@ -327,17 +327,17 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
     if (body) {
       body.classList.add("color-picker__body");
 
-      paletteCursor = el("div", { className: "color-picker__palette-cursor" }) as HTMLDivElement;
-      palette = el("div", { className: "color-picker__palette" }, paletteCursor) as HTMLDivElement;
+      paletteCursor = element("div", { className: "color-picker__palette-cursor" }) as HTMLDivElement;
+      palette = element("div", { className: "color-picker__palette" }, paletteCursor) as HTMLDivElement;
 
-      alphaThumb = el("div", { className: "color-picker__alpha-thumb" }) as HTMLDivElement;
-      alphaTrack = el("div", { className: "color-picker__alpha" }, alphaThumb) as HTMLDivElement;
+      alphaThumb = element("div", { className: "color-picker__alpha-thumb" }) as HTMLDivElement;
+      alphaTrack = element("div", { className: "color-picker__alpha" }, alphaThumb) as HTMLDivElement;
 
-      hueThumb = el("div", { className: "color-picker__hue-thumb" }) as HTMLDivElement;
-      hueTrack = el("div", { className: "color-picker__hue" }, hueThumb) as HTMLDivElement;
+      hueThumb = element("div", { className: "color-picker__hue-thumb" }) as HTMLDivElement;
+      hueTrack = element("div", { className: "color-picker__hue" }, hueThumb) as HTMLDivElement;
 
-      const mainRow = el("div", { className: "color-picker__main" }, palette, alphaTrack) as HTMLDivElement;
-      const hueRow = el("div", { className: "color-picker__hue-row" }, hueTrack) as HTMLDivElement;
+      const mainRow = element("div", { className: "color-picker__main" }, palette, alphaTrack) as HTMLDivElement;
+      const hueRow = element("div", { className: "color-picker__hue-row" }, hueTrack) as HTMLDivElement;
 
       const hexInputHandle = Input({
         blockGameKeys: true,
@@ -349,7 +349,7 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
       hexInput.spellcheck = false;
       hexInput.inputMode = "text";
       hexInput.setAttribute("aria-label", `Hex code for ${label}`);
-      formatToggle = el("button", {
+      formatToggle = element("button", {
         type: "button",
         className: "color-picker__mode-btn",
         textContent: "HEX",
@@ -357,7 +357,7 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
         "aria-label": "Passer en saisie RGBA",
       }) as HTMLButtonElement;
       hexInputHandle.root.classList.add("color-picker__hex-wrap");
-      const hexRow = el("div", { className: "color-picker__hex-row" }, formatToggle, hexInputHandle.root) as HTMLDivElement;
+      const hexRow = element("div", { className: "color-picker__hex-row" }, formatToggle, hexInputHandle.root) as HTMLDivElement;
 
       body.replaceChildren(mainRow, hueRow, hexRow);
 
@@ -441,7 +441,7 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
 
   if (isMobile) {
     if (collapse) collapse.remove();
-    nativeInput = el("input", {
+    nativeInput = element("input", {
       className: "color-picker__native",
       type: "color",
       value: rgbaToHex(hsvaToRgba({ ...hsva, a: 1 })),

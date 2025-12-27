@@ -1,5 +1,5 @@
 // NavTabs with sliding pill indicator
-import { el } from "../../dom";
+import { element } from "../../styles/helpers";
 
 export type TabDef = { id: string; label: string };
 
@@ -11,15 +11,15 @@ export type NavTabs = {
 };
 
 export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: string) => void): NavTabs {
-  const pill = el("div", { className: "lg-pill", id: "pill" });
+  const pill = element("div", { className: "lg-pill", id: "pill" });
   const btns = tabs.map(t => {
-    const b = el("button", { className: "lg-tab" }, t.label) as HTMLButtonElement;
+    const b = element("button", { className: "lg-tab" }, t.label) as HTMLButtonElement;
     b.setAttribute("data-target", t.id);
     return b;
   });
 
   // RENDERS ONLY THE ROW, NOT THE FULL BAR
-  const tabsRow = el("div", { className: "lg-tabs", id: "lg-tabs-row" }, pill, ...btns) as HTMLDivElement;
+  const tabsRow = element("div", { className: "lg-tabs", id: "lg-tabs-row" }, pill, ...btns) as HTMLDivElement;
   const root = tabsRow; // no more nested .lg-tabbar
 
   // Wheel scrolling for overflow
