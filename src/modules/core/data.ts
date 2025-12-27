@@ -1,42 +1,65 @@
 // src/modules/core/data.ts
-// MGData - Capture runtime game data (items, plants, pets, etc.) and expose simple accessors
+// MGData - Captures runtime game data (items, plants, pets, etc.) via Object.* hooks
+// and exposes simple accessors for the mod to consume.
 
 import { pageWindow } from "../../utils/pageContext";
 import { sleep } from "../utils/helpers";
-import { MGSprite } from "../pixi/sprite";
+import { MGSprite } from "../sprite";
 
-type DataKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants" | "weather";
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
-type DataBag = Record<DataKey, any | null>;
+type CapturedDataKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants";
+type DataKey = CapturedDataKey | "weather";
+type DataBag = Record<DataKey, Record<string, unknown> | null>;
 
-const root = pageWindow as any;
-const NativeObject = root.Object || Object;
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
 
-const originalKeys = NativeObject.keys;
-const originalValues = NativeObject.values;
-const originalEntries = NativeObject.entries;
+const pageContext = pageWindow as Window & typeof globalThis;
+const NativeObject = pageContext.Object ?? Object;
 
-const signatureKeys: Record<
-  Exclude<DataKey, "weather">,
-  string[]
-> = {
-  items: ["WateringCan", "PlanterPot", "Shovel", "RainbowPotion"],
+const originalObjectKeys = NativeObject.keys;
+const originalObjectValues = NativeObject.values;
+const originalObjectEntries = NativeObject.entries;
+
+const SIGNATURE_KEYS: Record<CapturedDataKey, readonly string[]> = {
+  items: ["WateringCan", "PlanterPot", "Shovel"],
   decor: ["SmallRock", "MediumRock", "LargeRock", "WoodBench", "StoneBench", "MarbleBench"],
   mutations: ["Gold", "Rainbow", "Wet", "Chilled", "Frozen"],
-  eggs: ["CommonEgg", "UncommonEgg", "RareEgg", "LegendaryEgg"],
+  eggs: ["CommonEgg", "UncommonEgg", "RareEgg"],
   pets: ["Worm", "Snail", "Bee", "Chicken", "Bunny"],
   abilities: ["ProduceScaleBoost", "DoubleHarvest", "SeedFinderI", "CoinFinderI"],
   plants: ["Carrot", "Strawberry", "Aloe", "Blueberry", "Apple"],
-};
+} as const;
 
-const WEATHER_IDS = ["Rain", "Frost", "Dawn", "AmberMoon"];
-const MAIN_BUNDLE_RE = /main-[^/]+\.js(\?|$)/;
+const WEATHER_IDS = ["Rain", "Frost", "Dawn", "AmberMoon"] as const;
+const MAIN_BUNDLE_PATTERN = /main-[^/]+\.js(\?|$)/;
+const MAX_SCAN_DEPTH = 3;
+const MAX_WEATHER_POLL_ATTEMPTS = 200;
+const WEATHER_POLL_INTERVAL_MS = 50;
 
-const visited = new WeakSet<object>();
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
 
-const state = {
-  ready: false,
-  hookInstalled: false,
+const visitedObjects = new WeakSet<object>();
+
+interface CaptureState {
+  isReady: boolean;
+  isHookInstalled: boolean;
+  data: DataBag;
+  spritesResolved: boolean;
+  spritesResolving: Promise<void> | null;
+  weatherPollingTimer: ReturnType<typeof setInterval> | null;
+  weatherPollAttempts: number;
+}
+
+const captureState: CaptureState = {
+  isReady: false,
+  isHookInstalled: false,
   data: {
     items: null,
     decor: null,
@@ -46,146 +69,174 @@ const state = {
     abilities: null,
     plants: null,
     weather: null,
-  } as DataBag,
+  },
   spritesResolved: false,
-  spritesResolving: null as Promise<void> | null,
-  weatherTimer: null as ReturnType<typeof setInterval> | null,
-  weatherAttempts: 0,
+  spritesResolving: null,
+  weatherPollingTimer: null,
+  weatherPollAttempts: 0,
 };
 
-const hasAllKeys = (keys: string[], required: string[]) => required.every((k) => keys.includes(k));
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-function setData(key: Exclude<DataKey, "weather">, value: any): void {
-  if (state.data[key] != null) return;
-  state.data[key] = value;
+const containsAllKeys = (objectKeys: string[], requiredKeys: readonly string[]) =>
+  requiredKeys.every((key) => objectKeys.includes(key));
 
-  if (allCaptured()) {
+function setCapturedData(key: CapturedDataKey, value: Record<string, unknown>): void {
+  if (captureState.data[key] != null) return;
+  captureState.data[key] = value;
+
+  if (isAllDataCaptured()) {
     restoreObjectHooks();
   }
 }
 
-function allCaptured(): boolean {
-  return Object.values(state.data).every((v) => v != null);
+function isAllDataCaptured(): boolean {
+  return Object.values(captureState.data).every((v) => v != null);
 }
 
-// ---------- Runtime capture via Object.* patch ----------
-function scanObject(obj: any, depth: number): void {
-  if (!obj || typeof obj !== "object" || visited.has(obj)) return;
-  visited.add(obj);
+// ─────────────────────────────────────────────────────────────────────────────
+// Runtime capture via Object.* hooks
+// ─────────────────────────────────────────────────────────────────────────────
+
+function scanObjectForData(obj: unknown, depth: number): void {
+  if (!obj || typeof obj !== "object" || visitedObjects.has(obj)) return;
+  visitedObjects.add(obj);
 
   let keys: string[];
   try {
-    keys = originalKeys(obj);
+    keys = originalObjectKeys(obj);
   } catch {
     return;
   }
   if (!keys || keys.length === 0) return;
 
-  let v: any;
+  const record = obj as Record<string, unknown>;
+  let sample: unknown;
 
-  if (!state.data.items && hasAllKeys(keys, signatureKeys.items)) {
-    v = (obj as any).WateringCan;
-    if (v && typeof v === "object" && "coinPrice" in v && "creditPrice" in v) setData("items", obj);
+  if (!captureState.data.items && containsAllKeys(keys, SIGNATURE_KEYS.items)) {
+    sample = record.WateringCan;
+    if (sample && typeof sample === "object" && "coinPrice" in sample && "creditPrice" in sample) {
+      setCapturedData("items", record);
+    }
   }
 
-  if (!state.data.decor && hasAllKeys(keys, signatureKeys.decor)) {
-    v = (obj as any).SmallRock;
-    if (v && typeof v === "object" && "coinPrice" in v && "creditPrice" in v) setData("decor", obj);
+  if (!captureState.data.decor && containsAllKeys(keys, SIGNATURE_KEYS.decor)) {
+    sample = record.SmallRock;
+    if (sample && typeof sample === "object" && "coinPrice" in sample && "creditPrice" in sample) {
+      setCapturedData("decor", record);
+    }
   }
 
-  if (!state.data.mutations && hasAllKeys(keys, signatureKeys.mutations)) {
-    v = (obj as any).Gold;
-    if (v && typeof v === "object" && "baseChance" in v && "coinMultiplier" in v) setData("mutations", obj);
+  if (!captureState.data.mutations && containsAllKeys(keys, SIGNATURE_KEYS.mutations)) {
+    sample = record.Gold;
+    if (sample && typeof sample === "object" && "baseChance" in sample && "coinMultiplier" in sample) {
+      setCapturedData("mutations", record);
+    }
   }
 
-  if (!state.data.eggs && hasAllKeys(keys, signatureKeys.eggs)) {
-    v = (obj as any).CommonEgg;
-    if (v && typeof v === "object" && "faunaSpawnWeights" in v && "secondsToHatch" in v) setData("eggs", obj);
+  if (!captureState.data.eggs && containsAllKeys(keys, SIGNATURE_KEYS.eggs)) {
+    sample = record.CommonEgg;
+    if (sample && typeof sample === "object" && "faunaSpawnWeights" in sample && "secondsToHatch" in sample) {
+      setCapturedData("eggs", record);
+    }
   }
 
-  if (!state.data.pets && hasAllKeys(keys, signatureKeys.pets)) {
-    v = (obj as any).Worm;
-    if (v && typeof v === "object" && "coinsToFullyReplenishHunger" in v && Array.isArray(v.diet)) setData("pets", obj);
+  if (!captureState.data.pets && containsAllKeys(keys, SIGNATURE_KEYS.pets)) {
+    sample = record.Worm;
+    if (sample && typeof sample === "object" && "coinsToFullyReplenishHunger" in sample && "diet" in sample && Array.isArray((sample as Record<string, unknown>).diet)) {
+      setCapturedData("pets", record);
+    }
   }
 
-  if (!state.data.abilities && hasAllKeys(keys, signatureKeys.abilities)) {
-    v = (obj as any).ProduceScaleBoost;
-    if (v && typeof v === "object" && "trigger" in v && "baseParameters" in v) setData("abilities", obj);
+  if (!captureState.data.abilities && containsAllKeys(keys, SIGNATURE_KEYS.abilities)) {
+    sample = record.ProduceScaleBoost;
+    if (sample && typeof sample === "object" && "trigger" in sample && "baseParameters" in sample) {
+      setCapturedData("abilities", record);
+    }
   }
 
-  if (!state.data.plants && hasAllKeys(keys, signatureKeys.plants)) {
-    v = (obj as any).Carrot;
-    if (v && typeof v === "object" && (v as any).seed && (v as any).plant && (v as any).crop) setData("plants", obj);
+  if (!captureState.data.plants && containsAllKeys(keys, SIGNATURE_KEYS.plants)) {
+    sample = record.Carrot;
+    if (sample && typeof sample === "object" && "seed" in sample && "plant" in sample && "crop" in sample) {
+      setCapturedData("plants", record);
+    }
   }
 
-  if (depth >= 3) return;
+  if (depth >= MAX_SCAN_DEPTH) return;
 
-  for (let i = 0; i < keys.length; i++) {
-    let child: any;
+  for (const key of keys) {
+    let child: unknown;
     try {
-      child = (obj as any)[keys[i]];
+      child = record[key];
     } catch {
       continue;
     }
-    if (child && typeof child === "object") scanObject(child, depth + 1);
+    if (child && typeof child === "object") {
+      scanObjectForData(child, depth + 1);
+    }
   }
 }
 
-function tryCapture(target: any): void {
+function tryCapture(target: unknown): void {
   try {
-    scanObject(target, 0);
+    scanObjectForData(target, 0);
   } catch {}
 }
 
 function installObjectHooks(): void {
-  if (state.hookInstalled) return;
-  state.hookInstalled = true;
+  if (captureState.isHookInstalled) return;
+  captureState.isHookInstalled = true;
 
   try {
     NativeObject.keys = function hookedKeys(target: any): any {
       tryCapture(target);
-      return originalKeys.apply(this, arguments as any);
+      return originalObjectKeys.apply(this, arguments as any);
     };
 
-    if (originalValues) {
+    if (originalObjectValues) {
       NativeObject.values = function hookedValues(target: any): any {
         tryCapture(target);
-        return (originalValues as any).apply(this, arguments as any);
+        return (originalObjectValues as any).apply(this, arguments as any);
       };
     }
 
-    if (originalEntries) {
+    if (originalObjectEntries) {
       NativeObject.entries = function hookedEntries(target: any): any {
         tryCapture(target);
-        return (originalEntries as any).apply(this, arguments as any);
+        return (originalObjectEntries as any).apply(this, arguments as any);
       };
     }
   } catch {}
 }
 
 function restoreObjectHooks(): void {
-  if (!state.hookInstalled) return;
+  if (!captureState.isHookInstalled) return;
   try {
-    NativeObject.keys = originalKeys;
-    if (originalValues) NativeObject.values = originalValues;
-    if (originalEntries) NativeObject.entries = originalEntries;
+    NativeObject.keys = originalObjectKeys;
+    if (originalObjectValues) NativeObject.values = originalObjectValues;
+    if (originalObjectEntries) NativeObject.entries = originalObjectEntries;
   } catch {}
-  state.hookInstalled = false;
+  captureState.isHookInstalled = false;
 }
 
-// ---------- Weather extraction ----------
+// ─────────────────────────────────────────────────────────────────────────────
+// Weather extraction (from main bundle)
+// ─────────────────────────────────────────────────────────────────────────────
+
 function findMainBundleUrl(): string | null {
   try {
-    for (const script of root.document?.scripts || []) {
+    for (const script of pageContext.document?.scripts || []) {
       const src = script?.src ? String(script.src) : "";
-      if (MAIN_BUNDLE_RE.test(src)) return src;
+      if (MAIN_BUNDLE_PATTERN.test(src)) return src;
     }
   } catch {}
 
   try {
-    for (const entry of root.performance?.getEntriesByType?.("resource") || []) {
+    for (const entry of pageContext.performance?.getEntriesByType?.("resource") || []) {
       const name = entry?.name ? String(entry.name) : "";
-      if (MAIN_BUNDLE_RE.test(name)) return name;
+      if (MAIN_BUNDLE_PATTERN.test(name)) return name;
     }
   } catch {}
 
@@ -268,7 +319,7 @@ function buildWeather(data: any): Record<string, any> | null {
 }
 
 async function loadWeatherFromBundle(): Promise<boolean> {
-  if (state.data.weather) return true;
+  if (captureState.data.weather) return true;
 
   const url = findMainBundleUrl();
   if (!url) return false;
@@ -304,27 +355,30 @@ async function loadWeatherFromBundle(): Promise<boolean> {
   const weatherCatalog = buildWeather(weatherDex);
   if (!weatherCatalog) return false;
 
-  state.data.weather = weatherCatalog;
+  captureState.data.weather = weatherCatalog;
   return true;
 }
 
 function startWeatherPolling(): void {
-  if (state.weatherTimer) return;
-  state.weatherAttempts = 0;
+  if (captureState.weatherPollingTimer) return;
+  captureState.weatherPollAttempts = 0;
 
   const timer = setInterval(async () => {
-    const ok = await loadWeatherFromBundle();
-    if (ok || ++state.weatherAttempts > 200) {
+    const success = await loadWeatherFromBundle();
+    if (success || ++captureState.weatherPollAttempts > MAX_WEATHER_POLL_ATTEMPTS) {
       clearInterval(timer);
-      state.weatherTimer = null;
+      captureState.weatherPollingTimer = null;
     }
-  }, 50);
+  }, WEATHER_POLL_INTERVAL_MS);
 
-  state.weatherTimer = timer;
+  captureState.weatherPollingTimer = timer;
 }
 
-// ---------- Sprite resolution ----------
-function normalizeName(input: string): string {
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprite resolution
+// ─────────────────────────────────────────────────────────────────────────────
+
+function normalizeNameForSprite(input: string): string {
   return String(input || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -381,7 +435,7 @@ function pickSpriteId(
   }
 
   // 2) Try from name (normalized)
-  const normName = normalizeName(nameHint || "");
+  const normName = normalizeNameForSprite(nameHint || "");
   const fromName = tryCandidate(normName || nameHint || "");
   if (fromName) return fromName;
 
@@ -543,100 +597,101 @@ function resolveAllSprites(bag: DataBag): void {
 }
 
 async function resolveSprites(): Promise<void> {
-  if (state.spritesResolved) return;
-  if (state.spritesResolving) return state.spritesResolving;
+  if (captureState.spritesResolved) return;
+  if (captureState.spritesResolving) return captureState.spritesResolving;
 
-  state.spritesResolving = (async () => {
+  captureState.spritesResolving = (async () => {
     try {
-      await waitAll(20000, 50);
+      await waitForAnyData(20_000, 50);
       await MGSprite.init();
-      resolveAllSprites(state.data);
-      state.spritesResolved = true;
+      resolveAllSprites(captureState.data);
+      captureState.spritesResolved = true;
     } catch (err) {
       try { console.warn("[MGData] sprite resolution failed", err); } catch {}
     } finally {
-      state.spritesResolving = null;
+      captureState.spritesResolving = null;
     }
   })();
 
-  return state.spritesResolving;
+  return captureState.spritesResolving;
 }
 
-// ---------- Public API ----------
+// ─────────────────────────────────────────────────────────────────────────────
+// Public API
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function init(): Promise<boolean> {
-  if (state.ready) return true;
+  if (captureState.isReady) return true;
 
   installObjectHooks();
   startWeatherPolling();
 
-  // Kick off sprite resolution in the background (once data + sprites are ready)
   void resolveSprites();
 
-  state.ready = true;
+  captureState.isReady = true;
   return true;
 }
 
-function ready(): boolean {
-  return state.ready;
+function isReady(): boolean {
+  return captureState.isReady;
 }
 
 function stop(): boolean {
   restoreObjectHooks();
-  if (state.weatherTimer) {
-    clearInterval(state.weatherTimer);
-    state.weatherTimer = null;
+  if (captureState.weatherPollingTimer) {
+    clearInterval(captureState.weatherPollingTimer);
+    captureState.weatherPollingTimer = null;
   }
-  state.ready = false;
+  captureState.isReady = false;
   return true;
 }
 
 function getAll(): DataBag {
-  // Fire-and-forget sprite resolution to keep things updated
-  if (!state.spritesResolved && !state.spritesResolving) {
+  if (!captureState.spritesResolved && !captureState.spritesResolving) {
     void resolveSprites();
   }
-  return { ...state.data };
+  return { ...captureState.data };
 }
 
-function get(key: DataKey): any | null {
-  return state.data[key] ?? null;
+function get(key: DataKey): Record<string, unknown> | null {
+  return captureState.data[key] ?? null;
 }
 
 function has(key: DataKey): boolean {
-  return state.data[key] != null;
+  return captureState.data[key] != null;
 }
 
-async function waitAll(timeoutMs = 10_000, intervalMs = 50): Promise<DataBag> {
+async function waitForAnyData(timeoutMs = 10_000, intervalMs = 50): Promise<DataBag> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    if (Object.values(state.data).some((v) => v != null)) return { ...state.data };
+    if (Object.values(captureState.data).some((v) => v != null)) {
+      return { ...captureState.data };
+    }
     await sleep(intervalMs);
   }
-  throw new Error("MGData.waitAll: timeout");
+  throw new Error("MGData.waitForAnyData: timeout");
 }
 
-async function waitFor(key: DataKey, timeoutMs = 10_000, intervalMs = 50): Promise<any> {
+async function waitFor(key: DataKey, timeoutMs = 10_000, intervalMs = 50): Promise<Record<string, unknown>> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const v = state.data[key];
-    if (v != null) return v;
+    const value = captureState.data[key];
+    if (value != null) return value;
     await sleep(intervalMs);
   }
   throw new Error(`MGData.waitFor: timeout waiting for "${key}"`);
 }
 
 export const MGData = {
-  init, 
-
-  ready,
+  init,
+  isReady,
   stop,
 
   getAll,
   get,
-  
   has,
 
-  waitAll,
+  waitForAnyData,
   waitFor,
 };
 

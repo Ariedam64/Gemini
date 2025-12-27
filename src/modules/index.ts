@@ -11,7 +11,7 @@ export { MGData } from "./core/data";
 
 // Pixi modules
 export { MGPixiHooks } from "./pixi/hooks";
-export { MGSprite } from "./pixi/sprite";
+export { MGSprite } from "./sprite";
 export { MGTile } from "./pixi/tile";
 export { MGPixi } from "./pixi/pixi";
 
@@ -24,7 +24,7 @@ import { MGVersion } from "./core/version";
 import { MGAssets } from "./core/assets";
 import { MGManifest } from "./core/manifest";
 import { MGData } from "./core/data";
-import { MGSprite } from "./pixi/sprite";
+import { MGSprite } from "./sprite";
 import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
 import { MGAudio } from "./media/audio";

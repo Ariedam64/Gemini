@@ -11,7 +11,8 @@
       "Bash(powershell -Command:*)",
       "Bash(findstr:*)",
       "Bash(del \"\\\\?\\\\C:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\GameSourceFiles\\\\nul\")",
-      "Bash(cmd /c 'del \"\"\\\\\\\\?\\\\C:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\GameSourceFiles\\\\nul\"\"')"
+      "Bash(cmd /c 'del \"\"\\\\\\\\?\\\\C:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\GameSourceFiles\\\\nul\"\"')",
+      "Bash(mkdir:*)"
     ]
   }
 }
