@@ -1,4 +1,4 @@
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 import { Select, SelectHandle } from "../Select/Select";
 import { detectEnvironment, type EnvironmentInfo } from "../../../utils/api";
 

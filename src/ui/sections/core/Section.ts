@@ -3,7 +3,7 @@
  * Provides lifecycle management, cleanup utilities, and common helpers
  */
 
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 import type { SectionConfig, MountResult } from "./Types";
 
 export abstract class BaseSection {

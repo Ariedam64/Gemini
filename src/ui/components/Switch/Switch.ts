@@ -1,5 +1,5 @@
 // ui/components/Switch.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type SwitchSize = "sm" | "md" | "lg";
 export type LabelSide = "left" | "right" | "none";

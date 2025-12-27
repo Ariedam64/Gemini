@@ -1,4 +1,4 @@
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type BadgeType = "neutral" | "info" | "success" | "warning" | "danger";
 export type BadgeTone = "soft" | "outline" | "solid";

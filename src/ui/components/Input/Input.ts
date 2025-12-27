@@ -1,5 +1,5 @@
 // ui/components/Input.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type InputMode = "any" | "digits" | "alpha" | "alphanumeric";
 

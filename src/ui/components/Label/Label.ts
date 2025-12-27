@@ -1,5 +1,5 @@
 // ui/components/Label.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type LabelTone = "default" | "muted" | "info" | "success" | "warning" | "danger";
 export type LabelSize = "sm" | "md" | "lg";

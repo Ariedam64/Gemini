@@ -1,5 +1,5 @@
 // ui/components/Slider/Slider.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type SliderOptions = {
   id?: string;

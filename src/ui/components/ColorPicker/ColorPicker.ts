@@ -1,5 +1,5 @@
 // ui/components/ColorPicker/ColorPicker.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 import { Card } from "../Card/Card";
 import { detectEnvironment } from "../../../utils/api";
 import { Input } from "../Input/Input";

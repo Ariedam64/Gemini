@@ -1,4 +1,4 @@
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type Align = "left" | "center" | "right";
 export type ColDef<T = any> = {

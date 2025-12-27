@@ -4,7 +4,8 @@
       "Bash(mv:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run build:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(find:*)"
     ]
   }
 }

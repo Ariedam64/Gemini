@@ -1,5 +1,5 @@
 // ui/components/Button.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type ButtonVariant = "default" | "primary";
 export type ButtonSize = "md" | "sm";

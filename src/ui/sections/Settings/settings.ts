@@ -3,7 +3,7 @@
  * Manages theme customization and system environment display
  */
 
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 import { BaseSection } from "../core/Section";
 import type { SectionsDeps } from "../core/Types";
 import { Card } from "../../components/Card/Card";

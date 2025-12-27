@@ -1,5 +1,5 @@
 // ui/components/Tooltip/Tooltip.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type TooltipPlacement = "top" | "bottom" | "left" | "right";
 export type TooltipTrigger = "hover" | "click" | "focus" | "manual";

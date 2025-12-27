@@ -1,5 +1,5 @@
 // ui/components/SearchBar.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type SearchSize = "sm" | "md" | "lg";
 

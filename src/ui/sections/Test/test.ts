@@ -4,7 +4,7 @@
  * State is persisted across sessions (timeRange, logSettings)
  */
 
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 import { BaseSection } from "../core/Section";
 import { Button } from "../../components/Button/Button";
 import { Card, CardFooter } from "../../components/Card/Card";

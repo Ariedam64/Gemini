@@ -1,5 +1,5 @@
 // ui/components/Log/Log.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type LogMode = "plain" | "js";
 export type LogLevel = "debug" | "info" | "warn" | "error";

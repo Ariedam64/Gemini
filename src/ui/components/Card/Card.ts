@@ -1,5 +1,5 @@
 // ui/components/Card.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 let cardCollapseSeq = 0;
 const expandedStateById = new Map<string, boolean>();

@@ -3,7 +3,7 @@
  * Refactored for better modularity and clarity
  */
 
-import { attachHost } from "../../core/dom";
+import { attachHost } from "../dom";
 import { createNavTabs } from "../components/NavTabs/NavTabs";
 import { SectionManager } from "../sections";
 import { pageWindow } from "../../utils/pageContext";

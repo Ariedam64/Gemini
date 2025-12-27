@@ -1,5 +1,5 @@
 // NavTabs with sliding pill indicator
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type TabDef = { id: string; label: string };
 

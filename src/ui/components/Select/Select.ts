@@ -1,5 +1,5 @@
 // ui/components/Select.ts
-import { el } from "../../../core/dom";
+import { el } from "../../dom";
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 export type SelectSize = "sm" | "md" | "lg";

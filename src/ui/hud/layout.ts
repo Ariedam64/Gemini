@@ -1,4 +1,4 @@
-import { el } from "../../core/dom";
+import { el } from "../dom";
 import { HudLayoutElements } from "./types";
 
 /**
