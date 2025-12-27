@@ -7,6 +7,7 @@ import { shareGlobal } from "../utils/pageContext";
 export { MGVersion } from "./core/version";
 export { MGAssets } from "./core/assets";
 export { MGManifest } from "./core/manifest";
+export { MGData } from "./core/data";
 
 // Pixi modules
 export { MGPixiHooks } from "./pixi/hooks";
@@ -22,6 +23,7 @@ export { MGCosmetic } from "./media/cosmetic";
 import { MGVersion } from "./core/version";
 import { MGAssets } from "./core/assets";
 import { MGManifest } from "./core/manifest";
+import { MGData } from "./core/data";
 import { MGSprite } from "./pixi/sprite";
 import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
@@ -41,6 +43,7 @@ export function exposeModules(): void {
   shareGlobal("MGVersion", MGVersion);
   shareGlobal("MGAssets", MGAssets);
   shareGlobal("MGManifest", MGManifest);
+  shareGlobal("MGData", MGData);
   shareGlobal("MGSprite", MGSprite);
   shareGlobal("MGTile", MGTile);
   shareGlobal("MGPixi", MGPixi);
@@ -58,6 +61,7 @@ export async function initAllModules(
   exposeModules();
 
   const tasks = [
+    { name: "Data", init: () => MGData.init() },
     { name: "Sprites", init: () => MGSprite.init() },
     { name: "TileObjectSystem", init: () => MGTile.init() },
     { name: "Pixi", init: () => MGPixi.init() },
@@ -78,7 +82,7 @@ export async function initAllModules(
     })
   );
 
-  console.log("[MG] Ready: MGSprite / MGAudio / MGCosmetic / MGTile / MGPixi / MGSkins");
+  console.log("[MG] Ready: MGData / MGSprite / MGAudio / MGCosmetic / MGTile / MGPixi / MGSkins");
   console.log("MGPixi.inspectTile(tx, ty)");
   console.log("MGTile.help()");
 }
