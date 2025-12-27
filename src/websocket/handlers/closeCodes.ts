@@ -1,22 +1,12 @@
 // src/Websocket/handlers/closeCodes.ts
 import { handle } from "./base";
 import { WebSocketCloseCode } from "../protocol";
-import { isInIframe, pageWindow } from "../../utils/pageContext";
 
 /**
  * Close code handlers.
  * Only logs when debug is enabled.
  */
 
-let autoReloadEnabled = false;
-
-/**
- * Enable auto-reload when server closes with VersionExpired.
- * Safe to call multiple times.
- */
-export function startAutoReloadOnVersionExpired(): void {
-  autoReloadEnabled = true;
-}
 
 handle(WebSocketCloseCode.AuthenticationFailure, (p, ctx) => {
   if (ctx.debug) { console.log("[WS][Close] Auth failure", p.code, p.reason); }
@@ -52,9 +42,6 @@ handle(WebSocketCloseCode.UserSessionSuperseded, (p, ctx) => {
 
 handle(WebSocketCloseCode.VersionExpired, (p, ctx) => {
   if (ctx.debug) { console.log("[WS][Close] Version expired", p.code, p.reason); }
-  if (autoReloadEnabled && !isInIframe()) {
-    try { pageWindow.location.reload(); } catch {}
-  }
 });
 
 handle(WebSocketCloseCode.VersionMismatch, (p, ctx) => {

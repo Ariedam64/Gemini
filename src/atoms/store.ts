@@ -2,8 +2,12 @@
 // Store facade: select / set / subscribe
 // All access to Jotai atoms goes through this facade
 
-import { getMirror, getAtomByLabel, getCapturedInfo } from "../hook/store";
+import { getMirror } from "./core/bridge";
+import { getAtomByLabel } from "./core/lookup";
 import type { Unsubscribe } from "./types";
+
+// Re-export waitForStore from bridge
+export { waitForStore } from "./core/bridge";
 
 export const Store = {
   /**
@@ -81,26 +85,4 @@ export const Store = {
  */
 export async function prewarm(): Promise<void> {
   await getMirror();
-}
-
-/**
- * Wait for the store to be captured (not polyfilled)
- */
-export async function waitForStore(
-  options: { timeoutMs?: number; intervalMs?: number } = {}
-): Promise<void> {
-  const { timeoutMs = 5000, intervalMs = 50 } = options;
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeoutMs) {
-    const info = getCapturedInfo();
-
-    if (info.via && !info.polyfill) {
-      return;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-
-  throw new Error("Store not captured within timeout");
 }

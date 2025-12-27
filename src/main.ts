@@ -3,7 +3,7 @@ import { THEMES } from "./ui/theme";
 import { buildSections } from "./ui/sections";
 import { createHUD } from "./ui/hud"
 import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
-import { initWebSocket, startAutoReloadOnVersionExpired } from "./websocket/bootstrap";
+import { initWebSocket } from "./websocket/bootstrap";
 
 
 (async function () {
@@ -11,7 +11,6 @@ import { initWebSocket, startAutoReloadOnVersionExpired } from "./websocket/boot
 
     initWebSocket({ debug: false });
     const state = loadHudState();
-    startAutoReloadOnVersionExpired();
 
     const hud = createHUD({
       hostId: "gemini-hud-root",

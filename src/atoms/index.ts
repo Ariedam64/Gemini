@@ -106,6 +106,7 @@ export { makeAtom, makeView } from "./core/view";
 export { sig, createSignatureChannel } from "./core/signature";
 export type { SignatureChannel, SignatureOptions } from "./core/signature";
 export { getAtPath, setAtPath, toPathArray, Equality } from "./core/utils";
+export { getAtomByLabel, findAtomsByLabel, getAtomCache, clearLabelCache } from "./core/lookup";
 
 // =============================================================================
 // ALL ATOMS

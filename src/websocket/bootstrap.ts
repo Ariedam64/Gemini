@@ -7,9 +7,6 @@ import { attachIncomingHandlers, type IncomingHandler } from "./handlers/base";
 import "./handlers/closeCodes";
 import "./handlers/serverMessages";
 
-// Re-export utilities from handlers
-export { startAutoReloadOnVersionExpired } from "./handlers/closeCodes";
-
 import "./middlewares/garden"
 import "./middlewares/inventory"
 import "./middlewares/pets"
