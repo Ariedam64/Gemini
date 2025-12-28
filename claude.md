@@ -1,218 +1,159 @@
-# Gemini - Game Mod for MagicGarden/Quinoa
+# Gemini - MagicGarden/Quinoa Game Mod
 
-## Project Overview
+Userscript mod (Tampermonkey/Violetmonkey) for MagicGarden. HUD overlay with real-time state management and WebSocket integration.
 
-Gemini is a sophisticated Tampermonkey/Violetmonkey userscript mod for the MagicGarden/Quinoa web game. It provides a custom HUD overlay with real-time game state management and WebSocket integration.
+**URLs:** `magiccircle.gg/r/*`, `magicgarden.gg/r/*`, `starweaver.org/r/*`
 
-**Target Platforms:** All browsers (Chrome, Firefox, Safari, Edge) on PC, Mac, iOS, and Android via Tampermonkey/Violetmonkey.
+**Stack:** TypeScript 5.9 (strict), esbuild (IIFE), Jotai, Pixi.js, Shadow DOM
 
-**Game URLs:**
-- `https://magiccircle.gg/r/*`
-- `https://magicgarden.gg/r/*`
-- `https://starweaver.org/r/*`
-
-## Tech Stack
-
-- **TypeScript 5.9.3** (strict mode)
-- **esbuild** - Bundler (IIFE format, single file output)
-- **Jotai** - State management (custom bridge to game's React store)
-- **Pixi.js** - Graphics/sprite rendering (via game's instance)
-- **Shadow DOM** - UI isolation from game styles
-
-## Project Structure
+## Structure
 
 ```
-Gemini/
-├── src/                      # Main source code
-│   ├── main.ts              # Entry point
-│   ├── bootstrap.ts         # Init functions
-│   ├── loader.ts            # Loading overlay
-│   ├── atoms/               # Jotai store bridge
-│   ├── modules/             # Game asset systems
-│   ├── ui/                  # HUD & components
-│   ├── utils/               # Utilities
-│   ├── websocket/           # Network layer
-│   └── data/                # Reference data
-├── GameSourceFiles/          # Extracted game source (reference)
-├── GameFilesExample/         # Example game data files
-├── dist/                     # Build output
-├── esbuild.config.mjs       # Build config
-├── meta.userscript.js       # Userscript metadata
-└── tsconfig.json            # TypeScript config
+src/
+├── main.ts           # Entry point
+├── api/              # Public API (window.Gemini)
+├── atoms/            # Jotai bridge (state)
+├── globals/          # Reactive global variables
+├── modules/          # Assets & Pixi.js
+├── websocket/        # Network (WS capture)
+├── ui/
+│   ├── loader/       # Bootstrap & loading screen
+│   ├── hud/          # Main HUD overlay
+│   ├── components/   # Reusable UI components
+│   ├── sections/     # Modular tabs/sections
+│   ├── theme/        # Theme management
+│   └── styles/       # CSS utilities
+└── utils/            # Utilities
 ```
 
-## Key Directories
+## Initialization (ui/loader/bootstrap.ts)
 
-### `/src/atoms/` - Game State (Jotai Bridge)
-Custom bridge to React's Jotai store. Captures game state without direct imports.
+```
+1. installReactDevToolsHook()  → Capture React Fiber
+2. createLoader()              → Display loader
+3. initWebSocketCapture()      → Intercept WebSocket
+4. initAtoms()                 → Bridge Jotai store
+5. initReactiveGlobals()       → Reactive global variables
+6. initAPI()                   → Expose window.Gemini
+7. initHUD()                   → Shadow DOM overlay
+8. initModules()               → Load assets (Data, Sprite, Tile, Pixi, Audio)
+```
 
-**Key files:**
-- `atoms.ts` - Atom definitions (position, inventory, pets, shops, etc.)
-- `store.ts` - Store facade (`Store.select()`, `Store.set()`, `Store.subscribe()`)
-- `core/bridge.ts` - Mirror bridge to Jotai
-- `types.ts` - TypeScript types for all game state
+## Loader (ui/loader/loader.ts)
 
-**Usage:**
+`LoaderController` interface:
+- `log(message, tone?)` - Log message (info/success/error)
+- `logStep(key, message, tone?)` - Log with step key
+- `succeed(message?, delayMs?)` - Complete successfully
+- `fail(message, error?)` - Display error
+
+## Public API (window.Gemini)
+
+Exposed via `api/index.ts`:
+
+```typescript
+window.Gemini = {
+  Store: { select, set, subscribe, subscribeImmediate },
+  Globals: { currentTile },
+  Modules: { Version, Assets, Manifest, Data, Sprite, Tile, Pixi, Audio, Cosmetic },
+  WebSocket: { chat, move, plantSeed, harvestCrop, purchaseSeed, placePet, ... }
+}
+```
+
+## Global Variables (globals/)
+
+Reactive variables combining multiple atoms:
+
+```typescript
+interface GlobalVariable<T> {
+  get(): T;
+  subscribe(callback: (value: T, prev: T) => void): Unsubscribe;
+  destroy(): void;
+}
+
+// Example: currentTile combines 8 atoms into one object
+Globals.currentTile.get()  // { position, tile, garden, object, plant }
+Globals.currentTile.subscribe((value, prev) => { ... })
+```
+
+**Creation:** `createReactiveGlobal()` in `globals/core/reactive.ts`
+
+## Store (atoms/)
+
 ```typescript
 await Store.select('myInventoryAtom')        // Read
 await Store.set('myInventoryAtom', value)    // Write
 await Store.subscribe('myInventoryAtom', cb) // Subscribe
 ```
 
-### `/src/modules/` - Game Assets & Graphics
-Access to game resources and Pixi.js rendering.
+## WebSocket (websocket/)
 
-**Key files:**
-- `core/version.ts` - Game version detection
-- `core/manifest.ts` - Asset manifest loading
-- `pixi/sprite.ts` - Sprite/texture loading
-- `pixi/tile.ts` - Tile system introspection
-- `media/audio.ts` - Audio/SFX system
-
-### `/src/ui/` - HUD & Components
-Overlay interface with theme management.
-
-**Structure:**
-- `hud/` - Main HUD factory and state
-- `components/` - Reusable UI (Button, Input, Select, Table, etc.)
-- `sections/` - Modular tabs/sections
-- `theme/` - Theme switching
-- `styles/` - Global CSS variables and utilities
-
-**Component Pattern:** Factory functions with CSS-in-JS
-```typescript
-const button = Button({ label: "Click", variant: "primary", onClick: fn });
-```
-
-### `/src/websocket/` - Network Layer
-WebSocket capture and message routing.
-
-**Key files:**
 - `connection.ts` - WebSocket capture & transport
-- `api.ts` - Player action functions (chat, plant, harvest, etc.)
-- `middlewares/` - Outgoing message processing
-- `handlers/` - Incoming message handlers
+- `api.ts` - Actions (chat, plantSeed, harvestCrop, purchaseSeed, placePet, ...)
+- `middlewares/` - Outgoing message filtering (auto-register via import)
+- `handlers/` - Incoming message handling (auto-register via import)
 
-**API:**
-```typescript
-await chat("Hello!");
-await plantSeed(seedId, x, y);
-await harvestCrop(cropId);
-```
-
-### `/src/utils/` - Utilities
-- `api.ts` - Game REST endpoints
-- `pageContext.ts` - Tampermonkey page window access
-
-### `/GameSourceFiles/` - Game Reference
-Extracted game source code for reference only. Contains:
-- Flora/fauna/decor definitions
-- Mutation mechanics
-- Shop/inventory systems
-- Map/tile data
-
-**Note:** This is the deobfuscated game code fetched from network. We only have access to the minified main in production.
-
-## Build Commands
+## Build
 
 ```bash
-npm run build      # Debug build -> dist/gemini-build.user.js
-npm run release    # Release build -> dist/gemini.user.js
+npm run build      # Debug → dist/gemini-build.user.js
+npm run release    # Release → dist/gemini.user.js
 npm run typecheck  # TypeScript validation
 ```
 
-## Initialization Flow
+## Code Rules
 
-```
-1. installReactDevToolsHook()  # Capture React store
-2. createLoader()              # Show loading screen
-3. initWebSocketCapture()      # Intercept game WebSocket
-4. initAtoms()                 # Bridge to Jotai store
-5. initHUD()                   # Create Shadow DOM overlay
-6. initModules()               # Load asset systems
-7. Ready!
-```
+### Readability
+- **Explicit names** - Self-documenting variables, functions, and types
+- **No comments** - Code must be readable without explanation
+- **Short functions** - Max ~30 lines, single responsibility
+- **Early return** - Avoid deep nesting levels
+- **Named constants** - No magic numbers/strings
 
-## Coding Guidelines
+### TypeScript
+- **Strict mode** - Everything must be explicitly typed
+- **Dedicated types** - Create types for complex structures
+- **Avoid `any`** - Use `unknown` if necessary
 
-### General
-- **TypeScript strict mode** - All code must be fully typed
-- **No comments needed** - Use clear, self-documenting names
-- **Async/await** - All store/network operations are async
-- **Shadow DOM isolation** - UI styles don't leak to game
+### Architecture
+- **Factory functions** - Synchronous components returning HTMLElement
+- **Lazy init** - Singleton pattern with init check
+- **Cleanup** - Every subscription returns a cleanup function
+- **Shadow DOM** - UI isolated from game
 
-### State Management
-- **Read game state** via atoms (`Store.select()`)
-- **Send commands** via WebSocket API (`api.ts` functions)
-- **UI state** persists via Tampermonkey storage (`GM_getValue`/`GM_setValue`)
+### Patterns
 
-### Component Creation
-- All components are **synchronous factory functions**
-- Each component has a `.css.ts` file for styles
-- Use existing components in `/ui/components/`
-
-### Adding Features
-1. **New atom?** Add to `atoms/atoms.ts` and `atoms/types.ts`
-2. **New game action?** Add to `websocket/api.ts`
-3. **New UI section?** Create in `ui/sections/` and register in `registry.ts`
-4. **New component?** Create folder in `ui/components/`
-
-### WebSocket Middleware
-- Middlewares in `websocket/middlewares/` auto-register via import
-- Handlers in `websocket/handlers/` auto-register via import
-- Add imports to `websocket/bootstrap.ts`
-
-## Key Patterns
-
-### Lazy Initialization
 ```typescript
+// Lazy init
 let instance: T | null = null;
 export function init(): T {
   if (instance) return instance;
-  instance = create();
-  return instance;
+  return instance = create();
 }
-```
 
-### Atom Views (Derived State)
-```typescript
-const gardenView = makeView("myDataAtom", { path: "garden" });
-```
-
-### Cleanup/Disposal
-Functions return cleanup routines when needed:
-```typescript
+// Cleanup
 const unsubscribe = await Store.subscribe('atom', callback);
 // Later: unsubscribe();
 ```
 
-## Important Types
+### Adding Features
+1. **New atom** → `atoms/atoms.ts` + `atoms/types.ts`
+2. **New action** → `websocket/api.ts`
+3. **New UI section** → `ui/sections/` + register in `registry.ts`
+4. **New component** → Folder in `ui/components/`
+5. **New middleware/handler** → File + import in `websocket/bootstrap.ts`
 
-### Inventory
-- `CropInventoryItem`, `SeedInventoryItem`, `ToolInventoryItem`
-- `EggInventoryItem`, `PetInventoryItem`, `DecorInventoryItem`
+## Game Source Reference
 
-### Garden
-- `GrowSlot` - Plant growth stage
-- `PlantTileObject`, `EggTileObject`, `DecorTileObject`
+The `GameSourceFiles/` folder contains the deobfuscated game source code for reference. This is where you can understand how the game works internally (flora, fauna, mutations, shops, inventory, map/tile systems, etc.).
 
-### Pets
-- `PetSlot`, `PetInfo`, `PetSlotInfo`
+**Important:** In production, only the minified bundle is available:
+`GameSourceFiles/gg-preview-pr-2307-router.magiccircle.workers.dev/version/gg-preview-pr-2307-app/assets/main-DT8r8yOu.js`
 
-### Shops
-- `Shop`, `Shops` (seed, egg, tool, decor)
-- Reset timers: seed 300s, tool 600s, egg 900s, decor 3600s
+The mod hooks into this minified code at runtime.
 
-## Cross-Platform Notes
-
-- Use `pageWindow` from `utils/pageContext.ts` for `unsafeWindow` access
-- Test on mobile browsers (touch events, responsive layout)
-- Shadow DOM ensures style isolation across browsers
-- Avoid browser-specific APIs without polyfills
-
-## Debugging
+## Debug
 
 - Toggle HUD: `Ctrl+Shift+U`
-- Atoms available via React DevTools
-- Console logs prefixed with `[Gemini]`
-- Loading screen shows initialization progress
+- Console: logs prefixed with `[Gemini]`
+- Loader: shows init progress

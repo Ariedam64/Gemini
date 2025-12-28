@@ -1,7 +1,4 @@
-// src/loader.ts
-// Visual loader overlay displayed while the mod initializes
-
-import { element } from "./ui/styles/helpers";
+import { element } from "../styles/helpers";
 
 const ICON_URL = "https://i.imgur.com/k5WuC32.png";
 
@@ -111,8 +108,8 @@ function injectStyles(): void {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 36px;
-      height: 36px;
+      width: 70px;
+      height: 70px;
       border-radius: 50%;
       object-fit: cover;
       animation: gemini-loader-spin-reverse 1s linear infinite;
@@ -260,7 +257,7 @@ function injectStyles(): void {
       .gemini-loader__card { padding: 16px; }
       .gemini-loader__header { gap: 12px; }
       .gemini-loader__spinner { width: 42px; height: 42px; }
-      .gemini-loader__spinner-icon { width: 32px; height: 32px; }
+      .gemini-loader__spinner-icon { width: 56px; height: 56px; }
       .gemini-loader__title { font-size: 16px; }
     }
   `;

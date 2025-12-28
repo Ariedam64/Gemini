@@ -1,10 +1,8 @@
-// Install React DevTools hook IMMEDIATELY before anything else loads
-// This must happen before React initializes to capture Fiber roots
 import { installReactDevToolsHook } from "./atoms";
 installReactDevToolsHook();
 
-import { createLoader } from "./loader";
 import {
+  createLoader,
   initWebSocketCapture,
   initAtoms,
   initReactiveGlobals,
@@ -12,7 +10,7 @@ import {
   initHUD,
   initModules,
   startInjectGamePanelButton,
-} from "./bootstrap";
+} from "./ui/loader";
 
 (async function () {
   "use strict";

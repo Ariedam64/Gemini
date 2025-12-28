@@ -1,18 +1,15 @@
-// src/bootstrap.ts
-// Individual initialization steps for the loader
-
-import { loadHudState, saveHudStateValue } from "./ui/hud";
-import { THEMES } from "./ui/theme";
-import { buildSections } from "./ui/sections";
-import { createHUD } from "./ui/hud";
-import { startInjectGamePanelButton } from "./utils/injectGamePanelButton";
-import { initWebSocket } from "./websocket/bootstrap";
-import { watchBestWebSocket } from "./websocket/connection";
-import { initAllModules } from "./modules";
+import { loadHudState, saveHudStateValue } from "../hud";
+import { THEMES } from "../theme";
+import { buildSections } from "../sections";
+import { createHUD } from "../hud";
+import { startInjectGamePanelButton } from "../../utils/injectGamePanelButton";
+import { initWebSocket } from "../../websocket/bootstrap";
+import { watchBestWebSocket } from "../../websocket/connection";
+import { initAllModules } from "../../modules";
 import { LoaderController } from "./loader";
-import { prewarm as prewarmAtoms, waitForStore as waitForAtomsStore } from "./atoms";
-import { initGlobals } from "./globals";
-import { exposeGeminiAPI } from "./api";
+import { prewarm as prewarmAtoms, waitForStore as waitForAtomsStore } from "../../atoms";
+import { initGlobals } from "../../globals";
+import { exposeGeminiAPI } from "../../api";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
