@@ -67,7 +67,7 @@ export class TestSection extends BaseSection {
       },
     });
 
-    const kvRow = element("div", lblTime.root, timeRange.root);
+    const kvRow = element("div", null, lblTime.root, timeRange.root);
 
     // --- Log Component ---
     const log = Log({

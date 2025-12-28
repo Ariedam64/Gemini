@@ -7,6 +7,8 @@ import { createLoader } from "./loader";
 import {
   initWebSocketCapture,
   initAtoms,
+  initReactiveGlobals,
+  initAPI,
   initHUD,
   initModules,
   startInjectGamePanelButton,
@@ -26,6 +28,8 @@ import {
   try {
     cleanupWebSocket = initWebSocketCapture(loader);
     await initAtoms(loader);
+    initReactiveGlobals(loader);
+    initAPI(loader);
     hud = initHUD(loader);
     await initModules(loader);
 

@@ -1,8 +1,6 @@
 // src/modules/index.ts
 // Main entry point for all MG modules
 
-import { shareGlobal } from "../utils/pageContext";
-
 // Core modules
 export { MGVersion } from "./core/version";
 export { MGAssets } from "./core/assets";
@@ -19,10 +17,7 @@ export { MGPixi } from "./pixi/pixi";
 export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
-// Re-import for window exposure
-import { MGVersion } from "./core/version";
-import { MGAssets } from "./core/assets";
-import { MGManifest } from "./core/manifest";
+// Re-import for initialization
 import { MGData } from "./core/data";
 import { MGSprite } from "./sprite";
 import { MGTile } from "./pixi/tile";
@@ -36,30 +31,9 @@ export type ModuleInitProgress = {
   error?: unknown;
 };
 
-/**
- * Expose all modules on the window object for console access
- */
-export function exposeModules(): void {
-  shareGlobal("MGVersion", MGVersion);
-  shareGlobal("MGAssets", MGAssets);
-  shareGlobal("MGManifest", MGManifest);
-  shareGlobal("MGData", MGData);
-  shareGlobal("MGSprite", MGSprite);
-  shareGlobal("MGTile", MGTile);
-  shareGlobal("MGPixi", MGPixi);
-  shareGlobal("MGAudio", MGAudio);
-  shareGlobal("MGCosmetic", MGCosmetic);
-}
-
-/**
- * Initialize all modules (call after page load)
- */
 export async function initAllModules(
   onProgress?: (progress: ModuleInitProgress) => void
 ): Promise<void> {
-  // Expose first so they're available in console even if init fails
-  exposeModules();
-
   const tasks = [
     { name: "Data", init: () => MGData.init() },
     { name: "Sprites", init: () => MGSprite.init() },
@@ -82,10 +56,5 @@ export async function initAllModules(
     })
   );
 
-  console.log("[MG] Ready: MGData / MGSprite / MGAudio / MGCosmetic / MGTile / MGPixi / MGSkins");
-  console.log("MGPixi.inspectTile(tx, ty)");
-  console.log("MGTile.help()");
+  console.log("[Gemini] Modules ready. Access via Gemini.Modules in console.");
 }
-
-// Auto-expose on import
-exposeModules();

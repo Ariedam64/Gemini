@@ -11,6 +11,8 @@ import { watchBestWebSocket } from "./websocket/connection";
 import { initAllModules } from "./modules";
 import { LoaderController } from "./loader";
 import { prewarm as prewarmAtoms, waitForStore as waitForAtomsStore } from "./atoms";
+import { initGlobals } from "./globals";
+import { exposeGeminiAPI } from "./api";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -46,6 +48,30 @@ export async function initAtoms(loader: LoaderController): Promise<void> {
   } catch (err) {
     loader.logStep("Atoms", "Jotai store not captured yet", "error");
     console.warn("[Bootstrap] Jotai store wait failed", err);
+  }
+}
+
+export function initReactiveGlobals(loader: LoaderController): void {
+  loader.logStep("Globals", "Initializing reactive globals...");
+
+  try {
+    initGlobals();
+    loader.logStep("Globals", "Reactive globals ready", "success");
+  } catch (err) {
+    loader.logStep("Globals", "Failed to initialize globals", "error");
+    console.warn("[Bootstrap] Globals init failed", err);
+  }
+}
+
+export function initAPI(loader: LoaderController): void {
+  loader.logStep("API", "Exposing Gemini API...");
+
+  try {
+    exposeGeminiAPI();
+    loader.logStep("API", "Gemini API ready (window.Gemini)", "success");
+  } catch (err) {
+    loader.logStep("API", "Failed to expose API", "error");
+    console.warn("[Bootstrap] API init failed", err);
   }
 }
 
