@@ -1,6 +1,10 @@
-# Gemini - MagicGarden/Quinoa Game Mod
+# CLAUDE.md
 
-Userscript mod (Tampermonkey/Violetmonkey) for MagicGarden. HUD overlay with real-time state management and WebSocket integration.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Userscript mod (Tampermonkey/Violetmonkey) for MagicGarden game. HUD overlay with real-time state management and WebSocket integration.
 
 **URLs:** `magiccircle.gg/r/*`, `magicgarden.gg/r/*`, `starweaver.org/r/*`
 

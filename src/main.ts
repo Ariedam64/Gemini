@@ -11,6 +11,7 @@ import {
   initModules,
   startInjectGamePanelButton,
 } from "./ui/loader";
+import { Globals } from "./globals";
 
 (async function () {
   "use strict";
@@ -32,6 +33,7 @@ import {
     await initModules(loader);
 
     loader.succeed("Gemini is ready!");
+
   } catch (e) {
     loader.fail("Failed to initialize the mod.", e);
   } finally {

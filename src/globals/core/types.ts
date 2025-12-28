@@ -53,3 +53,71 @@ export type AtomSources<T extends Record<string, unknown>> = {
 export type CombineFunction<TSources extends Record<string, unknown>, TResult> = (
   sources: TSources
 ) => TResult;
+
+// =============================================================================
+// MY PETS GLOBAL
+// =============================================================================
+
+export type PetLocation = "inventory" | "hutch" | "active";
+
+export type PetAbilityTrigger = {
+  abilityId: string | null;
+  performedAt: number | null;
+  data: unknown;
+} | null;
+
+export type UnifiedPet = {
+  id: string;
+  petSpecies: string;
+  name: string | null;
+  xp: number;
+  hunger: number;
+  mutations: string[];
+  targetScale: number;
+  abilities: string[];
+  location: PetLocation;
+  position: { x: number; y: number } | null;
+  lastAbilityTrigger: PetAbilityTrigger;
+};
+
+export type MyPetsData = {
+  all: UnifiedPet[];
+  byLocation: {
+    inventory: UnifiedPet[];
+    hutch: UnifiedPet[];
+    active: UnifiedPet[];
+  };
+  counts: {
+    inventory: number;
+    hutch: number;
+    active: number;
+    total: number;
+  };
+};
+
+export type PetLocationChange = {
+  pet: UnifiedPet;
+  from: PetLocation;
+  to: PetLocation;
+};
+
+export type PetAbilityEvent = {
+  pet: UnifiedPet;
+  trigger: NonNullable<PetAbilityTrigger>;
+};
+
+export type PetCountChange = {
+  added: UnifiedPet[];
+  removed: UnifiedPet[];
+  counts: MyPetsData["counts"];
+};
+
+export type MyPetsGlobal = {
+  get(): MyPetsData;
+  subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe;
+  subscribeStable(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe;
+  subscribeLocation(callback: (event: PetLocationChange) => void): Unsubscribe;
+  subscribeAbility(callback: (event: PetAbilityEvent) => void): Unsubscribe;
+  subscribeCount(callback: (event: PetCountChange) => void): Unsubscribe;
+  destroy(): void;
+};
