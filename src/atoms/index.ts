@@ -161,6 +161,7 @@ export {
   stateShopsView,
   stateUserSlotsView,
   statePlayersView,
+  stateHostPlayerIdView,
 
   // Inventory
   myInventoryAtom,

@@ -125,6 +125,7 @@ export const stateChildDataView = makeView<unknown, unknown>("stateAtom", { path
 export const stateShopsView = makeView<unknown, Shops | null>("stateAtom", { path: "child.data.shops" });
 export const stateUserSlotsView = makeView<unknown, (UserSlot | null)[]>("stateAtom", { path: "child.data.userSlots" });
 export const statePlayersView = makeView<unknown, unknown[]>("stateAtom", { path: "data.players" });
+export const stateHostPlayerIdView = makeView<unknown, string>("stateAtom", { path: "data.hostPlayerId" });
 
 // =============================================================================
 // INVENTORY
