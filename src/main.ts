@@ -12,6 +12,7 @@ import {
   startInjectGamePanelButton,
 } from "./ui/loader";
 import { Globals } from "./globals";
+import type { ShopsData, ShopRestockEvent, ShopPurchaseEvent } from "./globals";
 
 (async function () {
   "use strict";
@@ -44,4 +45,6 @@ import { Globals } from "./globals";
     const hudRef = hud;
     startInjectGamePanelButton({ onClick: () => hudRef.setOpen(true) });
   }
+
+ 
 })();

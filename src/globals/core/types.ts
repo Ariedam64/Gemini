@@ -178,6 +178,7 @@ export type GameMapData = {
   cols: number;
   rows: number;
   totalTiles: number;
+  tileSize: number;
   spawnTiles: number[];
   spawnPositions: XY[];
   locations: Record<string, MapLocation>;
@@ -336,5 +337,78 @@ export type PlayersGlobal = {
   subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void): Unsubscribe;
   subscribeConnection(callback: (event: PlayerConnectionChange) => void): Unsubscribe;
   subscribeHost(callback: (event: HostChange) => void): Unsubscribe;
+  destroy(): void;
+};
+
+// =============================================================================
+// SHOPS GLOBAL
+// =============================================================================
+
+export type ShopType = "seed" | "tool" | "egg" | "decor";
+
+export type ShopItem = {
+  id: string;
+  itemType: string;
+  initialStock: number;
+  purchased: number;
+  remaining: number;
+  isAvailable: boolean;
+};
+
+export type Shop = {
+  type: ShopType;
+  items: ShopItem[];
+  availableCount: number;
+  totalCount: number;
+  secondsUntilRestock: number;
+  restockAt: number | null;
+};
+
+export type ShopsData = {
+  all: Shop[];
+  byType: Record<ShopType, Shop>;
+  nextRestock: {
+    shop: ShopType;
+    seconds: number;
+    at: number;
+  } | null;
+};
+
+export type ShopRestockEvent = {
+  shop: Shop;
+  previousItems: ShopItem[];
+};
+
+export type ShopPurchaseEvent = {
+  shopType: ShopType;
+  itemId: string;
+  quantity: number;
+  newPurchased: number;
+  remaining: number;
+};
+
+export type ShopAvailabilityChange = {
+  shopType: ShopType;
+  itemId: string;
+  wasAvailable: boolean;
+  isAvailable: boolean;
+};
+
+export type ShopsGlobal = {
+  get(): ShopsData;
+  getShop(type: ShopType): Shop;
+  getItem(shopType: ShopType, itemId: string): ShopItem | null;
+
+  subscribe(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe;
+  subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe;
+
+  subscribeSeedRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
+  subscribeToolRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
+  subscribeEggRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
+  subscribeDecorRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
+
+  subscribePurchase(callback: (event: ShopPurchaseEvent) => void): Unsubscribe;
+  subscribeAvailability(callback: (event: ShopAvailabilityChange) => void): Unsubscribe;
+
   destroy(): void;
 };

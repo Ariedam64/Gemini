@@ -6,18 +6,21 @@ export { getMyPets } from "./variables/myPets";
 export { getGameMap } from "./variables/gameMap";
 export { getMyInventory } from "./variables/myInventory";
 export { getPlayers } from "./variables/players";
+export { getShops } from "./variables/shops";
 
 import { getCurrentTile } from "./variables/currentTile";
 import { getMyPets } from "./variables/myPets";
 import { getGameMap } from "./variables/gameMap";
 import { getMyInventory } from "./variables/myInventory";
 import { getPlayers } from "./variables/players";
+import { getShops } from "./variables/shops";
 import type {
   CurrentTileGlobalWithSubscriptions,
   MyPetsGlobal,
   GameMapGlobal,
   MyInventoryGlobal,
   PlayersGlobal,
+  ShopsGlobal,
 } from "./core/types";
 
 export type GlobalsRegistry = {
@@ -26,6 +29,7 @@ export type GlobalsRegistry = {
   gameMap: GameMapGlobal;
   myInventory: MyInventoryGlobal;
   players: PlayersGlobal;
+  shops: ShopsGlobal;
 };
 
 let _globals: GlobalsRegistry | null = null;
@@ -39,6 +43,7 @@ export function initGlobals(): GlobalsRegistry {
     gameMap: getGameMap(),
     myInventory: getMyInventory(),
     players: getPlayers(),
+    shops: getShops(),
   };
 
   return _globals;
@@ -58,6 +63,7 @@ export function destroyGlobals(): void {
     _globals.gameMap.destroy();
     _globals.myInventory.destroy();
     _globals.players.destroy();
+    _globals.shops.destroy();
     _globals = null;
   }
 }
@@ -77,5 +83,8 @@ export const Globals = {
   },
   get players() {
     return getGlobals().players;
+  },
+  get shops() {
+    return getGlobals().shops;
   },
 };

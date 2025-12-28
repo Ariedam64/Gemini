@@ -1,4 +1,5 @@
 import { Store } from "../../atoms/store";
+import { tileSizeAtom } from "../../atoms";
 import type {
   GameMapGlobal,
   GameMapData,
@@ -20,10 +21,19 @@ type RawMapData = {
   locations?: Record<string, { spawnTileIdx: number[] }>;
 };
 
+type MapSources = {
+  map: RawMapData | null;
+  tileSize: number;
+};
+
 function createGameMapGlobal(): GameMapGlobal {
   let data: GameMapData | null = null;
-  let unsubscribe: Unsubscribe | null = null;
+  const unsubscribes: Unsubscribe[] = [];
   const readyCallbacks = new Set<(data: GameMapData) => void>();
+
+  const sources: Partial<MapSources> = {};
+  const ready = new Set<keyof MapSources>();
+  const sourceCount = 2;
 
   function globalToXY(cols: number, globalIndex: number): XY {
     return {
@@ -36,7 +46,7 @@ function createGameMapGlobal(): GameMapGlobal {
     return y * cols + x;
   }
 
-  function buildMapData(raw: RawMapData): GameMapData {
+  function buildMapData(raw: RawMapData, tileSize: number): GameMapData {
     const { cols, rows } = raw;
     const totalTiles = cols * rows;
 
@@ -101,6 +111,7 @@ function createGameMapGlobal(): GameMapGlobal {
       cols,
       rows,
       totalTiles,
+      tileSize,
       spawnTiles: raw.spawnTiles,
       spawnPositions,
       locations,
@@ -128,18 +139,36 @@ function createGameMapGlobal(): GameMapGlobal {
     };
   }
 
+  function tryBuild(): void {
+    if (ready.size < sourceCount || data) return;
+
+    const raw = sources.map;
+    const tileSize = sources.tileSize ?? 0;
+
+    if (!raw) return;
+
+    data = buildMapData(raw, tileSize);
+
+    for (const cb of readyCallbacks) {
+      cb(data);
+    }
+    readyCallbacks.clear();
+  }
+
   async function init(): Promise<void> {
-    unsubscribe = await Store.subscribe("mapAtom", (value: unknown) => {
-      if (!value || data) return;
-
-      const raw = value as RawMapData;
-      data = buildMapData(raw);
-
-      for (const cb of readyCallbacks) {
-        cb(data);
-      }
-      readyCallbacks.clear();
+    const unsub1 = await Store.subscribe("mapAtom", (value: unknown) => {
+      sources.map = value as RawMapData | null;
+      ready.add("map");
+      tryBuild();
     });
+    unsubscribes.push(unsub1);
+
+    const unsub2 = await tileSizeAtom.onChangeNow((value) => {
+      sources.tileSize = value;
+      ready.add("tileSize");
+      tryBuild();
+    });
+    unsubscribes.push(unsub2);
   }
 
   init();
@@ -164,8 +193,10 @@ function createGameMapGlobal(): GameMapGlobal {
     },
 
     destroy(): void {
-      unsubscribe?.();
-      unsubscribe = null;
+      for (const unsub of unsubscribes) {
+        unsub();
+      }
+      unsubscribes.length = 0;
       data = null;
       readyCallbacks.clear();
     },
