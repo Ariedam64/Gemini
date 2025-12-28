@@ -412,3 +412,81 @@ export type ShopsGlobal = {
 
   destroy(): void;
 };
+
+// =============================================================================
+// WEATHER GLOBAL
+// =============================================================================
+
+export type WeatherType = "Sunny" | "Rain" | "Frost" | "Dawn" | "AmberMoon";
+
+export type WeatherData = {
+  type: WeatherType;
+  isActive: boolean;
+  startTime: number | null;
+  endTime: number | null;
+  remainingSeconds: number;
+};
+
+export type WeatherChangeEvent = {
+  current: WeatherData;
+  previous: WeatherData;
+};
+
+export type WeatherGlobal = {
+  get(): WeatherData;
+  subscribe(callback: (value: WeatherData, prev: WeatherData) => void): Unsubscribe;
+  subscribeChange(callback: (event: WeatherChangeEvent) => void): Unsubscribe;
+  destroy(): void;
+};
+
+// =============================================================================
+// SELL INFO GLOBAL
+// =============================================================================
+
+export type SellLogEntry = {
+  species: string;
+  quantity: number;
+  price: number;
+  timestamp: number;
+};
+
+export type NewVariants = Record<string, string[]>;
+
+export type PendingLogs = {
+  crops: {
+    all: NewVariants;
+    fromSelling: NewVariants;
+  };
+  pets: {
+    variants: NewVariants;
+    abilities: NewVariants;
+  };
+  hasPending: boolean;
+  totalCount: number;
+};
+
+export type SellInfoData = {
+  totalPrice: number;
+  friendBonus: number;
+  hasNewLogs: boolean;
+  recentLogs: SellLogEntry[];
+  pendingLogs: PendingLogs;
+};
+
+export type SellEvent = {
+  logs: SellLogEntry[];
+  totalPrice: number;
+};
+
+export type NewLogsEvent = {
+  pendingLogs: PendingLogs;
+  previous: PendingLogs;
+};
+
+export type SellInfoGlobal = {
+  get(): SellInfoData;
+  subscribe(callback: (value: SellInfoData, prev: SellInfoData) => void): Unsubscribe;
+  subscribeSell(callback: (event: SellEvent) => void): Unsubscribe;
+  subscribeNewLogs(callback: (event: NewLogsEvent) => void): Unsubscribe;
+  destroy(): void;
+};
