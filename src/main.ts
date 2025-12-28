@@ -1,6 +1,3 @@
-import { installReactDevToolsHook } from "./atoms";
-installReactDevToolsHook();
-
 import {
   createLoader,
   initWebSocketCapture,
@@ -11,8 +8,6 @@ import {
   initModules,
   startInjectGamePanelButton,
 } from "./ui/loader";
-import { Globals } from "./globals";
-import type { ShopsData, ShopRestockEvent, ShopPurchaseEvent } from "./globals";
 
 (async function () {
   "use strict";
