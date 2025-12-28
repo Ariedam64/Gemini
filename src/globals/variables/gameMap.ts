@@ -1,5 +1,4 @@
 import { Store } from "../../atoms/store";
-import { tileSizeAtom } from "../../atoms";
 import type {
   GameMapGlobal,
   GameMapData,
@@ -7,6 +6,7 @@ import type {
   MapTile,
   UserSlotTiles,
   MapLocation,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 
@@ -163,8 +163,8 @@ function createGameMapGlobal(): GameMapGlobal {
     });
     unsubscribes.push(unsub1);
 
-    const unsub2 = await tileSizeAtom.onChangeNow((value) => {
-      sources.tileSize = value;
+    const unsub2 = await Store.subscribe("tileSizeAtom", (value: unknown) => {
+      sources.tileSize = value as number;
       ready.add("tileSize");
       tryBuild();
     });
@@ -182,9 +182,11 @@ function createGameMapGlobal(): GameMapGlobal {
       return data !== null;
     },
 
-    onReady(callback: (data: GameMapData) => void): Unsubscribe {
+    onReady(callback: (data: GameMapData) => void, options?: SubscribeOptions): Unsubscribe {
       if (data) {
-        callback(data);
+        if (options?.immediate !== false) {
+          callback(data);
+        }
         return () => {};
       }
 

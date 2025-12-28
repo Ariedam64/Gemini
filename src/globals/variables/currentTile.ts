@@ -1,4 +1,5 @@
 import { Store } from "../../atoms/store";
+import { deepEqual } from "../core/reactive";
 import type {
   CurrentTileGlobalWithSubscriptions,
   CurrentTileData,
@@ -10,6 +11,7 @@ import type {
   ObjectChange,
   PlantInfoChange,
   GardenChange,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { GardenTileObject, PlantTileObject } from "../../atoms/types";
@@ -141,37 +143,6 @@ function getStableKey(data: CurrentTileData): string {
     plantSpecies: data.plant?.species ?? null,
     slotCount: data.plant?.slots.length ?? 0,
   });
-}
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return a === b;
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-
-  if (aKeys.length !== bKeys.length) return false;
-
-  for (const key of aKeys) {
-    if (!Object.prototype.hasOwnProperty.call(bObj, key)) return false;
-    if (!deepEqual(aObj[key], bObj[key])) return false;
-  }
-
-  return true;
 }
 
 type ListenerSets = {
@@ -309,34 +280,43 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
       return currentData;
     },
 
-    subscribe(callback: (value: CurrentTileData, prev: CurrentTileData) => void): Unsubscribe {
+    subscribe(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeStable(callback: (value: CurrentTileData, prev: CurrentTileData) => void): Unsubscribe {
+    subscribeStable(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
     },
 
-    subscribeObject(callback: (event: ObjectChange) => void): Unsubscribe {
+    subscribeObject(callback: (event: ObjectChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.object.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ current: currentData.object, previous: currentData.object });
+      }
       return () => listeners.object.delete(callback);
     },
 
-    subscribePlantInfo(callback: (event: PlantInfoChange) => void): Unsubscribe {
+    subscribePlantInfo(callback: (event: PlantInfoChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.plantInfo.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ current: currentData.plant, previous: currentData.plant });
+      }
       return () => listeners.plantInfo.delete(callback);
     },
 
-    subscribeGarden(callback: (event: GardenChange) => void): Unsubscribe {
+    subscribeGarden(callback: (event: GardenChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.garden.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ current: currentData.garden, previous: currentData.garden });
+      }
       return () => listeners.garden.delete(callback);
     },
 

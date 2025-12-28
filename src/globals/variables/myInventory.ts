@@ -1,4 +1,5 @@
 import { Store } from "../../atoms/store";
+import { deepEqual } from "../core/reactive";
 import type {
   MyInventoryGlobal,
   MyInventoryData,
@@ -6,6 +7,7 @@ import type {
   SelectedItemChange,
   InventoryItemsChange,
   FavoritesChange,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { Inventory, InventoryItem } from "../../atoms/types";
@@ -83,37 +85,6 @@ function getStableKey(data: MyInventoryData): string {
 
 function isStableEqual(prev: MyInventoryData, next: MyInventoryData): boolean {
   return getStableKey(prev) === getStableKey(next);
-}
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return a === b;
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-
-  if (aKeys.length !== bKeys.length) return false;
-
-  for (const key of aKeys) {
-    if (!Object.prototype.hasOwnProperty.call(bObj, key)) return false;
-    if (!deepEqual(aObj[key], bObj[key])) return false;
-  }
-
-  return true;
 }
 
 type ListenerSets = {
@@ -272,34 +243,43 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
       return currentData;
     },
 
-    subscribe(callback: (value: MyInventoryData, prev: MyInventoryData) => void): Unsubscribe {
+    subscribe(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeStable(callback: (value: MyInventoryData, prev: MyInventoryData) => void): Unsubscribe {
+    subscribeStable(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
     },
 
-    subscribeSelection(callback: (event: SelectedItemChange) => void): Unsubscribe {
+    subscribeSelection(callback: (event: SelectedItemChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.selection.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ current: currentData.selectedItem, previous: currentData.selectedItem });
+      }
       return () => listeners.selection.delete(callback);
     },
 
-    subscribeItems(callback: (event: InventoryItemsChange) => void): Unsubscribe {
+    subscribeItems(callback: (event: InventoryItemsChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.items.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ added: currentData.items, removed: [], counts: { before: 0, after: currentData.count } });
+      }
       return () => listeners.items.delete(callback);
     },
 
-    subscribeFavorites(callback: (event: FavoritesChange) => void): Unsubscribe {
+    subscribeFavorites(callback: (event: FavoritesChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.favorites.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ added: currentData.favoritedItemIds, removed: [], current: currentData.favoritedItemIds });
+      }
       return () => listeners.favorites.delete(callback);
     },
 

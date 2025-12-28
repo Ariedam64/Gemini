@@ -2,9 +2,13 @@ import type { GrowSlot, GardenTileObject } from "../../atoms/types";
 
 export type Unsubscribe = () => void;
 
+export type SubscribeOptions = {
+  immediate?: boolean;
+};
+
 export type GlobalVariable<T> = {
   get(): T;
-  subscribe(callback: (value: T, prev: T) => void): Unsubscribe;
+  subscribe(callback: (value: T, prev: T) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -65,11 +69,11 @@ export type CurrentTileGlobal = CurrentTileData;
 
 export type CurrentTileGlobalWithSubscriptions = {
   get(): CurrentTileData;
-  subscribe(callback: (value: CurrentTileData, prev: CurrentTileData) => void): Unsubscribe;
-  subscribeStable(callback: (value: CurrentTileData, prev: CurrentTileData) => void): Unsubscribe;
-  subscribeObject(callback: (event: ObjectChange) => void): Unsubscribe;
-  subscribePlantInfo(callback: (event: PlantInfoChange) => void): Unsubscribe;
-  subscribeGarden(callback: (event: GardenChange) => void): Unsubscribe;
+  subscribe(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeObject(callback: (event: ObjectChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribePlantInfo(callback: (event: PlantInfoChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeGarden(callback: (event: GardenChange) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -120,6 +124,8 @@ export type MyPetsData = {
     active: number;
     total: number;
   };
+  expandedPetSlotId: string | null;
+  expandedPet: UnifiedPet | null;
 };
 
 export type PetLocationChange = {
@@ -139,13 +145,21 @@ export type PetCountChange = {
   counts: MyPetsData["counts"];
 };
 
+export type ExpandedPetChange = {
+  current: UnifiedPet | null;
+  previous: UnifiedPet | null;
+  currentId: string | null;
+  previousId: string | null;
+};
+
 export type MyPetsGlobal = {
   get(): MyPetsData;
-  subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe;
-  subscribeStable(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe;
-  subscribeLocation(callback: (event: PetLocationChange) => void): Unsubscribe;
-  subscribeAbility(callback: (event: PetAbilityEvent) => void): Unsubscribe;
-  subscribeCount(callback: (event: PetCountChange) => void): Unsubscribe;
+  subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: MyPetsData, prev: MyPetsData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeLocation(callback: (event: PetLocationChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeAbility(callback: (event: PetAbilityEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeCount(callback: (event: PetCountChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeExpandedPet(callback: (event: ExpandedPetChange) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -194,7 +208,7 @@ export type GameMapData = {
 export type GameMapGlobal = {
   get(): GameMapData | null;
   isReady(): boolean;
-  onReady(callback: (data: GameMapData) => void): Unsubscribe;
+  onReady(callback: (data: GameMapData) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -236,11 +250,11 @@ export type FavoritesChange = {
 
 export type MyInventoryGlobal = {
   get(): MyInventoryData;
-  subscribe(callback: (value: MyInventoryData, prev: MyInventoryData) => void): Unsubscribe;
-  subscribeStable(callback: (value: MyInventoryData, prev: MyInventoryData) => void): Unsubscribe;
-  subscribeSelection(callback: (event: SelectedItemChange) => void): Unsubscribe;
-  subscribeItems(callback: (event: InventoryItemsChange) => void): Unsubscribe;
-  subscribeFavorites(callback: (event: FavoritesChange) => void): Unsubscribe;
+  subscribe(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeSelection(callback: (event: SelectedItemChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeItems(callback: (event: InventoryItemsChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeFavorites(callback: (event: FavoritesChange) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -332,11 +346,11 @@ export type HostChange = {
 
 export type PlayersGlobal = {
   get(): PlayersData;
-  subscribe(callback: (value: PlayersData, prev: PlayersData) => void): Unsubscribe;
-  subscribeStable(callback: (value: PlayersData, prev: PlayersData) => void): Unsubscribe;
-  subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void): Unsubscribe;
-  subscribeConnection(callback: (event: PlayerConnectionChange) => void): Unsubscribe;
-  subscribeHost(callback: (event: HostChange) => void): Unsubscribe;
+  subscribe(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeConnection(callback: (event: PlayerConnectionChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeHost(callback: (event: HostChange) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -399,16 +413,16 @@ export type ShopsGlobal = {
   getShop(type: ShopType): Shop;
   getItem(shopType: ShopType, itemId: string): ShopItem | null;
 
-  subscribe(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe;
-  subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe;
+  subscribe(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe;
 
-  subscribeSeedRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
-  subscribeToolRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
-  subscribeEggRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
-  subscribeDecorRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe;
+  subscribeSeedRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeToolRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeEggRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeDecorRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
 
-  subscribePurchase(callback: (event: ShopPurchaseEvent) => void): Unsubscribe;
-  subscribeAvailability(callback: (event: ShopAvailabilityChange) => void): Unsubscribe;
+  subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeAvailability(callback: (event: ShopAvailabilityChange) => void, options?: SubscribeOptions): Unsubscribe;
 
   destroy(): void;
 };
@@ -434,8 +448,8 @@ export type WeatherChangeEvent = {
 
 export type WeatherGlobal = {
   get(): WeatherData;
-  subscribe(callback: (value: WeatherData, prev: WeatherData) => void): Unsubscribe;
-  subscribeChange(callback: (event: WeatherChangeEvent) => void): Unsubscribe;
+  subscribe(callback: (value: WeatherData, prev: WeatherData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeChange(callback: (event: WeatherChangeEvent) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 
@@ -485,8 +499,8 @@ export type NewLogsEvent = {
 
 export type SellInfoGlobal = {
   get(): SellInfoData;
-  subscribe(callback: (value: SellInfoData, prev: SellInfoData) => void): Unsubscribe;
-  subscribeSell(callback: (event: SellEvent) => void): Unsubscribe;
-  subscribeNewLogs(callback: (event: NewLogsEvent) => void): Unsubscribe;
+  subscribe(callback: (value: SellInfoData, prev: SellInfoData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeSell(callback: (event: SellEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeNewLogs(callback: (event: NewLogsEvent) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };

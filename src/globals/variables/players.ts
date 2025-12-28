@@ -3,6 +3,7 @@ import {
   stateHostPlayerIdView,
   stateUserSlotsView,
 } from "../../atoms";
+import { deepEqual } from "../core/reactive";
 import type {
   PlayersGlobal,
   PlayersData,
@@ -10,6 +11,7 @@ import type {
   PlayerJoinLeaveEvent,
   PlayerConnectionChange,
   HostChange,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 
@@ -180,37 +182,6 @@ function getStableKey(data: PlayersData): string {
   });
 }
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return a === b;
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-
-  if (aKeys.length !== bKeys.length) return false;
-
-  for (const key of aKeys) {
-    if (!Object.prototype.hasOwnProperty.call(bObj, key)) return false;
-    if (!deepEqual(aObj[key], bObj[key])) return false;
-  }
-
-  return true;
-}
-
 type ListenerSets = {
   all: Set<(value: PlayersData, prev: PlayersData) => void>;
   stable: Set<(value: PlayersData, prev: PlayersData) => void>;
@@ -358,34 +329,47 @@ function createPlayersGlobal(): PlayersGlobal {
       return currentData;
     },
 
-    subscribe(callback: (value: PlayersData, prev: PlayersData) => void): Unsubscribe {
+    subscribe(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeStable(callback: (value: PlayersData, prev: PlayersData) => void): Unsubscribe {
+    subscribeStable(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
     },
 
-    subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void): Unsubscribe {
+    subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.joinLeave.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        for (const player of currentData.all) {
+          callback({ player, type: "join" });
+        }
+      }
       return () => listeners.joinLeave.delete(callback);
     },
 
-    subscribeConnection(callback: (event: PlayerConnectionChange) => void): Unsubscribe {
+    subscribeConnection(callback: (event: PlayerConnectionChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.connection.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        for (const player of currentData.all) {
+          callback({ player, isConnected: player.isConnected });
+        }
+      }
       return () => listeners.connection.delete(callback);
     },
 
-    subscribeHost(callback: (event: HostChange) => void): Unsubscribe {
+    subscribeHost(callback: (event: HostChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.host.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        callback({ current: currentData.host, previous: currentData.host });
+      }
       return () => listeners.host.delete(callback);
     },
 

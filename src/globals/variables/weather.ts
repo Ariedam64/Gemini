@@ -4,6 +4,7 @@ import type {
   WeatherData,
   WeatherType,
   WeatherChangeEvent,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { Weather as RawWeather } from "../../atoms/types";
@@ -111,16 +112,19 @@ function createWeatherGlobal(): WeatherGlobal {
       return currentData;
     },
 
-    subscribe(callback: (value: WeatherData, prev: WeatherData) => void): Unsubscribe {
+    subscribe(callback: (value: WeatherData, prev: WeatherData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized) {
+      if (options?.immediate !== false && initialized) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeChange(callback: (event: WeatherChangeEvent) => void): Unsubscribe {
+    subscribeChange(callback: (event: WeatherChangeEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.change.add(callback);
+      if (options?.immediate && initialized) {
+        callback({ current: currentData, previous: currentData });
+      }
       return () => listeners.change.delete(callback);
     },
 

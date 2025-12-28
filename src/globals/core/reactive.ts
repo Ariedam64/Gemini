@@ -14,7 +14,7 @@ type SourceState<T extends Record<string, unknown>> = {
 
 type EqualityFn<T> = (a: T, b: T) => boolean;
 
-function deepEqual(a: unknown, b: unknown): boolean {
+export function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (a === null || b === null) return a === b;
   if (typeof a !== typeof b) return false;
@@ -139,21 +139,3 @@ export function createReactiveGlobal<
   };
 }
 
-export function createLazyGlobal<
-  TSources extends Record<string, unknown>,
-  TResult
->(
-  atomSources: AtomSources<TSources>,
-  combine: CombineFunction<TSources, TResult>,
-  initialValue: TResult,
-  isEqual?: EqualityFn<TResult>
-): () => GlobalVariable<TResult> {
-  let instance: GlobalVariable<TResult> | null = null;
-
-  return () => {
-    if (!instance) {
-      instance = createReactiveGlobal(atomSources, combine, initialValue, isEqual);
-    }
-    return instance;
-  };
-}

@@ -1,4 +1,5 @@
 import { Store } from "../../atoms/store";
+import { deepEqual } from "../core/reactive";
 import type {
   MyPetsGlobal,
   MyPetsData,
@@ -7,6 +8,8 @@ import type {
   PetLocationChange,
   PetAbilityEvent,
   PetCountChange,
+  ExpandedPetChange,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { PetInventoryItem, PetInfo, PetSlotInfo } from "../../atoms/types";
@@ -16,6 +19,7 @@ type MyPetsSources = {
   hutch: PetInventoryItem[];
   active: PetInfo[];
   slotInfos: Record<string, PetSlotInfo>;
+  expandedPetSlotId: string | null;
 };
 
 const atomSources = {
@@ -23,6 +27,7 @@ const atomSources = {
   hutch: "myPetHutchPetItemsAtom",
   active: "myPetInfosAtom",
   slotInfos: "myPetSlotInfosAtom",
+  expandedPetSlotId: "expandedPetSlotIdAtom",
 };
 
 function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutch"): UnifiedPet {
@@ -88,6 +93,9 @@ function buildData(sources: MyPetsSources): MyPetsData {
 
   const all = [...activePets, ...inventoryPets, ...hutchPets];
 
+  const expandedPetSlotId = sources.expandedPetSlotId ?? null;
+  const expandedPet = expandedPetSlotId ? all.find((p) => p.id === expandedPetSlotId) ?? null : null;
+
   return {
     all,
     byLocation: {
@@ -101,6 +109,8 @@ function buildData(sources: MyPetsSources): MyPetsData {
       active: activePets.length,
       total: all.length,
     },
+    expandedPetSlotId,
+    expandedPet,
   };
 }
 
@@ -108,6 +118,8 @@ const initialData: MyPetsData = {
   all: [],
   byLocation: { inventory: [], hutch: [], active: [] },
   counts: { inventory: 0, hutch: 0, active: 0, total: 0 },
+  expandedPetSlotId: null,
+  expandedPet: null,
 };
 
 function arraysEqual<T>(a: T[], b: T[]): boolean {
@@ -136,37 +148,6 @@ function isStableEqual(prev: MyPetsData, next: MyPetsData): boolean {
   const nextKeys = next.all.map(getStableKey);
 
   return arraysEqual(prevKeys, nextKeys);
-}
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return a === b;
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-
-  if (aKeys.length !== bKeys.length) return false;
-
-  for (const key of aKeys) {
-    if (!Object.prototype.hasOwnProperty.call(bObj, key)) return false;
-    if (!deepEqual(aObj[key], bObj[key])) return false;
-  }
-
-  return true;
 }
 
 function detectLocationChanges(prev: MyPetsData, next: MyPetsData): PetLocationChange[] {
@@ -224,6 +205,7 @@ type ListenerSets = {
   location: Set<(event: PetLocationChange) => void>;
   ability: Set<(event: PetAbilityEvent) => void>;
   count: Set<(event: PetCountChange) => void>;
+  expandedPet: Set<(event: ExpandedPetChange) => void>;
 };
 
 function createMyPetsGlobal(): MyPetsGlobal {
@@ -238,6 +220,7 @@ function createMyPetsGlobal(): MyPetsGlobal {
     location: new Set(),
     ability: new Set(),
     count: new Set(),
+    expandedPet: new Set(),
   };
 
   const sources: Partial<MyPetsSources> = {};
@@ -286,6 +269,18 @@ function createMyPetsGlobal(): MyPetsGlobal {
         cb(countChange);
       }
     }
+
+    if (previousData.expandedPetSlotId !== currentData.expandedPetSlotId) {
+      const event: ExpandedPetChange = {
+        current: currentData.expandedPet,
+        previous: previousData.expandedPet,
+        currentId: currentData.expandedPetSlotId,
+        previousId: previousData.expandedPetSlotId,
+      };
+      for (const cb of listeners.expandedPet) {
+        cb(event);
+      }
+    }
   }
 
   async function init(): Promise<void> {
@@ -318,35 +313,63 @@ function createMyPetsGlobal(): MyPetsGlobal {
       return currentData;
     },
 
-    subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe {
+    subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeStable(callback: (value: MyPetsData, prev: MyPetsData) => void): Unsubscribe {
+    subscribeStable(callback: (value: MyPetsData, prev: MyPetsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
     },
 
-    subscribeLocation(callback: (event: PetLocationChange) => void): Unsubscribe {
+    subscribeLocation(callback: (event: PetLocationChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.location.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        for (const pet of currentData.all) {
+          callback({ pet, from: pet.location, to: pet.location });
+        }
+      }
       return () => listeners.location.delete(callback);
     },
 
-    subscribeAbility(callback: (event: PetAbilityEvent) => void): Unsubscribe {
+    subscribeAbility(callback: (event: PetAbilityEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.ability.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        for (const pet of currentData.all) {
+          if (pet.lastAbilityTrigger) {
+            callback({ pet, trigger: pet.lastAbilityTrigger });
+          }
+        }
+      }
       return () => listeners.ability.delete(callback);
     },
 
-    subscribeCount(callback: (event: PetCountChange) => void): Unsubscribe {
+    subscribeCount(callback: (event: PetCountChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.count.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({ added: currentData.all, removed: [], counts: currentData.counts });
+      }
       return () => listeners.count.delete(callback);
+    },
+
+    subscribeExpandedPet(callback: (event: ExpandedPetChange) => void, options?: SubscribeOptions): Unsubscribe {
+      listeners.expandedPet.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        callback({
+          current: currentData.expandedPet,
+          previous: currentData.expandedPet,
+          currentId: currentData.expandedPetSlotId,
+          previousId: currentData.expandedPetSlotId,
+        });
+      }
+      return () => listeners.expandedPet.delete(callback);
     },
 
     destroy(): void {
@@ -359,6 +382,7 @@ function createMyPetsGlobal(): MyPetsGlobal {
       listeners.location.clear();
       listeners.ability.clear();
       listeners.count.clear();
+      listeners.expandedPet.clear();
       initialized = false;
     },
   };

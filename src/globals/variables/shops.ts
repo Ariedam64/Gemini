@@ -1,4 +1,5 @@
 import { shopsAtom, myShopPurchasesAtom } from "../../atoms";
+import { deepEqual } from "../core/reactive";
 import type {
   ShopsGlobal,
   ShopsData,
@@ -8,6 +9,7 @@ import type {
   ShopRestockEvent,
   ShopPurchaseEvent,
   ShopAvailabilityChange,
+  SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { Shops as RawShops, Shop as RawShop, ShopPurchases, ShopPurchase, ShopInventoryItem } from "../../atoms/types";
@@ -139,37 +141,6 @@ const initialData: ShopsData = {
   },
   nextRestock: null,
 };
-
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return a === b;
-
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (!deepEqual(a[i], b[i])) return false;
-    }
-    return true;
-  }
-
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-
-  const aObj = a as Record<string, unknown>;
-  const bObj = b as Record<string, unknown>;
-  const aKeys = Object.keys(aObj);
-  const bKeys = Object.keys(bObj);
-
-  if (aKeys.length !== bKeys.length) return false;
-
-  for (const key of aKeys) {
-    if (!Object.prototype.hasOwnProperty.call(bObj, key)) return false;
-    if (!deepEqual(aObj[key], bObj[key])) return false;
-  }
-
-  return true;
-}
 
 function getStableKey(data: ShopsData): string {
   return JSON.stringify({
@@ -376,49 +347,77 @@ function createShopsGlobal(): ShopsGlobal {
       return shop.items.find((item) => item.id === itemId) ?? null;
     },
 
-    subscribe(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe {
+    subscribe(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
     },
 
-    subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void): Unsubscribe {
+    subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
     },
 
-    subscribeSeedRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe {
+    subscribeSeedRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.seedRestock.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        callback({ shop: currentData.byType.seed, previousItems: [] });
+      }
       return () => listeners.seedRestock.delete(callback);
     },
 
-    subscribeToolRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe {
+    subscribeToolRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.toolRestock.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        callback({ shop: currentData.byType.tool, previousItems: [] });
+      }
       return () => listeners.toolRestock.delete(callback);
     },
 
-    subscribeEggRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe {
+    subscribeEggRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.eggRestock.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        callback({ shop: currentData.byType.egg, previousItems: [] });
+      }
       return () => listeners.eggRestock.delete(callback);
     },
 
-    subscribeDecorRestock(callback: (event: ShopRestockEvent) => void): Unsubscribe {
+    subscribeDecorRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.decorRestock.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        callback({ shop: currentData.byType.decor, previousItems: [] });
+      }
       return () => listeners.decorRestock.delete(callback);
     },
 
-    subscribePurchase(callback: (event: ShopPurchaseEvent) => void): Unsubscribe {
+    subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.purchase.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        for (const shop of currentData.all) {
+          for (const item of shop.items) {
+            if (item.purchased > 0) {
+              callback({ shopType: shop.type, itemId: item.id, quantity: item.purchased, newPurchased: item.purchased, remaining: item.remaining });
+            }
+          }
+        }
+      }
       return () => listeners.purchase.delete(callback);
     },
 
-    subscribeAvailability(callback: (event: ShopAvailabilityChange) => void): Unsubscribe {
+    subscribeAvailability(callback: (event: ShopAvailabilityChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.availability.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceCount) {
+        for (const shop of currentData.all) {
+          for (const item of shop.items) {
+            callback({ shopType: shop.type, itemId: item.id, wasAvailable: item.isAvailable, isAvailable: item.isAvailable });
+          }
+        }
+      }
       return () => listeners.availability.delete(callback);
     },
 
