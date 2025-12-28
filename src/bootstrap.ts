@@ -52,14 +52,14 @@ export async function initAtoms(loader: LoaderController): Promise<void> {
 }
 
 export function initReactiveGlobals(loader: LoaderController): void {
-  loader.logStep("Globals", "Initializing reactive globals...");
+  loader.logStep("Globals", "Initializing global variables...");
 
   try {
     initGlobals();
-    loader.logStep("Globals", "Reactive globals ready", "success");
+    loader.logStep("Globals", "Global variables ready", "success");
   } catch (err) {
-    loader.logStep("Globals", "Failed to initialize globals", "error");
-    console.warn("[Bootstrap] Globals init failed", err);
+    loader.logStep("Globals", "Failed to initialize global variables", "error");
+    console.warn("[Bootstrap] Global variables init failed", err);
   }
 }
 
@@ -68,7 +68,7 @@ export function initAPI(loader: LoaderController): void {
 
   try {
     exposeGeminiAPI();
-    loader.logStep("API", "Gemini API ready (window.Gemini)", "success");
+    loader.logStep("API", "Gemini API ready", "success");
   } catch (err) {
     loader.logStep("API", "Failed to expose API", "error");
     console.warn("[Bootstrap] API init failed", err);
@@ -108,7 +108,6 @@ export function initHUD(loader: LoaderController): ReturnType<typeof createHUD> 
 }
 
 export async function initModules(loader: LoaderController): Promise<void> {
-  loader.log("HUD ready. Loading modules in the background...", "success");
   loader.setSubtitle("Activating Gemini modules...");
 
   await initAllModules((progress) => {
