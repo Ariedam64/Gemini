@@ -109,6 +109,10 @@ export type UnifiedPet = {
   location: PetLocation;
   position: { x: number; y: number } | null;
   lastAbilityTrigger: PetAbilityTrigger;
+  growthStage: number;
+  currentStrength: number;
+  maxStrength: number;
+  isMature: boolean;
 };
 
 export type MyPetsData = {
@@ -152,6 +156,22 @@ export type ExpandedPetChange = {
   previousId: string | null;
 };
 
+export type PetGrowthEvent = {
+  pet: UnifiedPet;
+  previousStage: number;
+  newStage: number;
+};
+
+export type PetStrengthGainEvent = {
+  pet: UnifiedPet;
+  previousStrength: number;
+  newStrength: number;
+};
+
+export type PetMaxStrengthEvent = {
+  pet: UnifiedPet;
+};
+
 export type MyPetsGlobal = {
   get(): MyPetsData;
   subscribe(callback: (value: MyPetsData, prev: MyPetsData) => void, options?: SubscribeOptions): Unsubscribe;
@@ -160,6 +180,9 @@ export type MyPetsGlobal = {
   subscribeAbility(callback: (event: PetAbilityEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeCount(callback: (event: PetCountChange) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeExpandedPet(callback: (event: ExpandedPetChange) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeGrowth(callback: (event: PetGrowthEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStrengthGain(callback: (event: PetStrengthGainEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeMaxStrength(callback: (event: PetMaxStrengthEvent) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 

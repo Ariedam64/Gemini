@@ -9,10 +9,19 @@ import type {
   PetAbilityEvent,
   PetCountChange,
   ExpandedPetChange,
+  PetGrowthEvent,
+  PetStrengthGainEvent,
+  PetMaxStrengthEvent,
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
 import type { PetInventoryItem, PetInfo, PetSlotInfo } from "../../atoms/types";
+import {
+  calculatePetAge,
+  calculateMaxStrength,
+  calculateCurrentStrength,
+  isPetMature,
+} from "../../modules/calculators";
 
 type MyPetsSources = {
   inventory: PetInventoryItem[];
@@ -31,6 +40,11 @@ const atomSources = {
 };
 
 function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutch"): UnifiedPet {
+  const growthStage = calculatePetAge(item.xp);
+  const maxStrength = calculateMaxStrength(item.petSpecies, item.targetScale);
+  const currentStrength = calculateCurrentStrength(item.petSpecies, item.xp, maxStrength);
+  const isMature = isPetMature(item.petSpecies, growthStage);
+
   return {
     id: item.id,
     petSpecies: item.petSpecies,
@@ -43,12 +57,21 @@ function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutc
     location,
     position: null,
     lastAbilityTrigger: null,
+    growthStage,
+    currentStrength,
+    maxStrength,
+    isMature,
   };
 }
 
 function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): UnifiedPet {
   const slotInfo = slotInfos[info.slot.id];
   const lastAbilityTrigger: PetAbilityTrigger = slotInfo?.lastAbilityTrigger ?? null;
+
+  const growthStage = calculatePetAge(info.slot.xp);
+  const maxStrength = calculateMaxStrength(info.slot.petSpecies, info.slot.targetScale);
+  const currentStrength = calculateCurrentStrength(info.slot.petSpecies, info.slot.xp, maxStrength);
+  const isMature = isPetMature(info.slot.petSpecies, growthStage);
 
   return {
     id: info.slot.id,
@@ -62,6 +85,10 @@ function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): Uni
     location: "active",
     position: info.position ? { x: info.position.x, y: info.position.y } : null,
     lastAbilityTrigger,
+    growthStage,
+    currentStrength,
+    maxStrength,
+    isMature,
   };
 }
 
@@ -199,6 +226,48 @@ function detectCountChanges(prev: MyPetsData, next: MyPetsData): PetCountChange 
   return { added, removed, counts: next.counts };
 }
 
+function detectGrowthEvents(prev: MyPetsData, next: MyPetsData): PetGrowthEvent[] {
+  const events: PetGrowthEvent[] = [];
+  const prevMap = new Map(prev.all.map((p) => [p.id, p]));
+
+  for (const pet of next.all) {
+    const prevPet = prevMap.get(pet.id);
+    if (prevPet && pet.growthStage > prevPet.growthStage) {
+      events.push({ pet, previousStage: prevPet.growthStage, newStage: pet.growthStage });
+    }
+  }
+
+  return events;
+}
+
+function detectStrengthGainEvents(prev: MyPetsData, next: MyPetsData): PetStrengthGainEvent[] {
+  const events: PetStrengthGainEvent[] = [];
+  const prevMap = new Map(prev.all.map((p) => [p.id, p]));
+
+  for (const pet of next.all) {
+    const prevPet = prevMap.get(pet.id);
+    if (prevPet && pet.currentStrength > prevPet.currentStrength) {
+      events.push({ pet, previousStrength: prevPet.currentStrength, newStrength: pet.currentStrength });
+    }
+  }
+
+  return events;
+}
+
+function detectMaxStrengthEvents(prev: MyPetsData, next: MyPetsData): PetMaxStrengthEvent[] {
+  const events: PetMaxStrengthEvent[] = [];
+  const prevMap = new Map(prev.all.map((p) => [p.id, p]));
+
+  for (const pet of next.all) {
+    const prevPet = prevMap.get(pet.id);
+    if (prevPet && pet.currentStrength === pet.maxStrength && prevPet.currentStrength < prevPet.maxStrength) {
+      events.push({ pet });
+    }
+  }
+
+  return events;
+}
+
 type ListenerSets = {
   all: Set<(value: MyPetsData, prev: MyPetsData) => void>;
   stable: Set<(value: MyPetsData, prev: MyPetsData) => void>;
@@ -206,6 +275,9 @@ type ListenerSets = {
   ability: Set<(event: PetAbilityEvent) => void>;
   count: Set<(event: PetCountChange) => void>;
   expandedPet: Set<(event: ExpandedPetChange) => void>;
+  growth: Set<(event: PetGrowthEvent) => void>;
+  strengthGain: Set<(event: PetStrengthGainEvent) => void>;
+  maxStrength: Set<(event: PetMaxStrengthEvent) => void>;
 };
 
 function createMyPetsGlobal(): MyPetsGlobal {
@@ -221,6 +293,9 @@ function createMyPetsGlobal(): MyPetsGlobal {
     ability: new Set(),
     count: new Set(),
     expandedPet: new Set(),
+    growth: new Set(),
+    strengthGain: new Set(),
+    maxStrength: new Set(),
   };
 
   const sources: Partial<MyPetsSources> = {};
@@ -267,6 +342,27 @@ function createMyPetsGlobal(): MyPetsGlobal {
     if (countChange) {
       for (const cb of listeners.count) {
         cb(countChange);
+      }
+    }
+
+    const growthEvents = detectGrowthEvents(previousData, currentData);
+    for (const event of growthEvents) {
+      for (const cb of listeners.growth) {
+        cb(event);
+      }
+    }
+
+    const strengthGainEvents = detectStrengthGainEvents(previousData, currentData);
+    for (const event of strengthGainEvents) {
+      for (const cb of listeners.strengthGain) {
+        cb(event);
+      }
+    }
+
+    const maxStrengthEvents = detectMaxStrengthEvents(previousData, currentData);
+    for (const event of maxStrengthEvents) {
+      for (const cb of listeners.maxStrength) {
+        cb(event);
       }
     }
 
@@ -372,6 +468,38 @@ function createMyPetsGlobal(): MyPetsGlobal {
       return () => listeners.expandedPet.delete(callback);
     },
 
+    subscribeGrowth(callback: (event: PetGrowthEvent) => void, options?: SubscribeOptions): Unsubscribe {
+      listeners.growth.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        for (const pet of currentData.all) {
+          callback({ pet, previousStage: pet.growthStage, newStage: pet.growthStage });
+        }
+      }
+      return () => listeners.growth.delete(callback);
+    },
+
+    subscribeStrengthGain(callback: (event: PetStrengthGainEvent) => void, options?: SubscribeOptions): Unsubscribe {
+      listeners.strengthGain.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        for (const pet of currentData.all) {
+          callback({ pet, previousStrength: pet.currentStrength, newStrength: pet.currentStrength });
+        }
+      }
+      return () => listeners.strengthGain.delete(callback);
+    },
+
+    subscribeMaxStrength(callback: (event: PetMaxStrengthEvent) => void, options?: SubscribeOptions): Unsubscribe {
+      listeners.maxStrength.add(callback);
+      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+        for (const pet of currentData.all) {
+          if (pet.currentStrength === pet.maxStrength) {
+            callback({ pet });
+          }
+        }
+      }
+      return () => listeners.maxStrength.delete(callback);
+    },
+
     destroy(): void {
       for (const unsub of unsubscribes) {
         unsub();
@@ -383,6 +511,9 @@ function createMyPetsGlobal(): MyPetsGlobal {
       listeners.ability.clear();
       listeners.count.clear();
       listeners.expandedPet.clear();
+      listeners.growth.clear();
+      listeners.strengthGain.clear();
+      listeners.maxStrength.clear();
       initialized = false;
     },
   };
