@@ -1,7 +1,7 @@
 // src/modules/core/version.ts
 // MGVersion - Detects the game version from script tags
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import { sleep } from "../utils/helpers";
 
 let gameVersion: string | null = null;

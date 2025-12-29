@@ -1,7 +1,7 @@
 // src/modules/media/audio.ts
 // MGAudio - Audio management (SFX, music, ambience)
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import { clamp, clamp01 } from "../utils/helpers";
 import { getBlob, getJSON } from "../utils/network";
 import { joinPath } from "../utils/path";

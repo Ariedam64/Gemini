@@ -1,5 +1,5 @@
-// src/utils/pageContext.ts
-// Page vs sandbox context helpers (original behavior with a few extra notes)
+// src/utils/windowContext.ts
+// Page vs sandbox context helpers for userscript environments
 
 declare const unsafeWindow:
   | (Window & typeof globalThis & { [key: string]: any })

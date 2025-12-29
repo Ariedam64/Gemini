@@ -1,6 +1,6 @@
 import { ResizeHandlerOptions, ResizeHandler } from "./types";
-import { detectEnvironment } from "../../utils/api";
-import { pageWindow } from "../../utils/pageContext";
+import { MGEnvironment } from "../../modules/core/environment";
+import { pageWindow } from "../../utils/windowContext";
 
 /**
  * Create resize handler for the HUD
@@ -26,7 +26,7 @@ export function createResizeHandler(options: ResizeHandlerOptions): ResizeHandle
    * Calculate responsive bounds based on device and viewport
    */
   function calculateResponsiveBounds(): { min: number; max: number } {
-    const env = detectEnvironment();
+    const env = MGEnvironment.detect();
     const viewportWidth = Math.round(
       ((pageWindow as any).visualViewport?.width) ?? (pageWindow.innerWidth ?? 0)
     );
@@ -74,7 +74,7 @@ export function createResizeHandler(options: ResizeHandlerOptions): ResizeHandle
   calculateResponsiveBounds();
 
   // Drag resize (disabled on mobile)
-  const envAtStart = detectEnvironment();
+  const envAtStart = MGEnvironment.detect();
   const dragEnabled = !(
     envAtStart.platform === "mobile" ||
     envAtStart.os === "ios" ||

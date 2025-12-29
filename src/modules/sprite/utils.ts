@@ -2,7 +2,7 @@
 // Key helpers and utilities for sprite system
 
 import type { PixiApp, PixiConstructors } from "./types";
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Key Normalization

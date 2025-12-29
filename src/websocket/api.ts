@@ -13,7 +13,7 @@
 
 import { sendType, type SendResult } from "./connection";
 import { ClientToServerMessageType as T } from "./protocol";
-import { pageWindow } from "../utils/pageContext";
+import { pageWindow } from "../utils/windowContext";
 
 function send(type: string, payload: Record<string, unknown> = {}, win: any = pageWindow): SendResult {
   return sendType(type, payload, win);

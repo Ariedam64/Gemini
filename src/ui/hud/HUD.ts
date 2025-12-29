@@ -5,7 +5,7 @@
 
 import { createNavTabs } from "../components/NavTabs/NavTabs";
 import { SectionManager } from "../sections";
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 /* ================================ Shadow DOM Host ================================ */
 

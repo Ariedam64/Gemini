@@ -1,7 +1,7 @@
 // src/atoms/core/lookup.ts
 // Atom lookup utilities: find atoms by label from the game's atom cache
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 /* ================================= Cache ================================= */
 

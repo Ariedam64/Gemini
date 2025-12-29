@@ -11,8 +11,8 @@ import { Select, SelectOption } from "../../components/Select/Select";
 import { Label } from "../../components/Label/Label";
 import { Button } from "../../components/Button/Button";
 import { ColorPicker, ColorPickerValue } from "../../components/ColorPicker/ColorPicker";
-import { detectEnvironment } from "../../../utils/api";
-import { attachCopyHandler } from "../../../utils/copy";
+import { MGEnvironment } from "../../../modules/core/environment";
+import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
 import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
 
@@ -195,7 +195,7 @@ export class SettingsSection extends BaseSection {
     const osVal = element("span", {}, "—") as HTMLElement;
 
     const renderEnv = () => {
-      const env = detectEnvironment() as any;
+      const env = MGEnvironment.detect() as any;
       surfaceVal.textContent = env.surface;
       platformVal.textContent = env.platform;
       browserVal.textContent = env.browser ?? "Unknown";
@@ -211,7 +211,7 @@ export class SettingsSection extends BaseSection {
     });
 
     attachCopyHandler(copyJsonBtn, () => {
-      const env = detectEnvironment() as any;
+      const env = MGEnvironment.detect() as any;
       return JSON.stringify(env, null, 2);
     });
 

@@ -1,6 +1,6 @@
 import { element } from "../../styles/helpers";
 import { Select, SelectHandle } from "../Select/Select";
-import { detectEnvironment, type EnvironmentInfo } from "../../../utils/api";
+import { MGEnvironment, type EnvironmentInfo } from "../../../modules/core/environment";
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /* Types                                                                     */
@@ -124,7 +124,7 @@ export function TimeRangePicker(opts: TimeRangePickerOptions = {}): TimeRangePic
   root.classList.add("time-range--stacked");
 
   /* Decide path: native or custom */
-  const env = detectEnvironment();
+  const env = MGEnvironment.detect();
   const wantNative = picker === "native"
     || (picker === "auto" && (useNativeOn?.(env) ?? isMobileOrTouch(env)));
 

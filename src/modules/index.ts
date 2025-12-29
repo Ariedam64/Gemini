@@ -6,6 +6,8 @@ export { MGVersion } from "./core/version";
 export { MGAssets } from "./core/assets";
 export { MGManifest } from "./core/manifest";
 export { MGData } from "./core/data";
+export { MGAntiAfk } from "./core/antiafk";
+export { MGEnvironment } from "./core/environment";
 
 // Pixi modules
 export { MGPixiHooks } from "./pixi/hooks";

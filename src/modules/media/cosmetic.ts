@@ -1,7 +1,7 @@
 // src/modules/media/cosmetic.ts
 // MGCosmetic - Cosmetic image management (HTML images)
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import { joinPath } from "../utils/path";
 import { MGAssets } from "../core/assets";
 import { MGManifest } from "../core/manifest";

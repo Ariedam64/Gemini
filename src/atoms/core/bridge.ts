@@ -2,7 +2,7 @@
 // Bridge to game's Jotai store: capture via Fiber, mirror API, atom lookup.
 // Idempotent multi-scripts. Zero monkey-patching.
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import type { Unsubscribe } from "../types";
 import { getAtomCache } from "./lookup";
 

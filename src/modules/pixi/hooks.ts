@@ -2,7 +2,7 @@
 // MGPixiHooks - Central capture point for PIXI app, renderer, and game engine
 
 import { sleep } from "../utils/helpers";
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 // Types
 type GameEngine = any;

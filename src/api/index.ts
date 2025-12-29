@@ -1,4 +1,4 @@
-import { pageWindow } from "../utils/pageContext";
+import { pageWindow } from "../utils/windowContext";
 import { Store } from "../atoms/store";
 import { Globals, getGlobals, initGlobals, destroyGlobals } from "../globals";
 import * as WebSocketAPI from "../websocket/api";

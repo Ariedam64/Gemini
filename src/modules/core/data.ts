@@ -2,7 +2,7 @@
 // MGData - Captures runtime game data (items, plants, pets, etc.) via Object.* hooks
 // and exposes simple accessors for the mod to consume.
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import { sleep } from "../utils/helpers";
 import { MGSprite } from "../sprite";
 

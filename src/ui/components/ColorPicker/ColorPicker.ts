@@ -1,7 +1,7 @@
 // ui/components/ColorPicker/ColorPicker.ts
 import { element } from "../../styles/helpers";
 import { Card } from "../Card/Card";
-import { detectEnvironment } from "../../../utils/api";
+import { MGEnvironment } from "../../../modules/core/environment";
 import { Input } from "../Input/Input";
 
 type HSVA = { h: number; s: number; v: number; a: number };
@@ -183,7 +183,7 @@ export function ColorPicker(opts: ColorPickerOptions = {}): ColorPickerHandle {
     onChange,
   } = opts;
 
-  const envMobile = detectMobileOverride ? detectMobileOverride() : detectEnvironment().platform === "mobile";
+  const envMobile = detectMobileOverride ? detectMobileOverride() : MGEnvironment.detect().platform === "mobile";
   const isMobile = envMobile;
 
   let hsva = normalizeHsva(value, alpha);

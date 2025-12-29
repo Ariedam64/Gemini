@@ -3,7 +3,7 @@
  * Handles theme application with smooth transitions
  */
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 export type ThemeVars = Record<string, string>;
 export type ThemeMap = Record<string, ThemeVars>;

@@ -2,7 +2,7 @@
 // MGPixi - Pixi.js utilities (highlights, fades, inspection)
 
 import { tryDo, clamp } from "../utils/helpers";
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 import { MGPixiHooks } from "./hooks";
 import { MGTile } from "./tile";
 

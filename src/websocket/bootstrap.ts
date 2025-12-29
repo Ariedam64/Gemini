@@ -1,6 +1,6 @@
 // src/Websocket/bootstrap.ts
 import { installWebSocketCapture, getBestWebSocket, watchBestWebSocket } from "./connection";
-import { pageWindow } from "../utils/pageContext";
+import { pageWindow } from "../utils/windowContext";
 import { patchOutgoingMessages, type OutgoingMiddleware } from "./middlewares/base";
 import { attachIncomingHandlers, type IncomingHandler } from "./handlers/base";
 

@@ -1,6 +1,6 @@
-// src/utils/copy.ts
-import { pageWindow, sandboxWindow, isIsolatedContext } from "./pageContext";
-import { isDiscordSurface } from "./api";
+// src/utils/clipboard.ts
+import { pageWindow } from "./windowContext";
+import { MGEnvironment } from "../modules/core/environment";
 
 export type CopyMethod =
   | "clipboard-write"
@@ -168,7 +168,7 @@ export async function copyText(text: string, opts: CopyOptions = {}): Promise<Co
   if (!opts.disablePromptFallback) {
     try {
       // eslint-disable-next-line no-alert
-      window.prompt(isDiscordSurface() ? "Copie manuelle (Discord bloque clipboard):" : "Copie manuelle:", trimmed);
+      window.prompt(MGEnvironment.isDiscord() ? "Copie manuelle (Discord bloque clipboard):" : "Copie manuelle:", trimmed);
       return { ok: true, method: "prompt" };
     } catch { /* ignore */ }
   }

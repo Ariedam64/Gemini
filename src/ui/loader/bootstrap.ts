@@ -2,7 +2,7 @@ import { loadHudState, saveHudStateValue, Hud } from "../hud";
 import { THEMES } from "../theme";
 import { buildSections, preloadSections } from "../sections";
 import { createHUD } from "../hud";
-import { startInjectGamePanelButton } from "../../utils/injectGamePanelButton";
+import { startInjectGamePanelButton } from "../inject/toolbarButton";
 import { initWebSocket } from "../../websocket/bootstrap";
 import { watchBestWebSocket } from "../../websocket/connection";
 import { initAllModules } from "../../modules";

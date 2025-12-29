@@ -2,7 +2,7 @@
 // Network utilities for fetching game assets
 // Uses native fetch (works in page context) with GM_xmlhttpRequest as fallback
 
-import { pageWindow } from "../../utils/pageContext";
+import { pageWindow } from "../../utils/windowContext";
 
 declare const GM_xmlhttpRequest: any;
 

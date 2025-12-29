@@ -12,7 +12,7 @@
  * - Symbols used to avoid readable global flags.
  */
 
-import { pageWindow } from "../utils/pageContext";
+import { pageWindow } from "../utils/windowContext";
 
 export type BestWsResult = {
   ws: WebSocket | null;
