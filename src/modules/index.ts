@@ -43,6 +43,7 @@ export const MGTracker = {
 
 // Re-import for initialization
 import { MGData } from "./core/data";
+import { MGAntiAfk } from "./core/antiafk";
 import { MGSprite } from "./sprite";
 import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
@@ -60,6 +61,7 @@ export async function initAllModules(
 ): Promise<void> {
   const tasks = [
     { name: "Data", init: () => MGData.init() },
+    { name: "AntiAfk", init: () => MGAntiAfk.init() },
     { name: "Sprites", init: () => MGSprite.init() },
     { name: "TileObjectSystem", init: () => MGTile.init() },
     { name: "Pixi", init: () => MGPixi.init() },

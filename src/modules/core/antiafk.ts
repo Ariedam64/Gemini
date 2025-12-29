@@ -14,6 +14,7 @@ const STOP_EVENTS = [
 type EventListener = { type: string; handler: (e: Event) => void; target: Document | Window };
 
 interface AntiAfkState {
+  initialized: boolean;
   listeners: EventListener[];
   savedProps: {
     hidden: PropertyDescriptor | undefined;
@@ -24,17 +25,18 @@ interface AntiAfkState {
   oscillator: OscillatorNode | null;
   gainNode: GainNode | null;
   heartbeatInterval: number | null;
-  isRunning: boolean;
+  running: boolean;
 }
 
 const state: AntiAfkState = {
+  initialized: false,
   listeners: [],
   savedProps: { hidden: undefined, visibilityState: undefined, hasFocus: null },
   audioCtx: null,
   oscillator: null,
   gainNode: null,
   heartbeatInterval: null,
-  isRunning: false,
+  running: false,
 };
 
 function swallowEvents() {
@@ -164,9 +166,20 @@ function stopHeartbeat() {
   }
 }
 
-function start() {
-  if (state.isRunning) return;
-  state.isRunning = true;
+function init(): void {
+  if (state.initialized) return;
+  state.initialized = true;
+  start();
+}
+
+function isReady(): boolean {
+  return state.initialized;
+}
+
+function start(): void {
+  if (!state.initialized) return;
+  if (state.running) return;
+  state.running = true;
 
   patchDocumentProps();
   swallowEvents();
@@ -174,9 +187,9 @@ function start() {
   startHeartbeat();
 }
 
-function stop() {
-  if (!state.isRunning) return;
-  state.isRunning = false;
+function stop(): void {
+  if (!state.running) return;
+  state.running = false;
 
   stopHeartbeat();
   stopAudioKeepAlive();
@@ -185,10 +198,12 @@ function stop() {
 }
 
 function isRunning(): boolean {
-  return state.isRunning;
+  return state.running;
 }
 
 export const MGAntiAfk = {
+  init,
+  isReady,
   start,
   stop,
   isRunning,
