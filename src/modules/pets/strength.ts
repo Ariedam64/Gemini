@@ -1,4 +1,4 @@
-// src/modules/core/petStrength.ts
+// src/modules/pets/strength.ts
 // Pet Strength Helper - Enrichment utilities for UnifiedPet data
 // Refactored to use calculator modules
 

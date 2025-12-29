@@ -1,4 +1,4 @@
-// src/modules/core/abilityLogger.ts
+// src/modules/pets/abilityLogger.ts
 // Ability Logger - Tracks pet ability procs detected by Globals.myPets.subscribeAbility()
 
 import { Globals } from '../../globals';

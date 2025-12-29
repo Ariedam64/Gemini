@@ -1,4 +1,4 @@
-// src/modules/core/achievements/types.ts
+// src/modules/achievements/types.ts
 // Achievement System Types
 
 // ─────────────────────────────────────────────────────────────────────────────

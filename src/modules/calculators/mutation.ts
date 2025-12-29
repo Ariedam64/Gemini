@@ -1,4 +1,4 @@
-// src/modules/core/calculators/mutationCalculators.ts
+// src/modules/calculators/mutation.ts
 // Mutation calculation utilities - verified from game source
 
 /**

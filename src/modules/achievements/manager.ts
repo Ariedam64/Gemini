@@ -1,4 +1,4 @@
-// src/modules/core/achievements/manager.ts
+// src/modules/achievements/manager.ts
 // Achievement Manager - Core achievement tracking system
 
 import type {

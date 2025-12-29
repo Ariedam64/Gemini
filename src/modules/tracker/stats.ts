@@ -1,4 +1,4 @@
-// src/modules/core/statsTracker.ts
+// src/modules/tracker/stats.ts
 // Stats Tracker - Track player statistics and actions
 
 // ─────────────────────────────────────────────────────────────────────────────
