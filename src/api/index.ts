@@ -12,6 +12,10 @@ import {
   MGPixi,
   MGAudio,
   MGCosmetic,
+  MGAchievements,
+  MGCalculators,
+  MGPets,
+  MGTracker,
 } from "../modules";
 
 export const GeminiAPI = {
@@ -34,6 +38,10 @@ export const GeminiAPI = {
     Pixi: MGPixi,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
+    Achievements: MGAchievements,
+    Calculators: MGCalculators,
+    Pets: MGPets,
+    Tracker: MGTracker,
   },
 
   WebSocket: {

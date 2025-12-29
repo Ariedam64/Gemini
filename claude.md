@@ -156,6 +156,51 @@ The `GameSourceFiles/` folder contains the deobfuscated game source code for ref
 
 The mod hooks into this minified code at runtime.
 
+## Game Data (MGData & MGSprite)
+
+**Important:** All game data (plants, mutations, pets, items, shops, etc.) must be retrieved from `MGData` module, which dynamically captures data from the game at runtime via Object.* hooks.
+
+```typescript
+// Access game data via MGData
+MGData.get('plants')     // All plants data (seed, plant, crop)
+MGData.get('pets')       // All pets/fauna data
+MGData.get('mutations')  // All mutations data
+MGData.get('items')      // All items data
+MGData.get('decors')      // All decor data
+MGData.get('eggs')       // All eggs data
+MGData.get('abilities')  // All pet abilities data
+MGData.get('weather')    // All weather data
+
+MGData.getAll()          // Get all captured data
+MGData.has('plants')     // Check if data is captured
+await MGData.waitFor('plants')  // Wait for specific data
+```
+
+**Sprites:** Use `MGSprite` with sprite IDs from `MGData`. Each entity in MGData has a `spriteId` property resolved automatically:
+
+```typescript
+// MGData provides spriteId, MGSprite renders them
+const plants = MGData.get('plants')
+const carrot = plants['Carrot']
+const spriteId = carrot.crop.spriteId  // e.g. "sprite/plant/Carrot"
+
+// Display sprite
+MGSprite.show("plant", "Carrot")
+MGSprite.show("plant", "Carrot", { mutations: ["Gold", "Wet"] })
+
+// Convert to canvas
+const canvas = MGSprite.toCanvas("plant", "Carrot")
+
+// Check if sprite exists
+MGSprite.has("plant", "Carrot")
+
+// List available sprites
+MGSprite.getCategories()        // ["plant", "pet", "item", ...]
+MGSprite.getCategoryId("plant") // ["Carrot", "Strawberry", ...]
+```
+
+**Never hardcode game data** - always use MGData to ensure compatibility with game updates.
+
 ## Debug
 
 - Toggle HUD: `Ctrl+Shift+U`

@@ -17,6 +17,28 @@ export { MGPixi } from "./pixi/pixi";
 export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
+// Gameplay/helper modules
+import * as MGAchievements from "./achievements";
+import * as MGCalculators from "./calculators";
+import * as PetStrength from "./pets/strength";
+import { AbilityLogger, getAbilityLogger, destroyAbilityLogger } from "./pets/abilityLogger";
+import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";
+
+export { MGAchievements, MGCalculators };
+
+export const MGPets = {
+  AbilityLogger,
+  getAbilityLogger,
+  destroyAbilityLogger,
+  ...PetStrength,
+};
+
+export const MGTracker = {
+  StatsTracker,
+  getStatsTracker,
+  destroyStatsTracker,
+};
+
 // Re-import for initialization
 import { MGData } from "./core/data";
 import { MGSprite } from "./sprite";
