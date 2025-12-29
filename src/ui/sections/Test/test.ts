@@ -1,20 +1,42 @@
 /**
  * Test Section
- * Demo section for testing components like TimeRangePicker and Log
- * State is persisted across sessions (timeRange, logSettings)
+ * Demo section for displaying all sprite categories
  */
 
 import { element } from "../../styles/helpers";
 import { BaseSection } from "../core/Section";
-import { Button } from "../../components/Button/Button";
-import { Card, CardFooter } from "../../components/Card/Card";
-import { Label } from "../../components/Label/Label";
-import { TimeRangePicker } from "../../components/TimeRangePicker/TimeRangePicker";
-import { Log } from "../../components/Log/Log";
-import * as wsApi from "../../../websocket/api";
-import { initTestState, DEFAULT_TEST_STATE, TestStateController } from "./State";
+import { Card } from "../../components/Card/Card";
+import { Table, ColDef } from "../../components/Table/Table";
+import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { Badge } from "../../components/Badge/Badge";
+import { MGSprite } from "../../../modules/sprite";
+import { MGData } from "../../../modules/core/data";
+import { initTestState, TestStateController } from "./State";
+
+type SpriteRow = {
+  name: string;
+  spriteId: string;
+  rarity: string | null;
+};
+
+const RARITY_ORDER: Record<string, number> = {
+  Common: 1,
+  Uncommon: 2,
+  Rare: 3,
+  Legendary: 4,
+  Mythical: 5,
+  Divine: 6,
+  Celestial: 7,
+};
+
+function getRarityOrder(rarity: string | null): number {
+  if (!rarity) return 0;
+  return RARITY_ORDER[rarity] ?? 0;
+}
 
 export class TestSection extends BaseSection {
+  private stateCtrl: TestStateController | null = null;
+
   constructor() {
     super({
       id: "tab-test",
@@ -23,149 +45,281 @@ export class TestSection extends BaseSection {
   }
 
   protected async build(container: HTMLElement): Promise<void> {
+    this.stateCtrl = await initTestState();
+
     const section = this.createContainer("test-section");
+    section.style.display = "flex";
+    section.style.flexDirection = "column";
+    section.style.gap = "12px";
     container.appendChild(section);
 
-    // Initialize state with fallback
-    let state: TestStateController;
-    try {
-      state = await initTestState();
-    } catch {
-      // Fallback if state initialization fails
-      state = {
-        get: () => DEFAULT_TEST_STATE,
-        set: () => {},
-        update: () => {},
-        save: () => {},
-      } as TestStateController;
+    await this.buildSpriteTables(section);
+  }
+
+  private renderSprite(row: SpriteRow): Node {
+    const wrapper = element("div", {
+      style: "display:flex;align-items:center;justify-content:center;width:32px;height:32px;",
+    }) as HTMLDivElement;
+
+    if (row.spriteId) {
+      const spriteId = row.spriteId;
+      requestAnimationFrame(() => {
+        try {
+          const canvas = MGSprite.toCanvas(spriteId, { scale: 1 });
+          canvas.style.maxWidth = "32px";
+          canvas.style.maxHeight = "32px";
+          canvas.style.objectFit = "contain";
+          wrapper.appendChild(canvas);
+        } catch {
+          wrapper.textContent = "-";
+        }
+      });
+    } else {
+      wrapper.textContent = "-";
     }
+    return wrapper;
+  }
 
-    const currentState = state.get();
-
-    // --- TimeRangePicker Card ---
-    const lblTime = Label({
-      text: "Plage horaire",
-      hint: "Heures actives du mode 'Plage horaire'.",
-      icon: "\u23F0",
+  private renderRarity(row: SpriteRow): Node {
+    if (!row.rarity) {
+      const span = element("span", { style: "opacity:0.5;" }) as HTMLSpanElement;
+      span.textContent = "—";
+      return span;
+    }
+    const badge = Badge({
+      variant: "rarity",
+      rarity: row.rarity,
+      size: "sm",
     });
+    return badge.root;
+  }
 
-    const timeRange = TimeRangePicker({
-      start: currentState.timeRange.start,
-      end: currentState.timeRange.end,
-      stepMinutes: 5,
-      allowOvernight: true,
-      picker: "auto",
-      format: "12h",
-      onChange: (range) => {
-        // Auto-save on change
-        state.update({
-          timeRange: {
-            start: range.start,
-            end: range.end,
-          },
-        });
+  private createDataCard(
+    category: string,
+    title: string,
+    allRows: SpriteRow[],
+    columns: ColDef<SpriteRow>[]
+  ): HTMLElement {
+    const state = this.stateCtrl!.getCategoryState(category);
+
+    const filterRows = (query: string): SpriteRow[] => {
+      if (!query) return allRows;
+      const q = query.toLowerCase();
+      return allRows.filter((row) => row.name.toLowerCase().includes(q));
+    };
+
+    const table = Table<SpriteRow>({
+      columns,
+      data: filterRows(state.search),
+      pageSize: 0,
+      compact: true,
+      maxHeight: "calc(var(--lg-row-h, 40px) * 6)",
+      getRowId: (row) => row.spriteId,
+      onSortChange: (key, dir) => {
+        this.stateCtrl!.setCategorySort(category, key, dir);
       },
     });
 
-    const kvRow = element("div", null, lblTime.root, timeRange.root);
-
-    // --- Log Component ---
-    const log = Log({
-      height: 220,
-      mode: currentState.logSettings.mode,
-      maxLines: 1000,
-    });
-
-    // Set initial wrap state
-    if (currentState.logSettings.wrap) {
-      log.setWrap(true);
+    if (state.sort.key && state.sort.dir) {
+      table.sortBy(state.sort.key, state.sort.dir);
     }
 
-    // Seed demo lines
-    log.add({ level: "info", text: "Log initialise" });
-    log.add({ level: "debug", text: "const x = 42; // demo" });
-    log.add({ level: "warn", text: "Requete lente: fetch('/api') > 1200ms" });
-    log.add({ level: "error", text: "new Error('Boom')" });
-
-    // Apply button
-    const btnApply = Button({
-      label: "Appliquer",
-      variant: "primary",
-      onClick: () => {
-        const value = timeRange.getValue();
-        log.add({ level: "info", text: `[Apply] ${value.start} -> ${value.end}` });
+    const search = SearchBar({
+      placeholder: "Search...",
+      value: state.search,
+      debounceMs: 150,
+      withClear: true,
+      size: "sm",
+      focusKey: "",
+      onChange: (val) => {
+        const trimmed = val.trim();
+        this.stateCtrl!.setCategorySearch(category, trimmed);
+        table.setData(filterRows(trimmed));
       },
     });
 
-    const timeCard = Card(
+    const searchWrapper = element("div", {
+      style: "margin-bottom:8px;",
+    }) as HTMLDivElement;
+    searchWrapper.appendChild(search.root);
+
+    const content = element("div") as HTMLDivElement;
+    content.appendChild(searchWrapper);
+    content.appendChild(table.root);
+
+    return Card(
       {
-        title: "Parametres - Plage horaire",
-        subtitle: "Choisis la fenetre d'activite",
+        title,
+        subtitle: `${allRows.length} entries`,
         variant: "soft",
-        padding: "lg",
-        footer: CardFooter(btnApply as any),
+        padding: "sm",
+        expandable: true,
+        defaultExpanded: state.expanded,
+        onExpandChange: (expanded) => {
+          this.stateCtrl!.setCategoryExpanded(category, expanded);
+        },
       },
-      kvRow
+      content
     );
+  }
 
-    // --- Log Controls ---
-    const btnClear = Button({
-      label: "Clear",
-      onClick: () => wsApi.chat("test"),
-    });
+  private formatCategoryName(category: string): string {
+    return category
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
 
-    const btnWrap = Button({
-      label: currentState.logSettings.wrap ? "Unwrap" : "Wrap",
-      onClick: () => {
-        const newWrap = !log.classList.contains("log--wrap");
-        log.setWrap(newWrap);
-        btnWrap.setLabel(newWrap ? "Unwrap" : "Wrap");
+  private findPlantBySprite(spriteId: string, spriteName: string): any | null {
+    const plants = MGData.get("plants") as Record<string, any> | null;
+    if (!plants) return null;
 
-        // Auto-save on change
-        state.update({
-          logSettings: {
-            ...state.get().logSettings,
-            wrap: newWrap,
-          },
-        });
+    for (const plant of Object.values(plants)) {
+      if (plant?.seed?.spriteId === spriteId) return plant;
+      if (plant?.plant?.spriteId === spriteId) return plant;
+      if (plant?.crop?.spriteId === spriteId) return plant;
+    }
+
+    const nameLC = spriteName.toLowerCase();
+    for (const plant of Object.values(plants)) {
+      const seedName = (plant?.seed?.name || "").toLowerCase();
+      if (seedName === nameLC || seedName === `${nameLC} seed`) return plant;
+    }
+
+    return null;
+  }
+
+  private findPetBySpriteId(spriteId: string): any | null {
+    const pets = MGData.get("pets") as Record<string, any> | null;
+    if (!pets) return null;
+
+    for (const pet of Object.values(pets)) {
+      if (pet?.spriteId === spriteId) return pet;
+    }
+    return null;
+  }
+
+  private findItemBySpriteId(spriteId: string): any | null {
+    const items = MGData.get("items") as Record<string, any> | null;
+    if (!items) return null;
+
+    for (const item of Object.values(items)) {
+      if (item?.spriteId === spriteId) return item;
+    }
+    return null;
+  }
+
+  private findDecorBySpriteId(spriteId: string): any | null {
+    const decors = MGData.get("decor") as Record<string, any> | null;
+    if (!decors) return null;
+
+    for (const decor of Object.values(decors)) {
+      if (decor?.spriteId === spriteId) return decor;
+    }
+    return null;
+  }
+
+  private findEggBySpriteId(spriteId: string): any | null {
+    const eggs = MGData.get("eggs") as Record<string, any> | null;
+    if (!eggs) return null;
+
+    for (const egg of Object.values(eggs)) {
+      if (egg?.spriteId === spriteId) return egg;
+    }
+    return null;
+  }
+
+  private getRarityForSprite(category: string, spriteId: string, spriteName: string): string | null {
+    const catLower = category.toLowerCase();
+
+    if (catLower === "plant" || catLower === "seed" || catLower === "tallplant") {
+      const plant = this.findPlantBySprite(spriteId, spriteName);
+      if (plant?.seed?.rarity) return plant.seed.rarity;
+    }
+
+    if (catLower === "pet") {
+      const pet = this.findPetBySpriteId(spriteId);
+      if (pet?.rarity) return pet.rarity;
+    }
+
+    if (catLower === "item") {
+      const item = this.findItemBySpriteId(spriteId);
+      if (item?.rarity) return item.rarity;
+    }
+
+    if (catLower === "decor") {
+      const decor = this.findDecorBySpriteId(spriteId);
+      if (decor?.rarity) return decor.rarity;
+    }
+
+    if (catLower === "egg") {
+      const egg = this.findEggBySpriteId(spriteId);
+      if (egg?.rarity) return egg.rarity;
+    }
+
+    return null;
+  }
+
+  private async buildSpriteTables(container: HTMLElement): Promise<void> {
+    const spriteColumns: ColDef<SpriteRow>[] = [
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        width: "1fr",
+        sortFn: (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
       },
-    });
-
-    const btnMode = Button({
-      label: `Mode: ${currentState.logSettings.mode}`,
-      onClick: () => {
-        const currentMode = state.get().logSettings.mode;
-        const newMode = currentMode === "js" ? "plain" : "js";
-        log.setMode(newMode);
-        btnMode.setLabel(`Mode: ${newMode}`);
-
-        // Auto-save on change
-        state.update({
-          logSettings: {
-            ...state.get().logSettings,
-            mode: newMode,
-          },
-        });
+      {
+        key: "rarity",
+        header: "Rarity",
+        sortable: true,
+        width: "100px",
+        align: "center",
+        render: (row) => this.renderRarity(row),
+        sortFn: (a, b) => getRarityOrder(a.rarity) - getRarityOrder(b.rarity),
       },
-    });
+      {
+        key: "sprite",
+        header: "Sprite",
+        width: "60px",
+        align: "center",
+        render: (row) => this.renderSprite(row),
+      },
+    ];
 
-    const btnAdd = Button({
-      label: "Add line",
-      onClick: () =>
-        log.add({
-          level: "debug",
-          text: "function tick(){ return Date.now(); } // sample",
-        }),
-    });
+    if (!MGSprite.ready()) {
+      try {
+        await MGSprite.init();
+      } catch {
+        return;
+      }
+    }
 
-    const logsCard = Card(
-      { title: "Logs", variant: "default", padding: "lg" },
-      log,
-      CardFooter(btnClear as any, btnWrap as any, btnMode as any, btnAdd as any)
-    );
+    const categories = MGSprite.getCategories();
 
-    // Mount cards
-    section.appendChild(timeCard);
-    section.appendChild(logsCard);
+    for (const category of categories) {
+      const ids = MGSprite.getCategoryId(category);
+
+      const rows: SpriteRow[] = ids.map((id) => {
+        const spriteId = `sprite/${category}/${id}`;
+        return {
+          name: id,
+          spriteId,
+          rarity: this.getRarityForSprite(category, spriteId, id),
+        };
+      });
+
+      rows.sort((a, b) => getRarityOrder(a.rarity) - getRarityOrder(b.rarity));
+
+      if (rows.length > 0) {
+        const card = this.createDataCard(
+          category,
+          this.formatCategoryName(category),
+          rows,
+          spriteColumns
+        );
+        container.appendChild(card);
+      }
+    }
   }
 }

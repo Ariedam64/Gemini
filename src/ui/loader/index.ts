@@ -6,5 +6,6 @@ export {
   initAPI,
   initHUD,
   initModules,
+  initSpriteWarmup,
   startInjectGamePanelButton,
 } from "./bootstrap";

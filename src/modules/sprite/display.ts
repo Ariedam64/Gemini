@@ -11,11 +11,164 @@ import type {
   MutationCacheState,
   CacheConfig,
   MutationName,
+  CanvasCacheState,
+  CanvasCacheConfig,
 } from "./types";
 import { resolveKey, makeKey } from "./utils";
 import { computeVariantSignature } from "./mutations/types";
 import { composeMutatedTexture, composeMutatedAnimation } from "./mutations/composer";
 import { variantKey, lruGet, lruSet, DEFAULT_CACHE_CONFIG } from "./mutations/cache";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Canvas Cache
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const DEFAULT_CANVAS_CACHE_CONFIG: CanvasCacheConfig = {
+  enabled: true,
+  maxEntries: 500,
+};
+
+export function createCanvasCacheState(): CanvasCacheState {
+  return {
+    cache: new Map(),
+    maxEntries: DEFAULT_CANVAS_CACHE_CONFIG.maxEntries,
+  };
+}
+
+function buildCanvasCacheKey(
+  key: string,
+  options: ToCanvasOptions
+): string {
+  const scale = options.scale ?? 1;
+  const frameIndex = options.frameIndex ?? 0;
+  const mutations = options.mutations?.slice().sort().join(",") || "";
+  const anchorX = options.anchorX ?? 0.5;
+  const anchorY = options.anchorY ?? 0.5;
+  const pad = options.pad ?? 2;
+  return `${key}|s${scale}|f${frameIndex}|m${mutations}|ax${anchorX}|ay${anchorY}|p${pad}`;
+}
+
+function canvasCacheGet(
+  cacheState: CanvasCacheState,
+  cacheKey: string
+): HTMLCanvasElement | null {
+  const entry = cacheState.cache.get(cacheKey);
+  if (!entry) return null;
+  entry.lastAccess = performance.now();
+  return entry.canvas;
+}
+
+function canvasCacheSet(
+  cacheState: CanvasCacheState,
+  config: CanvasCacheConfig,
+  cacheKey: string,
+  canvas: HTMLCanvasElement
+): void {
+  if (!config.enabled) return;
+
+  if (cacheState.cache.size >= config.maxEntries) {
+    let oldest: string | null = null;
+    let oldestTime = Infinity;
+    for (const [k, v] of cacheState.cache) {
+      if (v.lastAccess < oldestTime) {
+        oldestTime = v.lastAccess;
+        oldest = k;
+      }
+    }
+    if (oldest) cacheState.cache.delete(oldest);
+  }
+
+  cacheState.cache.set(cacheKey, {
+    canvas,
+    lastAccess: performance.now(),
+  });
+}
+
+function cloneCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const clone = document.createElement("canvas");
+  clone.width = source.width;
+  clone.height = source.height;
+  const ctx = clone.getContext("2d");
+  if (ctx) ctx.drawImage(source, 0, 0);
+  return clone;
+}
+
+export function clearCanvasCache(cacheState: CanvasCacheState): void {
+  cacheState.cache.clear();
+}
+
+export function getCanvasCacheStats(cacheState: CanvasCacheState): { size: number; maxEntries: number } {
+  return {
+    size: cacheState.cache.size,
+    maxEntries: cacheState.maxEntries,
+  };
+}
+
+export type WarmupProgressCallback = (loaded: number, total: number) => void;
+
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(() => resolve(), { timeout: 50 });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+export async function warmupCanvasCache(
+  spriteIds: string[],
+  state: SpriteState,
+  mutCacheState: MutationCacheState,
+  mutCacheConfig: CacheConfig,
+  canvasCacheState: CanvasCacheState,
+  canvasCacheConfig: CanvasCacheConfig,
+  onProgress?: WarmupProgressCallback,
+  batchSize = 5,
+  _batchDelayMs = 0
+): Promise<number> {
+  if (!state.ready || !canvasCacheConfig.enabled) return 0;
+
+  const total = spriteIds.length;
+  let loaded = 0;
+
+  onProgress?.(0, total);
+
+  for (let i = 0; i < total; i += batchSize) {
+    const batch = spriteIds.slice(i, i + batchSize);
+
+    for (const spriteId of batch) {
+      try {
+        const key = resolveKey(null, spriteId, state.textures, state.animations);
+        const cacheKey = buildCanvasCacheKey(key, { scale: 1 });
+
+        if (!canvasCacheState.cache.has(cacheKey)) {
+          spriteToCanvas(
+            state,
+            mutCacheState,
+            mutCacheConfig,
+            null,
+            spriteId,
+            { scale: 1 },
+            canvasCacheState,
+            canvasCacheConfig
+          );
+        }
+        loaded++;
+      } catch {
+        loaded++;
+      }
+    }
+
+    onProgress?.(loaded, total);
+
+    if (i + batchSize < total) {
+      await yieldToMain();
+    }
+  }
+
+  return loaded;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Overlay Management
@@ -232,13 +385,24 @@ export function spriteToCanvas(
   cacheConfig: CacheConfig,
   category: string | null,
   asset: string,
-  options: ToCanvasOptions = {}
+  options: ToCanvasOptions = {},
+  canvasCacheState?: CanvasCacheState,
+  canvasCacheConfig?: CanvasCacheConfig
 ): HTMLCanvasElement {
   if (!state.ready) throw new Error("MGSprite not ready yet");
 
   const key = resolveKey(category, asset, state.textures, state.animations);
-  const mutations = options.mutations || [];
 
+  // Check canvas cache first
+  if (canvasCacheState && canvasCacheConfig?.enabled) {
+    const cacheKey = buildCanvasCacheKey(key, options);
+    const cached = canvasCacheGet(canvasCacheState, cacheKey);
+    if (cached) {
+      return cloneCanvas(cached);
+    }
+  }
+
+  const mutations = options.mutations || [];
   const rawFrames = state.animations.get(key);
   const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
 
@@ -275,6 +439,13 @@ export function spriteToCanvas(
   try {
     tmp.destroy?.({ children: true });
   } catch {}
+
+  // Store in canvas cache
+  if (canvasCacheState && canvasCacheConfig?.enabled) {
+    const cacheKey = buildCanvasCacheKey(key, options);
+    canvasCacheSet(canvasCacheState, canvasCacheConfig, cacheKey, canvas);
+    return cloneCanvas(canvas);
+  }
 
   return canvas;
 }

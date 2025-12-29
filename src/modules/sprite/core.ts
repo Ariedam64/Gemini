@@ -1,13 +1,14 @@
 // src/modules/sprite/core.ts
 // State management and initialization for sprite system
 
-import type { SpriteState, MutationCacheState, CacheConfig } from "./types";
+import type { SpriteState, MutationCacheState, CacheConfig, CanvasCacheState, CanvasCacheConfig } from "./types";
 import { waitWithTimeout } from "../utils/helpers";
 import { MGPixiHooks } from "../pixi/hooks";
 import { MGAssets } from "../core/assets";
 import { waitForCtors, log } from "./utils";
 import { loadAtlasesFromManifest } from "./atlas";
 import { createCacheState, DEFAULT_CACHE_CONFIG } from "./mutations/cache";
+import { createCanvasCacheState, DEFAULT_CANVAS_CACHE_CONFIG } from "./display";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State Factories
@@ -37,6 +38,8 @@ let _initPromise: Promise<boolean> | null = null;
 const state = createSpriteState();
 const cacheState = createCacheState();
 const cacheConfig: CacheConfig = { ...DEFAULT_CACHE_CONFIG };
+const canvasCacheState = createCanvasCacheState();
+const canvasCacheConfig: CanvasCacheConfig = { ...DEFAULT_CANVAS_CACHE_CONFIG };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Getters
@@ -52,6 +55,14 @@ export function getCacheState(): MutationCacheState {
 
 export function getCacheConfig(): CacheConfig {
   return cacheConfig;
+}
+
+export function getCanvasCacheState(): CanvasCacheState {
+  return canvasCacheState;
+}
+
+export function getCanvasCacheConfig(): CanvasCacheConfig {
+  return canvasCacheConfig;
 }
 
 export function isReady(): boolean {

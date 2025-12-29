@@ -8,9 +8,9 @@ import type {
   ToCanvasOptions,
   MutationName,
 } from "./types";
-import { init, getState, getCacheState, getCacheConfig, isReady } from "./core";
+import { init, getState, getCacheState, getCacheConfig, getCanvasCacheState, getCanvasCacheConfig, isReady } from "./core";
 import { makeKey, normalizeKey, resolveKey } from "./utils";
-import { showSprite, spriteToCanvas, clearSprites, attachParent, attachParentProvider } from "./display";
+import { showSprite, spriteToCanvas, clearSprites, attachParent, attachParentProvider, clearCanvasCache, getCanvasCacheStats, warmupCanvasCache, WarmupProgressCallback } from "./display";
 import { clearCache } from "./mutations/cache";
 import { MUT_NAMES } from "./mutations/types";
 
@@ -54,9 +54,15 @@ function toCanvas(category: string, asset: string, options?: ToCanvasOptions): H
 function toCanvas(asset: string, options?: ToCanvasOptions): HTMLCanvasElement;
 function toCanvas(a: string, b?: string | ToCanvasOptions, c?: ToCanvasOptions): HTMLCanvasElement {
   if (typeof b === "string") {
-    return spriteToCanvas(getState(), getCacheState(), getCacheConfig(), a, b, c || {});
+    return spriteToCanvas(
+      getState(), getCacheState(), getCacheConfig(), a, b, c || {},
+      getCanvasCacheState(), getCanvasCacheConfig()
+    );
   }
-  return spriteToCanvas(getState(), getCacheState(), getCacheConfig(), null, a, b || {});
+  return spriteToCanvas(
+    getState(), getCacheState(), getCacheConfig(), null, a, b || {},
+    getCanvasCacheState(), getCanvasCacheConfig()
+  );
 }
 
 /**
@@ -112,7 +118,7 @@ function getCategoryId(category: string): string[] {
   if (!cat) return [];
   const index = getState().categoryIndex;
   if (!index) return [];
-  return Array.from(index.get(cat)?.values() || []).sort((a, b) => a.localeCompare(b));
+  return Array.from(index.get(cat)?.values() || []);
 }
 
 /**
@@ -229,10 +235,51 @@ function clearMutationCache(): void {
 }
 
 /**
+ * Clear the canvas cache (toCanvas results)
+ */
+function clearToCanvasCache(): void {
+  clearCanvasCache(getCanvasCacheState());
+}
+
+/**
+ * Get canvas cache statistics
+ */
+function getToCanvasCacheStats(): { size: number; maxEntries: number } {
+  return getCanvasCacheStats(getCanvasCacheState());
+}
+
+/**
  * Get available mutation names
  */
 function getMutationNames(): MutationName[] {
   return [...MUT_NAMES];
+}
+
+/**
+ * Warmup canvas cache by preloading sprites
+ * @param spriteIds - Array of sprite IDs to preload
+ * @param onProgress - Callback for progress updates (loaded, total)
+ * @param batchSize - Number of sprites to process per batch (default: 10)
+ * @param batchDelayMs - Delay between batches in ms (default: 0)
+ */
+async function warmup(
+  spriteIds: string[],
+  onProgress?: WarmupProgressCallback,
+  batchSize = 10,
+  batchDelayMs = 0
+): Promise<number> {
+  assertReady();
+  return warmupCanvasCache(
+    spriteIds,
+    getState(),
+    getCacheState(),
+    getCacheConfig(),
+    getCanvasCacheState(),
+    getCanvasCacheConfig(),
+    onProgress,
+    batchSize,
+    batchDelayMs
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -261,7 +308,10 @@ export const MGSprite = {
   getIdPath,
 
   clearMutationCache,
+  clearToCanvasCache,
+  getToCanvasCacheStats,
   getMutationNames,
+  warmup,
 };
 
 // Re-export types

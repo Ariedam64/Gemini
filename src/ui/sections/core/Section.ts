@@ -4,7 +4,7 @@
  */
 
 import { element } from "../../styles/helpers";
-import type { SectionConfig, MountResult } from "./Types";
+import type { SectionConfig } from "./Types";
 
 export abstract class BaseSection {
   readonly id: string;
@@ -31,24 +31,20 @@ export abstract class BaseSection {
   render(container: HTMLElement): void {
     this.unmount();
 
-    // Reset container
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
 
     this.container = container;
 
-    // Execute the section build
     const result = this.build(container);
 
-    // Support async build
     if (result instanceof Promise) {
       result.catch((error) => {
         console.error(`[Gemini] Error building section ${this.id}:`, error);
       });
     }
 
-    // Auto-activate first .gemini-section element if present
     const firstSection = container.firstElementChild as HTMLElement | null;
     if (firstSection && firstSection.classList.contains("gemini-section")) {
       firstSection.classList.add("active");

@@ -127,3 +127,22 @@ export interface CacheConfig {
   maxCost: number;
   srcCanvasMax: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Canvas Cache Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CanvasCacheEntry {
+  canvas: HTMLCanvasElement;
+  lastAccess: number;
+}
+
+export interface CanvasCacheState {
+  cache: Map<string, CanvasCacheEntry>;
+  maxEntries: number;
+}
+
+export interface CanvasCacheConfig {
+  enabled: boolean;
+  maxEntries: number;
+}
