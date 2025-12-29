@@ -504,3 +504,157 @@ export type SellInfoGlobal = {
   subscribeNewLogs(callback: (event: NewLogsEvent) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
+
+// =============================================================================
+// MY GARDEN GLOBAL
+// =============================================================================
+
+import type { Garden, DecorRotation } from "../../atoms/types";
+
+export type TileIndex = string;
+
+export type MutationId = string;
+
+export type PlantWithTile = {
+  tileIndex: TileIndex;
+  position: XY;
+  species: string;
+  plantedAt: number;
+  maturedAt: number;
+  isMature: boolean;
+  slots: GrowSlot[];
+  slotsCount: number;
+  matureSlotsCount: number;
+};
+
+export type CropInfo = {
+  tileIndex: TileIndex;
+  position: XY;
+  slotIndex: number;
+  species: string;
+  startTime: number;
+  endTime: number;
+  targetScale: number;
+  mutations: string[];
+  isMature: boolean;
+};
+
+export type EggWithTile = {
+  tileIndex: TileIndex;
+  position: XY;
+  eggId: string;
+  plantedAt: number;
+  maturedAt: number;
+  isMature: boolean;
+};
+
+export type DecorWithTile = {
+  tileIndex: TileIndex;
+  position: XY;
+  decorId: string;
+  rotation: DecorRotation;
+  location: "tileObjects" | "boardwalk";
+};
+
+export type MyGardenData = {
+  garden: Garden | null;
+  mySlotIndex: number | null;
+
+  plants: {
+    all: PlantWithTile[];
+    mature: PlantWithTile[];
+    growing: PlantWithTile[];
+    bySpecies: Record<string, PlantWithTile[]>;
+    count: number;
+  };
+
+  crops: {
+    all: CropInfo[];
+    mature: CropInfo[];
+    growing: CropInfo[];
+    mutated: {
+      all: CropInfo[];
+      byMutation: Record<string, CropInfo[]>;
+    };
+  };
+
+  eggs: {
+    all: EggWithTile[];
+    mature: EggWithTile[];
+    growing: EggWithTile[];
+    byType: Record<string, EggWithTile[]>;
+    count: number;
+  };
+
+  decors: {
+    tileObjects: DecorWithTile[];
+    boardwalk: DecorWithTile[];
+    all: DecorWithTile[];
+    byType: Record<string, DecorWithTile[]>;
+    count: number;
+  };
+
+  tiles: {
+    tileObjects: MapTile[];
+    boardwalk: MapTile[];
+    empty: {
+      tileObjects: MapTile[];
+      boardwalk: MapTile[];
+    };
+  };
+
+  counts: {
+    plants: number;
+    maturePlants: number;
+    crops: number;
+    matureCrops: number;
+    eggs: number;
+    matureEggs: number;
+    decors: number;
+    emptyTileObjects: number;
+    emptyBoardwalk: number;
+  };
+};
+
+export type PlantAddedEvent = { plant: PlantWithTile };
+export type PlantRemovedEvent = { plant: PlantWithTile; tileIndex: TileIndex };
+export type PlantMaturedEvent = { plant: PlantWithTile };
+
+export type CropMutatedEvent = {
+  crop: CropInfo;
+  added: MutationId[];
+  removed: MutationId[];
+};
+export type CropMaturedEvent = { crop: CropInfo };
+export type CropHarvestedEvent = { crop: CropInfo; remainingSlots: number };
+
+export type EggPlacedEvent = { egg: EggWithTile };
+export type EggRemovedEvent = { egg: EggWithTile };
+export type EggMaturedEvent = { egg: EggWithTile };
+
+export type DecorPlacedEvent = { decor: DecorWithTile };
+export type DecorRemovedEvent = { decor: DecorWithTile };
+
+export type MyGardenGlobal = {
+  get(): MyGardenData;
+
+  subscribe(callback: (value: MyGardenData, prev: MyGardenData) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (value: MyGardenData, prev: MyGardenData) => void, options?: SubscribeOptions): Unsubscribe;
+
+  subscribePlantAdded(callback: (event: PlantAddedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribePlantRemoved(callback: (event: PlantRemovedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribePlantMatured(callback: (event: PlantMaturedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+
+  subscribeCropMutated(callback: (event: CropMutatedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeCropMatured(callback: (event: CropMaturedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeCropHarvested(callback: (event: CropHarvestedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+
+  subscribeEggPlaced(callback: (event: EggPlacedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeEggRemoved(callback: (event: EggRemovedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeEggMatured(callback: (event: EggMaturedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+
+  subscribeDecorPlaced(callback: (event: DecorPlacedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeDecorRemoved(callback: (event: DecorRemovedEvent) => void, options?: SubscribeOptions): Unsubscribe;
+
+  destroy(): void;
+};

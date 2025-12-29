@@ -8,6 +8,7 @@ export { getMyInventory } from "./variables/myInventory";
 export { getPlayers } from "./variables/players";
 export { getShops } from "./variables/shops";
 export { getWeather } from "./variables/weather";
+export { getMyGarden } from "./variables/myGarden";
 
 import { getCurrentTile } from "./variables/currentTile";
 import { getMyPets } from "./variables/myPets";
@@ -16,6 +17,7 @@ import { getMyInventory } from "./variables/myInventory";
 import { getPlayers } from "./variables/players";
 import { getShops } from "./variables/shops";
 import { getWeather } from "./variables/weather";
+import { getMyGarden } from "./variables/myGarden";
 import type {
   CurrentTileGlobalWithSubscriptions,
   MyPetsGlobal,
@@ -24,6 +26,7 @@ import type {
   PlayersGlobal,
   ShopsGlobal,
   WeatherGlobal,
+  MyGardenGlobal,
 } from "./core/types";
 
 export type GlobalsRegistry = {
@@ -34,6 +37,7 @@ export type GlobalsRegistry = {
   players: PlayersGlobal;
   shops: ShopsGlobal;
   weather: WeatherGlobal;
+  myGarden: MyGardenGlobal;
 };
 
 let _globals: GlobalsRegistry | null = null;
@@ -49,6 +53,7 @@ export function initGlobals(): GlobalsRegistry {
     players: getPlayers(),
     shops: getShops(),
     weather: getWeather(),
+    myGarden: getMyGarden(),
   };
 
   return _globals;
@@ -70,6 +75,7 @@ export function destroyGlobals(): void {
     _globals.players.destroy();
     _globals.shops.destroy();
     _globals.weather.destroy();
+    _globals.myGarden.destroy();
     _globals = null;
   }
 }
@@ -95,5 +101,8 @@ export const Globals = {
   },
   get weather() {
     return getGlobals().weather;
+  },
+  get myGarden() {
+    return getGlobals().myGarden;
   },
 };
