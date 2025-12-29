@@ -137,17 +137,17 @@ Render game sprites with optional mutation effects.
 
 ```typescript
 // Display a sprite
-MGSprite.show('plants', 'Carrot')
-MGSprite.show('plants', 'Carrot', { mutations: ['Gold', 'Wet'] })
-MGSprite.show('plants', 'Carrot', { x: 100, y: 200, scale: 2 })
+MGSprite.show('plant', 'Carrot')
+MGSprite.show('plant', 'Carrot', { mutations: ['Gold', 'Wet'] })
+MGSprite.show('plant', 'Carrot', { x: 100, y: 200, scale: 2 })
 
 // Convert to canvas
-const canvas = MGSprite.toCanvas('plants', 'Carrot', { mutations: ['Rainbow'] })
+const canvas = MGSprite.toCanvas('plant', 'Carrot', { mutations: ['Rainbow'] })
 
 // Query available sprites
 MGSprite.getCategories()          // ['plants', 'pets', 'items', ...]
-MGSprite.getCategoryId('plants')  // ['Carrot', 'Strawberry', ...]
-MGSprite.has('plants', 'Carrot')  // true
+MGSprite.getCategoryId('plant')  // ['Carrot', 'Strawberry', ...]
+MGSprite.has('plant', 'Carrot')  // true
 ```
 
 ### Store
