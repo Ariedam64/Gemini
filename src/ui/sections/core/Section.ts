@@ -12,6 +12,8 @@ export abstract class BaseSection {
 
   protected container: HTMLElement | null = null;
   private cleanupFunctions: (() => void)[] = [];
+  private preloadedContent: HTMLElement | null = null;
+  private preloadPromise: Promise<void> | null = null;
 
   constructor(config: SectionConfig) {
     this.id = config.id;
@@ -23,6 +25,34 @@ export abstract class BaseSection {
    * This is where the section builds its UI
    */
   protected abstract build(container: HTMLElement): void | Promise<void>;
+
+  /**
+   * Preload the section content in background
+   * Creates content in a detached container for later use
+   */
+  async preload(): Promise<void> {
+    if (this.preloadedContent || this.preloadPromise) return;
+
+    const tempContainer = element("div") as HTMLDivElement;
+
+    this.preloadPromise = (async () => {
+      const result = this.build(tempContainer);
+      if (result instanceof Promise) {
+        await result;
+      }
+      this.preloadedContent = tempContainer;
+      this.preloadPromise = null;
+    })();
+
+    await this.preloadPromise;
+  }
+
+  /**
+   * Check if section has preloaded content ready
+   */
+  isPreloaded(): boolean {
+    return this.preloadedContent !== null;
+  }
 
   /**
    * Renders the section into the container
@@ -37,12 +67,19 @@ export abstract class BaseSection {
 
     this.container = container;
 
-    const result = this.build(container);
+    if (this.preloadedContent) {
+      while (this.preloadedContent.firstChild) {
+        container.appendChild(this.preloadedContent.firstChild);
+      }
+      this.preloadedContent = null;
+    } else {
+      const result = this.build(container);
 
-    if (result instanceof Promise) {
-      result.catch((error) => {
-        console.error(`[Gemini] Error building section ${this.id}:`, error);
-      });
+      if (result instanceof Promise) {
+        result.catch((error) => {
+          console.error(`[Gemini] Error building section ${this.id}:`, error);
+        });
+      }
     }
 
     const firstSection = container.firstElementChild as HTMLElement | null;

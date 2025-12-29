@@ -260,6 +260,18 @@ export class TestSection extends BaseSection {
     return null;
   }
 
+  private yieldToMain(delayMs = 0): Promise<void> {
+    return new Promise((resolve) => {
+      if (delayMs > 0) {
+        setTimeout(resolve, delayMs);
+      } else if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(() => resolve(), { timeout: 50 });
+      } else {
+        setTimeout(resolve, 4);
+      }
+    });
+  }
+
   private async buildSpriteTables(container: HTMLElement): Promise<void> {
     const spriteColumns: ColDef<SpriteRow>[] = [
       {
@@ -297,7 +309,10 @@ export class TestSection extends BaseSection {
 
     const categories = MGSprite.getCategories();
 
-    for (const category of categories) {
+    for (let i = 0; i < categories.length; i++) {
+      await this.yieldToMain(8);
+
+      const category = categories[i];
       const ids = MGSprite.getCategoryId(category);
 
       const rows: SpriteRow[] = ids.map((id) => {

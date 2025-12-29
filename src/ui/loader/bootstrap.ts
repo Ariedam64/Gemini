@@ -1,6 +1,6 @@
-import { loadHudState, saveHudStateValue } from "../hud";
+import { loadHudState, saveHudStateValue, Hud } from "../hud";
 import { THEMES } from "../theme";
-import { buildSections } from "../sections";
+import { buildSections, preloadSections } from "../sections";
 import { createHUD } from "../hud";
 import { startInjectGamePanelButton } from "../../utils/injectGamePanelButton";
 import { initWebSocket } from "../../websocket/bootstrap";
@@ -84,7 +84,7 @@ function yieldToMain(): Promise<void> {
   });
 }
 
-export async function initHUD(loader: LoaderController): Promise<ReturnType<typeof createHUD>> {
+export async function initHUD(loader: LoaderController): Promise<Hud> {
   loader.logStep("HUD", "Loading HUD preferences...");
 
   await yieldToMain();
@@ -93,7 +93,7 @@ export async function initHUD(loader: LoaderController): Promise<ReturnType<type
 
   await yieldToMain();
 
-  const hud = createHUD({
+  const hud = await createHUD({
     hostId: "gemini-hud-root",
     initialWidth: state.width,
     initialOpen: state.isOpen,
@@ -182,6 +182,18 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
   } catch (err) {
     loader.logStep("Sprites", "Sprite warmup failed", "error");
     console.warn("[Bootstrap] Sprite warmup failed", err);
+  }
+}
+
+export async function initSectionsPreload(loader: LoaderController): Promise<void> {
+  loader.logStep("Sections", "Preloading UI sections...");
+
+  try {
+    await preloadSections();
+    loader.logStep("Sections", "Sections preloaded", "success");
+  } catch (err) {
+    loader.logStep("Sections", "Sections preload failed", "error");
+    console.warn("[Bootstrap] Sections preload failed", err);
   }
 }
 

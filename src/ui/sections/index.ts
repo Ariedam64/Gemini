@@ -34,4 +34,4 @@ export {
 } from "./core/State";
 
 // Registry
-export { buildSections } from "./registry";
+export { buildSections, preloadSections } from "./registry";

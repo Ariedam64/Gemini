@@ -72,10 +72,20 @@ import { logCss } from "../components/Log/log.css";
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
 
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(() => resolve(), { timeout: 16 });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
 /**
  * Create and initialize the HUD
  */
-export function createHUD(opts: HudOptions): Hud {
+export async function createHUD(opts: HudOptions): Promise<Hud> {
   const {
     hostId = "gemini-hud-root",
 
@@ -101,32 +111,38 @@ export function createHUD(opts: HudOptions): Hud {
   // ===== 1. Host + Shadow + CSS Injection =====
   const { host, shadow } = attachHost(hostId);
 
-  // Inject all styles
-  injectStyleOnce(shadow, variablesCss, "variables");
-  injectStyleOnce(shadow, primitivesCss, "primitives");
-  injectStyleOnce(shadow, utilitiesCss, "utilities");
-  injectStyleOnce(shadow, hudCss, "hud");
+  // Inject all styles in batches with yields to avoid blocking
+  const styleInjections: [string, string][] = [
+    [variablesCss, "variables"],
+    [primitivesCss, "primitives"],
+    [utilitiesCss, "utilities"],
+    [hudCss, "hud"],
+    [cardCss, "card"],
+    [badgeCss, "badge"],
+    [buttonCss, "button"],
+    [inputCss, "input"],
+    [labelCss, "label"],
+    [navTabsCss, "navTabs"],
+    [searchBarCss, "searchBar"],
+    [selectCss, "select"],
+    [switchCss, "switch"],
+    [tableCss, "table"],
+    [timeRangePickerCss, "timeRangePicker"],
+    [tooltipCss, "tooltip"],
+    [sliderCss, "slider"],
+    [reorderableListCss, "reorderableList"],
+    [colorPickerCss, "colorPicker"],
+    [logCss, "log"],
+    [settingsCss, "settings"],
+  ];
 
-  // Inject component styles
-  injectStyleOnce(shadow, cardCss, "card");
-  injectStyleOnce(shadow, badgeCss, "badge");
-  injectStyleOnce(shadow, buttonCss, "button");
-  injectStyleOnce(shadow, inputCss, "input");
-  injectStyleOnce(shadow, labelCss, "label");
-  injectStyleOnce(shadow, navTabsCss, "navTabs");
-  injectStyleOnce(shadow, searchBarCss, "searchBar");
-  injectStyleOnce(shadow, selectCss, "select");
-  injectStyleOnce(shadow, switchCss, "switch");
-  injectStyleOnce(shadow, tableCss, "table");
-  injectStyleOnce(shadow, timeRangePickerCss, "timeRangePicker");
-  injectStyleOnce(shadow, tooltipCss, "tooltip");
-  injectStyleOnce(shadow, sliderCss, "slider");
-  injectStyleOnce(shadow, reorderableListCss, "reorderableList");
-  injectStyleOnce(shadow, colorPickerCss, "colorPicker");
-  injectStyleOnce(shadow, logCss, "log");
-
-  // Inject section styles
-  injectStyleOnce(shadow, settingsCss, "settings");
+  for (let i = 0; i < styleInjections.length; i++) {
+    const [css, id] = styleInjections[i];
+    injectStyleOnce(shadow, css, id);
+    if (i % 5 === 4) {
+      await yieldToMain();
+    }
+  }
 
   // ===== 2. Create DOM Structure =====
   const { panel, tabbar, content, resizer, closeButton, wrapper } = createHudLayout({

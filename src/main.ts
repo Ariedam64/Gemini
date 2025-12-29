@@ -7,6 +7,7 @@ import {
   initHUD,
   initModules,
   initSpriteWarmup,
+  initSectionsPreload,
   startInjectGamePanelButton,
 } from "./ui/loader";
 
@@ -27,6 +28,7 @@ import {
     initAPI(loader);
     await initModules(loader);
     await initSpriteWarmup(loader);
+    await initSectionsPreload(loader);
 
     loader.succeed("Gemini is ready!");
 
