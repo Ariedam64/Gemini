@@ -461,38 +461,10 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             return wrapper;
         };
 
-        // Create checkbox renderer
-        const createCheckboxCell = (row: ItemRow): Node => {
-            const checkbox = element("input", { type: "checkbox", className: "game-checkbox" }) as HTMLInputElement;
-            checkbox.checked = row.selected;
 
-            checkbox.addEventListener('change', (e) => {
-                e.stopPropagation();
-                if (checkbox.checked) {
-                    selectedSet.add(row.id);
-                } else {
-                    selectedSet.delete(row.id);
-                }
-                onUpdate(Array.from(selectedSet));
-                tableHandle.setData(buildTableData());
-                updateCounter();
-            });
-
-            // Prevent the row click from triggering when clicking the checkbox directly
-            checkbox.addEventListener('click', (e) => e.stopPropagation());
-
-            return checkbox;
-        };
 
         // Table columns - Refined Layout: [✓] [Sprite + Name] [Rarity]
         const columns: ColDef<ItemRow>[] = [
-            {
-                key: 'selected',
-                header: '✓',
-                width: '40px',
-                align: 'center',
-                render: (row) => createCheckboxCell(row)
-            },
             {
                 key: 'name',
                 header: 'Name',
@@ -508,7 +480,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                     const sprite = createSpriteCell(row.id);
 
                     const nameLabel = element("span", {
-                        style: "font-weight: 500; color: var(--fg);"
+                        style: "font-weight: 500; color: var(--fg); white-space: nowrap;"
                     }, row.name);
 
                     container.append(sprite, nameLabel);
@@ -534,16 +506,14 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             compact: true,
             zebra: true,
             animations: true,
+            selectable: true,
+            selectOnRowClick: true,
+            initialSelection: Array.from(selectedSet),
             getRowId: (row) => row.id,
-            onRowClick: (row) => {
-                // Toggle selection on row click
-                if (selectedSet.has(row.id)) {
-                    selectedSet.delete(row.id);
-                } else {
-                    selectedSet.add(row.id);
-                }
+            onSelectionChange: (ids) => {
+                selectedSet.clear();
+                ids.forEach(id => selectedSet.add(id));
                 onUpdate(Array.from(selectedSet));
-                tableHandle.setData(buildTableData());
                 updateCounter();
             }
         });

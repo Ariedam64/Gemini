@@ -22,10 +22,13 @@ export type TableOptions<T = any> = {
   compact?: boolean;
   maxHeight?: number | string;
   selectable?: boolean;
+  selectOnRowClick?: boolean;
+  initialSelection?: string[];
   animations?: boolean;
   respectReducedMotion?: boolean;
   getRowId?: (row: T, index: number) => string;
   onSortChange?: (colKey: string | null, dir: "asc" | "desc" | null) => void;
+  onSelectionChange?: (ids: string[]) => void;
   onRowClick?: (row: T, index: number, ev: MouseEvent) => void;
 };
 
@@ -35,6 +38,7 @@ export type TableHandle<T = any> = {
   setColumns: (cols: ColDef<T>[]) => void;
   sortBy: (key: string | null, dir?: "asc" | "desc" | null) => void;
   getSelection: () => string[];
+  setSelection: (ids: string[]) => void;
   clearSelection: () => void;
   setPage: (p: number) => void;
   getState: () => { page: number; pageCount: number; sortKey: string | null; sortDir: "asc" | "desc" | null };
@@ -54,8 +58,11 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     compact = false,
     maxHeight,
     selectable = false,
+    selectOnRowClick = false,
+    initialSelection = [],
     getRowId = (_r, i) => String(i),
     onSortChange,
+    onSelectionChange,
     onRowClick,
   } = opts;
 
@@ -89,6 +96,13 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
   const CHECK_W = "36px";
   root.style.setProperty("--check-w", CHECK_W);
+
+  function getJustify(align?: Align) {
+    if (align === "center") return "center";
+    if (align === "right") return "flex-end";
+    return "flex-start";
+  }
+
   function updateColsTemplate() {
     const parts = columns.map(c => {
       const w = (c.width || "1fr").trim();
@@ -109,23 +123,31 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     const cmp = col?.sortFn
       ? (a: T, b: T) => dir * col.sortFn!(a, b)
       : (a: T, b: T) => {
-          const av = (a as any)[sortKey as any];
-          const bv = (b as any)[sortKey as any];
-          if (av == null && bv == null) return 0;
-          if (av == null) return -1 * dir;
-          if (bv == null) return 1 * dir;
-          if (typeof av === "number" && typeof bv === "number") return dir * (av - bv);
-          return dir * String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
-        };
+        const av = (a as any)[sortKey as any];
+        const bv = (b as any)[sortKey as any];
+        if (av == null && bv == null) return 0;
+        if (av == null) return -1 * dir;
+        if (bv == null) return 1 * dir;
+        if (typeof av === "number" && typeof bv === "number") return dir * (av - bv);
+        return dir * String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: "base" });
+      };
     data.sort(cmp);
   }
 
-  const selected = new Set<string>();
+  const selected = new Set<string>(initialSelection);
   function getSelection() { return Array.from(selected); }
+  function setSelection(ids: string[]) {
+    selected.clear();
+    ids.forEach(id => selected.add(id));
+    updateHeaderCheckbox();
+    renderBody();
+    onSelectionChange?.(getSelection());
+  }
   function clearSelection() {
     selected.clear();
     updateHeaderCheckbox();
-    body.querySelectorAll<HTMLInputElement>(".lg-row-check").forEach(i => i.checked = false);
+    renderBody();
+    onSelectionChange?.(getSelection());
   }
 
   let headerCheck: HTMLInputElement | null = null;
@@ -161,6 +183,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
           const id = getRowId(r, (page - 1) * (pageSize || 0) + i);
           if (check) selected.add(id); else selected.delete(id);
         });
+        onSelectionChange?.(getSelection());
         renderBody();
       });
       cell.appendChild(headerCheck);
@@ -170,7 +193,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     columns.forEach(col => {
       const th = element("button", { className: "lg-th", type: "button", title: col.title || col.header }) as HTMLButtonElement;
       th.textContent = col.header;
-      if (col.align) th.style.setProperty("--col-align", col.align);
+      if (col.align) th.style.setProperty("--col-justify", getJustify(col.align));
       if (col.sortable) th.classList.add("sortable");
 
       if (sortKey === String(col.key) && sortDir) th.setAttribute("data-sort", sortDir);
@@ -198,7 +221,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
     head.appendChild(row);
 
-    try { ro.disconnect(); } catch {}
+    try { ro.disconnect(); } catch { }
     ro.observe(body);
     syncHeaderPadding();
   }
@@ -340,24 +363,41 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
       const td = element("div", { className: "lg-td lg-td-check" }) as HTMLDivElement;
       const cb = element("input", { type: "checkbox", className: "lg-row-check" }) as HTMLInputElement;
       cb.checked = selected.has(rid);
-      cb.addEventListener("change", () => { if (cb.checked) selected.add(rid); else selected.delete(rid); updateHeaderCheckbox(); });
+      cb.addEventListener("change", (ev) => {
+        ev.stopPropagation();
+        if (cb.checked) selected.add(rid); else selected.delete(rid);
+        updateHeaderCheckbox();
+        onSelectionChange?.(getSelection());
+      });
+      cb.addEventListener("click", (ev) => ev.stopPropagation());
       td.appendChild(cb);
       tr.appendChild(td);
     }
 
     columns.forEach(col => {
       const td = element("div", { className: "lg-td" }) as HTMLDivElement;
-      if (col.align) td.style.setProperty("--col-align", col.align);
+      if (col.align) td.style.setProperty("--col-justify", getJustify(col.align));
       let node: Node | string = col.render ? col.render(rowData, absIndex) : String((rowData as any)[col.key] ?? "");
       if (typeof node === "string") td.textContent = node; else td.appendChild(node);
       tr.appendChild(td);
     });
 
-    if (onRowClick) {
+    if (onRowClick || (selectable && selectOnRowClick)) {
       tr.classList.add("clickable");
       tr.addEventListener("click", (ev) => {
         if ((ev.target as HTMLElement).closest(".lg-td-check")) return;
-        onRowClick(rowData, absIndex, ev);
+
+        if (selectable && selectOnRowClick) {
+          const check = !selected.has(rid);
+          if (check) selected.add(rid); else selected.delete(rid);
+          updateHeaderCheckbox();
+          // Find and update the checkbox visually
+          const cb = tr.querySelector<HTMLInputElement>(".lg-row-check");
+          if (cb) cb.checked = check;
+          onSelectionChange?.(getSelection());
+        }
+
+        onRowClick?.(rowData, absIndex, ev);
       });
     }
 
@@ -404,7 +444,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     render();
   }
 
-  function destroy() { try { ro.disconnect(); } catch {} window.removeEventListener("resize", onWinResize); }
+  function destroy() { try { ro.disconnect(); } catch { } window.removeEventListener("resize", onWinResize); }
 
   table.append(head, body, foot);
   root.appendChild(table);
@@ -417,6 +457,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     setColumns,
     sortBy,
     getSelection,
+    setSelection,
     clearSelection,
     setPage,
     getState: () => ({ page, pageCount: pageCount(), sortKey, sortDir }),

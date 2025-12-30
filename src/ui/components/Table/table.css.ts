@@ -51,7 +51,8 @@ export const tableCss = `
   box-sizing:border-box;
   gap:8px;
   min-height: var(--lg-row-min-h, 36px);
-  text-align: var(--col-align, left);
+  justify-content: var(--col-justify, flex-start);
+  text-align: center; /* Fallback for text-only cells */
   border-bottom:1px solid color-mix(in oklab, var(--border) 80%, transparent);
 }
 
