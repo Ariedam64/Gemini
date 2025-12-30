@@ -75,6 +75,15 @@ export interface ShowOptions {
   mutations?: MutationName[];
 }
 
+export type CanvasBoundsMode = "mutations" | "base" | "padded";
+
+export interface BoundsPadding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export interface ToCanvasOptions {
   frameIndex?: number;
   scale?: number;
@@ -82,6 +91,8 @@ export interface ToCanvasOptions {
   anchorX?: number;
   anchorY?: number;
   mutations?: MutationName[];
+  boundsMode?: CanvasBoundsMode;
+  boundsPadding?: number | BoundsPadding;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

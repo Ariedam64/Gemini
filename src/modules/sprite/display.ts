@@ -13,10 +13,12 @@ import type {
   MutationName,
   CanvasCacheState,
   CanvasCacheConfig,
+  CanvasBoundsMode,
+  BoundsPadding,
 } from "./types";
 import { resolveKey, makeKey } from "./utils";
-import { computeVariantSignature } from "./mutations/types";
-import { composeMutatedTexture, composeMutatedAnimation } from "./mutations/composer";
+import { computeVariantSignature, MUT_NAMES } from "./mutations/types";
+import { composeMutatedTexture, composeMutatedAnimation, textureToCanvas } from "./mutations/composer";
 import { variantKey, lruGet, lruSet, DEFAULT_CACHE_CONFIG } from "./mutations/cache";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,15 +39,17 @@ export function createCanvasCacheState(): CanvasCacheState {
 
 function buildCanvasCacheKey(
   key: string,
-  options: ToCanvasOptions
+  options: ToCanvasOptions,
+  boundsMode: CanvasBoundsMode,
+  pad: number,
+  paddingKey: string
 ): string {
   const scale = options.scale ?? 1;
   const frameIndex = options.frameIndex ?? 0;
   const mutations = options.mutations?.slice().sort().join(",") || "";
   const anchorX = options.anchorX ?? 0.5;
   const anchorY = options.anchorY ?? 0.5;
-  const pad = options.pad ?? 2;
-  return `${key}|s${scale}|f${frameIndex}|m${mutations}|ax${anchorX}|ay${anchorY}|p${pad}`;
+  return `${key}|s${scale}|f${frameIndex}|m${mutations}|ax${anchorX}|ay${anchorY}|bm${boundsMode}|bp${paddingKey}|p${pad}`;
 }
 
 function canvasCacheGet(
@@ -140,7 +144,11 @@ export async function warmupCanvasCache(
     for (const spriteId of batch) {
       try {
         const key = resolveKey(null, spriteId, state.textures, state.animations);
-        const cacheKey = buildCanvasCacheKey(key, { scale: 1 });
+        const options: ToCanvasOptions = { scale: 1 };
+        const boundsMode = resolveBoundsMode(options);
+        const pad = resolvePad(boundsMode, options);
+        const paddingKey = boundsPaddingKey(boundsMode, options.boundsPadding);
+        const cacheKey = buildCanvasCacheKey(key, options, boundsMode, pad, paddingKey);
 
         if (!canvasCacheState.cache.has(cacheKey)) {
           spriteToCanvas(
@@ -149,7 +157,7 @@ export async function warmupCanvasCache(
             mutCacheConfig,
             null,
             spriteId,
-            { scale: 1 },
+            options,
             canvasCacheState,
             canvasCacheConfig
           );
@@ -183,7 +191,7 @@ function ensureOverlay(state: SpriteState): PixiContainer {
 
   try {
     state.app!.stage.sortableChildren = true;
-  } catch { }
+  } catch {}
   state.app!.stage.addChild(container);
 
   state.overlay = container;
@@ -350,13 +358,13 @@ export function showSprite(
   (obj as any).__mgDestroy = () => {
     try {
       if ((obj as any).__mgTick) state.app!.ticker?.remove?.((obj as any).__mgTick);
-    } catch { }
+    } catch {}
     try {
       obj.destroy?.({ children: true, texture: false, baseTexture: false });
     } catch {
       try {
         obj.destroy?.();
-      } catch { }
+      } catch {}
     }
     state.live.delete(obj);
   };
@@ -368,31 +376,114 @@ export function showSprite(
 // Extract Canvas
 // ─────────────────────────────────────────────────────────────────────────────
 
-function extractCanvas(state: SpriteState, target: any, region?: any): HTMLCanvasElement {
+function extractCanvas(state: SpriteState, target: any): HTMLCanvasElement {
   const r = state.renderer;
-  if (!r) throw new Error("Renderer missing");
+  if (r?.extract?.canvas) return r.extract.canvas(target);
+  if (r?.plugins?.extract?.canvas) return r.plugins.extract.canvas(target);
+  throw new Error("No extract.canvas available on renderer");
+}
 
-  // Force Resolution 1 for all UI extractions to ensure consistent aspect ratios and scale.
-  const resolution = 1;
+type TextureBaseMeta = {
+  baseX: number;
+  baseY: number;
+  baseW: number;
+  baseH: number;
+  texW: number;
+  texH: number;
+};
 
-  if (region && (typeof r.generateTexture === "function" || r.textureGenerator)) {
-    let rt: any;
-    if (typeof r.generateTexture === "function") {
-      rt = r.generateTexture(target, { resolution, region });
-    } else {
-      rt = r.textureGenerator.generateTexture({ target, resolution, region });
-    }
+const autoBoundsPaddingCache = new Map<string, BoundsPadding>();
 
-    if (rt) {
-      const canvas = r.extract.canvas(rt);
-      rt.destroy?.(true);
-      return canvas;
-    }
+function resolveBoundsMode(options: ToCanvasOptions): CanvasBoundsMode {
+  if (options.boundsMode) return options.boundsMode;
+  if (options.mutations && options.mutations.length > 0) return "base";
+  return "mutations";
+}
+
+function resolvePad(boundsMode: CanvasBoundsMode, options: ToCanvasOptions): number {
+  if (boundsMode === "mutations") return options.pad ?? 2;
+  return options.pad ?? 0;
+}
+
+function clampPad(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, value);
+}
+
+function normalizeBoundsPadding(input?: number | BoundsPadding): BoundsPadding {
+  if (typeof input === "number") {
+    const v = clampPad(input);
+    return { top: v, right: v, bottom: v, left: v };
+  }
+  if (!input) return { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    top: clampPad(input.top ?? 0),
+    right: clampPad(input.right ?? 0),
+    bottom: clampPad(input.bottom ?? 0),
+    left: clampPad(input.left ?? 0),
+  };
+}
+
+function boundsPaddingKey(boundsMode: CanvasBoundsMode, padding?: number | BoundsPadding): string {
+  if (boundsMode === "mutations") return "0,0,0,0";
+  if (boundsMode === "padded" && padding == null) return "auto";
+  const p = normalizeBoundsPadding(padding);
+  return `${p.top},${p.right},${p.bottom},${p.left}`;
+}
+
+function getTextureSize(tex: PixiTexture): { w: number; h: number } {
+  const w = tex?.orig?.width ?? tex?.frame?.width ?? tex?.width ?? 1;
+  const h = tex?.orig?.height ?? tex?.frame?.height ?? tex?.height ?? 1;
+  return { w, h };
+}
+
+function getTextureBaseMeta(tex: PixiTexture, baseW: number, baseH: number): TextureBaseMeta {
+  const meta = (tex as any)?.__mg_base;
+  if (
+    meta &&
+    Number.isFinite(meta.baseX) &&
+    Number.isFinite(meta.baseY) &&
+    Number.isFinite(meta.baseW) &&
+    Number.isFinite(meta.baseH) &&
+    Number.isFinite(meta.texW) &&
+    Number.isFinite(meta.texH)
+  ) {
+    return meta as TextureBaseMeta;
+  }
+  return { baseX: 0, baseY: 0, baseW, baseH, texW: baseW, texH: baseH };
+}
+
+function getAutoBoundsPadding(
+  key: string,
+  frameIndex: number,
+  baseTex: PixiTexture,
+  state: SpriteState,
+  cacheState: MutationCacheState,
+  cacheConfig: CacheConfig
+): BoundsPadding {
+  const cacheKey = `${key}|f${frameIndex}`;
+  const cached = autoBoundsPaddingCache.get(cacheKey);
+  if (cached) return cached;
+
+  const baseSize = getTextureSize(baseTex);
+  const max = { top: 0, right: 0, bottom: 0, left: 0 };
+
+  for (const mut of MUT_NAMES) {
+    const mtex = getMutatedTexture(key, baseTex, [mut], state, cacheState, cacheConfig);
+    const meta = getTextureBaseMeta(mtex, baseSize.w, baseSize.h);
+    const left = Math.max(0, meta.baseX);
+    const top = Math.max(0, meta.baseY);
+    const right = Math.max(0, meta.texW - meta.baseX - meta.baseW);
+    const bottom = Math.max(0, meta.texH - meta.baseY - meta.baseH);
+
+    if (left > max.left) max.left = left;
+    if (top > max.top) max.top = top;
+    if (right > max.right) max.right = right;
+    if (bottom > max.bottom) max.bottom = bottom;
   }
 
-  if (r.extract?.canvas) return r.extract.canvas(target);
-  if (r.plugins?.extract?.canvas) return r.plugins.extract.canvas(target);
-  throw new Error("No extract.canvas available on renderer");
+  autoBoundsPaddingCache.set(cacheKey, max);
+  return max;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -412,10 +503,15 @@ export function spriteToCanvas(
   if (!state.ready) throw new Error("MGSprite not ready yet");
 
   const key = resolveKey(category, asset, state.textures, state.animations);
+  const boundsMode = resolveBoundsMode(options);
+  const pad = resolvePad(boundsMode, options);
+  const paddingKey = boundsPaddingKey(boundsMode, options.boundsPadding);
+  const cacheKey = canvasCacheState && canvasCacheConfig?.enabled
+    ? buildCanvasCacheKey(key, options, boundsMode, pad, paddingKey)
+    : null;
 
   // Check canvas cache first
-  if (canvasCacheState && canvasCacheConfig?.enabled) {
-    const cacheKey = buildCanvasCacheKey(key, options);
+  if (cacheKey && canvasCacheState && canvasCacheConfig?.enabled) {
     const cached = canvasCacheGet(canvasCacheState, cacheKey);
     if (cached) {
       return cloneCanvas(cached);
@@ -426,53 +522,84 @@ export function spriteToCanvas(
   const rawFrames = state.animations.get(key);
   const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
 
+  let baseTex: PixiTexture;
   let tex: PixiTexture;
 
   if (rawFrames?.length) {
-    const frames = getMutatedFrames(key, rawFrames, mutations, state, cacheState, cacheConfig);
-    tex = frames[idx % frames.length];
+    baseTex = rawFrames[idx % rawFrames.length];
+    if (mutations.length) {
+      const frames = getMutatedFrames(key, rawFrames, mutations, state, cacheState, cacheConfig);
+      tex = frames[idx % frames.length];
+    } else {
+      tex = baseTex;
+    }
   } else {
     const rawTex = state.textures.get(key);
     if (!rawTex) throw new Error(`Unknown sprite/anim key: ${key}`);
+    baseTex = rawTex;
     tex = getMutatedTexture(key, rawTex, mutations, state, cacheState, cacheConfig);
   }
 
-  const spr = new state.ctors!.Sprite(tex);
-  const baseW = tex?.orig?.width ?? tex?.frame?.width ?? tex?.width ?? 1;
-  const baseH = tex?.orig?.height ?? tex?.frame?.height ?? tex?.height ?? 1;
-  const ax = options.anchorX ?? spr.texture?.defaultAnchor?.x ?? 0.5;
-  const ay = options.anchorY ?? spr.texture?.defaultAnchor?.y ?? 0.5;
+  let canvas: HTMLCanvasElement;
 
-  const scale = options.scale ?? 1;
-  const w = baseW * scale;
-  const h = baseH * scale;
+  if (boundsMode === "mutations") {
+    const spr = new state.ctors!.Sprite(tex);
+    const ax = options.anchorX ?? spr.texture?.defaultAnchor?.x ?? 0.5;
+    const ay = options.anchorY ?? spr.texture?.defaultAnchor?.y ?? 0.5;
+    spr.anchor?.set?.(ax, ay);
+    spr.scale.set(options.scale ?? 1);
 
-  spr.anchor?.set?.(ax, ay);
-  spr.scale.set(scale);
-  spr.position.set(w * ax, h * ay);
+    const tmp = new state.ctors!.Container();
+    tmp.addChild(spr);
 
-  // Lock sprite determines the bounds and ensures internal centering
-  const lock = new state.ctors!.Sprite(tex);
-  lock.anchor?.set?.(ax, ay);
-  lock.position.set(w * ax, h * ay);
-  lock.width = w;
-  lock.height = h;
-  lock.alpha = 0;
+    try {
+      tmp.updateTransform?.();
+    } catch {}
 
-  const tmp = new state.ctors!.Container();
-  tmp.addChild(lock);
-  tmp.addChild(spr);
+    const bnd = spr.getBounds?.(true) || { x: 0, y: 0, width: spr.width, height: spr.height };
+    spr.position.set(-bnd.x + pad, -bnd.y + pad);
 
-  const region = new state.ctors!.Rectangle(0, 0, w, h);
-  const canvas = extractCanvas(state, tmp, region);
+    canvas = extractCanvas(state, tmp);
 
-  try {
-    tmp.destroy?.({ children: true });
-  } catch { }
+    try {
+      tmp.destroy?.({ children: true });
+    } catch {}
+  } else {
+    const scale = options.scale ?? 1;
+    let boundsPadding = normalizeBoundsPadding(options.boundsPadding);
+    if (boundsMode === "padded" && options.boundsPadding == null) {
+      boundsPadding = getAutoBoundsPadding(key, idx, baseTex, state, cacheState, cacheConfig);
+    }
+    if (pad) {
+      boundsPadding = {
+        top: boundsPadding.top + pad,
+        right: boundsPadding.right + pad,
+        bottom: boundsPadding.bottom + pad,
+        left: boundsPadding.left + pad,
+      };
+    }
+
+    const baseSize = getTextureSize(baseTex);
+    const meta = getTextureBaseMeta(tex, baseSize.w, baseSize.h);
+    const outW = Math.max(1, Math.ceil((baseSize.w + boundsPadding.left + boundsPadding.right) * scale));
+    const outH = Math.max(1, Math.ceil((baseSize.h + boundsPadding.top + boundsPadding.bottom) * scale));
+
+    canvas = document.createElement("canvas");
+    canvas.width = outW;
+    canvas.height = outH;
+
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.imageSmoothingEnabled = false;
+      const srcCanvas = textureToCanvas(tex, state.renderer!, state.ctors!, cacheState, cacheConfig);
+      const drawX = (boundsPadding.left - meta.baseX) * scale;
+      const drawY = (boundsPadding.top - meta.baseY) * scale;
+      ctx.drawImage(srcCanvas, drawX, drawY, srcCanvas.width * scale, srcCanvas.height * scale);
+    }
+  }
 
   // Store in canvas cache
-  if (canvasCacheState && canvasCacheConfig?.enabled) {
-    const cacheKey = buildCanvasCacheKey(key, options);
+  if (cacheKey && canvasCacheState && canvasCacheConfig?.enabled) {
     canvasCacheSet(canvasCacheState, canvasCacheConfig, cacheKey, canvas);
     return cloneCanvas(canvas);
   }

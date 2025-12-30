@@ -46,7 +46,7 @@ export function textureToCanvas(
       canvas = renderer.extract.canvas(spr);
       spr.destroy?.({ children: true, texture: false, baseTexture: false });
     }
-  } catch { }
+  } catch {}
 
   if (!canvas) {
     const fr = tex?.frame || tex?._frame;
@@ -63,27 +63,23 @@ export function textureToCanvas(
 
     if (!fr || !src) throw new Error("textureToCanvas fail");
 
-    const rotated = rot === true || rot === 2 || rot === 6;
-    const isCcw90 = rot === true || rot === 2;
-
     canvas = document.createElement("canvas");
     const fullW = Math.max(1, (orig?.width ?? fr.width) | 0);
     const fullH = Math.max(1, (orig?.height ?? fr.height) | 0);
-
     const offX = trim?.x ?? 0;
     const offY = trim?.y ?? 0;
 
     canvas.width = fullW;
     canvas.height = fullH;
 
-    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+    const ctx = canvas.getContext("2d")!;
     ctx.imageSmoothingEnabled = false;
 
+    const rotated = rot === true || rot === 2 || rot === 8;
     if (rotated) {
       ctx.save();
-      // Translate to center of its rotated frame and rotate
       ctx.translate(offX + fr.height / 2, offY + fr.width / 2);
-      ctx.rotate(isCcw90 ? -Math.PI / 2 : Math.PI / 2);
+      ctx.rotate(-Math.PI / 2);
       ctx.drawImage(src, fr.x, fr.y, fr.width, fr.height, -fr.width / 2, -fr.height / 2, fr.width, fr.height);
       ctx.restore();
     } else {
@@ -130,7 +126,7 @@ function buildColorLayerSprites(
     layerCanvas.width = w;
     layerCanvas.height = h;
 
-    const lctx = layerCanvas.getContext("2d", { willReadFrequently: true })!;
+    const lctx = layerCanvas.getContext("2d")!;
     lctx.imageSmoothingEnabled = false;
     lctx.save();
     lctx.translate(w * aX, h * aY);
@@ -143,8 +139,7 @@ function buildColorLayerSprites(
 
     applyFilterOnto(lctx, layerCanvas, step.name, step.isTall);
 
-    // Unified Logical Resolution: Force resolution 1 for intermediate textures.
-    const filteredTex = ctors.Texture.from(layerCanvas, { resolution: 1 });
+    const filteredTex = ctors.Texture.from(layerCanvas);
     disposables.push(filteredTex);
 
     clone.texture = filteredTex;
@@ -154,7 +149,7 @@ function buildColorLayerSprites(
   return layers;
 }
 
-function buildOverlaySprites(
+function buildTallOverlaySprites(
   itKey: string,
   dims: ComposeDims,
   overlayPipeline: PipelineStep[],
@@ -175,7 +170,7 @@ function buildOverlaySprites(
         tex: textures.get(step.overlayTall)!,
         key: step.overlayTall,
       }) ||
-      findOverlayTexture(itKey, step.name, textures, step.isTall);
+      findOverlayTexture(itKey, step.name, textures, true);
 
     if (!hit?.tex) continue;
 
@@ -190,7 +185,7 @@ function buildOverlaySprites(
     maskedCanvas.width = ow;
     maskedCanvas.height = oCan.height;
 
-    const mctx = maskedCanvas.getContext("2d", { willReadFrequently: true });
+    const mctx = maskedCanvas.getContext("2d");
     if (!mctx) continue;
 
     mctx.imageSmoothingEnabled = false;
@@ -198,8 +193,7 @@ function buildOverlaySprites(
     mctx.globalCompositeOperation = "destination-in";
     mctx.drawImage(baseCanvas, -overlayPos.x, -overlayPos.y);
 
-    // Unified Logical Resolution: Force resolution 1 for intermediate textures.
-    const maskedTex = ctors.Texture.from(maskedCanvas, { resolution: 1 });
+    const maskedTex = ctors.Texture.from(maskedCanvas);
     disposables.push(maskedTex);
 
     const ov = new ctors.Sprite(maskedTex);
@@ -275,12 +269,8 @@ export function composeMutatedTexture(
 
     const { Container, Sprite, Texture } = ctx.ctors;
 
-    const rot = tex?.rotate || tex?._rotate || 0;
-    const isRotated = rot === true || rot === 2 || rot === 6;
-
     const w = tex?.orig?.width ?? tex?.frame?.width ?? tex?.width ?? 1;
     const h = tex?.orig?.height ?? tex?.frame?.height ?? tex?.height ?? 1;
-
     const aX = tex?.defaultAnchor?.x ?? 0.5;
     const aY = tex?.defaultAnchor?.y ?? 0.5;
     const basePos = { x: w * aX, y: h * aY };
@@ -289,16 +279,6 @@ export function composeMutatedTexture(
 
     const root: PixiContainer = new Container();
     root.sortableChildren = true;
-
-    // Lock sprite determines the bounds and prevents expansion
-    const lock = new Sprite(tex);
-    lock.anchor?.set?.(aX, aY);
-    lock.position.set(basePos.x, basePos.y);
-    lock.width = w;
-    lock.height = h;
-    lock.alpha = 0;
-    lock.zIndex = -1000;
-    root.addChild(lock);
 
     const base: PixiSprite = new Sprite(tex);
     base.anchor?.set?.(aX, aY);
@@ -328,41 +308,54 @@ export function composeMutatedTexture(
     );
     colorLayers.forEach((layer) => root.addChild(layer));
 
-    const overlaySprites = buildOverlaySprites(
-      itemKey,
-      dims,
-      overlayPipeline,
-      ctx.textures,
-      ctx.ctors,
-      ctx.renderer,
-      ctx.cacheState,
-      ctx.cacheConfig,
-      baseCanvas,
-      disposables
-    );
-    overlaySprites.forEach((ov) => root.addChild(ov));
+    if (isTall) {
+      const overlaySprites = buildTallOverlaySprites(
+        itemKey,
+        dims,
+        overlayPipeline,
+        ctx.textures,
+        ctx.ctors,
+        ctx.renderer,
+        ctx.cacheState,
+        ctx.cacheConfig,
+        baseCanvas,
+        disposables
+      );
+      overlaySprites.forEach((ov) => root.addChild(ov));
+    }
 
     const iconSprites = buildIconSprites(itemKey, dims, iconPipeline, ctx.textures, ctx.ctors, iconLayout);
     iconSprites.forEach((icon) => root.addChild(icon));
 
-    // Unified Logical Resolution: Force resolution 1.
-    // This ensures a 50px sprite always renders to a 50px canvas.
-    const resolution = 1;
-
-    // Create crop region to constrain output to exact dimensions.
-    const { Rectangle } = ctx.ctors;
-    const crop = Rectangle ? new Rectangle(0, 0, w, h) : undefined;
+    let bounds = { x: 0, y: 0, width: w, height: h };
+    try {
+      const bnd = root.getLocalBounds?.() || root.getBounds?.(true);
+      if (bnd && Number.isFinite(bnd.width) && Number.isFinite(bnd.height)) {
+        bounds = { x: bnd.x, y: bnd.y, width: bnd.width, height: bnd.height };
+      }
+    } catch {}
 
     let rt: any = null;
     if (typeof ctx.renderer.generateTexture === "function") {
-      rt = ctx.renderer.generateTexture(root, { resolution, region: crop });
+      rt = ctx.renderer.generateTexture(root, { resolution: 1 });
     } else if (ctx.renderer.textureGenerator?.generateTexture) {
-      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution, region: crop });
+      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution: 1 });
     }
 
     if (!rt) throw new Error("no render texture");
 
-    const outTex = rt instanceof Texture ? rt : Texture.from(ctx.renderer.extract.canvas(rt), { resolution });
+    const outTex = rt instanceof Texture ? rt : Texture.from(ctx.renderer.extract.canvas(rt));
+
+    try {
+      (outTex as any).__mg_base = {
+        baseX: -bounds.x,
+        baseY: -bounds.y,
+        baseW: w,
+        baseH: h,
+        texW: bounds.width,
+        texH: bounds.height,
+      };
+    } catch {}
 
     if (rt && rt !== outTex) {
       rt.destroy?.(true);
@@ -373,7 +366,7 @@ export function composeMutatedTexture(
     try {
       outTex.__mg_gen = true;
       outTex.label = `${itemKey}|${variant.sig}`;
-    } catch { }
+    } catch {}
 
     return outTex;
   } catch {
