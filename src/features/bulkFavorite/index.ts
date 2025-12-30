@@ -45,7 +45,7 @@ export function start(): void {
     });
 
     cleanupFn = () => {
-        unwatch();
+        unwatch.disconnect();
         removeButton();
     };
 
@@ -168,8 +168,8 @@ function renderButton(inventoryEl: HTMLElement, config: BulkFavoriteConfig): voi
     window.addEventListener('resize', resizeHandler);
 
     // Watch for inventory removal
-    const unwatchRemove = onRemoved(inventoryEl, () => {
-        removeButton();
+    const unwatchRemove = onRemoved('[data-testid="inventory-panel"], .inventory-container, #inventory', (el) => {
+        if (el === inventoryEl) removeButton();
     });
 
     // Update cleanup
@@ -177,7 +177,7 @@ function renderButton(inventoryEl: HTMLElement, config: BulkFavoriteConfig): voi
     cleanupFn = () => {
         originalCleanup?.();
         window.removeEventListener('resize', resizeHandler);
-        unwatchRemove();
+        unwatchRemove.disconnect();
         removeButton();
     };
 }
@@ -246,13 +246,20 @@ async function handleBulkAction(favorite: boolean): Promise<void> {
     try {
         let count = 0;
 
+        const favoritedIds = new Set(inventory.favoritedItemIds);
+
         for (const item of inventory.items) {
+            const itemId = (item as any).id;
+            if (!itemId) continue;
+
+            const isFavorited = favoritedIds.has(itemId);
+
             // Skip if already in desired state
-            if (favorite && item.isFavorited) continue;
-            if (!favorite && !item.isFavorited) continue;
+            if (favorite && isFavorited) continue;
+            if (!favorite && !isFavorited) continue;
 
             // Toggle favorite status
-            await Gemini.WebSocket.toggleFavoriteItem(item.id, favorite);
+            await Gemini.WebSocket.toggleFavoriteItem(itemId, favorite);
             count++;
 
             // Small delay to avoid overwhelming the server

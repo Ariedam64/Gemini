@@ -116,7 +116,15 @@ export const GeminiAPI = {
 export { GeminiAPI as Gemini };
 
 export function exposeGeminiAPI(): void {
-  (pageWindow as unknown as Record<string, unknown>).Gemini = GeminiAPI;
+  const win = pageWindow as unknown as Record<string, unknown>;
+  win.Gemini = GeminiAPI;
+
+  // Direct shortcuts for high-value modules
+  win.MGSprite = MGSprite;
+  win.MGData = MGData;
+  win.MGPixi = MGPixi;
+  win.MGAssets = MGAssets;
+  win.MGEnvironment = MGEnvironment;
 }
 
 export function getExposedAPI(): typeof GeminiAPI | undefined {

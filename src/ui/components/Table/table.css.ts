@@ -100,7 +100,7 @@ export const tableCss = `
   max-height: var(--tbl-max-h, auto);
   overflow:auto;
   overflow-y:auto;
-  overflow-x:hidden;
+  overflow-x:auto;
   scrollbar-gutter:stable;
   min-height:0; /* key so scrolling does not jump */
 }

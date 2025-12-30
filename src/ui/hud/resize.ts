@@ -40,12 +40,9 @@ export function createResizeHandler(options: ResizeHandlerOptions): ResizeHandle
       // Usable width = viewport - insets
       const usableWidth = Math.max(280, viewportWidth - Math.round(insetLeft + insetRight));
 
-      // min ≈ 66% of the viewport but not beyond the usable width
-      const min = Math.min(420, Math.max(300, Math.floor(viewportWidth * 0.66)));
-      const max = usableWidth;
-
-      currentMinWidth = Math.min(min, usableWidth);
-      currentMaxWidth = max;
+      // On mobile, we want it to be able to shrink to 100% of usable width
+      currentMinWidth = 280;
+      currentMaxWidth = usableWidth;
     } else {
       currentMinWidth = configMinWidth;
       currentMaxWidth = configMaxWidth;

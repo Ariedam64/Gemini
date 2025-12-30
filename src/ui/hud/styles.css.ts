@@ -15,8 +15,8 @@ export const hudCss = `
     position: fixed;
     top: 0;
     right: 0;
-    bottom: 0;
     width: var(--w);
+    max-width: 100vw;
     display: flex;
     flex-direction: column;
     background-color: var(--bg);
@@ -118,6 +118,8 @@ export const hudCss = `
   .gemini-content {
     padding: calc(var(--pad) + var(--inset-t)) var(--pad) calc(var(--pad) + var(--inset-b));
     overflow: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     height: calc(100dvh - var(--tab-h));
     scrollbar-gutter: stable;
   }

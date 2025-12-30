@@ -183,7 +183,7 @@ function ensureOverlay(state: SpriteState): PixiContainer {
 
   try {
     state.app!.stage.sortableChildren = true;
-  } catch {}
+  } catch { }
   state.app!.stage.addChild(container);
 
   state.overlay = container;
@@ -350,13 +350,13 @@ export function showSprite(
   (obj as any).__mgDestroy = () => {
     try {
       if ((obj as any).__mgTick) state.app!.ticker?.remove?.((obj as any).__mgTick);
-    } catch {}
+    } catch { }
     try {
       obj.destroy?.({ children: true, texture: false, baseTexture: false });
     } catch {
       try {
         obj.destroy?.();
-      } catch {}
+      } catch { }
     }
     state.live.delete(obj);
   };
@@ -368,10 +368,30 @@ export function showSprite(
 // Extract Canvas
 // ─────────────────────────────────────────────────────────────────────────────
 
-function extractCanvas(state: SpriteState, target: any): HTMLCanvasElement {
+function extractCanvas(state: SpriteState, target: any, region?: any): HTMLCanvasElement {
   const r = state.renderer;
-  if (r?.extract?.canvas) return r.extract.canvas(target);
-  if (r?.plugins?.extract?.canvas) return r.plugins.extract.canvas(target);
+  if (!r) throw new Error("Renderer missing");
+
+  // Force Resolution 1 for all UI extractions to ensure consistent aspect ratios and scale.
+  const resolution = 1;
+
+  if (region && (typeof r.generateTexture === "function" || r.textureGenerator)) {
+    let rt: any;
+    if (typeof r.generateTexture === "function") {
+      rt = r.generateTexture(target, { resolution, region });
+    } else {
+      rt = r.textureGenerator.generateTexture({ target, resolution, region });
+    }
+
+    if (rt) {
+      const canvas = r.extract.canvas(rt);
+      rt.destroy?.(true);
+      return canvas;
+    }
+  }
+
+  if (r.extract?.canvas) return r.extract.canvas(target);
+  if (r.plugins?.extract?.canvas) return r.plugins.extract.canvas(target);
   throw new Error("No extract.canvas available on renderer");
 }
 
@@ -418,27 +438,37 @@ export function spriteToCanvas(
   }
 
   const spr = new state.ctors!.Sprite(tex);
+  const baseW = tex?.orig?.width ?? tex?.frame?.width ?? tex?.width ?? 1;
+  const baseH = tex?.orig?.height ?? tex?.frame?.height ?? tex?.height ?? 1;
   const ax = options.anchorX ?? spr.texture?.defaultAnchor?.x ?? 0.5;
   const ay = options.anchorY ?? spr.texture?.defaultAnchor?.y ?? 0.5;
-  spr.anchor?.set?.(ax, ay);
-  spr.scale.set(options.scale ?? 1);
 
-  const pad = options.pad ?? 2;
+  const scale = options.scale ?? 1;
+  const w = baseW * scale;
+  const h = baseH * scale;
+
+  spr.anchor?.set?.(ax, ay);
+  spr.scale.set(scale);
+  spr.position.set(w * ax, h * ay);
+
+  // Lock sprite determines the bounds and ensures internal centering
+  const lock = new state.ctors!.Sprite(tex);
+  lock.anchor?.set?.(ax, ay);
+  lock.position.set(w * ax, h * ay);
+  lock.width = w;
+  lock.height = h;
+  lock.alpha = 0;
+
   const tmp = new state.ctors!.Container();
+  tmp.addChild(lock);
   tmp.addChild(spr);
 
-  try {
-    tmp.updateTransform?.();
-  } catch {}
-
-  const bnd = spr.getBounds?.(true) || { x: 0, y: 0, width: spr.width, height: spr.height };
-  spr.position.set(-bnd.x + pad, -bnd.y + pad);
-
-  const canvas = extractCanvas(state, tmp);
+  const region = new state.ctors!.Rectangle(0, 0, w, h);
+  const canvas = extractCanvas(state, tmp, region);
 
   try {
     tmp.destroy?.({ children: true });
-  } catch {}
+  } catch { }
 
   // Store in canvas cache
   if (canvasCacheState && canvasCacheConfig?.enabled) {
