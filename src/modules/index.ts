@@ -8,6 +8,7 @@ export { MGManifest } from "./core/manifest";
 export { MGData } from "./core/data";
 export { MGAntiAfk } from "./core/antiafk";
 export { MGEnvironment } from "./core/environment";
+export { MGCustomModal } from "./core/customModal";
 
 // Pixi modules
 export { MGPixiHooks } from "./pixi/hooks";
@@ -44,6 +45,7 @@ export const MGTracker = {
 // Re-import for initialization
 import { MGData } from "./core/data";
 import { MGAntiAfk } from "./core/antiafk";
+import { MGCustomModal } from "./core/customModal";
 import { MGSprite } from "./sprite";
 import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
@@ -62,6 +64,7 @@ export async function initAllModules(
   const tasks = [
     { name: "Data", init: () => MGData.init() },
     { name: "AntiAfk", init: () => MGAntiAfk.init() },
+    { name: "CustomModal", init: () => MGCustomModal.init() },
     { name: "Sprites", init: () => MGSprite.init() },
     { name: "TileObjectSystem", init: () => MGTile.init() },
     { name: "Pixi", init: () => MGPixi.init() },

@@ -295,9 +295,22 @@ export type PlayerEmoteData = {
 // JOURNAL & STATS
 // =============================================================================
 
+export type JournalVariantLog = {
+  variant: string;
+  createdAt: number;
+};
+
+export type JournalAbilityLog = {
+  ability: string;
+  createdAt: number;
+};
+
 export type Journal = {
-  produce: Record<string, { variantsLogged: string[] }>;
-  pets: Record<string, { variantsLogged: string[]; abilitiesLogged: string[] }>;
+  produce: Record<string, { variantsLogged: JournalVariantLog[] }>;
+  pets: Record<
+    string,
+    { variantsLogged: JournalVariantLog[]; abilitiesLogged: JournalAbilityLog[] }
+  >;
 };
 
 export type PlayerStats = {
