@@ -480,7 +480,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             return checkbox;
         };
 
-        // Table columns - Order matched to Test section + Selection
+        // Table columns - Refined Layout: [✓] [Sprite + Name] [Rarity]
         const columns: ColDef<ItemRow>[] = [
             {
                 key: 'selected',
@@ -496,8 +496,21 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                 sortable: true,
                 sortFn: (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
                 render: (row) => {
-                    const span = element("span", { style: "font-weight: 500; color: var(--fg);" }, row.name);
-                    return span;
+                    const container = element("div", {
+                        style: "display: flex; align-items: center; gap: 12px; width: 100%;"
+                    }) as HTMLDivElement;
+
+                    const sprite = createSpriteCell(row.id);
+
+                    const nameLabel = element("span", {
+                        style: "font-weight: 500; color: var(--fg); flex: 1; text-align: center;"
+                    }, row.name);
+
+                    // Weighted spacer (same width as sprite wrapper) to ensure the name is perfectly centered
+                    const spacer = element("div", { style: "width: 28px; flex-shrink: 0;" });
+
+                    container.append(sprite, nameLabel, spacer);
+                    return container;
                 }
             },
             {
@@ -508,14 +521,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                 sortable: true,
                 sortFn: (a, b) => getRarityOrder(a.rarity) - getRarityOrder(b.rarity),
                 render: (row) => renderRarity(row.rarity)
-            },
-            {
-                key: 'sprite',
-                header: 'Sprite',
-                width: '60px',
-                align: 'center',
-                render: (row) => createSpriteCell(row.id)
-            },
+            }
         ];
 
         // Create the table
