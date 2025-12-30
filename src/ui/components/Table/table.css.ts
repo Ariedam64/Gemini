@@ -65,7 +65,6 @@ export const tableCss = `
   font-weight:700;
   color:var(--fg);
   position:relative;
-  padding-right:22px; /* space for the sort icon */
   cursor:default;
   border-bottom:1px solid var(--border);
 }

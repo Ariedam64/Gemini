@@ -384,10 +384,8 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             variant: "default",
             size: "sm",
             onClick: () => {
-                filteredItems.forEach(id => selectedSet.add(id));
-                onUpdate(Array.from(selectedSet));
-                tableHandle.setData(buildTableData());
-                updateCounter();
+                const allIds = buildTableData().map(i => i.id);
+                tableHandle.setSelection(allIds);
             }
         });
 
@@ -396,10 +394,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             variant: "default",
             size: "sm",
             onClick: () => {
-                filteredItems.forEach(id => selectedSet.delete(id));
-                onUpdate(Array.from(selectedSet));
-                tableHandle.setData(buildTableData());
-                updateCounter();
+                tableHandle.clearSelection();
             }
         });
 
@@ -508,6 +503,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             animations: true,
             selectable: true,
             selectOnRowClick: true,
+            hideHeaderCheckbox: true,
             initialSelection: Array.from(selectedSet),
             getRowId: (row) => row.id,
             onSelectionChange: (ids) => {

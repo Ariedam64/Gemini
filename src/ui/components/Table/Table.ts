@@ -24,6 +24,7 @@ export type TableOptions<T = any> = {
   selectable?: boolean;
   selectOnRowClick?: boolean;
   initialSelection?: string[];
+  hideHeaderCheckbox?: boolean;
   animations?: boolean;
   respectReducedMotion?: boolean;
   getRowId?: (row: T, index: number) => string;
@@ -60,6 +61,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     selectable = false,
     selectOnRowClick = false,
     initialSelection = [],
+    hideHeaderCheckbox = false,
     getRowId = (_r, i) => String(i),
     onSortChange,
     onSelectionChange,
@@ -175,18 +177,20 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
     if (selectable) {
       const cell = element("div", { className: "lg-th lg-th-check" }) as HTMLDivElement;
-      headerCheck = element("input", { type: "checkbox" }) as HTMLInputElement;
-      headerCheck.addEventListener("change", () => {
-        const rows = pageSlice();
-        const check = headerCheck!.checked;
-        rows.forEach((r, i) => {
-          const id = getRowId(r, (page - 1) * (pageSize || 0) + i);
-          if (check) selected.add(id); else selected.delete(id);
+      if (!hideHeaderCheckbox) {
+        headerCheck = element("input", { type: "checkbox" }) as HTMLInputElement;
+        headerCheck.addEventListener("change", () => {
+          const rows = pageSlice();
+          const check = headerCheck!.checked;
+          rows.forEach((r, i) => {
+            const id = getRowId(r, (page - 1) * (pageSize || 0) + i);
+            if (check) selected.add(id); else selected.delete(id);
+          });
+          onSelectionChange?.(getSelection());
+          renderBody();
         });
-        onSelectionChange?.(getSelection());
-        renderBody();
-      });
-      cell.appendChild(headerCheck);
+        cell.appendChild(headerCheck);
+      }
       row.appendChild(cell);
     }
 
