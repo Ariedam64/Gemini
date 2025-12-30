@@ -497,19 +497,16 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                 sortFn: (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
                 render: (row) => {
                     const container = element("div", {
-                        style: "display: flex; align-items: center; gap: 12px; width: 100%;"
+                        style: "display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;"
                     }) as HTMLDivElement;
 
                     const sprite = createSpriteCell(row.id);
 
                     const nameLabel = element("span", {
-                        style: "font-weight: 500; color: var(--fg); flex: 1; text-align: center;"
+                        style: "font-weight: 500; color: var(--fg);"
                     }, row.name);
 
-                    // Weighted spacer (same width as sprite wrapper) to ensure the name is perfectly centered
-                    const spacer = element("div", { style: "width: 28px; flex-shrink: 0;" });
-
-                    container.append(sprite, nameLabel, spacer);
+                    container.append(sprite, nameLabel);
                     return container;
                 }
             },
