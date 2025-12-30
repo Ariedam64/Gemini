@@ -1,4 +1,5 @@
 import { element } from "../../styles/helpers";
+import { Switch, SwitchHandle } from "../Switch/Switch";
 
 export type Align = "left" | "center" | "right";
 export type ColDef<T = any> = {
@@ -22,6 +23,7 @@ export type TableOptions<T = any> = {
   compact?: boolean;
   maxHeight?: number | string;
   selectable?: boolean;
+  selectionType?: "checkbox" | "switch";
   selectOnRowClick?: boolean;
   initialSelection?: string[];
   hideHeaderCheckbox?: boolean;
@@ -59,6 +61,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     compact = false,
     maxHeight,
     selectable = false,
+    selectionType = "switch",
     selectOnRowClick = false,
     initialSelection = [],
     hideHeaderCheckbox = false,
@@ -96,7 +99,7 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
   if (compact) root.classList.add("compact");
   if (selectable) root.classList.add("selectable");
 
-  const CHECK_W = "36px";
+  const CHECK_W = selectionType === "switch" ? "52px" : "36px";
   root.style.setProperty("--check-w", CHECK_W);
 
   function getJustify(align?: Align) {
@@ -138,16 +141,27 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
   const selected = new Set<string>(initialSelection);
   function getSelection() { return Array.from(selected); }
+  const switchHandles = new Map<string, SwitchHandle>();
   function setSelection(ids: string[]) {
     selected.clear();
     ids.forEach(id => selected.add(id));
     updateHeaderCheckbox();
+
+    // Update all visible switch handles
+    switchHandles.forEach((h, id) => {
+      h.setChecked(selected.has(id), true);
+    });
+
     renderBody();
     onSelectionChange?.(getSelection());
   }
   function clearSelection() {
     selected.clear();
     updateHeaderCheckbox();
+
+    // Update all visible switch handles
+    switchHandles.forEach(h => h.setChecked(false, true));
+
     renderBody();
     onSelectionChange?.(getSelection());
   }
@@ -365,16 +379,32 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
 
     if (selectable) {
       const td = element("div", { className: "lg-td lg-td-check" }) as HTMLDivElement;
-      const cb = element("input", { type: "checkbox", className: "lg-row-check" }) as HTMLInputElement;
-      cb.checked = selected.has(rid);
-      cb.addEventListener("change", (ev) => {
-        ev.stopPropagation();
-        if (cb.checked) selected.add(rid); else selected.delete(rid);
-        updateHeaderCheckbox();
-        onSelectionChange?.(getSelection());
-      });
-      cb.addEventListener("click", (ev) => ev.stopPropagation());
-      td.appendChild(cb);
+
+      if (selectionType === "switch") {
+        const sw = Switch({
+          size: "sm",
+          checked: selected.has(rid),
+          onChange: (checked) => {
+            if (checked) selected.add(rid); else selected.delete(rid);
+            updateHeaderCheckbox();
+            onSelectionChange?.(getSelection());
+          }
+        });
+        // We handle row click interaction via the handle too
+        switchHandles.set(rid, sw);
+        td.appendChild(sw.root);
+      } else {
+        const cb = element("input", { type: "checkbox", className: "lg-row-check" }) as HTMLInputElement;
+        cb.checked = selected.has(rid);
+        cb.addEventListener("change", (ev) => {
+          ev.stopPropagation();
+          if (cb.checked) selected.add(rid); else selected.delete(rid);
+          updateHeaderCheckbox();
+          onSelectionChange?.(getSelection());
+        });
+        cb.addEventListener("click", (ev) => ev.stopPropagation());
+        td.appendChild(cb);
+      }
       tr.appendChild(td);
     }
 
@@ -395,9 +425,16 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
           const check = !selected.has(rid);
           if (check) selected.add(rid); else selected.delete(rid);
           updateHeaderCheckbox();
-          // Find and update the checkbox visually
-          const cb = tr.querySelector<HTMLInputElement>(".lg-row-check");
-          if (cb) cb.checked = check;
+
+          // Find and update the selection visual
+          if (selectionType === "switch") {
+            const h = switchHandles.get(rid);
+            if (h) h.setChecked(check, true);
+          } else {
+            const cb = tr.querySelector<HTMLInputElement>(".lg-row-check");
+            if (cb) cb.checked = check;
+          }
+
           onSelectionChange?.(getSelection());
         }
 

@@ -104,6 +104,19 @@ export const tableCss = `
   scrollbar-gutter:stable;
   min-height:0; /* key so scrolling does not jump */
 }
+.lg-tbody::-webkit-scrollbar {
+  width: 10px;
+}
+.lg-tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lg-tbody::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 8px;
+}
+.lg-tbody::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--muted) 150%, transparent);
+}
 
 /* Hover & clickable rows */
 .lg-tr-body.clickable{ cursor:pointer; }
