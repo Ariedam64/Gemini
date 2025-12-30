@@ -10,6 +10,7 @@ import { Switch } from "../../components/Switch/Switch";
 import { Button } from "../../components/Button/Button";
 import { Table, ColDef } from "../../components/Table/Table";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import { Badge } from "../../components/Badge/Badge";
 import { element } from "../../styles/helpers";
 import { MGData, MGSprite } from "../../../modules";
 import { storageGet, storageSet } from "../../../features/shared/storage";
@@ -40,22 +41,20 @@ const MUTATION_DATA = [
     { id: 'Ambercharged', color: '#FA8C4B', desc: 'Amber charged' },
 ];
 
-const PRODUCE_ORDER = [
-    'Carrot', 'Strawberry', 'Aloe', 'FavaBean', 'Delphinium', 'Blueberry', 'Apple',
-    'Tulip', 'OrangeTulip', 'Tomato', 'Daffodil', 'Corn', 'Watermelon', 'Pumpkin',
-    'Echeveria', 'Coconut', 'Banana', 'Lily', 'Camellia', 'Squash', 'BurrosTail',
-    'Mushroom', 'Cactus', 'Bamboo', 'Chrysanthemum', 'Grape', 'Pepper', 'Lemon',
-    'PassionFruit', 'DragonFruit', 'Cacao', 'Lychee', 'Sunflower', 'Starweaver',
-    'DawnCelestial', 'MoonCelestial'
-];
+const RARITY_ORDER: Record<string, number> = {
+    Common: 1,
+    Uncommon: 2,
+    Rare: 3,
+    Legendary: 4,
+    Mythical: 5,
+    Divine: 6,
+    Celestial: 7,
+};
 
-const PET_ORDER = [
-    'Worm', 'Snail', 'Bee', // Common
-    'Chicken', 'Bunny', 'Dragonfly', // Uncommon
-    'Pig', 'Cow', 'Turkey', // Rare
-    'Squirrel', 'Turtle', 'Goat', // Legendary
-    'Butterfly', 'Peacock', 'Capybara' // Mythic
-];
+function getRarityOrder(rarity: string | null): number {
+    if (!rarity) return 0;
+    return RARITY_ORDER[rarity] ?? 0;
+}
 
 export class AutoFavoriteSettingsSection extends BaseSection {
     private config: AutoFavoriteUIConfig = DEFAULT_CONFIG;
@@ -156,11 +155,25 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         try {
             await MGData.waitForAnyData();
 
-            const plants = MGData.get('plants') || {};
-            const pets = MGData.get('pets') || {};
+            const plants = (MGData.get('plants') || {}) as Record<string, any>;
+            const pets = (MGData.get('pets') || {}) as Record<string, any>;
 
-            this.allPlants = Object.keys(plants);
-            this.allPets = Object.keys(pets);
+            // Load and sort all items dynamically by Rarity then Name
+            this.allPlants = Object.keys(plants).sort((a, b) => {
+                const rarA = plants[a]?.seed?.rarity || null;
+                const rarB = plants[b]?.seed?.rarity || null;
+                const diff = getRarityOrder(rarA) - getRarityOrder(rarB);
+                if (diff !== 0) return diff;
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+            });
+
+            this.allPets = Object.keys(pets).sort((a, b) => {
+                const rarA = pets[a]?.rarity || null;
+                const rarB = pets[b]?.rarity || null;
+                const diff = getRarityOrder(rarA) - getRarityOrder(rarB);
+                if (diff !== 0) return diff;
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+            });
         } catch (error) {
             console.error('[AutoFavorite UI] Failed to load game data:', error);
         }
@@ -272,7 +285,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         }
 
         const btn = element("div", {
-            style: `padding: ${large ? '14px' : '8px 16px'}; border-radius: var(--card-radius, 12px); cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); background: ${isActive ? activeBg : 'color-mix(in oklab, var(--tab-bg) 5%, transparent)'}; border: 2px solid ${isActive ? activeBorder : 'color-mix(in oklab, var(--tab-bg) 20%, transparent)'}; display: flex; align-items: center; justify-content: center; gap: 16px; box-shadow: ${isActive ? (data.id === 'Rainbow' ? '0 4px 18px rgba(255,255,255,0.25)' : `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`) : 'none'}; opacity: ${isActive ? '1' : '0.8'};`
+            style: `padding: ${large ? '14px' : '8px 16px'}; min-height: 52px; border-radius: var(--card-radius, 12px); cursor: pointer; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); background: ${isActive ? activeBg : 'color-mix(in oklab, var(--tab-bg) 5%, transparent)'}; border: 2px solid ${isActive ? activeBorder : 'color-mix(in oklab, var(--tab-bg) 20%, transparent)'}; display: flex; align-items: center; justify-content: center; gap: 16px; box-shadow: ${isActive ? (data.id === 'Rainbow' ? '0 4px 18px rgba(255,255,255,0.25)' : `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`) : 'none'}; opacity: ${isActive ? '1' : '0.8'};`
         }) as HTMLDivElement;
 
         const leftSprite = element("div", { style: "width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" }) as HTMLDivElement;
@@ -322,33 +335,15 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     }
 
     private createProduceCard(): HTMLDivElement {
-        const sortedPlants = [...this.allPlants].sort((a, b) => {
-            const idxA = PRODUCE_ORDER.indexOf(a);
-            const idxB = PRODUCE_ORDER.indexOf(b);
-            if (idxA === -1 && idxB === -1) return a.localeCompare(b);
-            if (idxA === -1) return 1;
-            if (idxB === -1) return -1;
-            return idxA - idxB;
-        });
-
         return this.createItemSelectionCard({
-            title: "Produce", items: sortedPlants, category: 'plant', selected: this.config.favoriteProduceList,
+            title: "Produce", items: this.allPlants, category: 'plant', selected: this.config.favoriteProduceList,
             onUpdate: (newList) => { this.config.favoriteProduceList = newList; this.saveConfig(); }
         });
     }
 
     private createPetsCard(): HTMLDivElement {
-        const sortedPets = [...this.allPets].sort((a, b) => {
-            const idxA = PET_ORDER.indexOf(a);
-            const idxB = PET_ORDER.indexOf(b);
-            if (idxA === -1 && idxB === -1) return a.localeCompare(b);
-            if (idxA === -1) return 1;
-            if (idxB === -1) return -1;
-            return idxA - idxB;
-        });
-
         return this.createItemSelectionCard({
-            title: "Pets", items: sortedPets, category: 'pet', selected: this.config.favoritePetsList,
+            title: "Pets", items: this.allPets, category: 'pet', selected: this.config.favoritePetsList,
             onUpdate: (newList) => { this.config.favoritePetsList = newList; this.saveConfig(); }
         });
     }
@@ -411,14 +406,29 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         actions.append(selectAllBtn, deselectAllBtn);
 
         // Build table data with item info
-        type ItemRow = { id: string; name: string; selected: boolean };
+        type ItemRow = { id: string; name: string; rarity: string | null; selected: boolean };
 
         const buildTableData = (): ItemRow[] => {
             return filteredItems.map(id => ({
                 id,
                 name: id,
+                rarity: this.getItemRarity(id, category),
                 selected: selectedSet.has(id)
             }));
+        };
+
+        const renderRarity = (rarity: string | null): Node => {
+            if (!rarity) {
+                const span = element("span", { style: "opacity:0.5;" }) as HTMLSpanElement;
+                span.textContent = "—";
+                return span;
+            }
+            const badge = Badge({
+                variant: "rarity",
+                rarity: rarity,
+                size: "sm",
+            });
+            return badge.root;
         };
 
         // Create sprite renderer
@@ -470,7 +480,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             return checkbox;
         };
 
-        // Table columns
+        // Table columns - Order matched to Test section + Selection
         const columns: ColDef<ItemRow>[] = [
             {
                 key: 'selected',
@@ -480,22 +490,32 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                 render: (row) => createCheckboxCell(row)
             },
             {
-                key: 'sprite',
-                header: '',
-                width: '40px',
-                align: 'center',
-                render: (row) => createSpriteCell(row.id)
-            },
-            {
                 key: 'name',
                 header: 'Name',
                 width: '1fr',
                 sortable: true,
+                sortFn: (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
                 render: (row) => {
                     const span = element("span", { style: "font-weight: 500; color: var(--fg);" }, row.name);
                     return span;
                 }
-            }
+            },
+            {
+                key: 'rarity',
+                header: 'Rarity',
+                width: '100px',
+                align: 'center',
+                sortable: true,
+                sortFn: (a, b) => getRarityOrder(a.rarity) - getRarityOrder(b.rarity),
+                render: (row) => renderRarity(row.rarity)
+            },
+            {
+                key: 'sprite',
+                header: 'Sprite',
+                width: '60px',
+                align: 'center',
+                render: (row) => createSpriteCell(row.id)
+            },
         ];
 
         // Create the table
@@ -507,7 +527,10 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             zebra: true,
             animations: true,
             getRowId: (row) => row.id,
-            onRowClick: (row) => {
+            onRowClick: (row, index, ev) => {
+                // Prevent toggle if clicking specifically on the checkbox (which has its own logic)
+                if ((ev.target as HTMLElement).closest('.game-checkbox')) return;
+
                 // Toggle selection on row click
                 if (selectedSet.has(row.id)) {
                     selectedSet.delete(row.id);
@@ -538,62 +561,27 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         );
     }
 
-    private createItemRow(itemId: string, category: string, checked: boolean, onChange: (checked: boolean) => void): HTMLDivElement {
-        const row = element("div", {
-            className: `item-row ${checked ? 'checked' : ''}`,
-            style: `display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: background 0.2s; margin-bottom: 4px;`
-        }) as HTMLDivElement;
 
-        const checkbox = element("input", { type: "checkbox", className: "game-checkbox" }) as HTMLInputElement;
-        checkbox.checked = checked;
-
-        let loadCategory = category; let loadAsset = itemId;
-        if (category === 'plant') {
-            const tallPlants = ['Bamboo', 'Cactus'];
-            if (tallPlants.includes(itemId)) {
-                loadCategory = 'tallplant';
-            }
-
-            // Celestial "Produce" (PlantsTile) instead of full plant
-            if (itemId === 'DawnCelestial') loadAsset = 'DawnCelestialCrop';
-            if (itemId === 'MoonCelestial') loadAsset = 'MoonCelestialCrop';
-            if (itemId === 'Starweaver') loadAsset = 'Starweaver'; // Already Starweaver in plant category
-
-            if (itemId === 'OrangeTulip') loadAsset = 'Tulip';
-        }
-
-        const spriteWrapper = element("div", { style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.05); border-radius: 6px;" }) as HTMLDivElement;
+    private getItemRarity(id: string, category: string): string | null {
         try {
-            if (MGSprite.ready()) {
-                const canvas = MGSprite.toCanvas(loadCategory, loadAsset, { scale: 0.5 });
-                canvas.style.width = '28px'; canvas.style.height = '28px'; canvas.style.objectFit = 'contain';
-                spriteWrapper.appendChild(canvas);
+            if (category === 'pet') {
+                const pets = (MGData.get('pets') || {}) as Record<string, any>;
+                return pets[id]?.rarity || null;
             }
-        } catch (error) { }
+            if (category === 'plant') {
+                const plants = (MGData.get('plants') || {}) as Record<string, any>;
+                const plant = plants[id];
+                if (plant?.seed?.rarity) return plant.seed.rarity;
 
-        const label = element("span", { style: "font-size: 13px; font-weight: 600; flex: 1; color: var(--fg);" }, itemId);
-
-        // Update row visual state without rebuilding the entire section
-        const updateRowState = (isChecked: boolean) => {
-            row.classList.toggle('checked', isChecked);
-        };
-
-        const toggle = () => {
-            checkbox.checked = !checkbox.checked;
-            updateRowState(checkbox.checked);
-            onChange(checkbox.checked);
-        };
-
-        checkbox.addEventListener('change', (e) => {
-            e.stopPropagation();
-            updateRowState(checkbox.checked);
-            onChange(checkbox.checked);
-        });
-
-        row.addEventListener('click', toggle);
-
-        row.append(checkbox, spriteWrapper, label);
-        return row;
+                // Fallback: look for plant by name in case of slightly different ID mapping
+                const lowerId = id.toLowerCase();
+                for (const p of Object.values(plants)) {
+                    if (p?.seed?.name?.toLowerCase() === lowerId) return p.seed.rarity;
+                    if (p?.plant?.name?.toLowerCase() === lowerId) return p.seed.rarity;
+                }
+            }
+        } catch (e) { }
+        return null;
     }
 
     private async saveConfig(): Promise<void> {
