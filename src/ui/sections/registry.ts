@@ -2,8 +2,11 @@ import type { BaseSection } from "./core/Section";
 import type { SectionsDeps } from "./core/Types";
 
 // Concrete sections
-import { SettingsSection } from "./Settings/Settings";
-import { TestSection } from "./Test/Test";
+import { SettingsSection } from "./Settings/settings";
+import { TestSection } from "./Test/test";
+import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings/AutoFavoriteSettings";
+import { FeatureSettingsSection } from "./FeatureSettings/FeatureSettings";
+import { JournalCheckerSection } from "./JournalChecker/JournalChecker";
 
 let testSectionInstance: TestSection | null = null;
 
@@ -29,6 +32,9 @@ export async function preloadSections(): Promise<void> {
 export function buildSections(deps: SectionsDeps): BaseSection[] {
   return [
     new SettingsSection(deps),
+    new FeatureSettingsSection(),
+    new AutoFavoriteSettingsSection(),
+    new JournalCheckerSection(),
     getTestSection(),
   ];
 }

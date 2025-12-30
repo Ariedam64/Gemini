@@ -112,6 +112,9 @@ export const GeminiAPI = {
   },
 };
 
+// Export alias for backward compatibility with features
+export { GeminiAPI as Gemini };
+
 export function exposeGeminiAPI(): void {
   (pageWindow as unknown as Record<string, unknown>).Gemini = GeminiAPI;
 }

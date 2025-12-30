@@ -94,4 +94,42 @@ export const THEMES: Record<string, ThemeVars> = {
     "--pill-from": "#fb923c",
     "--pill-to": "#facc15",
   },
+  magicGarden: {
+    // ===== Core Colors (from Magic Garden StatsModal.tsx) =====
+    "--bg": "#201D1D",                      // MagicBlack - main dark background
+    "--fg": "#F5F5F5",                      // MagicWhite - primary white text
+    "--muted": "rgba(255,255,255,0.6)",     // Light grey subtext/descriptions
+    "--soft": "rgba(0,0,0,0.3)",            // Card/section backgrounds (darker overlay)
+    "--accent": "#FFF27D",                  // Yellow.Light - highlights & accent
+
+    // ===== Borders & Shadows =====
+    "--border": "rgba(255,255,255,0.1)",    // Thin dividing lines between sections
+    "--border-accent": "#4A3B2E",           // Brown.Dark - modal accent border
+    "--shadow": "rgba(0,0,0,0.5)",          // Drop shadows for cards
+    "--card-shadow": "0 4px 10px rgba(0, 0, 0, 0.5)",
+
+    // ===== Header/Tabs =====
+    "--tab-bg": "#10725A",                  // Cyan.Dark - greenish header background
+    "--tab-fg": "#F5F5F5",                  // White text on greenish header
+
+    // ===== Content Hierarchy (Game-Accurate) =====
+    "--section-title": "#10725A",           // Cyan.Dark - section title headers (FIXED: green not yellow)
+    "--group-title": "#5EB292",             // Cyan.Light - group headings (e.g., "Plants", "Pets")
+    "--item-label": "#F5F5F5",              // MagicWhite - stat item labels
+    "--item-desc": "rgba(255,255,255,0.6)", // Subtext/descriptions
+    "--item-value": "#FFF27D",              // Yellow.Light - stat values (aligned right)
+
+    // ===== Card Styling =====
+    "--card-bg": "rgba(0,0,0,0.3)",         // Content card dark overlay
+    "--card-radius": "12px",                // Standard card border radius
+    "--card-border": "#4A3B2E",             // Brown.Dark border
+
+    // ===== Pills/Badges =====
+    "--pill-from": "#FFF27D",               // Yellow.Light gradient start
+    "--pill-to": "#5EB292",                 // Cyan.Light gradient end
+
+    // ===== Scrollbar (matching AutoFavorite) =====
+    "--scrollbar-thumb": "rgba(255,255,255,0.2)",
+    "--scrollbar-thumb-hover": "rgba(255,255,255,0.3)",
+  },
 };
