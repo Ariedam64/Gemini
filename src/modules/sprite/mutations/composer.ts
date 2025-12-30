@@ -39,14 +39,32 @@ export function textureToCanvas(
   if (cached) return cached;
 
   let canvas: HTMLCanvasElement | null = null;
+  const resolution = renderer?.resolution ?? 1;
 
   try {
     if (renderer?.extract?.canvas) {
       const spr = new ctors.Sprite(tex);
-      canvas = renderer.extract.canvas(spr);
+      const extracted = renderer.extract.canvas(spr);
       spr.destroy?.({ children: true, texture: false, baseTexture: false });
+
+      // At high DPI, extract.canvas returns a physically larger canvas.
+      // Normalize to logical dimensions to prevent cropping issues.
+      if (resolution > 1 && extracted) {
+        const logicalW = Math.round(extracted.width / resolution);
+        const logicalH = Math.round(extracted.height / resolution);
+        canvas = document.createElement("canvas");
+        canvas.width = logicalW;
+        canvas.height = logicalH;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(extracted, 0, 0, logicalW, logicalH);
+        }
+      } else {
+        canvas = extracted;
+      }
     }
-  } catch {}
+  } catch { }
 
   if (!canvas) {
     const fr = tex?.frame || tex?._frame;
@@ -139,7 +157,8 @@ function buildColorLayerSprites(
 
     applyFilterOnto(lctx, layerCanvas, step.name, step.isTall);
 
-    const filteredTex = ctors.Texture.from(layerCanvas);
+    // Preserve the original texture's resolution for proper alignment at non-integer DPI
+    const filteredTex = ctors.Texture.from(layerCanvas, { resolution: tex.resolution ?? 1 });
     disposables.push(filteredTex);
 
     clone.texture = filteredTex;
@@ -193,7 +212,8 @@ function buildTallOverlaySprites(
     mctx.globalCompositeOperation = "destination-in";
     mctx.drawImage(baseCanvas, -overlayPos.x, -overlayPos.y);
 
-    const maskedTex = ctors.Texture.from(maskedCanvas);
+    // Preserve the overlay texture's resolution for proper alignment at non-integer DPI
+    const maskedTex = ctors.Texture.from(maskedCanvas, { resolution: hit.tex.resolution ?? 1 });
     disposables.push(maskedTex);
 
     const ov = new ctors.Sprite(maskedTex);
@@ -333,13 +353,17 @@ export function composeMutatedTexture(
       if (bnd && Number.isFinite(bnd.width) && Number.isFinite(bnd.height)) {
         bounds = { x: bnd.x, y: bnd.y, width: bnd.width, height: bnd.height };
       }
-    } catch {}
+    } catch { }
+
+    // Crop region constrains output to base sprite dimensions (matching QPM-GR approach)
+    const { Rectangle } = ctx.ctors;
+    const crop = Rectangle ? new Rectangle(0, 0, w, h) : undefined;
 
     let rt: any = null;
     if (typeof ctx.renderer.generateTexture === "function") {
-      rt = ctx.renderer.generateTexture(root, { resolution: 1 });
+      rt = ctx.renderer.generateTexture(root, { resolution: 1, region: crop });
     } else if (ctx.renderer.textureGenerator?.generateTexture) {
-      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution: 1 });
+      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution: 1, region: crop });
     }
 
     if (!rt) throw new Error("no render texture");
@@ -355,7 +379,7 @@ export function composeMutatedTexture(
         texW: bounds.width,
         texH: bounds.height,
       };
-    } catch {}
+    } catch { }
 
     if (rt && rt !== outTex) {
       rt.destroy?.(true);
@@ -366,7 +390,7 @@ export function composeMutatedTexture(
     try {
       outTex.__mg_gen = true;
       outTex.label = `${itemKey}|${variant.sig}`;
-    } catch {}
+    } catch { }
 
     return outTex;
   } catch {
