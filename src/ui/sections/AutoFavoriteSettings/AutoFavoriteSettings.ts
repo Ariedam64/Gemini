@@ -474,8 +474,12 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                     selectedSet.delete(row.id);
                 }
                 onUpdate(Array.from(selectedSet));
+                tableHandle.setData(buildTableData());
                 updateCounter();
             });
+
+            // Prevent the row click from triggering when clicking the checkbox directly
+            checkbox.addEventListener('click', (e) => e.stopPropagation());
 
             return checkbox;
         };
@@ -493,6 +497,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                 key: 'name',
                 header: 'Name',
                 width: '1fr',
+                align: 'center',
                 sortable: true,
                 sortFn: (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
                 render: (row) => {
@@ -530,10 +535,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             zebra: true,
             animations: true,
             getRowId: (row) => row.id,
-            onRowClick: (row, index, ev) => {
-                // Prevent toggle if clicking specifically on the checkbox (which has its own logic)
-                if ((ev.target as HTMLElement).closest('.game-checkbox')) return;
-
+            onRowClick: (row) => {
                 // Toggle selection on row click
                 if (selectedSet.has(row.id)) {
                     selectedSet.delete(row.id);
