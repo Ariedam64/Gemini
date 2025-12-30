@@ -9,6 +9,7 @@ import { Label } from "../../components/Label/Label";
 import { Switch } from "../../components/Switch/Switch";
 import { Button } from "../../components/Button/Button";
 import { Table, ColDef } from "../../components/Table/Table";
+import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { element } from "../../styles/helpers";
 import { MGData, MGSprite } from "../../../modules";
 import { storageGet, storageSet } from "../../../features/shared/storage";
@@ -359,31 +360,26 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         let selectedSet = new Set(selected);
         let filteredItems = items;
 
-        // Search input
-        const searchContainer = element("div", { style: "margin-bottom: 12px;" }) as HTMLDivElement;
-        const searchInput = element("input", {
-            type: "text",
+        // Search bar using proper SearchBar component (matches Test section pattern)
+        const searchContainer = element("div", { style: "margin-bottom: 8px;" }) as HTMLDivElement;
+        const search = SearchBar({
             placeholder: `Search ${title.toLowerCase()}...`,
-            style: `
-                width: 100%;
-                padding: 10px 14px;
-                border-radius: 8px;
-                border: 1px solid var(--border);
-                background: var(--soft);
-                color: var(--fg);
-                font-size: 14px;
-                outline: none;
-                transition: border-color 0.2s;
-            `.replace(/\s+/g, ' ').trim()
-        }) as HTMLInputElement;
-
-        searchInput.addEventListener('focus', () => {
-            searchInput.style.borderColor = 'var(--accent)';
+            value: "",
+            debounceMs: 150,
+            withClear: true,
+            size: "sm",
+            focusKey: "",
+            onChange: (val) => {
+                const query = val.trim().toLowerCase();
+                if (query) {
+                    filteredItems = items.filter(id => id.toLowerCase().includes(query));
+                } else {
+                    filteredItems = items;
+                }
+                tableHandle.setData(buildTableData());
+            },
         });
-        searchInput.addEventListener('blur', () => {
-            searchInput.style.borderColor = 'var(--border)';
-        });
-        searchContainer.appendChild(searchInput);
+        searchContainer.appendChild(search.root);
 
         // Action buttons
         const actions = element("div", { style: "display: flex; gap: 8px; margin-bottom: 12px;" }) as HTMLDivElement;
@@ -524,16 +520,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             }
         });
 
-        // Search functionality
-        searchInput.addEventListener('input', () => {
-            const query = searchInput.value.toLowerCase().trim();
-            if (query) {
-                filteredItems = items.filter(id => id.toLowerCase().includes(query));
-            } else {
-                filteredItems = items;
-            }
-            tableHandle.setData(buildTableData());
-        });
+        // Search functionality is handled by SearchBar component's onChange callback
 
         // Counter element
         const counterEl = element("p", { style: "margin-top: 8px; font-size: 11px; color: var(--muted);" }) as HTMLParagraphElement;

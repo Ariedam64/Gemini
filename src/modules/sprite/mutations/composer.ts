@@ -46,7 +46,7 @@ export function textureToCanvas(
       canvas = renderer.extract.canvas(spr);
       spr.destroy?.({ children: true, texture: false, baseTexture: false });
     }
-  } catch {}
+  } catch { }
 
   if (!canvas) {
     const fr = tex?.frame || tex?._frame;
@@ -327,11 +327,20 @@ export function composeMutatedTexture(
     const iconSprites = buildIconSprites(itemKey, dims, iconPipeline, ctx.textures, ctx.ctors, iconLayout);
     iconSprites.forEach((icon) => root.addChild(icon));
 
+    // Use the renderer's actual resolution for proper high-DPI support
+    const resolution = ctx.renderer.resolution ?? window.devicePixelRatio ?? 1;
+
+    // Create crop region to constrain output to exact dimensions
+    // Without this, PIXI auto-calculates bounds from children which causes
+    // alignment issues at non-integer DPI like 1.25
+    const { Rectangle } = ctx.ctors;
+    const crop = Rectangle ? new Rectangle(0, 0, w, h) : undefined;
+
     let rt: any = null;
     if (typeof ctx.renderer.generateTexture === "function") {
-      rt = ctx.renderer.generateTexture(root, { resolution: 1 });
+      rt = ctx.renderer.generateTexture(root, { resolution, region: crop });
     } else if (ctx.renderer.textureGenerator?.generateTexture) {
-      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution: 1 });
+      rt = ctx.renderer.textureGenerator.generateTexture({ target: root, resolution, region: crop });
     }
 
     if (!rt) throw new Error("no render texture");
@@ -347,7 +356,7 @@ export function composeMutatedTexture(
     try {
       outTex.__mg_gen = true;
       outTex.label = `${itemKey}|${variant.sig}`;
-    } catch {}
+    } catch { }
 
     return outTex;
   } catch {
