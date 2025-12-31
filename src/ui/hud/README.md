@@ -145,13 +145,19 @@ const { panel, tabbar, content, resizer, closeButton, wrapper } =
 ```typescript
 const sections = buildSections(deps);
 const manager = new SectionManager(sections, content);
-manager.activate(initialTab);
+
+// Resilient tab selection: ensure initialTab actually exists, else fallback to first available
+const activeTabId = (initialTab && sections.some(s => s.id === initialTab))
+  ? initialTab
+  : (sections[0]?.id || "");
+
+manager.activate(activeTabId);
 ```
 
 ### 5. Navigation
 
 ```typescript
-const nav = createNavTabs(tabs, initialTab, (id) => {
+const nav = createNavTabs(tabs, activeTabId, (id) => {
   manager.activate(id);
   onTabChange?.(id);
 });

@@ -21,7 +21,8 @@ export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
 // Feature modules
-export * as AutoFavorite from "./autoFavorite";
+import * as AutoFavorite from "./autoFavorite";
+export { AutoFavorite };
 export * as BulkFavorite from "./bulkFavorite";
 export * as JournalChecker from "./journalChecker";
 export * as Shared from "./shared";
@@ -76,7 +77,7 @@ export async function initAllModules(
     { name: "Pixi", init: () => MGPixi.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
-    { name: "AutoFavorite", init: async () => { (await import("./autoFavorite")).start(); } },
+    { name: "AutoFavorite", init: () => AutoFavorite.start() },
   ];
 
   await Promise.all(

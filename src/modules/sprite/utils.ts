@@ -110,11 +110,12 @@ export function getCtors(app: PixiApp): PixiConstructors {
   };
 }
 
+import { sleep } from "../utils/helpers";
+
 export async function waitForCtors(
   app: PixiApp,
   timeoutMs = 15000
 ): Promise<PixiConstructors> {
-  const { sleep } = await import("../utils/helpers");
   const t0 = performance.now();
   while (performance.now() - t0 < timeoutMs) {
     try {
@@ -133,5 +134,5 @@ export async function waitForCtors(
 export const log = (...args: any[]) => {
   try {
     console.log("[MGSprite]", ...args);
-  } catch {}
+  } catch { }
 };

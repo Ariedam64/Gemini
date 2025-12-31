@@ -219,7 +219,13 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   });
 
   const tabs = sections.map((s) => ({ id: s.id, label: s.label }));
-  const nav = createNavTabs(tabs, initialTab || tabs[0]?.id || "", (id) => {
+
+  // Resilient tab selection: ensure initialTab actually exists, else fallback to first available
+  const activeTabId = (initialTab && sections.some(s => s.id === initialTab))
+    ? initialTab
+    : (tabs[0]?.id || "");
+
+  const nav = createNavTabs(tabs, activeTabId, (id) => {
     manager.activate(id);
     onTabChange?.(id);
   });
@@ -232,7 +238,9 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   tabbar.append(nav.root, closeButton);
 
   // Activate initial tab
-  manager.activate(initialTab || tabs[0]?.id || "");
+  if (activeTabId) {
+    manager.activate(activeTabId);
+  }
 
   // ===== 7. Keyboard Shortcuts =====
   const keyboardShortcuts = setupKeyboardShortcuts({

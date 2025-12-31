@@ -461,8 +461,8 @@ wrapper.appendChild(canvas);
 ## 14. Build System
 
 ```bash
-npm run build    # Dev build → dist/gemini-build.user.js
-npm run release  # Prod build → dist/gemini.user.js
+npm run build    # Production build → dist/gemini.user.js
+npm run devtools # Dev build (with HUD / tools) → dist/gemini-build.user.js
 ```
 
 - **Entry**: `src/main.ts`
@@ -628,8 +628,8 @@ Gemini includes a robust suite of internal developer tools to accelerate feature
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `npm run dev` | Real-time development with HMR | In-memory / Network load |
-| `npm run build` | Standard development build | `dist/gemini-build.user.js` |
-| `npm run release` | Production build (Optimized & Stripped) | `dist/gemini.user.js` |
+| `npm run devtools` | Development build (with HUD tools) | `dist/gemini-build.user.js` |
+| `npm run build` | Production build (Optimized & Stripped) | `dist/gemini.user.js` |
 
 > [!IMPORTANT]
 > **HMR Support**: `npm run dev` supports Hot Module Replacement for the UI. However, game-engine hooks (WebSocket/Pixi) may require a page refresh to re-initialize correctly.
@@ -646,7 +646,7 @@ if (import.meta.env.MODE !== 'production') {
 }
 ```
 
-Vite's tree-shaking will completely remove these classes and their related logic from the `npm run release` output.
+Vite's tree-shaking will completely remove these classes and their related logic from the `npm run build` output.
 
 ### Developer HUD (The "DEV" Tab)
 
@@ -733,7 +733,8 @@ All AI agents (Claude, Codex, Antigravity, etc.) and IDE extensions MUST:
 ---
 
 ## 22. World Changelog
-- **v4.3**: Implemented resilient data loading for Auto-Favorite feature (Soft Wait Strategy) to prevent data timeouts from crashing the UI.
+- **v4.4**: Implemented resilient tab selection in the HUD to prevent production crashes when a previously active tab (like 'DEV') is missing.
+- **v4.3**: Implemented resilient data loading for Auto-Favorite feature (Soft Wait Strategy). Updated build scripts and cleaned Userscript header.
 - **v4.2**: Interactive Card Builder redesign with free-form `PositioningCanvas`, dynamic `SpritePicker`, and Preview mode. Simplified Pixi Tools to click-only selection.
 - **v4.1**: Overhauled Dev HUD. Implemented Manual HMR. Established AI Alignment & Docs hierarchy.
 - **v4.0**: Redesigned Design System, Shadow DOM isolation, and Reactive Globals.
@@ -746,10 +747,11 @@ All AI agents (Claude, Codex, Antigravity, etc.) and IDE extensions MUST:
 - [ ] Add support for multiple themes (Light/Minimalist/Retro).
 - [ ] Expand automated testing coverage to UI components via Vitest.
 - [ ] Research performance bottlenecks in large garden rendering.
+- [x] Refine build scripts (rename release to devtools) and clean header ✓
 - [ ] **Manual Review Required**: Auto-Favorite feature - verify sprite rendering and logic after refactor.
 - [ ] **Manual Review Required**: Journal Checker - verify functionality after refactor.
 - [ ] **Manual Review Required**: Bulk Favorite - currently non-functioning, needs repair.
 
 ---
 
-*v4.2 - 2024-12-31*
+*v4.4 - 2024-12-31*

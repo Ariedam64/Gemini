@@ -43,7 +43,7 @@ export default defineConfig({
                     'https://starweaver.org/r/*'
                 ],
                 'run-at': 'document-start',
-                'inject-into': 'page',
+                license: false as any,
                 grant: [
                     'GM_xmlhttpRequest',
                     'GM_info',
@@ -58,7 +58,12 @@ export default defineConfig({
                 connect: ['i.imgur.com']
             },
             build: {
-                fileName: 'gemini.user.js'
+                fileName: 'gemini.user.js',
+                // @ts-ignore
+                cssSideEffects: (css) => {
+                    if (!css) return '';
+                    return `(function() { const style = document.createElement('style'); style.textContent = ${JSON.stringify(css)}; document.head.appendChild(style); })();`;
+                }
             },
             server: {
                 mountGmApi: true
