@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build output (keep dist for userscript)
+# dist/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp files
+message*.txt
