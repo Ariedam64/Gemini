@@ -89,7 +89,7 @@ function processItem(item: FavoriteableItem, config: AutoFavoriteConfig): void {
         processedItems.add(item.id);
 
         try {
-            toggleFavoriteItem(item.id, true);
+            toggleFavoriteItem(item.id);
             console.log(`[AutoFavorite] ⭐ Favorited ${item.itemType}: ${item.species || item.id}`);
         } catch (error) {
             console.error('[AutoFavorite] WebSocket error:', error);

@@ -169,7 +169,11 @@ export class AutoFavoriteSettingsSection extends BaseSection {
 
     private async loadGameData(): Promise<void> {
         try {
-            await MGData.waitForAnyData();
+            // Wait for BOTH plants and pets data specifically
+            await Promise.all([
+                MGData.waitFor('plants'),
+                MGData.waitFor('pets')
+            ]);
 
             const plants = (MGData.get('plants') || {}) as Record<string, any>;
             const pets = (MGData.get('pets') || {}) as Record<string, any>;
