@@ -733,6 +733,7 @@ All AI agents (Claude, Codex, Antigravity, etc.) and IDE extensions MUST:
 ---
 
 ## 22. World Changelog
+- **v4.3**: Implemented resilient data loading for Auto-Favorite feature (Soft Wait Strategy) to prevent data timeouts from crashing the UI.
 - **v4.2**: Interactive Card Builder redesign with free-form `PositioningCanvas`, dynamic `SpritePicker`, and Preview mode. Simplified Pixi Tools to click-only selection.
 - **v4.1**: Overhauled Dev HUD. Implemented Manual HMR. Established AI Alignment & Docs hierarchy.
 - **v4.0**: Redesigned Design System, Shadow DOM isolation, and Reactive Globals.

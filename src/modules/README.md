@@ -46,3 +46,7 @@ A "Complex Feature" (e.g., Journal Checker) should follow this folder pattern:
 ## 🔗 Related Systems
 - **Atoms**: Modules often read atoms to get the current context.
 - **WebSocket**: Modules use the WS API to trigger server-side actions.
+---
+
+## Changelog
+- **v4.3**: Implemented resilient data loading for Auto-Favorite feature (Soft Wait Strategy) to prevent data timeouts from crashing the UI.

@@ -169,10 +169,13 @@ export class AutoFavoriteSettingsSection extends BaseSection {
 
     private async loadGameData(): Promise<void> {
         try {
-            // Wait for BOTH plants and pets data specifically
+            // Wait for some data to be captured first (Soft Wait Strategy)
+            await MGData.waitForAnyData(3000).catch(() => { });
+
+            // Then try to get plants and pets specifically, but don't hard-fail on individual timeouts
             await Promise.all([
-                MGData.waitFor('plants'),
-                MGData.waitFor('pets')
+                MGData.waitFor('plants', 3000).catch(() => console.warn('[AutoFavorite UI] Still waiting for plants data...')),
+                MGData.waitFor('pets', 3000).catch(() => console.warn('[AutoFavorite UI] Still waiting for pets data...'))
             ]);
 
             const plants = (MGData.get('plants') || {}) as Record<string, any>;

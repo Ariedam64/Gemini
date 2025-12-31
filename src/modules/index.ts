@@ -76,6 +76,7 @@ export async function initAllModules(
     { name: "Pixi", init: () => MGPixi.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
+    { name: "AutoFavorite", init: async () => { (await import("./autoFavorite")).start(); } },
   ];
 
   await Promise.all(

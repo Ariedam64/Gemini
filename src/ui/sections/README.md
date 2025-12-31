@@ -45,4 +45,5 @@ The `Dev/` folder contains development-only tools (conditionally compiled):
 ---
 
 ## Changelog
+- **v4.3**: Implemented resilient data loading for Auto-Favorite feature (Soft Wait Strategy) to prevent data timeouts from crashing the UI.
 - **v4.2**: DevSection refactored with interactive Card Builder, sprite dropdowns, and preview mode.
