@@ -60,15 +60,15 @@ export const cardCss = `
     margin-bottom:0;
   }
   .card--collapsed .card-header--expandable{
-    margin:-2px -4px 0;
+    margin:-6px -8px 0;
   }
 
   .card-header--expandable{
     cursor:pointer;
     user-select:none;
     border-radius:12px;
-    padding:2px 4px;
-    margin:-2px -4px 8px;
+    padding:6px 8px;
+    margin:-6px -8px 8px;
     transition: background-color .2s ease, color .2s ease;
   }
   .card-header--expandable:hover{

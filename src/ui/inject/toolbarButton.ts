@@ -108,7 +108,7 @@ export function startInjectGamePanelButton(opts: Options) {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      try { opts.onClick?.(); } catch {}
+      try { opts.onClick?.(); } catch { }
     });
     return btn;
   }
@@ -157,7 +157,7 @@ export function startInjectGamePanelButton(opts: Options) {
       // Ensure we observe only the anchor container for future changes
       const target = findAnchorForObserver(root);
       if (target && target !== obsTarget) {
-        try { observer.disconnect(); } catch {}
+        try { observer.disconnect(); } catch { }
         obsTarget = target;
         observer.observe(obsTarget, { childList: true, subtree: true });
       }
@@ -168,11 +168,6 @@ export function startInjectGamePanelButton(opts: Options) {
       isMounting = false;
     }
   }
-
-  // Initial mount (in case toolbar already there)
-  mountOnce();
-
-  // Try to fetch icon from loader via bridge (data URL)
 
   // Observe mutations to re-mount if the game re-renders the toolbar
   const host = document.getElementById("App") || document.body;
@@ -215,12 +210,16 @@ export function startInjectGamePanelButton(opts: Options) {
       }
     }, 150);
   });
+
+  // Initial mount (in case toolbar already there)
+  mountOnce();
+
   // Attach to #App initially (with subtree) to catch toolbar insertions anywhere in the tree
   observer.observe(host, { childList: true, subtree: true });
   stopObs = () => observer.disconnect();
 
   return () => {
-    try { stopObs?.(); } catch {}
-    try { mountedWrap?.remove(); } catch {}
+    try { stopObs?.(); } catch { }
+    try { mountedWrap?.remove(); } catch { }
   };
 }

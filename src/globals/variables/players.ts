@@ -70,6 +70,7 @@ type PlayersSources = {
 const initialData: PlayersData = {
   all: [],
   host: null,
+  myPlayer: null,
   count: 0,
 };
 
@@ -135,10 +136,10 @@ function buildPlayer(
     // Actions
     lastAction: lastActionEvent
       ? {
-          type: lastActionEvent.action,
-          data: lastActionEvent.data,
-          timestamp: lastActionEvent.timestamp,
-        }
+        type: lastActionEvent.action,
+        data: lastActionEvent.data,
+        timestamp: lastActionEvent.timestamp,
+      }
       : null,
     selectedItemIndex: slot?.notAuthoritative_selectedItemIndex ?? null,
     lastSlotMachineInfo: slot?.lastSlotMachineInfo ?? null,
@@ -165,10 +166,12 @@ function buildData(sources: PlayersSources): PlayersData {
 
   const all = players.map((raw) => buildPlayer(raw, hostPlayerId, userSlotMap));
   const host = all.find((p) => p.isHost) ?? null;
+  const myPlayer = all.find((p) => p.slotIndex !== null && p.slotIndex >= 0) ?? null;
 
   return {
     all,
     host,
+    myPlayer,
     count: all.length,
   };
 }

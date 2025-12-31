@@ -3,17 +3,29 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "useDefineForClassFields": true,
-    "types": ["tampermonkey"],
+    "types": [
+      "tampermonkey",
+      "vite/client"
+    ],
     "allowJs": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules", "src/ToRefactor"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/ToRefactor"
+  ]
 }
-

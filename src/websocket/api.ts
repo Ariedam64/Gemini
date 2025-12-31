@@ -41,7 +41,7 @@ export function kickPlayer(playerId: string, win: any = pageWindow): SendResult 
 }
 
 export function setPlayerData(data: Record<string, unknown>, win: any = pageWindow): SendResult {
-  return send(T.SetPlayerData, {scopePath: ["Room"], data }, win);
+  return send(T.SetPlayerData, { scopePath: ["Room"], data }, win);
 }
 
 export function usurpHost(win: any = pageWindow): SendResult {
@@ -70,7 +70,7 @@ export function requestGame(gameId: string, win: any = pageWindow): SendResult {
 }
 
 export function restartGame(win: any = pageWindow): SendResult {
-  return send(T.RestartGame, {scopePath: ["Room"]}, win);
+  return send(T.RestartGame, { scopePath: ["Room"] }, win);
 }
 
 export function ping(id: string | number, win: any = pageWindow): SendResult {
@@ -109,8 +109,8 @@ export function pickupObject(objectId: string, win: any = pageWindow): SendResul
   return send(T.PickupObject, { objectId }, win);
 }
 
-export function toggleFavoriteItem(itemId: string, favorite: boolean, win: any = pageWindow): SendResult {
-  return send(T.ToggleFavoriteItem, { itemId, favorite }, win);
+export function toggleFavoriteItem(itemId: string, favorited: boolean, win: any = pageWindow): SendResult {
+  return send(T.ToggleFavoriteItem, { scopePath: ["Item", itemId], itemId, favorited }, win);
 }
 
 export function putItemInStorage(itemId: string, win: any = pageWindow): SendResult {

@@ -1,13 +1,13 @@
 // ui/components/Button.ts
 import { element } from "../../styles/helpers";
 
-export type ButtonVariant = "default" | "primary";
+export type ButtonVariant = "default" | "primary" | "danger";
 export type ButtonSize = "md" | "sm";
 
 export type ButtonOptions = {
   label?: string | Node;
   id?: string;
-  variant?: ButtonVariant;      // "default" | "primary"
+  variant?: ButtonVariant;      // "default" | "primary" | "danger"
   size?: ButtonSize;            // "md" (default) | "sm"
   iconLeft?: string | Node;     // if provided, icon on the left
   iconRight?: string | Node;    // if provided, icon on the right
@@ -25,6 +25,7 @@ export type ButtonHandle = HTMLButtonElement & {
   setLabel: (content: string | Node) => void;
   setIconLeft: (content?: string | Node) => void;
   setIconRight: (content?: string | Node) => void;
+  setVariant: (v: ButtonVariant) => void;
 };
 
 function toNode(content?: string | Node): Node | null {
@@ -98,6 +99,7 @@ export function Button(opts: ButtonOptions = {}): ButtonHandle {
   const btn = element("button", { className: "btn", id }) as HTMLButtonElement;
   btn.type = type;
   if (variant === "primary") btn.classList.add("primary");
+  if (variant === "danger") btn.classList.add("danger");
   if (size === "sm") btn.classList.add("btn--sm");
   if (tooltip) btn.title = tooltip;
   if (fullWidth) btn.style.width = "100%";
@@ -171,6 +173,12 @@ export function Button(opts: ButtonOptions = {}): ButtonHandle {
     } else {
       btn.appendChild(makeIcon(content, "right"));
     }
+  };
+
+  handle.setVariant = (v: ButtonVariant) => {
+    btn.classList.remove("primary", "danger");
+    if (v === "primary") btn.classList.add("primary");
+    if (v === "danger") btn.classList.add("danger");
   };
 
   return handle;

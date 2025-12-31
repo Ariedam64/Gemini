@@ -77,10 +77,10 @@ const state = {
 function deepClone<T>(value: T): T {
   try {
     if (typeof structuredClone === "function") return structuredClone(value);
-  } catch {}
+  } catch { }
   try {
     return JSON.parse(JSON.stringify(value));
-  } catch {}
+  } catch { }
   return value;
 }
 
@@ -112,7 +112,7 @@ function getTileViewAt(tx: number, ty: number, ensure = true): { gidx: number | 
   if (!tv && ensure && typeof TOS.getOrCreateTileView === "function") {
     try {
       tv = TOS.getOrCreateTileView(gi);
-    } catch {}
+    } catch { }
   }
   return { gidx: gi, tv: tv || null };
 }
@@ -143,7 +143,7 @@ function applyTileObject(
   if (forceUpdate && eng?.reusableContext && typeof tv.update === "function") {
     try {
       tv.update(eng.reusableContext);
-    } catch {}
+    } catch { }
   }
 
   return { ok: true, tx: Number(tx), ty: Number(ty), gidx: gi, before, after: tv.tileObject };
@@ -199,7 +199,7 @@ function getTileDisplay(tv: TileView): any | null {
     for (const key of Object.keys(tv)) {
       if (ok(tv[key])) return tv[key];
     }
-  } catch {}
+  } catch { }
 
   return null;
 }
@@ -434,7 +434,7 @@ function setTileObjectRaw(
   if (forceUpdate && eng?.reusableContext && typeof tv.update === "function") {
     try {
       tv.update(eng.reusableContext);
-    } catch {}
+    } catch { }
   }
 
   return { ok: true, tx: Number(tx), ty: Number(ty), gidx: gi, before, after: tv.tileObject };
@@ -516,6 +516,16 @@ function pointToTile(
   return best;
 }
 
+function tileToPoint(tx: number, ty: number): { x: number; y: number } | null {
+  ensureReady();
+  const xf = state.xform;
+  if (!xf?.ok) return null;
+  return {
+    x: xf.originCenter.x + tx * xf.vx.x + ty * xf.vy.x,
+    y: xf.originCenter.y + tx * xf.vx.y + ty * xf.vy.y,
+  };
+}
+
 function help(): string {
   return [
     "MGTile.init()",
@@ -525,6 +535,7 @@ function help(): string {
     "MGTile.setTilePlant(tx,ty,{...}) / setTileDecor / setTileEgg",
     "MGTile.setTileObjectRaw(tx,ty,objOrFn)",
     "MGTile.rebuildTransform() / pointToTile({x,y})",
+    "MGTile.tileToPoint(tx,ty)",
   ].join("\n");
 }
 
@@ -549,6 +560,8 @@ export const MGTile = {
 
   rebuildTransform,
   pointToTile,
+  tileToPoint,
+  getTransform: () => state.xform,
 
   help,
 };

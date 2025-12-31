@@ -13,6 +13,7 @@
  */
 
 import { pageWindow } from "../utils/windowContext";
+import { pushWSLog } from "../ui/sections/Dev/WSLogger";
 
 export type BestWsResult = {
   ws: WebSocket | null;
@@ -65,6 +66,15 @@ function track(ws: WebSocket, debug: boolean) {
     if (debug) console.log("[WS] captured socket closed", ws.url);
   });
 
+  ws.addEventListener("message", (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      pushWSLog("in", data.type || "unknown", data);
+    } catch {
+      pushWSLog("in", "raw", e.data);
+    }
+  });
+
   // If already open when we attach listeners.
   if (ws.readyState === WS_OPEN) markOpen();
 }
@@ -76,11 +86,11 @@ export function installWebSocketCapture(
   const debug = !!opts.debug;
 
   const currentCtor: any = win?.WebSocket;
-  if (typeof currentCtor !== "function") return () => {};
+  if (typeof currentCtor !== "function") return () => { };
 
   if (currentCtor[WRAPPED]) {
     state.nativeCtor = currentCtor[NATIVE] ?? state.nativeCtor ?? null;
-    return () => {};
+    return () => { };
   }
 
   const NativeWebSocket: any = currentCtor;
@@ -92,19 +102,19 @@ export function installWebSocketCapture(
         ? new NativeWebSocket(url as any, protocols as any)
         : new NativeWebSocket(url as any);
 
-    try { track(ws, debug); } catch {}
+    try { track(ws, debug); } catch { }
     return ws;
   }
 
-  try { (WrappedWebSocket as any).prototype = NativeWebSocket.prototype; } catch {}
-  try { Object.setPrototypeOf(WrappedWebSocket, NativeWebSocket); } catch {}
+  try { (WrappedWebSocket as any).prototype = NativeWebSocket.prototype; } catch { }
+  try { Object.setPrototypeOf(WrappedWebSocket, NativeWebSocket); } catch { }
 
   try {
     (WrappedWebSocket as any).CONNECTING = NativeWebSocket.CONNECTING;
     (WrappedWebSocket as any).OPEN = NativeWebSocket.OPEN;
     (WrappedWebSocket as any).CLOSING = NativeWebSocket.CLOSING;
     (WrappedWebSocket as any).CLOSED = NativeWebSocket.CLOSED;
-  } catch {}
+  } catch { }
 
   (WrappedWebSocket as any)[WRAPPED] = true;
   (WrappedWebSocket as any)[NATIVE] = NativeWebSocket;
@@ -113,7 +123,7 @@ export function installWebSocketCapture(
     win.WebSocket = WrappedWebSocket as any;
     if (debug) console.log("[WS] WebSocket capture installed");
   } catch {
-    return () => {};
+    return () => { };
   }
 
   return () => {
@@ -121,7 +131,7 @@ export function installWebSocketCapture(
       if (win.WebSocket === (WrappedWebSocket as any)) {
         win.WebSocket = NativeWebSocket;
       }
-    } catch {}
+    } catch { }
   };
 }
 
@@ -207,6 +217,11 @@ export function sendToServer(message: unknown, win: any = pageWindow): SendResul
   if (payload == null) {
     return { ok: false, reason: "error", error: new Error("Cannot stringify message") };
   }
+
+  try {
+    const data = JSON.parse(payload);
+    pushWSLog("out", data.type || "unknown", data);
+  } catch { }
 
   try {
     ws.send(payload);

@@ -349,6 +349,7 @@ export type Player = {
 export type PlayersData = {
   all: Player[];
   host: Player | null;
+  myPlayer: Player | null;
   count: number;
 };
 

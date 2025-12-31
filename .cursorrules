@@ -1,0 +1,6 @@
+# Cursor Rules for Gemini Project
+
+For all AI actions in this project:
+1. Always read and follow [AI_INSTRUCTIONS.md](./AI_INSTRUCTIONS.md).
+2. Prioritize [development_guidelinesbase.md](./development_guidelinesbase.md) as the absolute source of truth.
+3. Maintain documentation hierarchy (Changelogs and TODOs) as specified in those documents.

@@ -20,6 +20,12 @@ export { MGPixi } from "./pixi/pixi";
 export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
+// Feature modules
+export * as AutoFavorite from "./autoFavorite";
+export * as BulkFavorite from "./bulkFavorite";
+export * as JournalChecker from "./journalChecker";
+export * as Shared from "./shared";
+
 // Gameplay/helper modules
 import * as MGAchievements from "./achievements";
 import * as MGCalculators from "./calculators";

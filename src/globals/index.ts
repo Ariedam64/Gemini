@@ -10,6 +10,16 @@ export { getShops } from "./variables/shops";
 export { getWeather } from "./variables/weather";
 export { getMyGarden } from "./variables/myGarden";
 
+// Convenience aliases (G_ prefix pattern)
+export { getMyInventory as G_MyInventory } from "./variables/myInventory";
+export { getPlayers as G_Players } from "./variables/players";
+export { getShops as G_Shops } from "./variables/shops";
+export { getWeather as G_Weather } from "./variables/weather";
+export { getGameMap as G_GameMap } from "./variables/gameMap";
+export { getMyPets as G_MyPets } from "./variables/myPets";
+export { getMyGarden as G_MyGarden } from "./variables/myGarden";
+
+
 import { getCurrentTile } from "./variables/currentTile";
 import { getMyPets } from "./variables/myPets";
 import { getGameMap } from "./variables/gameMap";

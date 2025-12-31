@@ -1,5 +1,6 @@
 // src/modules/core/environment.ts
 // MGEnvironment - Detects user environment (OS, browser, platform, surface)
+let platformOverride: "desktop" | "mobile" | null = null;
 
 export type Surface = "discord" | "web";
 
@@ -38,7 +39,7 @@ function getOrientation(): "portrait" | "landscape" | "unknown" {
     const w = Math.round((vv?.width ?? window.innerWidth) || 0);
     const h = Math.round((vv?.height ?? window.innerHeight) || 0);
     if (w && h) return w >= h ? "landscape" : "portrait";
-  } catch {}
+  } catch { }
   return "unknown";
 }
 
@@ -100,6 +101,7 @@ function detectBrowser(): string {
 }
 
 function detectPlatform(): "desktop" | "mobile" {
+  if (platformOverride) return platformOverride;
   const ua = navigator.userAgent || "";
   const uaData = (navigator as unknown as { userAgentData?: { mobile?: boolean } }).userAgentData;
   if (uaData && typeof uaData.mobile === "boolean") {
@@ -181,4 +183,5 @@ export const MGEnvironment = {
   isMobile,
   detectOS,
   detectBrowser,
+  setPlatformOverride: (p: "desktop" | "mobile" | null) => { platformOverride = p; }
 };

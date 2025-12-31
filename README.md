@@ -312,11 +312,33 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
 - **Pixi.js** (sprite rendering)
 - **Shadow DOM** (UI isolation)
 
+## Documentation
+
+For comprehensive development principles, architecture details, and contribution guidelines, refer to:
+
+- [**development_guidelinesbase.md**](./development_guidelinesbase.md) - Primary source of truth for all project decisions
+- **Section READMEs** - Located in each major folder (`src/api/`, `src/atoms/`, `src/globals/`, etc.)
+
+> AI agents and developers must always prioritize documentation over making assumptions.
+
 ## Debug
 
 - **Toggle HUD**: `Ctrl+Shift+U`
 - **Console logs**: Prefixed with `[Gemini]`
 - **Loader**: Shows initialization progress
+
+## Changelog
+
+### 2024-12-31
+- **Dev HUD Phase 2**: Fixed scroll containers, HMR reload button, Pixi overlay highlights, and Card Builder drag-and-drop.
+- **API Additions**: Added `MGTile.getTransform()` for public access to tile transform data.
+- **ComponentPalette**: New draggable UI component gallery for testing.
+
+## TODO
+
+- [ ] Add JSDoc comments to all public API exports for TypeDoc support
+- [ ] Set up Playwright E2E test infrastructure
+- [ ] Improve mobile layout testing in UI Gallery
 
 ## License
 

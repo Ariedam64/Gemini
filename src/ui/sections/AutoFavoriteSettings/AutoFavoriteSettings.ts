@@ -13,7 +13,7 @@ import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { element } from "../../styles/helpers";
 import { MGData, MGSprite } from "../../../modules";
-import { storageGet, storageSet } from "../../../features/shared/storage";
+import { storageGet, storageSet } from "../../../modules/shared/storage";
 
 interface AutoFavoriteUIConfig {
     enabled: boolean;
@@ -608,7 +608,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     private async saveConfig(): Promise<void> {
         storageSet('gemini:features:autoFavorite:ui', this.config);
         try {
-            const { setEnabled, updateSimpleConfig } = await import('../../../features/autoFavorite');
+            const { setEnabled, updateSimpleConfig } = await import('../../../modules/autoFavorite');
             await updateSimpleConfig({
                 enabled: this.config.enabled,
                 favoriteSpecies: [...this.config.favoriteProduceList, ...this.config.favoritePetsList],

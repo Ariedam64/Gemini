@@ -1,6 +1,8 @@
 /**
  * Journal Checker HUD Section
  * Displays collection progress in the Gemini side panel
+ * 
+ * Uses the comprehensive JournalProgress data from journalChecker feature
  */
 
 import { BaseSection } from "../core/Section";
@@ -8,7 +10,7 @@ import { Card } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";
 import { Button } from "../../components/Button/Button";
 import { element } from "../../styles/helpers";
-import type { JournalProgress } from "../../../features/journalChecker";
+import type { JournalProgress, CategoryProgress, SpeciesProgress } from "../../../modules/journalChecker";
 
 export class JournalCheckerSection extends BaseSection {
     private progress: JournalProgress | null = null;
@@ -41,7 +43,7 @@ export class JournalCheckerSection extends BaseSection {
 
     private async updateProgress(): Promise<void> {
         try {
-            const { aggregateJournalProgress } = await import('../../../features/journalChecker');
+            const { aggregateJournalProgress } = await import('../../../modules/journalChecker');
             this.progress = await aggregateJournalProgress();
             this.renderContent();
         } catch (error) {
@@ -63,8 +65,14 @@ export class JournalCheckerSection extends BaseSection {
             return;
         }
 
-        // Progress cards
-        section.appendChild(this.createProgressCard());
+        // Overall progress summary
+        section.appendChild(this.createSummaryCard());
+
+        // Detailed progress cards
+        section.appendChild(this.createCategoryCard('🌱 Produce', this.progress.plants));
+        section.appendChild(this.createCategoryCard('🐾 Pets', this.progress.pets, true));
+
+        // Actions
         section.appendChild(this.createActionsCard());
     }
 
@@ -75,36 +83,122 @@ export class JournalCheckerSection extends BaseSection {
         );
     }
 
-    private createProgressCard(): HTMLDivElement {
+    private createSummaryCard(): HTMLDivElement {
         if (!this.progress) return element("div") as HTMLDivElement;
 
         const plantsRow = this.createProgressRow(
-            "🌱 Plants",
+            "🌱 Produce Species",
             this.progress.plants.logged,
             this.progress.plants.total,
             this.progress.plants.percentage
         );
 
+        const plantsVariantsRow = this.createProgressRow(
+            "   Variants Logged",
+            this.progress.plants.variantsLogged,
+            this.progress.plants.variantsTotal,
+            this.progress.plants.variantsPercentage
+        );
+
         const petsRow = this.createProgressRow(
-            "🐾 Pets",
+            "🐾 Pet Species",
             this.progress.pets.logged,
             this.progress.pets.total,
             this.progress.pets.percentage
         );
 
-        const decorRow = this.createProgressRow(
-            "🎨 Decor",
-            this.progress.decor.logged,
-            this.progress.decor.total,
-            this.progress.decor.percentage
+        const petsVariantsRow = this.createProgressRow(
+            "   Variants Logged",
+            this.progress.pets.variantsLogged,
+            this.progress.pets.variantsTotal,
+            this.progress.pets.variantsPercentage
         );
+
+        const petsAbilitiesRow = this.progress.pets.abilitiesTotal ? this.createProgressRow(
+            "   Abilities Logged",
+            this.progress.pets.abilitiesLogged ?? 0,
+            this.progress.pets.abilitiesTotal,
+            this.progress.pets.abilitiesPercentage ?? 0
+        ) : null;
+
+        const children = [plantsRow, plantsVariantsRow, petsRow, petsVariantsRow];
+        if (petsAbilitiesRow) children.push(petsAbilitiesRow);
 
         return Card(
             { title: "Collection Progress", padding: "lg", expandable: true, defaultExpanded: true },
-            plantsRow,
-            petsRow,
-            decorRow
+            ...children
         );
+    }
+
+    private createCategoryCard(title: string, category: CategoryProgress, showAbilities = false): HTMLDivElement {
+        // Show top 5 incomplete species
+        const incomplete = category.speciesDetails
+            .filter(s => !s.isComplete)
+            .sort((a, b) => b.variantsPercentage - a.variantsPercentage)
+            .slice(0, 5);
+
+        const content = element("div", { style: "display: flex; flex-direction: column; gap: 8px;" }) as HTMLDivElement;
+
+        if (incomplete.length === 0) {
+            const complete = element("div", {
+                style: "color: var(--accent); font-size: 13px; text-align: center; padding: 8px;"
+            }, "✅ All species complete!");
+            content.appendChild(complete);
+        } else {
+            for (const species of incomplete) {
+                content.appendChild(this.createSpeciesRow(species, showAbilities));
+            }
+
+            const moreCount = category.speciesDetails.filter(s => !s.isComplete).length - 5;
+            if (moreCount > 0) {
+                const more = element("div", {
+                    style: "font-size: 12px; color: var(--muted); text-align: center; padding-top: 4px;"
+                }, `...and ${moreCount} more species`);
+                content.appendChild(more);
+            }
+        }
+
+        return Card(
+            { title, padding: "lg", expandable: true, defaultExpanded: false },
+            content
+        );
+    }
+
+    private createSpeciesRow(species: SpeciesProgress, showAbilities = false): HTMLDivElement {
+        const row = element("div", {
+            style: "display: flex; flex-direction: column; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--soft);"
+        }) as HTMLDivElement;
+
+        // Species name and completion
+        const header = element("div", { style: "display: flex; justify-content: space-between; align-items: center;" });
+        const name = element("span", { style: "font-weight: 500; font-size: 13px;" }, species.species);
+        const completion = element("span", {
+            style: `font-size: 12px; color: ${species.isComplete ? 'var(--accent)' : 'var(--muted)'}`
+        }, species.isComplete ? '✅ Complete' : `${Math.round(species.variantsPercentage)}%`);
+        header.append(name, completion);
+
+        // Missing variants (compact)
+        const missingVariants = species.variantsMissing.slice(0, 4);
+        const variantsText = missingVariants.length > 0
+            ? `Missing: ${missingVariants.join(', ')}${species.variantsMissing.length > 4 ? '...' : ''}`
+            : 'All variants logged';
+        const variants = element("div", {
+            style: "font-size: 11px; color: var(--muted);"
+        }, variantsText);
+
+        row.append(header, variants);
+
+        // Missing abilities (for pets)
+        if (showAbilities && species.abilitiesMissing && species.abilitiesMissing.length > 0) {
+            const missingAbilities = species.abilitiesMissing.slice(0, 3);
+            const abilitiesText = `Abilities: ${missingAbilities.join(', ')}${species.abilitiesMissing.length > 3 ? '...' : ''}`;
+            const abilities = element("div", {
+                style: "font-size: 11px; color: var(--muted);"
+            }, abilitiesText);
+            row.appendChild(abilities);
+        }
+
+        return row;
     }
 
     private createProgressRow(
@@ -136,7 +230,7 @@ export class JournalCheckerSection extends BaseSection {
 
         const progressFill = element("div", {
             style: `
-        width: ${percentage}%;
+        width: ${Math.min(100, percentage)}%;
         height: 100%;
         background: linear-gradient(90deg, var(--tab-bg, var(--accent)), var(--group-title, var(--pill-to)));
         transition: width 0.3s ease;
@@ -160,7 +254,7 @@ export class JournalCheckerSection extends BaseSection {
         });
 
         const showMissingBtn = Button({
-            label: "📋 Show Missing",
+            label: "📋 Log Missing",
             variant: "default",
             size: "md",
             onClick: () => {
@@ -180,26 +274,46 @@ export class JournalCheckerSection extends BaseSection {
         );
     }
 
-    private showMissingItems(): void {
+    private async showMissingItems(): Promise<void> {
         if (!this.progress) return;
 
-        const missing = [
-            { category: 'Plants', items: this.progress.plants.missing },
-            { category: 'Pets', items: this.progress.pets.missing },
-            { category: 'Decor', items: this.progress.decor.missing },
-        ].filter(group => group.items.length > 0);
+        try {
+            const { getMissingSummary } = await import('../../../modules/journalChecker');
+            const summary = await getMissingSummary();
 
-        if (missing.length === 0) {
-            console.log('🎉 [JournalChecker] Collection complete!');
-            return;
-        }
+            if (summary.plants.length === 0 && summary.pets.length === 0) {
+                console.log('🎉 [JournalChecker] Collection complete!');
+                return;
+            }
 
-        console.group('📋 Missing Items');
-        missing.forEach(group => {
-            console.group(`${group.category} (${group.items.length})`);
-            group.items.forEach(item => console.log(`- ${item}`));
+            console.group('📋 Missing Journal Entries');
+
+            if (summary.plants.length > 0) {
+                console.group(`🌱 Produce (${summary.plants.length} species incomplete)`);
+                for (const plant of summary.plants) {
+                    console.log(`${plant.species}: ${plant.missing.join(', ')}`);
+                }
+                console.groupEnd();
+            }
+
+            if (summary.pets.length > 0) {
+                console.group(`🐾 Pets (${summary.pets.length} species incomplete)`);
+                for (const pet of summary.pets) {
+                    const parts: string[] = [];
+                    if (pet.missingVariants.length > 0) {
+                        parts.push(`Variants: ${pet.missingVariants.join(', ')}`);
+                    }
+                    if (pet.missingAbilities.length > 0) {
+                        parts.push(`Abilities: ${pet.missingAbilities.join(', ')}`);
+                    }
+                    console.log(`${pet.species}: ${parts.join(' | ')}`);
+                }
+                console.groupEnd();
+            }
+
             console.groupEnd();
-        });
-        console.groupEnd();
+        } catch (error) {
+            console.error('[JournalChecker] Failed to get missing summary:', error);
+        }
     }
 }

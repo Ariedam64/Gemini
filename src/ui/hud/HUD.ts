@@ -195,7 +195,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     host: host as HTMLElement,
     panel,
     shadow,
-    onWidthChange: onWidthChange || (() => {}),
+    onWidthChange: onWidthChange || (() => { }),
     initialWidth,
     minWidth,
     maxWidth,
@@ -243,7 +243,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     closeOnEscape,
   });
 
-  // ===== 8. Resize Observer =====
+  // ===== 8. Resize Observer & Layout Events =====
   const handleResize = (): void => {
     nav.recalc();
     const currentWidth =
@@ -253,11 +253,20 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   };
   pageWindow.addEventListener("resize", handleResize);
 
+  const handleLayoutResize = (e: any): void => {
+    const width = e.detail?.width;
+    if (width) resizeHandler.setHudWidth(width);
+    else resizeHandler.setHudWidth(initialWidth);
+    nav.recalc();
+  };
+  host.addEventListener("gemini:layout-resize", handleLayoutResize);
+
   // ===== 9. Cleanup =====
   function destroy(): void {
     keyboardShortcuts.destroy();
     resizeHandler.destroy();
     pageWindow.removeEventListener("resize", handleResize);
+    host.removeEventListener("gemini:layout-resize", handleLayoutResize);
   }
 
   // ===== 10. Return HUD Instance =====
