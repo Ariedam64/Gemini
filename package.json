@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "devtools": "vite build --mode release",
+    "release": "vite build --mode release",
+    "devtools": "vite build --watch",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit"

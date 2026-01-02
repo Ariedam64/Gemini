@@ -21,10 +21,9 @@ export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
 // Feature modules
-import * as AutoFavorite from "./autoFavorite";
-export { AutoFavorite };
+export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
+export { MGJournalChecker, JournalChecker } from "./journalChecker";
 export * as BulkFavorite from "./bulkFavorite";
-export * as JournalChecker from "./journalChecker";
 export * as Shared from "./shared";
 
 // Gameplay/helper modules
@@ -77,7 +76,7 @@ export async function initAllModules(
     { name: "Pixi", init: () => MGPixi.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
-    { name: "AutoFavorite", init: () => AutoFavorite.start() },
+    { name: "AutoFavorite", init: async () => { const { MGAutoFavorite } = await import("./autoFavorite"); return MGAutoFavorite.init(); } },
   ];
 
   await Promise.all(

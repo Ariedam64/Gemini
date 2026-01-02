@@ -8,7 +8,7 @@ import { BaseSection } from "../core/Section";
 import { Card } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";
 import { Switch } from "../../components/Switch/Switch";
-import { storageGet, storageSet } from "../../../modules/shared/storage";
+import { storageGet, storageSet } from "../../../utils/storage";
 
 /* ───────────────────────── Feature Configurations ───────────────────────── */
 

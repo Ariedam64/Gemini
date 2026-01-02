@@ -43,8 +43,8 @@ export class JournalCheckerSection extends BaseSection {
 
     private async updateProgress(): Promise<void> {
         try {
-            const { aggregateJournalProgress } = await import('../../../modules/journalChecker');
-            this.progress = await aggregateJournalProgress();
+            const { MGJournalChecker } = await import('../../../modules');
+            this.progress = await MGJournalChecker.aggregateJournalProgress();
             this.renderContent();
         } catch (error) {
             console.error('[JournalChecker] Failed to load progress:', error);
@@ -278,8 +278,8 @@ export class JournalCheckerSection extends BaseSection {
         if (!this.progress) return;
 
         try {
-            const { getMissingSummary } = await import('../../../modules/journalChecker');
-            const summary = await getMissingSummary();
+            const { MGJournalChecker } = await import('../../../modules');
+            const summary = await MGJournalChecker.getMissingSummary();
 
             if (summary.plants.length === 0 && summary.pets.length === 0) {
                 console.log('🎉 [JournalChecker] Collection complete!');

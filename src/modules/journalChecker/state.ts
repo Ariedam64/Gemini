@@ -4,7 +4,7 @@
  * Level 1: Imports types only
  */
 
-import { storageGet, storageSet } from '../shared/storage';
+import { storageGet, storageSet } from '../../utils/storage';
 import type { JournalCheckerConfig } from './types';
 import { STORAGE_KEY, DEFAULT_CONFIG } from './types';
 

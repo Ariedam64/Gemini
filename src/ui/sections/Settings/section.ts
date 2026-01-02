@@ -14,7 +14,7 @@ import { ColorPicker, ColorPickerValue } from "../../components/ColorPicker/Colo
 import { MGEnvironment } from "../../../modules/core/environment";
 import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
-import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
+import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./state";
 
 /* ───────────────────────── Utilities ───────────────────────── */
 
@@ -73,11 +73,11 @@ export class SettingsSection extends BaseSection {
       // Fallback if state initialization fails
       state = {
         get: () => DEFAULT_SETTINGS_STATE,
-        set: () => {},
-        save: () => {},
-        setUI: () => {},
-        setCardExpanded: () => {},
-        toggleCard: () => {},
+        set: () => { },
+        save: () => { },
+        setUI: () => { },
+        setCardExpanded: () => { },
+        toggleCard: () => { },
       } as SettingsStateController;
     }
 

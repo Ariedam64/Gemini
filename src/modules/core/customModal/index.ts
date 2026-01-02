@@ -72,7 +72,7 @@ export const MGCustomModal = {
     return addCloseListener(callback);
   },
 
-  destroy(): void {
+  async destroy(): Promise<void> {
     return destroyModule();
   },
 };

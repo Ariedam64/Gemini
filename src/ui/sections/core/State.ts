@@ -1,6 +1,7 @@
 import { loadFromTampermonkey, saveToTampermonkey } from "../../hud/state/storage";
 
 // Storage (sections namespace)
+// Note: Key uses old format (gemini.sections) - will be migrated by bootstrap
 const K_SECTIONS = "gemini.sections";
 type SectionsStorage = Record<string, unknown>;
 

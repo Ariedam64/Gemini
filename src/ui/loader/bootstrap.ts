@@ -12,6 +12,7 @@ import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/core/data";
 import { MGSprite } from "../../modules/sprite";
+import { migrateStorageKeys } from "../../utils/storage";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");

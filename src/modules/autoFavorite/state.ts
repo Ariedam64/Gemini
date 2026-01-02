@@ -5,7 +5,7 @@
  * Handles storage persistence
  */
 
-import { storageGet, storageSet } from '../shared/storage';
+import { storageGet, storageSet } from '../../utils/storage';
 import type { AutoFavoriteConfig, SimpleAutoFavoriteConfig } from './types';
 import { STORAGE_KEY, DEFAULT_CONFIG } from './types';
 

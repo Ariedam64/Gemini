@@ -1,0 +1,1 @@
+export { AutoFavoriteSettingsSection } from './section';

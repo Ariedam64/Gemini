@@ -2,11 +2,11 @@ import type { BaseSection } from "./core/Section";
 import type { SectionsDeps } from "./core/Types";
 
 // Concrete sections
-import { SettingsSection } from "./Settings/settings";
-import { TestSection } from "./Test/test";
-import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings/AutoFavoriteSettings";
-import { FeatureSettingsSection } from "./FeatureSettings/FeatureSettings";
-import { JournalCheckerSection } from "./JournalChecker/JournalChecker";
+import { SettingsSection } from "./Settings";
+import { TestSection } from "./Test";
+import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
+import { FeatureSettingsSection } from "./FeatureSettings";
+import { JournalCheckerSection } from "./JournalChecker";
 import { DevSection } from "./Dev/DevSection";
 
 let testSectionInstance: TestSection | null = null;

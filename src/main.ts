@@ -10,9 +10,13 @@ import {
   initSectionsPreload,
   startInjectGamePanelButton,
 } from "./ui/loader";
+import { migrateStorageKeys } from "./utils/storage";
 
 (async function () {
   "use strict";
+
+  // Migrate old storage keys before anything else
+  migrateStorageKeys();
 
   const loader = createLoader({
     title: "Gemini is loading",

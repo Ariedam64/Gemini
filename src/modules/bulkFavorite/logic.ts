@@ -9,6 +9,23 @@ import { G_MyInventory } from '../../globals';
 import { toggleFavoriteItem } from '../../websocket/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Items that have an id property and can be favorited */
+type FavoritableItem = { id: string; itemType: string };
+
+/** Type guard to check if an item has an id property */
+function hasFavoritableId(item: unknown): item is FavoritableItem {
+    return (
+        typeof item === 'object' &&
+        item !== null &&
+        'id' in item &&
+        typeof (item as Record<string, unknown>).id === 'string'
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Bulk Actions
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -20,11 +37,18 @@ export async function bulkFavorite(favorite: boolean): Promise<number> {
         return 0;
     }
 
+    const favoritedIds = new Set(inventory.favoritedItemIds ?? []);
     let count = 0;
 
     for (const item of inventory.items) {
-        if (favorite && item.isFavorited) continue;
-        if (!favorite && !item.isFavorited) continue;
+        // Only items with id can be favorited
+        if (!hasFavoritableId(item)) continue;
+
+        const isFavorited = favoritedIds.has(item.id);
+
+        // Skip if already in desired state
+        if (favorite && isFavorited) continue;
+        if (!favorite && !isFavorited) continue;
 
         await toggleFavoriteItem(item.id, favorite);
         count++;
@@ -44,3 +68,4 @@ export async function bulkFavorite(favorite: boolean): Promise<number> {
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+

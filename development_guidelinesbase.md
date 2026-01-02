@@ -744,7 +744,7 @@ All AI agents (Claude, Codex, Antigravity, etc.) and IDE extensions MUST:
 
 ## 23. World TODO
 - [ ] Implement a standardized "Feature Toggle" system for non-dev features.
-- [ ] Add support for multiple themes (Light/Minimalist/Retro).
+- [ ] Add proper support for multiple themes (Light/Minimalist/Retro).
 - [ ] Expand automated testing coverage to UI components via Vitest.
 - [ ] Research performance bottlenecks in large garden rendering.
 - [x] Refine build scripts (rename release to devtools) and clean header ✓
