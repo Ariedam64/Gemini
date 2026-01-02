@@ -13,7 +13,7 @@ import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { element } from "../../styles/helpers";
 import { MGData, MGSprite, MGAutoFavorite } from "../../../modules";
-import { storageGet, storageSet } from "../../../utils/storage";
+import { storageGet, storageSet, MODULE_KEYS } from "../../../utils/storage";
 
 interface AutoFavoriteUIConfig {
     enabled: boolean;
@@ -160,7 +160,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         this.sectionElement = section;
         container.appendChild(section);
 
-        this.config = storageGet<AutoFavoriteUIConfig>('gemini:features:autoFavorite:ui', DEFAULT_CONFIG);
+        this.config = storageGet<AutoFavoriteUIConfig>(MODULE_KEYS.AUTO_FAVORITE_UI, DEFAULT_CONFIG);
         await this.loadGameData();
 
         await this.waitForSprites();
@@ -613,7 +613,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     }
 
     private async saveConfig(): Promise<void> {
-        storageSet('gemini:features:autoFavorite:ui', this.config);
+        storageSet(MODULE_KEYS.AUTO_FAVORITE_UI, this.config);
         try {
             const { setEnabled, updateSimpleConfig } = MGAutoFavorite;
             await updateSimpleConfig({

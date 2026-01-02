@@ -19,7 +19,10 @@ export interface BulkFavoriteConfig {
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const STORAGE_KEY = 'gemini:features:bulkFavorite';
+// Import storage key from centralized registry (per .claude/rules/core.md #4)
+import { MODULE_KEYS } from '../../utils/storage';
+
+export const STORAGE_KEY = MODULE_KEYS.BULK_FAVORITE;
 
 export const DEFAULT_CONFIG: BulkFavoriteConfig = {
     enabled: false,

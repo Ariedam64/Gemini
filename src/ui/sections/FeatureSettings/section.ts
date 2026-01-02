@@ -8,7 +8,7 @@ import { BaseSection } from "../core/Section";
 import { Card } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";
 import { Switch } from "../../components/Switch/Switch";
-import { storageGet, storageSet } from "../../../utils/storage";
+import { storageGet, storageSet, MODULE_KEYS } from "../../../utils/storage";
 
 /* ───────────────────────── Feature Configurations ───────────────────────── */
 
@@ -54,7 +54,7 @@ export class FeatureSettingsSection extends BaseSection {
         section.id = "feature-settings";
         container.appendChild(section);
 
-        this.config = storageGet<FeatureConfig>('gemini:features:config', DEFAULT_CONFIG);
+        this.config = storageGet<FeatureConfig>(MODULE_KEYS.CONFIG, DEFAULT_CONFIG);
 
         section.appendChild(this.createQOLCard());
         section.appendChild(this.createVisualIndicatorsCard());
@@ -143,7 +143,7 @@ export class FeatureSettingsSection extends BaseSection {
     }
 
     private saveConfig(): void {
-        storageSet('gemini:features:config', this.config);
+        storageSet(MODULE_KEYS.CONFIG, this.config);
         console.log('[FeatureSettings] Config saved:', this.config);
     }
 }

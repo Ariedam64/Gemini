@@ -23,10 +23,10 @@ These rules apply everywhere in the repo.
 
 - Keys must be namespaced by the built-in prefix (storage wrapper adds `gemini:` automatically).
 - Do NOT call `GM_getValue`/`GM_setValue` directly; use `src/utils/storage.ts`.
-- All storage keys should be defined in `src/utils/keys.ts` for easy lookup and documentation.
+- All storage keys are defined in `src/utils/storage.ts` (exported as `KEYS`) for easy lookup and documentation.
 - Events must be prefixed with `gemini:` (e.g., `gemini:journal-updated`).
-- Event names should also be defined in `src/utils/keys.ts` under `EVENTS`.
-  - HUD persisted state lives in `src/ui/hud/state/state.ts`.
+- Event names are also defined in `src/utils/storage.ts` under `EVENTS`.
+- HUD persisted state lives in `src/ui/hud/state/state.ts`.
 
 ## 5) Code quality (basic but mandatory)
 - Keep files small: target < 500 lines. If it grows, split by responsibility.

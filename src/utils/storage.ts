@@ -1,17 +1,102 @@
 /**
  * Unified Storage Wrapper (Tampermonkey GM_*)
- * 
+ *
  * Provides type-safe storage using Tampermonkey's GM_getValue/GM_setValue.
  * All keys are automatically prefixed with 'gemini:' for namespacing.
- * 
+ *
+ * All storage keys are defined here with descriptions to prevent typos
+ * and provide a single source of truth.
+ *
  * @example
- * import { storageGet, storageSet } from '@/utils/storage';
- * 
- * const config = storageGet('myFeature:config', { enabled: false });
- * storageSet('myFeature:config', { enabled: true });
+ * import { storageGet, storageSet, KEYS } from '@/utils/storage';
+ *
+ * const config = storageGet(KEYS.MODULE.AUTO_FAVORITE, { enabled: false });
+ * storageSet(KEYS.MODULE.AUTO_FAVORITE, { enabled: true });
  */
 
 const STORAGE_PREFIX = 'gemini:';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Storage Keys Registry
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Keys for HUD and UI state */
+export const HUD_KEYS = {
+    /** Main HUD state (open/closed, width, active tab) */
+    STATE: 'hud:state',
+    /** Current theme selection */
+    THEME: 'hud:theme',
+} as const;
+
+/** Keys for section-level persistent state */
+export const SECTION_KEYS = {
+    /** All sections combined state (legacy format) */
+    ALL: 'sections',
+    /** Settings section state */
+    SETTINGS: 'sections:settings',
+    /** Test section state */
+    TEST: 'sections:test',
+} as const;
+
+/** Keys for module-level persistence (per .claude/rules/modules.md) */
+export const MODULE_KEYS = {
+    /** Auto-favorite module config */
+    AUTO_FAVORITE: 'module:autoFavorite:config',
+    /** Auto-favorite UI configuration */
+    AUTO_FAVORITE_UI: 'module:autoFavorite:ui',
+    /** Journal checker module config */
+    JOURNAL_CHECKER: 'module:journalChecker:config',
+    /** Bulk favorite module config */
+    BULK_FAVORITE: 'module:bulkFavorite:config',
+    /** Achievements module data */
+    ACHIEVEMENTS: 'module:achievements:data',
+    /** Stats tracker module data */
+    TRACKER_STATS: 'module:tracker:stats',
+    /** Master module settings config */
+    CONFIG: 'module:config',
+} as const;
+
+/** Keys for development/debug purposes */
+export const DEV_KEYS = {
+    /** Auto-reload toggle for HMR */
+    AUTO_RELOAD: 'dev:auto-reload',
+} as const;
+
+/**
+ * All storage keys in one object for convenience
+ */
+export const KEYS = {
+    HUD: HUD_KEYS,
+    SECTION: SECTION_KEYS,
+    MODULE: MODULE_KEYS,
+    DEV: DEV_KEYS,
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event Names (CustomEvent prefixes per .claude/rules/core.md)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Event names for cross-feature signals (prefixed with gemini:) */
+export const EVENTS = {
+    /** Storage value changed */
+    STORAGE_CHANGE: 'gemini:storage:change',
+    /** Journal data updated */
+    JOURNAL_UPDATED: 'gemini:journal-updated',
+    /** HUD open state changed */
+    HUD_OPEN_CHANGE: 'gemini:hud-open-change',
+    /** Layout resize request */
+    LAYOUT_RESIZE: 'gemini:layout-resize',
+    /** Manual HMR toggle */
+    TOGGLE_MANUAL_HMR: 'gemini:toggle-manual-hmr',
+    /** Update pending notification */
+    UPDATE_PENDING: 'gemini:update-pending',
+    /** Force reload request */
+    FORCE_RELOAD: 'gemini:force-reload',
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Storage Wrapper Functions
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Get a value from Tampermonkey storage

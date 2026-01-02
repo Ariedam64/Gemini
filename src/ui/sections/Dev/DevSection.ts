@@ -6,8 +6,7 @@ import { WSLogger } from './WSLogger';
 import { UIGallery } from './UIGallery';
 import { PixiInspector } from './PixiInspector';
 // Per .claude/rules/core.md: use unified storage wrapper
-import { storageGet, storageSet } from '../../../utils/storage';
-import { DEV_KEYS } from '../../../utils/keys';
+import { storageGet, storageSet, DEV_KEYS } from '../../../utils/storage';
 import { isAllDataCaptured, tryCapture } from '../../../modules/core/data';
 import { pageWindow } from '../../../utils/windowContext';
 
