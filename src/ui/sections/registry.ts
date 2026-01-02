@@ -7,7 +7,7 @@ import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { FeatureSettingsSection } from "./FeatureSettings";
 import { JournalCheckerSection } from "./JournalChecker";
-import { DevSection } from "./Dev/DevSection";
+import { DevSection } from "./Dev";
 
 let testSectionInstance: TestSection | null = null;
 

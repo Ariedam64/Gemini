@@ -35,15 +35,27 @@ Always use CSS variables from `src/ui/styles/variables.css.ts`.
 ---
 
 ## 📂 Catalog
-| Component | Primary Use |
-|-----------|-------------|
-| **Badge** | Status labels (Success, Warning). |
-| **Button** | Clickable actions (Primary/Default). |
-| **Card** | Content grouping with optional titles. |
-| **Input** | Text and number entry. |
-| **Switch** | Boolean toggles. |
-| **Range** | Percentage or value sliders. |
-| **Divider** | Visual separators. |
+| Component | Primary Use | Façade API |
+|-----------|-------------|------------|
+| **Badge** | Status labels (Success, Warning). | — |
+| **Button** | Clickable actions (Primary/Default). | `setLoading`, `setDisabled`, `setLabel` |
+| **Card** | Content grouping with optional titles. | — |
+| **ColorPicker** | Color selection. | — |
+| **Divider** | Visual separators. | Variants: thick/dashed/vertical |
+| **Input** | Text and number entry. | — |
+| **Label** | Form labels. | — |
+| **Log** | Console-style log output. | — |
+| **NavTabs** | Tab navigation. | — |
+| **Range** | Percentage or value sliders. | `setValue`, `getValue`, `setDisabled` |
+| **ReorderableList** | Drag-to-reorder lists. | — |
+| **SearchBar** | Search input with icon. | — |
+| **Select** | Dropdown selection. | — |
+| **Slider** | Styled slider input. | — |
+| **StatRow** | Stats display (label + value). | `setValue`, `setLabel`, `setDescription` |
+| **Switch** | Boolean toggles. | — |
+| **Table** | Tabular data display. | — |
+| **TimeRangePicker** | Time range selection. | — |
+| **Tooltip** | Hover tooltips. | — |
 
 ---
 

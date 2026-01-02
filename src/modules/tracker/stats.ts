@@ -1,6 +1,9 @@
 // src/modules/tracker/stats.ts
 // Stats Tracker - Track player statistics and actions
 
+// Per .claude/rules/core.md: use unified storage wrapper
+import { storageGet, storageSet } from '../../utils/storage';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,7 +66,8 @@ export interface StatsData {
 
 export class StatsTracker {
   private stats: StatsData;
-  private storageKey = 'gemini_stats';
+  // Storage key - wrapper adds 'gemini:' prefix automatically
+  private readonly STORAGE_KEY = 'module:tracker:stats';
 
   constructor() {
     this.stats = this.loadStats();
@@ -71,30 +75,19 @@ export class StatsTracker {
   }
 
   /**
-   * Load stats from localStorage
+   * Load stats from storage
+   * Uses GM_* storage via utils/storage.ts wrapper
    */
   private loadStats(): StatsData {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (err) {
-      console.warn('[StatsTracker] Failed to load stats:', err);
-    }
-
-    return this.getDefaultStats();
+    return storageGet<StatsData>(this.STORAGE_KEY, this.getDefaultStats());
   }
 
   /**
-   * Save stats to localStorage
+   * Save stats to storage
+   * Uses GM_* storage via utils/storage.ts wrapper
    */
   private saveStats(): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.stats));
-    } catch (err) {
-      console.warn('[StatsTracker] Failed to save stats:', err);
-    }
+    storageSet(this.STORAGE_KEY, this.stats);
   }
 
   /**

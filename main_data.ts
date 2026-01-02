@@ -1,4 +1,4 @@
-// src/modules/core/data.ts
+﻿// src/modules/core/data.ts
 // MGData - Captures runtime game data (items, plants, pets, etc.) via Object.* hooks
 // and exposes simple accessors for the mod to consume.
 
@@ -6,17 +6,17 @@ import { pageWindow } from "../../utils/windowContext";
 import { sleep } from "../utils/helpers";
 import { MGSprite } from "../sprite";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Types
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 type CapturedDataKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants";
 type DataKey = CapturedDataKey | "weather";
 type DataBag = Record<DataKey, Record<string, unknown> | null>;
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Constants
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const pageContext = pageWindow as Window & typeof globalThis;
 const NativeObject = pageContext.Object ?? Object;
@@ -37,13 +37,13 @@ const SIGNATURE_KEYS: Record<CapturedDataKey, readonly string[]> = {
 
 const WEATHER_IDS = ["Rain", "Frost", "Dawn", "AmberMoon"] as const;
 const MAIN_BUNDLE_PATTERN = /main-[^/]+\.js(\?|$)/;
-const MAX_SCAN_DEPTH = 6;
+const MAX_SCAN_DEPTH = 3;
 const MAX_WEATHER_POLL_ATTEMPTS = 200;
 const WEATHER_POLL_INTERVAL_MS = 50;
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // State
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const visitedObjects = new WeakSet<object>();
 
@@ -55,13 +55,9 @@ interface CaptureState {
   spritesResolving: Promise<void> | null;
   weatherPollingTimer: ReturnType<typeof setInterval> | null;
   weatherPollAttempts: number;
-  scanInterval: ReturnType<typeof setInterval> | null;
-  scanAttempts: number;
 }
 
-// In development, persist state on pageWindow to survive HMR reloads
-const STATE_GLOBAL_KEY = "__GEMINI_DATA_STATE__";
-const captureState: CaptureState = (import.meta.env.DEV && (pageWindow as any)[STATE_GLOBAL_KEY]) || {
+const captureState: CaptureState = {
   isReady: false,
   isHookInstalled: false,
   data: {
@@ -78,17 +74,11 @@ const captureState: CaptureState = (import.meta.env.DEV && (pageWindow as any)[S
   spritesResolving: null,
   weatherPollingTimer: null,
   weatherPollAttempts: 0,
-  scanInterval: null,
-  scanAttempts: 0,
 };
 
-if (import.meta.env.DEV) {
-  (pageWindow as any)[STATE_GLOBAL_KEY] = captureState;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Helpers
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const containsAllKeys = (objectKeys: string[], requiredKeys: readonly string[]) =>
   requiredKeys.every((key) => objectKeys.includes(key));
@@ -102,13 +92,13 @@ function setCapturedData(key: CapturedDataKey, value: Record<string, unknown>): 
   }
 }
 
-export function isAllDataCaptured(): boolean {
+function isAllDataCaptured(): boolean {
   return Object.values(captureState.data).every((v) => v != null);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Runtime capture via Object.* hooks
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function scanObjectForData(obj: unknown, depth: number): void {
   if (!obj || typeof obj !== "object" || visitedObjects.has(obj)) return;
@@ -189,21 +179,14 @@ function scanObjectForData(obj: unknown, depth: number): void {
   }
 }
 
-export function tryCapture(target: unknown): void {
+function tryCapture(target: unknown): void {
   try {
     scanObjectForData(target, 0);
-  } catch { }
+  } catch {}
 }
 
-export function installObjectHooks(): void {
+function installObjectHooks(): void {
   if (captureState.isHookInstalled) return;
-
-  // Global sentinel to prevent double-patching across HMR/scripts
-  if ((NativeObject as any).__MG_HOOKED__) {
-    captureState.isHookInstalled = true;
-    return;
-  }
-  (NativeObject as any).__MG_HOOKED__ = true;
   captureState.isHookInstalled = true;
 
   try {
@@ -225,7 +208,7 @@ export function installObjectHooks(): void {
         return (originalObjectEntries as any).apply(this, arguments as any);
       };
     }
-  } catch { }
+  } catch {}
 }
 
 function restoreObjectHooks(): void {
@@ -234,14 +217,13 @@ function restoreObjectHooks(): void {
     NativeObject.keys = originalObjectKeys;
     if (originalObjectValues) NativeObject.values = originalObjectValues;
     if (originalObjectEntries) NativeObject.entries = originalObjectEntries;
-  } catch { }
+  } catch {}
   captureState.isHookInstalled = false;
 }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Weather extraction (from main bundle)
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function findMainBundleUrl(): string | null {
   try {
@@ -249,14 +231,14 @@ function findMainBundleUrl(): string | null {
       const src = script?.src ? String(script.src) : "";
       if (MAIN_BUNDLE_PATTERN.test(src)) return src;
     }
-  } catch { }
+  } catch {}
 
   try {
     for (const entry of pageContext.performance?.getEntriesByType?.("resource") || []) {
       const name = entry?.name ? String(entry.name) : "";
       if (MAIN_BUNDLE_PATTERN.test(name)) return name;
     }
-  } catch { }
+  } catch {}
 
   return null;
 }
@@ -392,9 +374,9 @@ function startWeatherPolling(): void {
   captureState.weatherPollingTimer = timer;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Sprite resolution
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function normalizeNameForSprite(input: string): string {
   return String(input || "")
@@ -441,7 +423,7 @@ function pickSpriteId(
     for (const category of cats) {
       try {
         if (MGSprite.has(category, c)) return MGSprite.getIdPath(category, c);
-      } catch { }
+      } catch {}
     }
     return null;
   };
@@ -478,7 +460,7 @@ function pickSpriteId(
         if (nameLc && leafLc.includes(nameLc)) return k;
       }
     }
-  } catch { }
+  } catch {}
 
   return null;
 }
@@ -500,7 +482,7 @@ function applySpriteId(
   if (spriteId) {
     try {
       target.spriteId = spriteId;
-    } catch { }
+    } catch {}
   }
 
   // Rotation variants (if present)
@@ -564,7 +546,7 @@ function resolveAllSprites(bag: DataBag): void {
       ["mutation-overlay"]
     );
     if (overlay) {
-      try { (entry as any).overlaySpriteId = overlay; } catch { }
+      try { (entry as any).overlaySpriteId = overlay; } catch {}
     }
   }
 
@@ -625,7 +607,7 @@ async function resolveSprites(): Promise<void> {
       resolveAllSprites(captureState.data);
       captureState.spritesResolved = true;
     } catch (err) {
-      try { console.warn("[MGData] sprite resolution failed", err); } catch { }
+      try { console.warn("[MGData] sprite resolution failed", err); } catch {}
     } finally {
       captureState.spritesResolving = null;
     }
@@ -634,38 +616,15 @@ async function resolveSprites(): Promise<void> {
   return captureState.spritesResolving;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // Public API
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 async function init(): Promise<boolean> {
-  // Install capture early (Side effect required for game timing)
+  if (captureState.isReady) return true;
+
   installObjectHooks();
-  if (captureState.isReady) { /* Already initialized, but hooks are now always installed early */ }
   startWeatherPolling();
-
-  // Universal Pulse Scan: Catch data even if it loads minutes after the mod.
-  // We run once immediately, then every 2s until captured or 10 min timeout.
-  if (!captureState.scanInterval && !isAllDataCaptured()) {
-    const runPulse = () => {
-      if (isAllDataCaptured() || captureState.scanAttempts > 300) {
-        if (captureState.scanInterval) {
-          clearInterval(captureState.scanInterval);
-          captureState.scanInterval = null;
-        }
-        return;
-      }
-      captureState.scanAttempts++;
-      try {
-        originalObjectKeys(pageWindow).forEach(key => {
-          try { tryCapture((pageWindow as any)[key]); } catch { }
-        });
-      } catch { }
-    };
-
-    runPulse();
-    captureState.scanInterval = setInterval(runPulse, 2000);
-  }
 
   void resolveSprites();
 
@@ -736,5 +695,5 @@ export const MGData = {
   waitFor,
 };
 
-// MGData initialization is now handled explicitly in main.ts to comply with Rule 25
-// and ensure hooks are installed early in the page lifetime.
+// Install capture early
+installObjectHooks();

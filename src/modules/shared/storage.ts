@@ -1,6 +1,11 @@
 /**
- * LocalStorage wrapper with type safety
- * Used by all Phase 2 features for configuration persistence
+ * @deprecated Use src/utils/storage.ts instead
+ * 
+ * This is a LEGACY localStorage wrapper that should NOT be used for new code.
+ * Per .claude/rules/core.md, all storage should use the unified GM_* wrapper
+ * at src/utils/storage.ts which provides proper Tampermonkey storage.
+ * 
+ * This file exists only for backward compatibility with existing code.
  */
 
 const STORAGE_PREFIX = 'gemini:';

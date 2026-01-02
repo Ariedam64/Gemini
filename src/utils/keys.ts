@@ -56,6 +56,10 @@ export const MODULE_KEYS = {
     JOURNAL_CHECKER: 'module:journalChecker:config',
     /** Bulk favorite module config */
     BULK_FAVORITE: 'module:bulkFavorite:config',
+    /** Achievements module data */
+    ACHIEVEMENTS: 'module:achievements:data',
+    /** Stats tracker module data */
+    TRACKER_STATS: 'module:tracker:stats',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,7 +130,10 @@ export const KEY_DESCRIPTIONS: Record<string, string> = {
     [MODULE_KEYS.AUTO_FAVORITE]: 'Auto-favorite module config (enabled, rules)',
     [MODULE_KEYS.JOURNAL_CHECKER]: 'Journal checker module config',
     [MODULE_KEYS.BULK_FAVORITE]: 'Bulk favorite module config',
+    [MODULE_KEYS.ACHIEVEMENTS]: 'Achievements module data (unlocked, progress)',
+    [MODULE_KEYS.TRACKER_STATS]: 'Stats tracker data (session, allTime)',
 
     // Dev
     [DEV_KEYS.AUTO_RELOAD]: 'Auto-reload toggle for development HMR',
 };
+

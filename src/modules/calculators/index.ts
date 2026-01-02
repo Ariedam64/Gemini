@@ -1,5 +1,11 @@
-// src/modules/core/calculators/index.ts
-// Calculator modules - Reusable game calculation utilities
+/**
+ * Calculators Module - Public API
+ * 
+ * Provides game calculation utilities for crops, pets, and mutations.
+ * These are pure utility functions that don't require initialization.
+ * 
+ * @module MGCalculators
+ */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Export all calculator modules
@@ -10,11 +16,10 @@ export * from './pet';
 export * from './mutation';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Re-export commonly used functions for convenience
+// MGCalculators API
 // ─────────────────────────────────────────────────────────────────────────────
 
-export {
-  // Crop calculators
+import {
   calculateCropSize,
   calculateCropSellPrice,
   calculateCropProgress,
@@ -22,8 +27,7 @@ export {
   getCropData,
 } from './crop';
 
-export {
-  // Pet calculators
+import {
   calculatePetAge,
   calculateMaxStrength,
   calculateCurrentStrength,
@@ -32,10 +36,50 @@ export {
   getPetData,
 } from './pet';
 
-export {
-  // Mutation calculators
+import {
   calculateMutationMultiplier,
   getMutationValue,
   isGrowthMutation,
   isEnvironmentalMutation,
 } from './mutation';
+
+/**
+ * Calculators Module
+ * 
+ * Note: This is a utility module with pure functions.
+ * init()/isReady() are provided for API consistency but are no-ops.
+ * 
+ * @module MGCalculators
+ */
+export const MGCalculators = {
+  // ─── Required Module API ───
+  init(): void { /* no-op: pure utility functions */ },
+  isReady(): boolean { return true; },
+
+  // ─── Crop Calculators ───
+  crop: {
+    calculateSize: calculateCropSize,
+    calculateSellPrice: calculateCropSellPrice,
+    calculateProgress: calculateCropProgress,
+    isReady: isCropReady,
+    getData: getCropData,
+  },
+
+  // ─── Pet Calculators ───
+  pet: {
+    calculateAge: calculatePetAge,
+    calculateMaxStrength: calculateMaxStrength,
+    calculateCurrentStrength: calculateCurrentStrength,
+    isMature: isPetMature,
+    calculateStrengthPerHour: calculateStrengthPerHour,
+    getData: getPetData,
+  },
+
+  // ─── Mutation Calculators ───
+  mutation: {
+    calculateMultiplier: calculateMutationMultiplier,
+    getValue: getMutationValue,
+    isGrowth: isGrowthMutation,
+    isEnvironmental: isEnvironmentalMutation,
+  },
+} as const;

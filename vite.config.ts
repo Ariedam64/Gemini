@@ -43,6 +43,7 @@ export default defineConfig({
                     'https://starweaver.org/r/*'
                 ],
                 'run-at': 'document-start',
+                'inject-into': 'page',
                 license: false as any,
                 grant: [
                     'GM_xmlhttpRequest',

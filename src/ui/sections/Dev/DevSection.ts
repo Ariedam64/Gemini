@@ -5,6 +5,11 @@ import { AtomInspector } from './AtomInspector';
 import { WSLogger } from './WSLogger';
 import { UIGallery } from './UIGallery';
 import { PixiInspector } from './PixiInspector';
+// Per .claude/rules/core.md: use unified storage wrapper
+import { storageGet, storageSet } from '../../../utils/storage';
+import { DEV_KEYS } from '../../../utils/keys';
+import { isAllDataCaptured, tryCapture } from '../../../modules/core/data';
+import { pageWindow } from '../../../utils/windowContext';
 
 export class DevSection extends BaseSection {
     constructor() {
@@ -59,8 +64,7 @@ export class DevSection extends BaseSection {
             style: 'padding: 6px 12px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px;'
         });
 
-        const HMR_KEY = 'gemini:dev:auto-reload';
-        const isAutoReloadSet = localStorage.getItem(HMR_KEY) !== 'false';
+        const isAutoReloadSet = storageGet<boolean>(DEV_KEYS.AUTO_RELOAD, true);
 
         const syncLeft = element('div', { style: 'display: flex; align-items: center; gap: 12px;' });
         const autoReloadToggle = element('input', { type: 'checkbox', checked: isAutoReloadSet });
@@ -102,7 +106,7 @@ export class DevSection extends BaseSection {
 
             autoReloadToggle.onchange = () => {
                 const enabled = autoReloadToggle.checked;
-                localStorage.setItem(HMR_KEY, String(enabled));
+                storageSet(DEV_KEYS.AUTO_RELOAD, enabled);
                 hot.send('gemini:toggle-manual-hmr', { enabled: !enabled });
 
                 // Show/hide button based ONLY on toggle state

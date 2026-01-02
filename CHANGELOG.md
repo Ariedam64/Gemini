@@ -6,7 +6,7 @@ All notable changes to Gemini. Format: [Keep a Changelog](https://keepachangelog
 
 ## [Unreleased] — 2026-01-02
 
-> Storage & naming refactor to align with `.claude/` documentation standards.
+> Major refactor: Storage layer (GM_*), module API standardization (MG* pattern), UI components (class-based styling), comprehensive compliance audit against `.claude/rules/`.
 
 ---
 
@@ -101,6 +101,26 @@ Modules updated: `autoFavorite`, `journalChecker`
 
 ---
 
+#### UI Components → Class-Based Styling
+
+**Before:** Components with inline styles (Divider, Range, StatRow)
+
+**After:** Separate CSS files per `ui.components.md`
+```
+Divider/
+├── Divider.ts       # Logic + façade API
+└── divider.css.ts   # Theme-compatible CSS
+```
+
+Components refactored:
+- `Divider` — Added variant support (default/thick/dashed/vertical)
+- `Range` — Added façade API (setValue/getValue/setDisabled)
+- `StatRow` — Added façade API (setValue/setLabel/setDescription)
+
+✅ **Tested:** All 19 components now comply with `ui.components.md`
+
+---
+
 #### Complex Modules → No Nested Barrel Files
 
 **Before:** `journalChecker/logic/index.ts` re-exports everything
@@ -143,11 +163,84 @@ import * as Lifecycle from './logic/lifecycle';
 
 ---
 
+#### Missing MGJournalChecker Initialization
+
+**Before:** `MGJournalChecker` was exported but not initialized in `initAllModules()`
+
+**After:** Added missing import and initialization task
+
+```typescript
+import { MGJournalChecker } from "./journalChecker";
+// ...
+{ name: "JournalChecker", init: () => MGJournalChecker.init() },
+```
+
+**Impact:** This was causing atoms to return null and modules not fully exposing to `window.Gemini`.
+
+---
+
+#### Missing Module API Exports
+
+**Before:** `MGAutoFavorite`, `MGJournalChecker`, `MGBulkFavorite` were not exposed in `window.Gemini.Modules`
+
+**After:** Added missing imports and exports to `src/api/index.ts`
+
+```typescript
+import { MGAutoFavorite, MGJournalChecker, MGBulkFavorite } from "../modules";
+// ...
+Modules: {
+  // ...
+  AutoFavorite: MGAutoFavorite,
+  JournalChecker: MGJournalChecker,
+  BulkFavorite: MGBulkFavorite,
+  // ...
+}
+```
+
+**Impact:** Gemini API now properly exposes all refactored modules.
+
+---
+
+#### MGData Data Loading & Reliability (Robust Fix)
+
+**Before:** `MGData` relied on passive `Object.keys` hooks and often failed in the Vite build due to sandbox isolation and HMR state loss, leading to `null` plants/pets/items in the HUD.
+
+**After:** 
+1. **Context Fix:** Restored `'inject-into': 'page'` in `vite.config.ts`, matching the working `main` branch and ensuring hooks are visible to the game.
+2. **HMR Stability:** Implemented dev-only state persistence on `pageWindow` to allow captured data to survive development reloads.
+3. **Proactive Dev Trigger:** Added a dev-only (auto-stripped in prod) proactive scan trigger in `MGData.init()` to ensure prompt data capture.
+4. **Compliance (Rule 25):** Standardized early synchronous hook installation in `main.ts`.
+
+**Impact:** Reliable and compliant game data capture across all environments and build systems.
+
+---
+
 ### 📝 Docs Updated
 
 - `.claude/rules/ui/ui.inject.md` — **NEW** QOL injection architecture
 - `.claude/CLAUDE.md` — Added ui.inject reference
-- `TODO.md` — Sections 1, 2, 3, 7 marked complete
+- `TODO.md` — Sections 1, 2, 3, 4, 7, 8 marked complete/mostly complete
+- `CHANGELOG.md` — Comprehensive change log for this refactor
+
+---
+
+### 🔍 Comprehensive Compliance Audit
+
+All code audited against `.claude/rules/` documentation:
+
+| Area | Files Fixed | Issue |
+|------|-------------|-------|
+| Storage | `tracker/stats.ts` | Was using `localStorage` → now uses `storageGet/storageSet` |
+| Storage | `DevSection.ts` | Was using `localStorage` → now uses `storageGet` + `DEV_KEYS` |
+| Storage | `achievements/manager.ts` | Was using `localStorage` → now uses `storageGet/storageSet` |
+| Deprecated | `shared/storage.ts` | Added deprecation notice pointing to `utils/storage.ts` |
+| Keys | `utils/keys.ts` | Added `TRACKER_STATS`, `ACHIEVEMENTS` keys + descriptions |
+| UI Sections | `Dev/index.ts` | Created proper facade; updated `registry.ts` import |
+| Comments | `media/audio.ts` | Clarified game volume reads are intentional exception |
+
+**Verified exceptions (intentional localStorage reads):**
+- `media/audio.ts` — Reads game's volume settings (not Gemini storage)
+- `utils/storage.ts` — Migration helper for localStorage → GM_*
 
 ---
 

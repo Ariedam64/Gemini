@@ -13,6 +13,9 @@ import type {
   AchievementRarity,
 } from './types';
 
+// Per .claude/rules/core.md: use unified storage wrapper
+import { storageGet, storageSet } from '../../utils/storage';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Achievement Manager Class
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +23,8 @@ import type {
 export class AchievementManager {
   private achievements = new Map<string, Achievement>();
   private data: AchievementData;
-  private storageKey = 'gemini_achievements';
+  // Storage key - wrapper adds 'gemini:' prefix automatically
+  private readonly STORAGE_KEY = 'module:achievements:data';
   private onUnlockCallbacks: AchievementEventCallback[] = [];
   private onProgressCallbacks: ProgressEventCallback[] = [];
 
@@ -29,33 +33,22 @@ export class AchievementManager {
   }
 
   /**
-   * Load achievement data from localStorage
+   * Load achievement data from storage
+   * Uses GM_* storage via utils/storage.ts wrapper
    */
   private loadData(): AchievementData {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (err) {
-      console.warn('[Achievements] Failed to load data:', err);
-    }
-
-    return {
+    return storageGet<AchievementData>(this.STORAGE_KEY, {
       unlocked: {},
       progress: {},
-    };
+    });
   }
 
   /**
-   * Save achievement data to localStorage
+   * Save achievement data to storage
+   * Uses GM_* storage via utils/storage.ts wrapper
    */
   private saveData(): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.data));
-    } catch (err) {
-      console.warn('[Achievements] Failed to save data:', err);
-    }
+    storageSet(this.STORAGE_KEY, this.data);
   }
 
   /**

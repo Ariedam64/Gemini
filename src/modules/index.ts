@@ -20,20 +20,20 @@ export { MGPixi } from "./pixi/pixi";
 export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
-// Feature modules
+// Feature modules (MG* pattern)
 export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
 export { MGJournalChecker, JournalChecker } from "./journalChecker";
-export * as BulkFavorite from "./bulkFavorite";
+export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
+export { MGAchievements } from "./achievements";
+export { MGCalculators } from "./calculators";
+
+// Shared utilities
 export * as Shared from "./shared";
 
-// Gameplay/helper modules
-import * as MGAchievements from "./achievements";
-import * as MGCalculators from "./calculators";
+// Legacy namespaced exports
 import * as PetStrength from "./pets/strength";
 import { AbilityLogger, getAbilityLogger, destroyAbilityLogger } from "./pets/abilityLogger";
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";
-
-export { MGAchievements, MGCalculators };
 
 export const MGPets = {
   AbilityLogger,
@@ -57,6 +57,10 @@ import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
 import { MGAudio } from "./media/audio";
 import { MGCosmetic } from "./media/cosmetic";
+import { MGAutoFavorite } from "./autoFavorite";
+import { MGJournalChecker } from "./journalChecker";
+import { MGBulkFavorite } from "./bulkFavorite";
+import { MGAchievements } from "./achievements";
 
 export type ModuleInitProgress = {
   name: string;
@@ -76,7 +80,10 @@ export async function initAllModules(
     { name: "Pixi", init: () => MGPixi.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
-    { name: "AutoFavorite", init: async () => { const { MGAutoFavorite } = await import("./autoFavorite"); return MGAutoFavorite.init(); } },
+    { name: "AutoFavorite", init: () => MGAutoFavorite.init() },
+    { name: "JournalChecker", init: () => MGJournalChecker.init() },
+    { name: "BulkFavorite", init: () => MGBulkFavorite.init() },
+    { name: "Achievements", init: () => MGAchievements.init() },
   ];
 
   await Promise.all(
@@ -94,3 +101,4 @@ export async function initAllModules(
 
   console.log("[Gemini] Modules ready. Access via Gemini.Modules in console.");
 }
+

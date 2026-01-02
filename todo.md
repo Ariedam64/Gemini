@@ -35,23 +35,30 @@
 
 ## 4) Other refactors (modules, sections, components)
 
-- [ ] **Modules refactor**
-  - [ ] Refactor all existing modules to match the `modules.md` structure:
-    - `index.ts` (façade), `types.ts`, `state.ts`, `logic.ts` (or `logic/`)
-    - `MG<ModuleName>` export with `init()` + `isReady()`
-    - Optional persistence in `state.ts` using scoped keys `gemini:module:<name>:*`
+> ✅ **MOSTLY COMPLETED** — Modules and components done. UI sections partial (state.ts in section.ts).
 
-- [ ] **UI sections refactor**
-  - [ ] Refactor all existing sections to match `ui.sections.md`:
-    - `index.ts`, `section.ts`, `state.ts`
-    - Optional `styles.css.ts`
-    - Use `parts/` when splitting sub-features
+- [x] **Modules refactor**
+  - [x] `MGAutoFavorite` with `init()` + `isReady()`
+  - [x] `MGJournalChecker` with `init()` + `isReady()`
+  - [x] `MGBulkFavorite` with `init()` + `isReady()`
+  - [x] `MGAchievements` with `init()` + `isReady()`
+  - [x] `MGCalculators` with `init()` + `isReady()` (utility, no-op init)
+  - [x] `MGSprite` already compliant
+  - [x] Updated `modules/index.ts` with all exports + `initAllModules()`
 
-- [ ] **UI components refactor**
-  - [ ] Refactor all existing components to match `ui.components.md`:
-    - `<ComponentName>.ts` + `<componentName>.css.ts`
-    - Options + simple façade API + `root`
-    - Theme-token based styling + responsive layout
+- [/] **UI sections refactor**
+  - [x] All sections have `index.ts` facade
+  - [x] All sections have main implementation file
+  - [ ] Some sections missing `state.ts` (persistence in section.ts instead):
+    - `AutoFavoriteSettings/` - persistence in section.ts
+    - `FeatureSettings/` - persistence in section.ts
+    - `Dev/` - persistence in DevSection.ts
+
+- [x] **UI components refactor**
+  - [x] Created missing CSS files: `divider.css.ts`, `range.css.ts`, `statRow.css.ts`
+  - [x] Refactored to class-based styling (no inline styles)
+  - [x] Added façade APIs with `root`, `setValue`, etc. methods
+  - [x] All components now export `componentNameCss` for style injection
 
 ---
 
@@ -86,5 +93,26 @@
 ### Fixed: customModal/index.ts  
 - **Issue:** `destroy()` sync but called async `destroyModule()`
 - **Fix:** Made `destroy()` async: `async destroy(): Promise<void>`
+
+---
+
+## 8. Compliance Audit
+
+> ✅ **COMPLETED** — All code audited against `.claude/rules/` documentation
+
+### Storage Compliance (core.md)
+- [x] `tracker/stats.ts` → uses `storageGet/storageSet`
+- [x] `achievements/manager.ts` → uses `storageGet/storageSet`
+- [x] `DevSection.ts` → uses `storageGet` + `DEV_KEYS`
+- [x] `shared/storage.ts` → deprecated notice added
+- [x] `media/audio.ts` → clarified as game volume reads (intentional exception)
+
+### Keys Registry (core.md)
+- [x] Added `MODULE_KEYS.ACHIEVEMENTS`
+- [x] Added `MODULE_KEYS.TRACKER_STATS`
+- [x] Added key descriptions for all new keys
+
+### UI Sections (ui.sections.md)
+- [x] `Dev/index.ts` created → `registry.ts` updated to use facade
 
 ---

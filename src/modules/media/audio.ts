@@ -36,7 +36,9 @@ interface PlayOptions {
   loop?: boolean;
 }
 
-// Volume keys in localStorage
+// Volume keys in localStorage - These are GAME volume settings, not Gemini storage
+// They are read from the game's localStorage (not our GM_* storage) intentionally
+// per core.md exception: reading game state is allowed
 const VOLUME_KEYS: Record<AudioCategory, string> = {
   sfx: "soundEffectsVolume",
   music: "musicVolume",
@@ -103,7 +105,7 @@ function readVolumeKey(key: string, fallback = NaN): number {
       const n = parseFloat(value);
       if (Number.isFinite(n)) return n;
     }
-  } catch {}
+  } catch { }
   return fallback;
 }
 
@@ -172,7 +174,7 @@ async function resumeIfNeeded(): Promise<void> {
   if (state.ctx.state === "suspended") {
     try {
       await state.ctx.resume();
-    } catch {}
+    } catch { }
   }
 }
 
@@ -282,10 +284,10 @@ function stop(category: "music" | "ambience"): boolean {
   if (audio) {
     try {
       audio.pause();
-    } catch {}
+    } catch { }
     try {
       audio.src = "";
-    } catch {}
+    } catch { }
   }
   state.tracks[category] = null;
   return true;
@@ -310,7 +312,7 @@ function playTrack(
   audio.loop = !!opts.loop;
   audio.volume = resolveVolume(category, opts.volume);
   audio.preload = "auto";
-  audio.play().catch(() => {});
+  audio.play().catch(() => { });
 
   state.tracks[category] = audio;
   return audio;
