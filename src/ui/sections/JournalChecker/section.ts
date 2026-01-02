@@ -10,7 +10,7 @@ import { Card } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";
 import { Button } from "../../components/Button/Button";
 import { element } from "../../styles/helpers";
-import type { JournalProgress, CategoryProgress, SpeciesProgress } from "../../../modules/journalChecker";
+import type { JournalProgress, CategoryProgress, SpeciesProgress } from "../../../features/journalChecker";
 
 export class JournalCheckerSection extends BaseSection {
     private progress: JournalProgress | null = null;

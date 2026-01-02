@@ -23,10 +23,11 @@ Project memory for Claude Code. Keep it short and actionable.
 - `src/api/` — public API (`window.Gemini`)
 - `src/atoms/` — state bridge (Store)
 - `src/globals/` — reactive derived globals
-- `src/modules/` — feature modules (MG*)
+- `src/modules/` — core infrastructure (MGData, MGSprite, MGTile, MGPixi, MGAudio, MGCosmetic)
+- `src/features/` — optional features (AutoFavorite, JournalChecker, BulkFavorite, Achievements, Tracker)
 - `src/websocket/` — capture/transport + actions
 - `src/ui/` — loader + HUD + components + sections + styles + theme
-- `src/utils/` — cross-cutting helpers only (storage, keys, etc.)
+- `src/utils/` — cross-cutting helpers only (storage, etc.)
 - `GameSourceFiles/` — exported game source for reference (minified runtime bundle + unminified reference code)
 - `GameFilesExample/` — real network examples captured from DevTools (manifest.json, sprite json, sample atom payloads, etc.)
 
@@ -50,7 +51,8 @@ Note: Treat `GameSourceFiles/` and `GameFilesExample/` as reference inputs. Do n
 
 ## Rules (source of truth)
 - Core: `@rules/core.md`
-- Modules: `@rules/modules.md`
+- Modules: `@rules/modules.md` (core infrastructure)
+- Features: `@rules/features.md` (optional features)
 - Utils: `@rules/utils.md`
 
 - State:
@@ -67,6 +69,7 @@ Note: Treat `GameSourceFiles/` and `GameFilesExample/` as reference inputs. Do n
 - WebSocket: `@rules/websocket/websocket.md`
 
 ## Workflows
+- Feature: `@workflows/feature/` (creating optional features)
 - UI:
   - Components: `@workflows/ui/component/`
   - Loader: `@workflows/ui/loader/`

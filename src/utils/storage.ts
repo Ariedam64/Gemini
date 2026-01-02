@@ -10,8 +10,8 @@
  * @example
  * import { storageGet, storageSet, KEYS } from '@/utils/storage';
  *
- * const config = storageGet(KEYS.MODULE.AUTO_FAVORITE, { enabled: false });
- * storageSet(KEYS.MODULE.AUTO_FAVORITE, { enabled: true });
+ * const config = storageGet(KEYS.FEATURE.AUTO_FAVORITE, { enabled: false });
+ * storageSet(KEYS.FEATURE.AUTO_FAVORITE, { enabled: true });
  */
 
 const STORAGE_PREFIX = 'gemini:';
@@ -38,22 +38,28 @@ export const SECTION_KEYS = {
     TEST: 'sections:test',
 } as const;
 
-/** Keys for module-level persistence (per .claude/rules/modules.md) */
+/** Keys for core modules (infrastructure - per .claude/rules/modules.md) */
 export const MODULE_KEYS = {
-    /** Auto-favorite module config */
-    AUTO_FAVORITE: 'module:autoFavorite:config',
+    // Core modules typically don't need storage (MGData, MGSprite, etc.)
+    // Add here if needed for caching or configuration
+} as const;
+
+/** Keys for optional features (per .claude/rules/features.md) */
+export const FEATURE_KEYS = {
+    /** Auto-favorite feature config */
+    AUTO_FAVORITE: 'feature:autoFavorite:config',
     /** Auto-favorite UI configuration */
-    AUTO_FAVORITE_UI: 'module:autoFavorite:ui',
-    /** Journal checker module config */
-    JOURNAL_CHECKER: 'module:journalChecker:config',
-    /** Bulk favorite module config */
-    BULK_FAVORITE: 'module:bulkFavorite:config',
-    /** Achievements module data */
-    ACHIEVEMENTS: 'module:achievements:data',
-    /** Stats tracker module data */
-    TRACKER_STATS: 'module:tracker:stats',
-    /** Master module settings config */
-    CONFIG: 'module:config',
+    AUTO_FAVORITE_UI: 'feature:autoFavorite:ui',
+    /** Journal checker feature config */
+    JOURNAL_CHECKER: 'feature:journalChecker:config',
+    /** Bulk favorite feature config */
+    BULK_FAVORITE: 'feature:bulkFavorite:config',
+    /** Achievements feature data */
+    ACHIEVEMENTS: 'feature:achievements:data',
+    /** Stats tracker feature data */
+    TRACKER_STATS: 'feature:tracker:stats',
+    /** Master feature settings config */
+    CONFIG: 'feature:config',
 } as const;
 
 /** Keys for development/debug purposes */
@@ -69,6 +75,7 @@ export const KEYS = {
     HUD: HUD_KEYS,
     SECTION: SECTION_KEYS,
     MODULE: MODULE_KEYS,
+    FEATURE: FEATURE_KEYS,
     DEV: DEV_KEYS,
 } as const;
 

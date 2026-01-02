@@ -47,12 +47,15 @@ export const GeminiAPI = {
     Pixi: MGPixi,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
+    Calculators: MGCalculators,
+    Pets: MGPets,
+  },
+
+  Features: {
     AutoFavorite: MGAutoFavorite,
     JournalChecker: MGJournalChecker,
     BulkFavorite: MGBulkFavorite,
     Achievements: MGAchievements,
-    Calculators: MGCalculators,
-    Pets: MGPets,
     Tracker: MGTracker,
   },
 

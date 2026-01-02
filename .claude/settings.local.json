@@ -17,7 +17,12 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd canvas cache with sprite warmup and refactor Test section\n\n- Add canvas cache system to MGSprite with LRU eviction for toCanvas results\n- Add warmup\\(\\) function to preload sprites at startup for better performance\n- Refactor bootstrap to warmup plant/pet sprites during loading\n- Make HUD initialization async with yieldToMain\\(\\) to avoid blocking\n- Refactor Test section to display all sprite categories with searchable tables\n- Add persistent state for expanded cards, sort order, and search queries\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nFix HUD freeze by making initialization async with preloading\n\n- Convert createHUD to async function with batched style injection\n- Add preload system to BaseSection for background content generation\n- Preload TestSection during mod loading to avoid freeze on tab switch\n- Add yieldToMain delays between sprite table builds for smoother loading\n- Use singleton pattern for TestSection to preserve preloaded content\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(del \"c:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\src\\\\utils\\\\keys.ts\")",
+      "Bash(test:*)",
+      "Bash(git clean:*)",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

@@ -14,7 +14,7 @@ import type {
 } from './types';
 
 // Per .claude/rules/core.md: use unified storage wrapper
-import { storageGet, storageSet, MODULE_KEYS } from '../../utils/storage';
+import { storageGet, storageSet, FEATURE_KEYS } from '../../utils/storage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Achievement Manager Class
@@ -24,7 +24,7 @@ export class AchievementManager {
   private achievements = new Map<string, Achievement>();
   private data: AchievementData;
   // Storage key from centralized registry (per .claude/rules/core.md #4)
-  private readonly STORAGE_KEY = MODULE_KEYS.ACHIEVEMENTS;
+  private readonly STORAGE_KEY = FEATURE_KEYS.ACHIEVEMENTS;
   private onUnlockCallbacks: AchievementEventCallback[] = [];
   private onProgressCallbacks: ProgressEventCallback[] = [];
 

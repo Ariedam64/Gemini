@@ -25,9 +25,9 @@ export interface AutoFavoriteConfig {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Import storage key from centralized registry (per .claude/rules/core.md #4)
-import { MODULE_KEYS } from '../../utils/storage';
+import { FEATURE_KEYS } from '../../utils/storage';
 
-export const STORAGE_KEY = MODULE_KEYS.AUTO_FAVORITE;
+export const STORAGE_KEY = FEATURE_KEYS.AUTO_FAVORITE;
 
 export const DEFAULT_CONFIG: AutoFavoriteConfig = {
     enabled: false,

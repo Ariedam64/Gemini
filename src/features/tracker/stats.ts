@@ -2,7 +2,7 @@
 // Stats Tracker - Track player statistics and actions
 
 // Per .claude/rules/core.md: use unified storage wrapper
-import { storageGet, storageSet, MODULE_KEYS } from '../../utils/storage';
+import { storageGet, storageSet, FEATURE_KEYS } from '../../utils/storage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -67,7 +67,7 @@ export interface StatsData {
 export class StatsTracker {
   private stats: StatsData;
   // Storage key from centralized registry (per .claude/rules/core.md #4)
-  private readonly STORAGE_KEY = MODULE_KEYS.TRACKER_STATS;
+  private readonly STORAGE_KEY = FEATURE_KEYS.TRACKER_STATS;
 
   constructor() {
     this.stats = this.loadStats();

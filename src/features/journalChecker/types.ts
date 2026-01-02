@@ -79,9 +79,9 @@ export interface JournalCheckerConfig {
 }
 
 // Import storage key from centralized registry (per .claude/rules/core.md #4)
-import { MODULE_KEYS } from '../../utils/storage';
+import { FEATURE_KEYS } from '../../utils/storage';
 
-export const STORAGE_KEY = MODULE_KEYS.JOURNAL_CHECKER;
+export const STORAGE_KEY = FEATURE_KEYS.JOURNAL_CHECKER;
 
 export const DEFAULT_CONFIG: JournalCheckerConfig = {
     enabled: false,

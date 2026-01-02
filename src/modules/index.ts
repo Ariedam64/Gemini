@@ -21,10 +21,10 @@ export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
 // Feature modules (MG* pattern)
-export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
-export { MGJournalChecker, JournalChecker } from "./journalChecker";
-export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
-export { MGAchievements } from "./achievements";
+export { MGAutoFavorite, AutoFavorite } from "../features/autoFavorite";
+export { MGJournalChecker, JournalChecker } from "../features/journalChecker";
+export { MGBulkFavorite, BulkFavorite } from "../features/bulkFavorite";
+export { MGAchievements } from "../features/achievements";
 export { MGCalculators } from "./calculators";
 
 // Shared utilities
@@ -33,7 +33,7 @@ export * as Shared from "./shared";
 // Legacy namespaced exports
 import * as PetStrength from "./pets/strength";
 import { AbilityLogger, getAbilityLogger, destroyAbilityLogger } from "./pets/abilityLogger";
-import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";
+import { StatsTracker, getStatsTracker, destroyStatsTracker } from "../features/tracker/stats";
 
 export const MGPets = {
   AbilityLogger,
@@ -57,10 +57,10 @@ import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
 import { MGAudio } from "./media/audio";
 import { MGCosmetic } from "./media/cosmetic";
-import { MGAutoFavorite } from "./autoFavorite";
-import { MGJournalChecker } from "./journalChecker";
-import { MGBulkFavorite } from "./bulkFavorite";
-import { MGAchievements } from "./achievements";
+import { MGAutoFavorite } from "../features/autoFavorite";
+import { MGJournalChecker } from "../features/journalChecker";
+import { MGBulkFavorite } from "../features/bulkFavorite";
+import { MGAchievements } from "../features/achievements";
 
 export type ModuleInitProgress = {
   name: string;
