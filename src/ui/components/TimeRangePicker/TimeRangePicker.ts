@@ -1,6 +1,6 @@
 import { element } from "../../styles/helpers";
 import { Select, SelectHandle } from "../Select/Select";
-import { MGEnvironment, type EnvironmentInfo } from "../../../modules/core/environment";
+import { MGEnvironment, type EnvironmentInfo } from "../../../modules/environment";
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /* Types                                                                     */

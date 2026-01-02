@@ -1,7 +1,7 @@
 // ui/components/ColorPicker/ColorPicker.ts
 import { element } from "../../styles/helpers";
 import { Card } from "../Card/Card";
-import { MGEnvironment } from "../../../modules/core/environment";
+import { MGEnvironment } from "../../../modules/environment";
 import { Input } from "../Input/Input";
 
 type HSVA = { h: number; s: number; v: number; a: number };

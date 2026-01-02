@@ -10,7 +10,7 @@ import { Table, ColDef } from "../../components/Table/Table";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { MGSprite } from "../../../modules/sprite";
-import { MGData } from "../../../modules/core/data";
+import { MGData } from "../../../modules/data";
 import { initTestState, TestStateController } from "./state";
 
 type SpriteRow = {

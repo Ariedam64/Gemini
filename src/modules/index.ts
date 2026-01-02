@@ -1,23 +1,23 @@
 // src/modules/index.ts
 // Main entry point for all MG modules
 
-// Core modules
-export { MGVersion } from "./core/version";
-export { MGAssets } from "./core/assets";
-export { MGManifest } from "./core/manifest";
-export { MGData } from "./core/data";
-export { MGEnvironment } from "./core/environment";
-export { MGCustomModal } from "./core/customModal";
+// Core infrastructure modules
+export { MGVersion } from "./version";
+export { MGAssets } from "./assets";
+export { MGManifest } from "./manifest";
+export { MGData } from "./data";
+export { MGEnvironment } from "./environment";
+export { MGCustomModal } from "./customModal";
 
-// Pixi modules
-export { MGPixiHooks } from "./pixi/hooks";
+// Rendering modules
 export { MGSprite } from "./sprite";
-export { MGTile } from "./pixi/tile";
-export { MGPixi } from "./pixi/pixi";
+export { MGTile } from "./tile";
+export { MGPixi } from "./pixi";
+export { MGPixiHooks } from "./pixi/hooks";
 
 // Media modules
-export { MGAudio } from "./media/audio";
-export { MGCosmetic } from "./media/cosmetic";
+export { MGAudio } from "./audio";
+export { MGCosmetic } from "./cosmetic";
 
 // Re-export features for backward compatibility
 export { MGAutoFavorite, AutoFavorite } from "../features/autoFavorite";
@@ -32,13 +32,13 @@ export { MGPets, MGTracker } from "../features";
 export * as Shared from "./shared";
 
 // Re-import for initialization
-import { MGData } from "./core/data";
-import { MGCustomModal } from "./core/customModal";
+import { MGData } from "./data";
+import { MGCustomModal } from "./customModal";
 import { MGSprite } from "./sprite";
-import { MGTile } from "./pixi/tile";
-import { MGPixi } from "./pixi/pixi";
-import { MGAudio } from "./media/audio";
-import { MGCosmetic } from "./media/cosmetic";
+import { MGTile } from "./tile";
+import { MGPixi } from "./pixi";
+import { MGAudio } from "./audio";
+import { MGCosmetic } from "./cosmetic";
 import { MGAntiAfk } from "../features/antiafk";
 import { MGAutoFavorite } from "../features/autoFavorite";
 import { MGJournalChecker } from "../features/journalChecker";

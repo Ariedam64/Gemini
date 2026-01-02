@@ -10,7 +10,7 @@ import { LoaderController } from "./loader";
 import { prewarm as prewarmAtoms, waitForStore as waitForAtomsStore } from "../../atoms";
 import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
-import { MGData } from "../../modules/core/data";
+import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
 import { migrateStorageKeys } from "../../utils/storage";
 

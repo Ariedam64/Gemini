@@ -1,6 +1,6 @@
 // src/utils/clipboard.ts
 import { pageWindow } from "./windowContext";
-import { MGEnvironment } from "../modules/core/environment";
+import { MGEnvironment } from "../modules/environment";
 
 export type CopyMethod =
   | "clipboard-write"

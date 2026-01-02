@@ -11,7 +11,7 @@ import { Select, SelectOption } from "../../components/Select/Select";
 import { Label } from "../../components/Label/Label";
 import { Button } from "../../components/Button/Button";
 import { ColorPicker, ColorPickerValue } from "../../components/ColorPicker/ColorPicker";
-import { MGEnvironment } from "../../../modules/core/environment";
+import { MGEnvironment } from "../../../modules/environment";
 import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
 import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./state";

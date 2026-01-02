@@ -1,5 +1,5 @@
 import { ResizeHandlerOptions, ResizeHandler } from "./types";
-import { MGEnvironment } from "../../modules/core/environment";
+import { MGEnvironment } from "../../modules/environment";
 import { pageWindow } from "../../utils/windowContext";
 
 /**

@@ -2,7 +2,7 @@ import { gardenView } from "../../atoms";
 import { Store } from "../../atoms/store";
 import { getGameMap } from "./gameMap";
 import { deepEqual } from "../core/reactive";
-import { MGData } from "../../modules/core/data";
+import { MGData } from "../../modules/data";
 import type {
   MyGardenGlobal,
   MyGardenData,
