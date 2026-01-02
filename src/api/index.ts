@@ -39,7 +39,6 @@ export const GeminiAPI = {
     Assets: MGAssets,
     Manifest: MGManifest,
     Data: MGData,
-    AntiAfk: MGAntiAfk,
     Environment: MGEnvironment,
     CustomModal: MGCustomModal,
     Sprite: MGSprite,
@@ -47,8 +46,6 @@ export const GeminiAPI = {
     Pixi: MGPixi,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
-    Calculators: MGCalculators,
-    Pets: MGPets,
   },
 
   Features: {
@@ -57,6 +54,9 @@ export const GeminiAPI = {
     BulkFavorite: MGBulkFavorite,
     Achievements: MGAchievements,
     Tracker: MGTracker,
+    AntiAfk: MGAntiAfk,
+    Calculators: MGCalculators,
+    Pets: MGPets,
   },
 
   WebSocket: {

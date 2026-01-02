@@ -6,7 +6,6 @@ export { MGVersion } from "./core/version";
 export { MGAssets } from "./core/assets";
 export { MGManifest } from "./core/manifest";
 export { MGData } from "./core/data";
-export { MGAntiAfk } from "./core/antiafk";
 export { MGEnvironment } from "./core/environment";
 export { MGCustomModal } from "./core/customModal";
 
@@ -20,43 +19,27 @@ export { MGPixi } from "./pixi/pixi";
 export { MGAudio } from "./media/audio";
 export { MGCosmetic } from "./media/cosmetic";
 
-// Feature modules (MG* pattern)
+// Re-export features for backward compatibility
 export { MGAutoFavorite, AutoFavorite } from "../features/autoFavorite";
 export { MGJournalChecker, JournalChecker } from "../features/journalChecker";
 export { MGBulkFavorite, BulkFavorite } from "../features/bulkFavorite";
 export { MGAchievements } from "../features/achievements";
-export { MGCalculators } from "./calculators";
+export { MGCalculators } from "../features/calculators";
+export { MGAntiAfk } from "../features/antiafk";
+export { MGPets, MGTracker } from "../features";
 
 // Shared utilities
 export * as Shared from "./shared";
 
-// Legacy namespaced exports
-import * as PetStrength from "./pets/strength";
-import { AbilityLogger, getAbilityLogger, destroyAbilityLogger } from "./pets/abilityLogger";
-import { StatsTracker, getStatsTracker, destroyStatsTracker } from "../features/tracker/stats";
-
-export const MGPets = {
-  AbilityLogger,
-  getAbilityLogger,
-  destroyAbilityLogger,
-  ...PetStrength,
-};
-
-export const MGTracker = {
-  StatsTracker,
-  getStatsTracker,
-  destroyStatsTracker,
-};
-
 // Re-import for initialization
 import { MGData } from "./core/data";
-import { MGAntiAfk } from "./core/antiafk";
 import { MGCustomModal } from "./core/customModal";
 import { MGSprite } from "./sprite";
 import { MGTile } from "./pixi/tile";
 import { MGPixi } from "./pixi/pixi";
 import { MGAudio } from "./media/audio";
 import { MGCosmetic } from "./media/cosmetic";
+import { MGAntiAfk } from "../features/antiafk";
 import { MGAutoFavorite } from "../features/autoFavorite";
 import { MGJournalChecker } from "../features/journalChecker";
 import { MGBulkFavorite } from "../features/bulkFavorite";
