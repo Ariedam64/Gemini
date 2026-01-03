@@ -1,73 +1,71 @@
-// src/modules/core/manifest.ts
+// src/modules/manifest/index.ts
 // MGManifest - Loads and parses the game manifest.json
 
-import { getJSON } from "../utils/network";
-import { joinPath } from "../utils/path";
-import { MGAssets } from "./assets";
+import { initializeManifest, isModuleReady, loadManifest, getBundleByName, extractJsonFiles } from "./logic/loading";
 
-// Types for manifest structure
-export interface ManifestAsset {
-  alias?: string[];
-  src?: string[];
-  data?: {
-    tags?: Record<string, boolean>;
-    [key: string]: any;
-  };
-}
-
-export interface ManifestBundle {
-  name: string;
-  assets: ManifestAsset[];
-}
-
-export interface Manifest {
-  bundles: ManifestBundle[];
-}
-
-// Cache: baseUrl -> Promise<Manifest>
-const _cache = new Map<string, Promise<Manifest>>();
+export type { Manifest, ManifestAsset, ManifestBundle, ManifestLoadOptions } from "./types";
 
 /**
- * Load the manifest.json from the given base URL (or default assets base)
+ * MGManifest module - Manifest loading and parsing
+ *
+ * Loads and caches the game's manifest.json file which contains
+ * asset bundle information (sprites, audio, data files, etc.).
+ *
+ * @example
+ * ```typescript
+ * // Load manifest (auto-initializes)
+ * const manifest = await MGManifest.load();
+ *
+ * // Get a specific bundle
+ * const bundle = MGManifest.getBundle(manifest, 'sprites');
+ *
+ * // List all JSON files from bundle
+ * const jsonFiles = MGManifest.listJsonFromBundle(bundle);
+ *
+ * // Manual initialization
+ * await MGManifest.init();
+ *
+ * // Check if ready
+ * if (MGManifest.isReady()) {
+ *   const manifest = await MGManifest.load();
+ * }
+ * ```
  */
-async function load(baseUrl?: string): Promise<Manifest> {
-  const base = baseUrl || (await MGAssets.base());
-
-  if (_cache.has(base)) {
-    return _cache.get(base)!;
-  }
-
-  const promise = getJSON<Manifest>(joinPath(base, "manifest.json"));
-  _cache.set(base, promise);
-  return promise;
-}
-
-/**
- * Get a specific bundle from the manifest by name
- */
-function getBundle(manifest: Manifest, name: string): ManifestBundle | null {
-  return manifest?.bundles?.find((bundle) => bundle?.name === name) || null;
-}
-
-/**
- * List all JSON files from a bundle (excluding manifest.json)
- */
-function listJsonFromBundle(bundle: ManifestBundle | null): string[] {
-  const result = new Set<string>();
-
-  for (const asset of bundle?.assets || []) {
-    for (const src of asset?.src || []) {
-      if (typeof src === "string" && src.endsWith(".json") && src !== "manifest.json") {
-        result.add(src);
-      }
-    }
-  }
-
-  return Array.from(result);
-}
-
 export const MGManifest = {
-  load,
-  getBundle,
-  listJsonFromBundle,
+  /**
+   * Initialize module by loading default manifest
+   * Safe to call multiple times (uses cache)
+   */
+  init: initializeManifest,
+
+  /**
+   * Check if module is ready
+   */
+  isReady: isModuleReady,
+
+  /**
+   * Load manifest.json from base URL
+   * Auto-caches by base URL
+   *
+   * @param options - Load options (optional base URL)
+   * @returns Parsed manifest object
+   */
+  load: loadManifest,
+
+  /**
+   * Get a specific bundle from manifest by name
+   *
+   * @param manifest - The manifest object
+   * @param bundleName - Name of the bundle to find
+   * @returns Bundle object or null if not found
+   */
+  getBundle: getBundleByName,
+
+  /**
+   * List all JSON files from a bundle (excluding manifest.json)
+   *
+   * @param bundle - The bundle to extract JSON files from
+   * @returns Array of JSON file paths
+   */
+  listJsonFromBundle: extractJsonFiles,
 };
