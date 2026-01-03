@@ -299,7 +299,7 @@ export class TestSection extends BaseSection {
       },
     ];
 
-    if (!MGSprite.ready()) {
+    if (!MGSprite.isReady()) {
       try {
         await MGSprite.init();
       } catch {

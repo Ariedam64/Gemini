@@ -8,11 +8,12 @@ import type {
   ToCanvasOptions,
   MutationName,
 } from "./types";
-import { init, getState, getCacheState, getCacheConfig, getCanvasCacheState, getCanvasCacheConfig, isReady } from "./core";
-import { makeKey, normalizeKey, resolveKey } from "./utils";
-import { showSprite, spriteToCanvas, clearSprites, attachParent, attachParentProvider, clearCanvasCache, getCanvasCacheStats, warmupCanvasCache, WarmupProgressCallback } from "./display";
-import { clearCache } from "./mutations/cache";
-import { MUT_NAMES } from "./mutations/types";
+import { getState, getCacheState, getCacheConfig, getCanvasCacheState, getCanvasCacheConfig, isReady } from "./state";
+import { initSpriteSystem } from "./logic/init";
+import { makeKey, normalizeKey, resolveKey } from "./logic/utils";
+import { showSprite, spriteToCanvas, clearSprites, attachParent, attachParentProvider, clearCanvasCache, getCanvasCacheStats, warmupCanvasCache, WarmupProgressCallback } from "./logic/display";
+import { clearCache } from "./logic/mutations/cache";
+import { MUT_NAMES } from "./logic/mutations/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -287,8 +288,8 @@ async function warmup(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MGSprite = {
-  init,
-  ready: isReady,
+  init: initSpriteSystem,
+  isReady,
 
   show,
   toCanvas,

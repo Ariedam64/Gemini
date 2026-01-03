@@ -141,7 +141,7 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
   loader.logStep("Sprites", "Warming up sprite cache...");
 
   try {
-    if (!MGSprite.ready()) {
+    if (!MGSprite.isReady()) {
       await MGSprite.init();
     }
 

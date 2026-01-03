@@ -5,7 +5,7 @@
  * Aligned with Gemini Design System v4.0
  */
 
-import { onAdded, onRemoved } from '../shared/dom';
+import { onAdded, onRemoved } from '../../utils/dom';
 import { element } from '../../ui/styles/helpers';
 import { variablesCss } from '../../ui/styles/variables.css';
 import { loadConfig } from './state';

@@ -21,7 +21,7 @@ import {
   calculateMaxStrength,
   calculateCurrentStrength,
   isPetMature,
-} from "../../modules/calculators";
+} from "../../features/calculators";
 
 type MyPetsSources = {
   inventory: PetInventoryItem[];

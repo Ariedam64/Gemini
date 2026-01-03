@@ -150,7 +150,7 @@ export function SpritePicker(opts: SpritePickerOptions = {}): SpritePickerHandle
             return;
         }
 
-        if (!MGSprite.ready()) {
+        if (!MGSprite.isReady()) {
             previewArea.appendChild(element('span', { textContent: 'Sprite system not ready', style: 'opacity: 0.4; font-size: 11px;' }));
             return;
         }

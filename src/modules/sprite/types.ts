@@ -157,3 +157,28 @@ export interface CanvasCacheConfig {
   enabled: boolean;
   maxEntries: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mutation System Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface MutationMeta {
+  overlayTall: string | null;
+  tallIconOverride: string | null;
+  angle?: number;
+  angleTall?: number;
+}
+
+export interface VariantSignature {
+  muts: MutationName[];
+  overlayMuts: MutationName[];
+  selectedMuts: MutationName[];
+  sig: string;
+}
+
+export interface PipelineStep {
+  name: MutationName;
+  meta: MutationMeta;
+  overlayTall: string | null;
+  isTall: boolean;
+}

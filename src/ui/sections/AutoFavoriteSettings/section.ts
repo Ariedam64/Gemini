@@ -170,7 +170,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     private async loadGameData(): Promise<void> {
         try {
             // Wait for some data to be captured first (Soft Wait Strategy)
-            await MGData.waitForAnyData(3000).catch(() => { });
+            await MGData.waitForAny(3000).catch(() => { });
 
             // Then try to get plants and pets specifically, but don't hard-fail on individual timeouts
             await Promise.all([
@@ -203,7 +203,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     }
 
     private async waitForSprites(): Promise<void> {
-        if (MGSprite.ready()) return;
+        if (MGSprite.isReady()) return;
 
         const maxWait = 10000;
         const checkInterval = 100;
@@ -211,7 +211,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
 
         return new Promise((resolve) => {
             const check = () => {
-                if (MGSprite.ready() || waited >= maxWait) {
+                if (MGSprite.isReady() || waited >= maxWait) {
                     resolve();
                 } else {
                     waited += checkInterval;
@@ -334,7 +334,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
 
         // Add left sprite (Sunflower with mutation)
         try {
-            if (MGSprite.ready()) {
+            if (MGSprite.isReady()) {
                 const canvas = MGSprite.toCanvas('plant', 'Sunflower', { mutations: [data.id as any], scale: 0.16 });
                 canvas.style.width = '28px'; canvas.style.height = '28px'; canvas.style.objectFit = 'contain';
                 leftSprite.appendChild(canvas);
@@ -353,7 +353,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         if (data.id === 'Rainbow' || data.id === 'Gold') {
             const rightSprite = element("div", { style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" }) as HTMLDivElement;
             try {
-                if (MGSprite.ready()) {
+                if (MGSprite.isReady()) {
                     const canvas = MGSprite.toCanvas('pet', 'Capybara', { mutations: [data.id as any], scale: 0.16 });
                     canvas.style.width = '28px'; canvas.style.height = '28px'; canvas.style.objectFit = 'contain';
                     rightSprite.appendChild(canvas);
@@ -490,7 +490,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             }) as HTMLDivElement;
 
             try {
-                if (MGSprite.ready()) {
+                if (MGSprite.isReady()) {
                     let loadCategory = category;
                     let loadAsset = itemId;
 

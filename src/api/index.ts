@@ -7,7 +7,6 @@ import {
   MGAssets,
   MGManifest,
   MGData,
-  MGAntiAfk,
   MGEnvironment,
   MGCustomModal,
   MGSprite,
@@ -15,14 +14,14 @@ import {
   MGPixi,
   MGAudio,
   MGCosmetic,
-  MGAutoFavorite,
-  MGJournalChecker,
-  MGBulkFavorite,
-  MGAchievements,
-  MGCalculators,
-  MGPets,
-  MGTracker,
 } from "../modules";
+import { MGAntiAfk } from "../features/antiafk";
+import { MGAutoFavorite } from "../features/autoFavorite";
+import { MGJournalChecker } from "../features/journalChecker";
+import { MGBulkFavorite } from "../features/bulkFavorite";
+import { MGAchievements } from "../features/achievements";
+import { MGCalculators } from "../features/calculators";
+import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
   Store: {
@@ -120,6 +119,8 @@ export const GeminiAPI = {
     destroyGlobals,
   },
 };
+
+export type GeminiAPIType = typeof GeminiAPI;
 
 // Export alias for backward compatibility with features
 export { GeminiAPI as Gemini };

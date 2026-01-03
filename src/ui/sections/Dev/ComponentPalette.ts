@@ -110,7 +110,7 @@ export function createComponent(item: ComponentItem): HTMLElement | null {
             }
             case 'Sprite': {
                 // Only render if sprite system is ready AND we have valid config
-                if (item.config.category && item.config.assetId && MGSprite.ready()) {
+                if (item.config.category && item.config.assetId && MGSprite.isReady()) {
                     try {
                         const canvas = MGSprite.toCanvas(item.config.category, item.config.assetId, {
                             mutations: item.config.mutations || [],

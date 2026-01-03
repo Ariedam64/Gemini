@@ -139,7 +139,7 @@ export function addCloseListener(
 }
 
 export function emitOpen(event: ModalOpenEvent): void {
-  for (const cb of state.listeners.onOpen) {
+  for (const cb of Array.from(state.listeners.onOpen)) {
     try {
       cb(event);
     } catch {
@@ -149,7 +149,7 @@ export function emitOpen(event: ModalOpenEvent): void {
 }
 
 export function emitClose(event: ModalCloseEvent): void {
-  for (const cb of state.listeners.onClose) {
+  for (const cb of Array.from(state.listeners.onClose)) {
     try {
       cb(event);
     } catch {

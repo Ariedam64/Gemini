@@ -15,7 +15,7 @@ import {
   close as closeModal,
   waitForClose as waitForModalClose,
   destroy as destroyModule,
-} from "./lifecycle";
+} from "./logic/lifecycle";
 import {
   isInitialized,
   isCustomModalActive,
