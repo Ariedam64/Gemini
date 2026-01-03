@@ -2,10 +2,10 @@ import { element } from '../../styles/helpers';
 import { Button } from '../../components/Button/Button';
 import { Card } from '../../components/Card/Card';
 import { Input } from '../../components/Input/Input';
-import { MGTile } from '../../../modules/pixi/tile';
-import { MGPixi } from '../../../modules/pixi/pixi';
-import { MGData } from '../../../modules/core/data';
-import { MGSprite } from '../../../modules/sprite';
+import { MGTile } from '../../../modules';
+import { MGPixi } from '../../../modules';
+import { MGData } from '../../../modules';
+import { MGSprite } from '../../../modules';
 
 export function PixiInspector(): HTMLElement {
     const container = element('div', {

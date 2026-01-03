@@ -1,10 +1,10 @@
-// src/modules/version/logic.ts
+// src/modules/version/logic/detection.ts
 // Version detection logic
 
-import { pageWindow } from "../../utils/windowContext";
-import { sleep } from "../utils/helpers";
-import { getCachedVersion, setCachedVersion, hasVersion } from "./state";
-import type { VersionInitOptions, VersionWaitOptions } from "./types";
+import { pageWindow } from "../../../utils/windowContext";
+import { sleep } from "../../utils/helpers";
+import { getCachedVersion, setCachedVersion, hasVersion } from "../state";
+import type { VersionInitOptions, VersionWaitOptions } from "../types";
 
 const VERSION_REGEX = /\/(?:r\/\d+\/)?version\/([^/]+)/;
 const DEFAULT_TIMEOUT_MS = 15000;

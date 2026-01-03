@@ -12,7 +12,8 @@ import { Table, ColDef } from "../../components/Table/Table";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { element } from "../../styles/helpers";
-import { MGData, MGSprite, MGAutoFavorite } from "../../../modules";
+import { MGData, MGSprite } from "../../../modules";
+import { MGAutoFavorite } from "../../../features";
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
 
 interface AutoFavoriteUIConfig {

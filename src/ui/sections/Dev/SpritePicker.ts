@@ -7,8 +7,8 @@
 import { element } from '../../styles/helpers';
 import { Select } from '../../components/Select/Select';
 import { Button } from '../../components/Button/Button';
-import { MGData } from '../../../modules/core/data';
-import { MGSprite } from '../../../modules/sprite';
+import { MGData } from '../../../modules';
+import { MGSprite } from '../../../modules';
 
 export interface SpriteSelection {
     category: string;

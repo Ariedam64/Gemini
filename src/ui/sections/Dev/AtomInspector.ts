@@ -2,7 +2,7 @@ import { element } from '../../styles/helpers';
 import { Card } from '../../components/Card/Card';
 import { Input } from '../../components/Input/Input';
 import { Gemini } from '../../../api';
-import { MGData } from '../../../modules/core/data';
+import { MGData } from '../../../modules';
 import { Globals } from '../../../globals';
 
 export function AtomInspector(): HTMLElement {

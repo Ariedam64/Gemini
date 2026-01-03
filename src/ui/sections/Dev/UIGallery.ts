@@ -6,8 +6,8 @@ import { Input } from '../../components/Input/Input';
 import { Range as UIRange } from '../../components/Range/Range';
 import { Badge } from '../../components/Badge/Badge';
 import { Select } from '../../components/Select/Select';
-import { MGSprite } from '../../../modules/sprite';
-import { MGEnvironment } from '../../../modules/core/environment';
+import { MGSprite } from '../../../modules';
+import { MGEnvironment } from '../../../modules';
 import { ComponentPalette, createComponent, ComponentItem } from './ComponentPalette';
 import { PositioningCanvas } from './PositioningCanvas';
 

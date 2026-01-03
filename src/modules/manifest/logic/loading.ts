@@ -1,11 +1,11 @@
-// src/modules/manifest/logic.ts
+// src/modules/manifest/logic/loading.ts
 // Manifest loading and parsing logic
 
-import { getJSON } from "../utils/network";
-import { joinPath } from "../utils/path";
-import { MGAssets } from "../assets";
-import type { Manifest, ManifestBundle, ManifestLoadOptions } from "./types";
-import { getCachedManifest, setCachedManifest } from "./state";
+import { getJSON } from "../../utils/network";
+import { joinPath } from "../../utils/path";
+import { MGAssets } from "../../assets";
+import type { Manifest, ManifestBundle, ManifestLoadOptions } from "../types";
+import { getCachedManifest, setCachedManifest } from "../state";
 
 const MANIFEST_FILENAME = "manifest.json";
 

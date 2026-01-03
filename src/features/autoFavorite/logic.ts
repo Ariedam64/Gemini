@@ -7,7 +7,7 @@
 
 import { G_MyInventory } from '../../globals';
 import { toggleFavoriteItem } from '../../websocket/api';
-import { MGData } from '../core/data';
+import { MGData } from '../../modules';
 import { loadConfig, updateConfig } from './state';
 import type { AutoFavoriteConfig, SimpleAutoFavoriteConfig, FavoriteableItem } from './types';
 

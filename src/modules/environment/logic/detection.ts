@@ -1,8 +1,8 @@
-// src/modules/environment/logic.ts
+// src/modules/environment/logic/detection.ts
 // Environment detection logic
 
-import type { EnvironmentInfo, OS, Platform, Surface, Orientation } from "./types";
-import { getPlatformOverride, getCachedEnvironment, setCachedEnvironment } from "./state";
+import type { EnvironmentInfo, OS, Platform, Surface, Orientation } from "../types";
+import { getPlatformOverride, getCachedEnvironment, setCachedEnvironment } from "../state";
 
 /**
  * Detect screen orientation

@@ -59,7 +59,7 @@ export default defineConfig({
                 connect: ['i.imgur.com']
             },
             build: {
-                fileName: 'gemini.user.js',
+                fileName: 'gemini-build.user.js',
                 // @ts-ignore
                 cssSideEffects: (css) => {
                     if (!css) return '';

@@ -6,7 +6,7 @@
  * Optimization: Caches results until journal data changes
  */
 
-import { MGData } from '../..';
+import { MGData } from '../../../modules';
 import { G_Players } from '../../../globals';
 import type {
     RawJournal,
@@ -183,7 +183,7 @@ export function calculatePetProgress(journal: RawJournal | null): CategoryProgre
 }
 
 export async function aggregateProgress(force: boolean = false): Promise<JournalProgress> {
-    await MGData.waitForAnyData();
+    await MGData.waitForAny();
 
     const journal = getMyJournal();
     const hash = getJournalHash(journal);

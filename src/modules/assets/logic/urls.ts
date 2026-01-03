@@ -1,17 +1,17 @@
-// src/modules/assets/logic.ts
+// src/modules/assets/logic/urls.ts
 // Asset URL generation logic
 
-import { ORIGIN } from "../utils/network";
-import { joinPath } from "../utils/path";
-import { MGVersion } from "../version";
+import { ORIGIN } from "../../utils/network";
+import { joinPath } from "../../utils/path";
+import { MGVersion } from "../../version";
 import {
   getCachedBaseUrl,
   getPendingPromise,
   setCachedBaseUrl,
   setPendingPromise,
   hasBaseUrl,
-} from "./state";
-import type { AssetsInitOptions } from "./types";
+} from "../state";
+import type { AssetsInitOptions } from "../types";
 
 const DEFAULT_TIMEOUT_MS = 15000;
 

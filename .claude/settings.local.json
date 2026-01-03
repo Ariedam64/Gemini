@@ -24,7 +24,11 @@
       "Bash(git reset:*)",
       "Bash(git rm:*)",
       "Bash(del \"c:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\src\\\\modules\\\\environment\\\\index.ts\")",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(done)",
+      "Bash(git restore:*)"
     ]
   }
 }

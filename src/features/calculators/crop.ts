@@ -1,7 +1,7 @@
-// src/modules/calculators/crop.ts
+// src/features/calculators/crop.ts
 // Crop calculation utilities - verified from game source
 
-import { MGData } from '../core/data';
+import { MGData } from '../../modules/data';
 import { calculateMutationMultiplier } from './mutation';
 
 // ─────────────────────────────────────────────────────────────────────────────
