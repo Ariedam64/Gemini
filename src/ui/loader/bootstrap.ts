@@ -13,6 +13,7 @@ import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
 import { migrateStorageKeys } from "../../utils/storage";
+import { MGAntiAfk } from "../../features/antiAfk";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -126,15 +127,19 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
 export async function initModules(loader: LoaderController): Promise<void> {
   loader.setSubtitle("Activating Gemini modules...");
 
+  const TOTAL_MODULES = 7;
+  let loadedCount = 0;
+
   await initAllModules((progress) => {
-    if (progress.status === "start") {
-      loader.logStep(progress.name, `Loading ${progress.name}...`);
-    } else if (progress.status === "success") {
-      loader.logStep(progress.name, `${progress.name} ready`, "success");
-    } else {
-      loader.logStep(progress.name, `${progress.name} encountered an issue.`, "error");
+    if (progress.status === "success") {
+      loadedCount++;
+      loader.logStep("Modules", `Loading modules... (${loadedCount}/${TOTAL_MODULES})`);
+    } else if (progress.status === "error") {
+      loader.logStep("Modules", `Loading modules... (${loadedCount}/${TOTAL_MODULES}) - ${progress.name} failed`, "error");
     }
   });
+
+  loader.logStep("Modules", `All modules loaded (${TOTAL_MODULES}/${TOTAL_MODULES})`, "success");
 }
 
 export async function initSpriteWarmup(loader: LoaderController): Promise<void> {
@@ -196,6 +201,29 @@ export async function initSectionsPreload(loader: LoaderController): Promise<voi
     loader.logStep("Sections", "Sections preload failed", "error");
     console.warn("[Bootstrap] Sections preload failed", err);
   }
+}
+
+export function initFeatures(loader: LoaderController): void {
+  loader.logStep("Features", "Initializing features...");
+
+  const features = [
+    { name: "AntiAfk", init: MGAntiAfk.init.bind(MGAntiAfk) },
+  ];
+
+  let initializedCount = 0;
+
+  for (const feature of features) {
+    try {
+      feature.init();
+      initializedCount++;
+      loader.logStep("Features", `Initializing features... (${initializedCount}/${features.length})`, "info");
+    } catch (err) {
+      loader.logStep("Features", `Initializing features... (${initializedCount}/${features.length}) - ${feature.name} failed`, "error");
+      console.warn(`[Bootstrap] Feature ${feature.name} init failed`, err);
+    }
+  }
+
+  loader.logStep("Features", `All features initialized (${features.length}/${features.length})`, "success");
 }
 
 export { startInjectGamePanelButton };

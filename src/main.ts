@@ -8,6 +8,7 @@ import {
   initModules,
   initSpriteWarmup,
   initSectionsPreload,
+  initFeatures,
   startInjectGamePanelButton,
 } from "./ui/loader";
 import { migrateStorageKeys } from "./utils/storage";
@@ -37,9 +38,13 @@ installReactDevToolsHook();
     await initAtoms(loader);
     initReactiveGlobals(loader);
     initAPI(loader);
-    await initModules(loader);
-    await initSpriteWarmup(loader);
-    await initSectionsPreload(loader);
+
+    await Promise.all([
+      initModules(loader),
+      (async () => { await initSpriteWarmup(loader); })(),
+      (async () => { await initSectionsPreload(loader); })(),
+      (async () => { initFeatures(loader); })(),
+    ]);
 
     loader.succeed("Gemini is ready!");
 

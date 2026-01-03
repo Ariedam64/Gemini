@@ -8,5 +8,6 @@ export {
   initModules,
   initSpriteWarmup,
   initSectionsPreload,
+  initFeatures,
   startInjectGamePanelButton,
 } from "./bootstrap";
