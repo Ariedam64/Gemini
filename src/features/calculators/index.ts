@@ -11,9 +11,9 @@
 // Export all calculator modules
 // ─────────────────────────────────────────────────────────────────────────────
 
-export * from './crop';
-export * from './pet';
-export * from './mutation';
+export * from './logic/crop';
+export * from './logic/pet';
+export * from './logic/mutation';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MGCalculators API
@@ -25,7 +25,7 @@ import {
   calculateCropProgress,
   isCropReady,
   getCropData,
-} from './crop';
+} from './logic/crop';
 
 import {
   calculatePetAge,
@@ -34,14 +34,14 @@ import {
   isPetMature,
   calculateStrengthPerHour,
   getPetData,
-} from './pet';
+} from './logic/pet';
 
 import {
   calculateMutationMultiplier,
   getMutationValue,
   isGrowthMutation,
   isEnvironmentalMutation,
-} from './mutation';
+} from './logic/mutation';
 
 /**
  * Calculators Module

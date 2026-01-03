@@ -9,16 +9,37 @@ Features are optional, toggleable functionality that enhance the user experience
 
 ## 1) Feature structure
 
-- Each feature lives in `src/features/<featureName>/`
-- Required files:
-  - `types.ts` - Type definitions and constants
-  - `state.ts` - State management and storage operations
-  - `index.ts` - Public API and initialization
-- Optional files:
-  - `ui.ts` - UI components (if feature has visual elements)
-  - `logic.ts` - Business logic
-  - `middleware.ts` - WebSocket outgoing message handling
-  - `handler.ts` - WebSocket incoming message handling
+Each feature lives in `src/features/<featureName>/` and follows this structure:
+
+### Required files:
+- `types.ts` - Type definitions, constants, and configuration types
+- `index.ts` - Public API and initialization
+
+### Optional files:
+- `state.ts` - State management and storage operations (if feature needs persistent state)
+- `ui.ts` - UI components (if feature has visual elements)
+- `middleware.ts` - WebSocket outgoing message handling
+- `handler.ts` - WebSocket incoming message handling
+
+### Logic folder (recommended):
+- `logic/` - Business logic implementation
+  - Split complex logic into multiple files by responsibility
+  - Example: `logic/antiAfk.ts`, `logic/events.ts`, `logic/audio.ts`
+  - Keep each file focused and under 500 lines
+  - Import from `logic/` folder in `index.ts`
+
+### Example structure:
+```
+src/features/myFeature/
+├── types.ts           # Config, constants, types
+├── state.ts           # Storage operations (optional)
+├── logic/             # Business logic (recommended)
+│   ├── core.ts        # Main logic
+│   ├── helpers.ts     # Helper functions
+│   └── events.ts      # Event handling
+├── index.ts           # Public API
+└── ui.ts              # UI components (optional)
+```
 
 ## 2) Toggle requirement
 

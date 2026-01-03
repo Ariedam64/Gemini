@@ -6,9 +6,7 @@ export { MGJournalChecker, JournalChecker } from "./journalChecker";
 export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
 export { MGAchievements } from "./achievements";
 export { MGCalculators } from "./calculators";
-
-// AntiAfk feature
-export { MGAntiAfk } from "./antiafk";
+export { MGAntiAfk } from "./antiAfk";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

@@ -28,7 +28,8 @@
       "Bash(ls:*)",
       "Bash(xargs:*)",
       "Bash(done)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(del \"c:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\src\\\\features\\\\antiafk.ts\")"
     ]
   }
 }

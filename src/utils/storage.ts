@@ -58,6 +58,8 @@ export const FEATURE_KEYS = {
     ACHIEVEMENTS: 'feature:achievements:data',
     /** Stats tracker feature data */
     TRACKER_STATS: 'feature:tracker:stats',
+    /** Anti-AFK feature config */
+    ANTI_AFK: 'feature:antiAfk:config',
     /** Master feature settings config */
     CONFIG: 'feature:config',
 } as const;

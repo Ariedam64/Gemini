@@ -1,7 +1,8 @@
 // src/features/calculators/pet.ts
 // Pet calculation utilities - verified from game source
 
-import { MGData } from "../../modules/data";
+import { MGData } from "../../../modules";
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants from game source
