@@ -84,7 +84,7 @@ export function isTeamCompositionUnique(petIds: [string, string, string], exclud
 }
 
 /**
- * Validate that pet IDs exist in the player's pet collection
+ * Validate that pet IDs exist in the player's pet collection OR in existing teams
  * @param petIds - Array of pet IDs to validate
  * @returns true if all non-empty IDs are valid, false otherwise
  */
@@ -92,6 +92,16 @@ export function validatePetIds(petIds: string[]): boolean {
     const myPets = getMyPets();
     const petsData = myPets.get();
     const validPetIds = new Set(petsData.all.map((pet) => pet.id));
+
+    // Also include pets that are in existing teams
+    const config = loadConfig();
+    for (const team of config.teams) {
+        for (const petId of team.petIds) {
+            if (petId !== EMPTY_SLOT) {
+                validPetIds.add(petId);
+            }
+        }
+    }
 
     for (const petId of petIds) {
         if (petId !== EMPTY_SLOT && !validPetIds.has(petId)) {
@@ -220,6 +230,7 @@ export function updateTeam(
     // Validate pet IDs if being updated
     if (updates.petIds !== undefined) {
         const normalizedPetIds = normalizePetIds(updates.petIds);
+
         if (!validatePetIds(normalizedPetIds)) {
             throw new Error('One or more pet IDs do not exist');
         }

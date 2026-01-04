@@ -52,7 +52,7 @@ export const statRowCss = `
 
   /* Section Title */
   .gemini-section-title {
-    color: var(--section-title, #FFF27D);
+    color: var(--fg);
     font-weight: 700;
     font-size: 18px;
     margin-bottom: 8px;
@@ -60,7 +60,7 @@ export const statRowCss = `
 
   /* Group Title */
   .gemini-group-title {
-    color: var(--group-title, #5EB292);
+    color: var(--fg);
     font-weight: 700;
     font-size: 16px;
     margin-bottom: 4px;

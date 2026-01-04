@@ -40,8 +40,9 @@ function createPlusIconSvg(): SVGSVGElement {
 
 function createNameInput(currentName: string, onNameChange?: (newName: string) => void): HTMLDivElement {
     const originalName = currentName;
+    let lastSavedName = currentName;
 
-    // Create input component
+    // Create input component with onChange callback
     const inputHandle = Input({
         value: currentName,
         placeholder: "Team name",
@@ -49,9 +50,18 @@ function createNameInput(currentName: string, onNameChange?: (newName: string) =
         allowSpaces: true,
         maxLength: 50,
         blockGameKeys: true,
+        onChange: (value) => {
+            // Update on every keystroke (add or delete)
+            const trimmedValue = value.trim();
+            if (trimmedValue && trimmedValue !== lastSavedName) {
+                lastSavedName = trimmedValue;
+                onNameChange?.(trimmedValue);
+            }
+        },
         onEnter: (value) => {
             const finalName = value.trim() || originalName;
-            if (finalName !== originalName) {
+            if (finalName !== lastSavedName) {
+                lastSavedName = finalName;
                 onNameChange?.(finalName);
             }
         },
@@ -63,7 +73,8 @@ function createNameInput(currentName: string, onNameChange?: (newName: string) =
     // Handle blur (save changes)
     inputHandle.input.addEventListener("blur", () => {
         const finalName = inputHandle.getValue().trim() || originalName;
-        if (finalName !== originalName) {
+        if (finalName !== lastSavedName) {
+            lastSavedName = finalName;
             onNameChange?.(finalName);
         }
     });
@@ -85,8 +96,9 @@ export interface TeamListItemProps {
     customIndicator?: HTMLElement;
     hideDragHandle?: boolean;
     isNameEditable?: boolean;
-    onNameChange?: (newName: string) => void;
+    showSlotStyles?: boolean;
     onSlotClick?: (slotIndex: number) => void;
+    onNameChange?: (newName: string) => void;
 }
 
 export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
@@ -131,7 +143,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             const hasPet = petId && petId !== "";
             const spriteSlot = element("div", {
                 className: `team-list-item__sprite-slot ${
-                    props.onSlotClick
+                    props.showSlotStyles
                         ? hasPet
                             ? "team-list-item__sprite-slot--filled"
                             : "team-list-item__sprite-slot--empty"
@@ -139,7 +151,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                 }`,
             });
 
-            // Add click handler for slot editing
+            // Add click handler for filled slots to remove pet, empty slots to add pet
             if (props.onSlotClick) {
                 spriteSlot.style.cursor = "pointer";
                 spriteSlot.addEventListener("click", () => {
@@ -148,8 +160,16 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             }
 
             if (hasPet) {
-                // Find pet in myPets - always fresh from current state
-                const pet = myPets.all.find((p) => p.id === petId);
+                // Find pet in myPets first, then fall back to global cache
+                let pet = myPets.all.find((p) => p.id === petId);
+
+                // If not in myPets, try to get from global cache
+                if (!pet) {
+                    const globalCache = (window as any).__petDataCache;
+                    if (globalCache && globalCache.has(petId)) {
+                        pet = globalCache.get(petId);
+                    }
+                }
 
                 if (pet) {
                     try {
@@ -185,15 +205,61 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                         spriteSlot.appendChild(placeholder);
                     }
                 } else {
-                    // Pet not found, show placeholder
+                    // Pet not found, show loading placeholder and wait for myPets to update
                     const placeholder = element("div", {
-                        textContent: "?",
+                        textContent: "⏳",
                         className: "team-list-item__sprite-placeholder",
                     });
                     spriteSlot.appendChild(placeholder);
+
+                    // Log for debugging
+                    console.warn(`[TeamListItem] Pet ${petId} not found in myPets yet, waiting for update`);
+
+                    // Subscribe to myPets changes to update this specific slot when pet data arrives
+                    let slotUpdateDone = false;
+                    const unsubscribeSlotUpdate = Globals.myPets.subscribe(() => {
+                        if (slotUpdateDone) return;
+
+                        const updatedMyPets = Globals.myPets.get();
+                        const foundPet = updatedMyPets.all.find((p) => p.id === petId);
+
+                        if (foundPet) {
+                            slotUpdateDone = true;
+                            unsubscribeSlotUpdate();
+
+                            try {
+                                // Clear placeholder
+                                spriteSlot.innerHTML = "";
+
+                                // Render pet sprite
+                                const cachedCanvas = MGSprite.toCanvas("pet", foundPet.petSpecies, {
+                                    mutations: foundPet.mutations as any,
+                                    scale: 1,
+                                });
+
+                                const canvas = document.createElement("canvas");
+                                canvas.width = cachedCanvas.width;
+                                canvas.height = cachedCanvas.height;
+                                const ctx = canvas.getContext("2d");
+                                if (ctx) {
+                                    ctx.drawImage(cachedCanvas, 0, 0);
+                                }
+
+                                canvas.style.width = "100%";
+                                canvas.style.height = "100%";
+                                canvas.style.objectFit = "contain";
+
+                                spriteSlot.appendChild(canvas);
+                                console.log(`[TeamListItem] Pet ${petId} sprite updated`);
+                            } catch (err) {
+                                console.warn(`[TeamListItem] Failed to render sprite for pet ${foundPet.petSpecies}:`, err);
+                                spriteSlot.innerHTML = "<div class='team-list-item__sprite-placeholder'>🐾</div>";
+                            }
+                        }
+                    }, { immediate: false });
                 }
-            } else if (props.onSlotClick) {
-                // Empty slot in manage mode - add SVG plus icon
+            } else if (props.showSlotStyles && !hasPet) {
+                // Empty slot with styles enabled - add SVG plus icon
                 const plusIcon = createPlusIconSvg();
                 spriteSlot.appendChild(plusIcon);
             }

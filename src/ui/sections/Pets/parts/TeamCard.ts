@@ -10,12 +10,11 @@ import { Checkbox, CheckboxHandle } from "../../../components/Checkbox/Checkbox"
 import { Button } from "../../../components/Button/Button";
 import { element } from "../../../styles/helpers";
 import { MGPetTeam } from "../../../../features/petTeam";
-import type { PetTeam } from "../../../../features/petTeam";
 import { Globals } from "../../../../globals";
-import { getMyInventory } from "../../../../globals/variables/myInventory";
-import { MGCustomModal } from "../../../../modules/customModal";
-import { Store } from "../../../../atoms";
-import type { InventoryItem } from "../../../../atoms/types";
+import { Store } from "../../../../atoms/store";
+import { MGCustomModal } from "../../../../modules";
+import { injectTeamCardStyles } from "./teamCard.css";
+import type { PetTeam } from "../../../../features/petTeam";
 
 type ScrollLockRelease = () => void;
 type DragState = {
@@ -105,90 +104,6 @@ function acquireScrollLock(origin: HTMLElement): ScrollLockRelease {
     };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Pet Management Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function cleanPetData(pet: any): any {
-    // Convert myPets.all format to inventory format
-    return {
-        id: pet.id,
-        itemType: "Pet",
-        petSpecies: pet.petSpecies,
-        name: pet.name,
-        xp: pet.xp,
-        hunger: pet.hunger,
-        mutations: pet.mutations,
-        targetScale: pet.targetScale,
-        abilities: pet.abilities,
-    };
-}
-
-async function showInventoryModal(onPetSelected: (petId: string) => void, teamId?: string): Promise<void> {
-    const myInventory = getMyInventory();
-    const myPets = Globals.myPets.get();
-
-    // Get pets already in this team (if teamId is provided)
-    const usedPetIds = new Set<string>();
-    if (teamId) {
-        const team = MGPetTeam.getTeam(teamId);
-        if (team) {
-            // Add all pet IDs that are already in this team's slots
-            team.petIds.forEach((petId) => {
-                if (petId && petId !== "") {
-                    usedPetIds.add(petId);
-                }
-            });
-        }
-    }
-
-    // Filter out pets already used in this team
-    const availablePets = myPets.all.filter((pet) => !usedPetIds.has(pet.id));
-    const cleanedPets = availablePets.map((pet) => cleanPetData(pet));
-
-    // Show custom modal with available pets
-    MGCustomModal.show("inventory", {
-        items: cleanedPets,
-        storages: [],
-        favoritedItemIds: [],
-    });
-
-    // Hide HUD on mobile
-    const hudElement = document.querySelector("[data-element='hud']");
-    const isMobile = window.innerWidth < 768;
-    if (isMobile && hudElement) {
-        (hudElement as HTMLElement).style.display = "none";
-    }
-
-    // Subscribe to atom changes directly to detect all index changes
-    const unsubscribeAtom = await Store.subscribe("myPossiblyNoLongerValidSelectedItemIndexAtom", async (index: number | null) => {
-        // Only process when we have a valid index (pet was selected)
-        if (index !== null && index >= 0) {
-            const selectedItem = myInventory.get().selectedItem;
-            if (selectedItem && "id" in selectedItem.item) {
-                const selectedPetId = selectedItem.item.id;
-                onPetSelected(selectedPetId);
-
-                // Cleanup subscription first
-                unsubscribeAtom();
-
-                // Reset selected item index immediately to clear selectedItem
-                // Use -1 as intermediate value to force change detection
-                await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
-                await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
-
-                // Close modal
-                MGCustomModal.close();
-
-                // Show HUD again on mobile
-                if (isMobile && hudElement) {
-                    (hudElement as HTMLElement).style.display = "";
-                }
-            }
-        }
-    });
-}
-
 export interface TeamCardPartOptions {
     onTeamReordered?: (teamIds: string[]) => void;
 }
@@ -203,18 +118,22 @@ export class TeamCardPart {
     private teamMode: "overview" | "manage" = "overview";
     private selectedTeamIds: Set<string> = new Set();
     private teamCheckboxes: Map<string, CheckboxHandle> = new Map();
-    private editingTeamId: string | null = null;
-    private editingSlotIndex: number | null = null;
     private onPointerMove: (ev: PointerEvent) => void;
     private onPointerUp: (ev: PointerEvent) => void;
     private onPointerCancel: (ev: PointerEvent) => void;
     private options: TeamCardPartOptions;
+    private static stylesInjected = false;
 
     constructor(options: TeamCardPartOptions = {}) {
         this.options = options;
         this.onPointerMove = this.handlePointerMove.bind(this);
         this.onPointerUp = this.handlePointerUp.bind(this);
         this.onPointerCancel = this.handlePointerCancel.bind(this);
+
+        if (!TeamCardPart.stylesInjected) {
+            injectTeamCardStyles();
+            TeamCardPart.stylesInjected = true;
+        }
     }
 
     build(): HTMLDivElement {
@@ -259,30 +178,16 @@ export class TeamCardPart {
 
     private createTeamCard(): HTMLDivElement {
         const cardWrapper = element("div", {
-            style: {
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-            },
+            className: "team-card-wrapper",
         });
 
         this.modeContainer = element("div", {
-            style: {
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-            },
+            className: "team-card__mode-container",
         });
         cardWrapper.appendChild(this.modeContainer);
 
         this.teamContent = element("div", {
-            style: {
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-                width: "100%",
-            },
+            className: "team-card__content",
         });
         cardWrapper.appendChild(this.teamContent);
 
@@ -332,18 +237,12 @@ export class TeamCardPart {
         }
 
         const disabledState = element("div", {
-            style: {
-                textAlign: "center",
-            },
+            className: "team-card__disabled-state",
         });
 
         const message = element("div", {
             textContent: "Pet Team feature is disabled",
-            style: {
-                color: "var(--muted)",
-                fontSize: "14px",
-                marginBottom: "12px",
-            },
+            className: "team-card__disabled-message",
         });
 
         const enableButton = Button({
@@ -375,24 +274,14 @@ export class TeamCardPart {
         if (teams.length === 0) {
             const emptyState = element("div", {
                 textContent: "No teams yet. Create your first team!",
-                style: {
-                    color: "var(--muted)",
-                    textAlign: "center",
-                    fontSize: "14px",
-                },
+                className: "team-card__empty-state",
             });
             this.teamContent.appendChild(emptyState);
             return;
         }
 
         this.listContainer = element("div", {
-            style: {
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px",
-                position: "relative",
-                width: "100%",
-            },
+            className: "team-card__list-container",
         });
 
         teams.forEach((team: PetTeam) => {
@@ -408,12 +297,13 @@ export class TeamCardPart {
                 customIndicator: checkboxHandle?.root,
                 hideDragHandle: this.teamMode === "manage",
                 isNameEditable: this.teamMode === "manage",
+                showSlotStyles: this.teamMode === "manage",
                 onNameChange: (newName) => {
                     this.handleRenameTeam(team.id, newName);
                 },
                 onSlotClick: this.teamMode === "manage"
                     ? (slotIndex) => {
-                        void this.handleSlotClick(team.id, slotIndex);
+                        this.handleRemovePet(team.id, slotIndex);
                     }
                     : undefined,
             });
@@ -438,12 +328,7 @@ export class TeamCardPart {
 
         if (this.teamMode === "manage") {
             const actionsContainer = element("div", {
-                style: {
-                    display: "flex",
-                    gap: "12px",
-                    justifyContent: "center",
-                    width: "100%",
-                },
+                className: "team-card__actions",
             });
 
             const newTeamButton = Button({
@@ -471,100 +356,136 @@ export class TeamCardPart {
     }
 
     private handleCreateTeam(): void {
-        console.log('[TeamCardPart] Creating new team...');
-        const success = MGPetTeam.createTeam("New Team", []);
-        if (success) {
-            console.log('[TeamCardPart] Team created successfully');
-            this.render();
-        } else {
-            console.warn('[TeamCardPart] Failed to create team');
+        // Generate a unique team name
+        const baseTeamName = "New Team";
+        let teamName = baseTeamName;
+        let counter = 1;
+
+        const allTeams = MGPetTeam.getAllTeams();
+        const existingTeamNames = new Set(allTeams.map((t) => t.name));
+
+        // If "New Team" exists, add (1), (2), etc.
+        while (existingTeamNames.has(teamName)) {
+            teamName = `${baseTeamName} (${counter})`;
+            counter++;
+        }
+
+        try {
+            const success = MGPetTeam.createTeam(teamName, []);
+            if (success) {
+                this.render();
+            }
+        } catch (err) {
+            // Error handled silently
         }
     }
 
     private handleDeleteTeam(): void {
         if (this.selectedTeamIds.size === 0) {
-            console.warn('[TeamCardPart] No teams selected for deletion');
             return;
         }
 
         const teamIdsToDelete = Array.from(this.selectedTeamIds);
-        console.log('[TeamCardPart] Deleting teams:', teamIdsToDelete);
 
-        let deletedCount = 0;
         for (const teamId of teamIdsToDelete) {
-            const success = MGPetTeam.deleteTeam(teamId);
-            if (success) {
-                deletedCount++;
-            }
+            MGPetTeam.deleteTeam(teamId);
         }
 
-        console.log(`[TeamCardPart] Deleted ${deletedCount}/${teamIdsToDelete.length} teams`);
         this.render();
     }
 
     private handleRenameTeam(teamId: string, newName: string): void {
-        console.log('[TeamCardPart] Renaming team:', teamId, '->', newName);
-        const success = MGPetTeam.renameTeam(teamId, newName);
-        if (success) {
-            console.log('[TeamCardPart] Team renamed successfully');
-        } else {
-            console.warn('[TeamCardPart] Failed to rename team');
-        }
+        MGPetTeam.renameTeam(teamId, newName);
     }
 
-    private async handleSlotClick(teamId: string, slotIndex: number): Promise<void> {
+    private handleRemovePet(teamId: string, slotIndex: number): void {
         const team = MGPetTeam.getTeam(teamId);
-        if (!team) return;
-
-        const currentPetId = team.petIds[slotIndex];
-
-        // If slot has a pet, remove it
-        if (currentPetId && currentPetId !== "") {
-            console.log('[TeamCardPart] Removing pet from slot:', slotIndex);
-            const newPetIds = [...team.petIds];
-            newPetIds[slotIndex] = "";
-            MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
-            this.render();
+        if (!team) {
             return;
         }
 
-        // If slot is empty, show inventory modal
-        console.log('[TeamCardPart] Opening inventory for slot:', slotIndex);
-        this.editingTeamId = teamId;
-        this.editingSlotIndex = slotIndex;
+        const petIdAtSlot = team.petIds[slotIndex];
 
-        await showInventoryModal((selectedPetId) => {
-            this.handlePetSelection(selectedPetId);
-        }, teamId);
+        // If slot is empty, show pet selection; if filled, remove pet
+        if (!petIdAtSlot || petIdAtSlot === "") {
+            this.handleAddPet(teamId, slotIndex);
+        } else {
+            this.handleRemovePetFromSlot(teamId, slotIndex);
+        }
     }
 
-    private handlePetSelection(selectedPetId: string): void {
-        if (this.editingTeamId === null || this.editingSlotIndex === null) {
-            console.warn('[TeamCardPart] No team/slot selected for pet addition');
-            return;
-        }
-
-        const team = MGPetTeam.getTeam(this.editingTeamId);
+    private handleRemovePetFromSlot(teamId: string, slotIndex: number): void {
+        const team = MGPetTeam.getTeam(teamId);
         if (!team) {
-            console.warn('[TeamCardPart] Team not found:', this.editingTeamId);
             return;
         }
-
-        console.log('[TeamCardPart] Adding pet to team:', this.editingTeamId, 'slot:', this.editingSlotIndex);
 
         const newPetIds = [...team.petIds];
-        newPetIds[this.editingSlotIndex] = selectedPetId;
+        newPetIds[slotIndex] = "";
+        MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
+        this.render();
+    }
 
-        const success = MGPetTeam.updateTeam(this.editingTeamId, { petIds: newPetIds as any });
-        if (success) {
-            console.log('[TeamCardPart] Pet added successfully');
-        } else {
-            console.warn('[TeamCardPart] Failed to add pet to team');
+    private async handleAddPet(teamId: string, slotIndex: number): Promise<void> {
+        const team = MGPetTeam.getTeam(teamId);
+        if (!team) {
+            return;
         }
 
-        this.editingTeamId = null;
-        this.editingSlotIndex = null;
-        this.render();
+        const myPets = Globals.myPets.get();
+
+        // Transform pets to match the expected schema
+        const allPets = myPets.all.map((pet) => ({
+            id: pet.id,
+            itemType: "Pet" as const,
+            petSpecies: pet.petSpecies,
+            name: pet.name ?? null,
+            xp: pet.xp,
+            hunger: pet.hunger,
+            mutations: pet.mutations || [],
+            targetScale: pet.targetScale,
+            abilities: pet.abilities || [],
+        }));
+
+        // Filter out pets already in this team
+        const alreadyInTeam = new Set(team.petIds.filter((id) => id !== ""));
+        const availablePets = allPets.filter((pet) => !alreadyInTeam.has(pet.id));
+
+        // Clear the selected item first
+        await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+
+        // Subscribe to selection changes
+        const unsubscribeSelection = Globals.myInventory.subscribeSelection((event) => {
+            // Check if a pet was selected (not null)
+            if (event.current && event.current.item) {
+                const selectedPet = event.current.item as any;
+
+                // Add pet to team at the specified slot
+                const newPetIds = [...team.petIds];
+                newPetIds[slotIndex] = selectedPet.id;
+                MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
+
+                // Clear the selection
+                Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+
+                // Close the modal and re-render the team card
+                MGCustomModal.close().then(() => {
+                    this.render();
+                });
+            }
+        });
+
+        // Show inventory modal with available pets
+        await MGCustomModal.show("inventory", {
+            items: availablePets as any,
+            favoritedItemIds: [],
+        });
+
+        // Wait for modal to close
+        await MGCustomModal.waitForClose();
+
+        // Cleanup
+        unsubscribeSelection();
     }
 
     private createCheckboxIndicator(teamId: string): CheckboxHandle {
@@ -577,7 +498,6 @@ export class TeamCardPart {
                 } else {
                     this.selectedTeamIds.delete(teamId);
                 }
-                console.log('[TeamCardPart] Selection changed:', Array.from(this.selectedTeamIds));
                 this.updateDeleteButtonState();
             },
         });
@@ -821,14 +741,8 @@ export class TeamCardPart {
                 updated.splice(newIndex, 0, moved);
 
                 const teamIds = updated.map((team) => team.id);
-                const success = MGPetTeam.reorderTeams(teamIds);
-
-                if (success) {
-                    console.log('[TeamCardPart] Teams reordered successfully');
-                    this.options.onTeamReordered?.(teamIds);
-                } else {
-                    console.warn('[TeamCardPart] Failed to reorder teams');
-                }
+                MGPetTeam.reorderTeams(teamIds);
+                this.options.onTeamReordered?.(teamIds);
             }
         }
 

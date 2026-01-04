@@ -21,7 +21,7 @@ type MyInventorySources = {
 const atomSources = {
   inventory: "myInventoryAtom",
   isFull: "isMyInventoryAtMaxLengthAtom",
-  selectedItemIndex: "myPossiblyNoLongerValidSelectedItemIndexAtom",
+  selectedItemIndex: "myValidatedSelectedItemIndexAtom",
 };
 
 const initialData: MyInventoryData = {

@@ -4,7 +4,7 @@
  */
 
 import { BaseSection } from "../core/Section";
-import { TeamCardPart } from "./parts/TeamCard";
+import { TeamCardPart } from "./parts";
 import { MGPetTeam } from "../../../features/petTeam";
 import { Globals } from "../../../globals";
 
