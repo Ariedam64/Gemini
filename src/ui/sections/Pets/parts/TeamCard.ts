@@ -162,6 +162,9 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
                 (hudElement as HTMLElement).style.display = "";
             }
 
+            // Reset selected item index after selection
+            Store.set("myValidatedSelectedItemIndexAtom", null);
+
             // Cleanup subscription
             unsubscribe();
         }
