@@ -146,7 +146,7 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
     }
 
     // Subscribe to selection changes
-    const unsubscribe = myInventory.subscribeSelection((event) => {
+    const unsubscribe = myInventory.subscribeSelection(async (event) => {
         if (event.current && "id" in event.current.item) {
             const selectedPetId = event.current.item.id;
             onPetSelected(selectedPetId);
@@ -156,8 +156,8 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
 
             // Reset selected item index immediately to clear selectedItem
             // Use -1 as intermediate value to force change detection
-            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
-            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+            await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
+            await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
             // Close modal
             MGCustomModal.close();
