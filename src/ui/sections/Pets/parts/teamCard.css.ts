@@ -17,6 +17,10 @@ export const teamCardStyles = `
     width: 100%;
 }
 
+.team-card__mode-container > * {
+    margin: 0 auto;
+}
+
 .team-card__content {
     display: flex;
     flex-direction: column;
