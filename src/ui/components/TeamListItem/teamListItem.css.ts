@@ -63,7 +63,6 @@ export const teamListItemCss = `
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
-  position: relative;
 }
 
 .team-list-item__name--active {
@@ -74,43 +73,17 @@ export const teamListItemCss = `
   font-weight: 400;
 }
 
-/* Editable name affordances */
-.team-list-item__name--editable {
-  cursor: text;
-  transition: background-color 0.15s ease;
-}
-
-.team-list-item__name--editable::after {
-  content: "✏️";
-  position: absolute;
-  right: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  pointer-events: none;
-}
-
-.team-list-item:hover .team-list-item__name--editable::after {
-  opacity: 1;
-}
-
-/* Editing input wrapper override */
-.team-list-item__name--editing.lg-input-wrap {
+/* Input in manage mode */
+.team-list-item__name-input {
   flex: 1;
   min-width: 0;
 }
 
-.team-list-item__name--editing.lg-input-wrap .input {
+.team-list-item__name-input .input {
   font-size: 14px;
   color: var(--fg);
-  background-color: color-mix(in oklab, var(--accent) 15%, var(--bg));
-  border: 2px solid var(--accent);
-  border-radius: 4px;
   padding: 4px 8px;
   width: 100%;
-  font-weight: inherit;
 }
 
 .team-list-item__sprites {
