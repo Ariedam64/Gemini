@@ -129,7 +129,7 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
     const myPets = Globals.myPets.get();
 
     // Reset selected item index before opening inventory
-    Store.set("myValidatedSelectedItemIndexAtom", null);
+    Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
     // Clean pet data to avoid crashes
     const cleanedPets = myPets.all.map((pet) => cleanPetData(pet));
@@ -163,7 +163,7 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
             }
 
             // Reset selected item index after selection
-            Store.set("myValidatedSelectedItemIndexAtom", null);
+            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
             // Cleanup subscription
             unsubscribe();
