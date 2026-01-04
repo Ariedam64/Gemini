@@ -59,6 +59,7 @@ export const MGPetTeam = {
     createTeam: TeamLogic.createTeam,
     updateTeam: TeamLogic.updateTeam,
     deleteTeam: TeamLogic.deleteTeam,
+    renameTeam: TeamLogic.renameTeam,
     getTeam: TeamLogic.getTeam,
     getAllTeams: TeamLogic.getAllTeams,
     getTeamByName: TeamLogic.getTeamByName,

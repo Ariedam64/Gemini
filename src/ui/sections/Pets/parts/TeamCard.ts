@@ -316,6 +316,10 @@ export class TeamCardPart {
                 isActive,
                 customIndicator: checkboxHandle?.root,
                 hideDragHandle: this.teamMode === "manage",
+                isNameEditable: this.teamMode === "manage",
+                onNameChange: (newName) => {
+                    this.handleRenameTeam(team.id, newName);
+                },
             });
 
             // Drag is only allowed in overview mode
@@ -395,6 +399,16 @@ export class TeamCardPart {
 
         console.log(`[TeamCardPart] Deleted ${deletedCount}/${teamIdsToDelete.length} teams`);
         this.render();
+    }
+
+    private handleRenameTeam(teamId: string, newName: string): void {
+        console.log('[TeamCardPart] Renaming team:', teamId, '->', newName);
+        const success = MGPetTeam.renameTeam(teamId, newName);
+        if (success) {
+            console.log('[TeamCardPart] Team renamed successfully');
+        } else {
+            console.warn('[TeamCardPart] Failed to rename team');
+        }
     }
 
     private createCheckboxIndicator(teamId: string): CheckboxHandle {

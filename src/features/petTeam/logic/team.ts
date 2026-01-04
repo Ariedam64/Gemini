@@ -320,3 +320,19 @@ export function reorderTeams(teamIds: TeamId[]): boolean {
 
     return true;
 }
+
+/**
+ * Rename a pet team
+ * @param teamId - Team ID to rename
+ * @param newName - New team name (must be unique)
+ * @returns true if renamed successfully, false otherwise
+ */
+export function renameTeam(teamId: TeamId, newName: string): boolean {
+    try {
+        const result = updateTeam(teamId, { name: newName });
+        return result !== null;
+    } catch (err) {
+        console.warn(`[PetTeam] Failed to rename team ${teamId}:`, err);
+        return false;
+    }
+}
