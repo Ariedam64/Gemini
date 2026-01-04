@@ -124,14 +124,29 @@ function cleanPetData(pet: any): any {
     };
 }
 
-async function showInventoryModal(onPetSelected: (petId: string) => void): Promise<void> {
+async function showInventoryModal(onPetSelected: (petId: string) => void, teamId?: string): Promise<void> {
     const myInventory = getMyInventory();
     const myPets = Globals.myPets.get();
 
-    // Clean pet data to avoid crashes
-    const cleanedPets = myPets.all.map((pet) => cleanPetData(pet));
+    // Get pets already in this team (if teamId is provided)
+    const usedPetIds = new Set<string>();
+    if (teamId) {
+        const team = MGPetTeam.getTeam(teamId);
+        if (team) {
+            // Add all pet IDs that are already in this team's slots
+            team.petIds.forEach((petId) => {
+                if (petId && petId !== "") {
+                    usedPetIds.add(petId);
+                }
+            });
+        }
+    }
 
-    // Show custom modal with all pets
+    // Filter out pets already used in this team
+    const availablePets = myPets.all.filter((pet) => !usedPetIds.has(pet.id));
+    const cleanedPets = availablePets.map((pet) => cleanPetData(pet));
+
+    // Show custom modal with available pets
     MGCustomModal.show("inventory", {
         items: cleanedPets,
         storages: [],
@@ -403,6 +418,11 @@ export class TeamCardPart {
                     : undefined,
             });
 
+            // Apply manage mode class to disable drag cursor
+            if (this.teamMode === "manage") {
+                teamItem.classList.add("team-list-item--manage");
+            }
+
             // Drag is only allowed in overview mode
             if (this.teamMode === "overview") {
                 teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
@@ -515,7 +535,7 @@ export class TeamCardPart {
 
         await showInventoryModal((selectedPetId) => {
             this.handlePetSelection(selectedPetId);
-        });
+        }, teamId);
     }
 
     private handlePetSelection(selectedPetId: string): void {

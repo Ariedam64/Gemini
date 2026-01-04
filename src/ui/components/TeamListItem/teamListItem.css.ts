@@ -13,6 +13,11 @@ export const teamListItemCss = `
   position: relative;
 }
 
+/* In manage mode, disable drag cursor */
+.team-list-item.team-list-item--manage {
+  cursor: auto;
+}
+
 .team-list-item:not(:last-child) {
   margin-bottom: 6px;
 }

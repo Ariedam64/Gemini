@@ -15,6 +15,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#0f172a",
     "--pill-from": "#4f46e5",
     "--pill-to": "#06b6d4",
+    "--section-title": "#1e40af",
+    "--group-title": "#3b82f6",
   },
   dark: {
     "--bg": "rgba(10,12,18,0.6)",
@@ -28,6 +30,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#e5e7eb",
     "--pill-from": "#6366f1",
     "--pill-to": "#06b6d4",
+    "--section-title": "#93c5fd",
+    "--group-title": "#bfdbfe",
   },
   sepia: {
     "--bg": "rgba(247,242,231,0.72)",
@@ -41,6 +45,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#3b2f2f",
     "--pill-from": "#b07d62",
     "--pill-to": "#d4a373",
+    "--section-title": "#92552a",
+    "--group-title": "#c99a6e",
   },
   forest: {
     "--bg": "rgba(14,24,18,0.62)",
@@ -54,6 +60,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#e7f5e9",
     "--pill-from": "#10b981",
     "--pill-to": "#84cc16",
+    "--section-title": "#6ee7b7",
+    "--group-title": "#a7f3d0",
   },
   violet: {
     "--bg": "rgba(23, 16, 42, 0.68)",
@@ -67,6 +75,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#ede9fe",
     "--pill-from": "#a855f7",
     "--pill-to": "#f472b6",
+    "--section-title": "#d8b4fe",
+    "--group-title": "#e9d5ff",
   },
   ocean: {
     "--bg": "rgba(10, 34, 46, 0.66)",
@@ -80,6 +90,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#e0f7ff",
     "--pill-from": "#0ea5e9",
     "--pill-to": "#14b8a6",
+    "--section-title": "#7dd3fc",
+    "--group-title": "#cffafe",
   },
   ember: {
     "--bg": "rgba(34,18,10,0.64)",
@@ -93,6 +105,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--tab-fg": "#fff7ed",
     "--pill-from": "#fb923c",
     "--pill-to": "#facc15",
+    "--section-title": "#fed7aa",
+    "--group-title": "#fecaca",
   },
   magicGarden: {
     // ===== Core Colors (from Magic Garden StatsModal.tsx) =====

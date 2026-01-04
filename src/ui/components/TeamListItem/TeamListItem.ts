@@ -15,9 +15,10 @@ function createPlusIconSvg(): SVGSVGElement {
     svg.setAttribute("width", "24");
     svg.setAttribute("height", "24");
     svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "white");
+    svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "2");
     svg.setAttribute("stroke-linecap", "round");
+    svg.style.color = "var(--accent)";
 
     const horizontal = document.createElementNS("http://www.w3.org/2000/svg", "line");
     horizontal.setAttribute("x1", "12");
@@ -114,79 +115,100 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             }`,
         });
 
-    // Get all pets data
-    const myPets = Globals.myPets.get();
-
     // Pet sprites container
     const spritesContainer = element("div", {
         className: "team-list-item__sprites",
     });
 
-    // Render pet sprites or empty slots
-    for (let i = 0; i < 3; i++) {
-        const petId = props.team.petIds[i];
-        const hasPet = petId && petId !== "";
-        const spriteSlot = element("div", {
-            className: `team-list-item__sprite-slot ${
-                props.onSlotClick
-                    ? hasPet
-                        ? "team-list-item__sprite-slot--filled"
-                        : "team-list-item__sprite-slot--empty"
-                    : ""
-            }`,
-        });
+    // Function to re-render all pet sprites when myPets changes
+    function renderSprites(): void {
+        const myPets = Globals.myPets.get();
+        spritesContainer.innerHTML = "";
 
-        // Add click handler for slot editing
-        if (props.onSlotClick) {
-            spriteSlot.style.cursor = "pointer";
-            spriteSlot.addEventListener("click", () => {
-                props.onSlotClick!(i);
+        // Render pet sprites or empty slots
+        for (let i = 0; i < 3; i++) {
+            const petId = props.team.petIds[i];
+            const hasPet = petId && petId !== "";
+            const spriteSlot = element("div", {
+                className: `team-list-item__sprite-slot ${
+                    props.onSlotClick
+                        ? hasPet
+                            ? "team-list-item__sprite-slot--filled"
+                            : "team-list-item__sprite-slot--empty"
+                        : ""
+                }`,
             });
-        }
 
-        if (hasPet) {
-            // Find pet in myPets
-            const pet = myPets.all.find((p) => p.id === petId);
+            // Add click handler for slot editing
+            if (props.onSlotClick) {
+                spriteSlot.style.cursor = "pointer";
+                spriteSlot.addEventListener("click", () => {
+                    props.onSlotClick!(i);
+                });
+            }
 
-            if (pet) {
-                try {
-                    // Render pet sprite using MGSprite
-                    const canvas = MGSprite.toCanvas("pet", pet.petSpecies, {
-                        mutations: pet.mutations as any,
-                        scale: 1,
-                    });
+            if (hasPet) {
+                // Find pet in myPets - always fresh from current state
+                const pet = myPets.all.find((p) => p.id === petId);
 
-                    // Style canvas to fit slot
-                    canvas.style.width = "100%";
-                    canvas.style.height = "100%";
-                    canvas.style.objectFit = "contain";
+                if (pet) {
+                    try {
+                        // Render pet sprite using MGSprite
+                        const cachedCanvas = MGSprite.toCanvas("pet", pet.petSpecies, {
+                            mutations: pet.mutations as any,
+                            scale: 1,
+                        });
 
-                    spriteSlot.appendChild(canvas);
-                } catch (err) {
-                    console.warn(`[TeamListItem] Failed to render sprite for pet ${pet.petSpecies}:`, err);
-                    // Fallback to placeholder on error
+                        // Clone the canvas since MGSprite returns cached instances
+                        // We need separate instances for each DOM location
+                        const canvas = document.createElement("canvas");
+                        canvas.width = cachedCanvas.width;
+                        canvas.height = cachedCanvas.height;
+                        const ctx = canvas.getContext("2d");
+                        if (ctx) {
+                            ctx.drawImage(cachedCanvas, 0, 0);
+                        }
+
+                        // Style canvas to fit slot
+                        canvas.style.width = "100%";
+                        canvas.style.height = "100%";
+                        canvas.style.objectFit = "contain";
+
+                        spriteSlot.appendChild(canvas);
+                    } catch (err) {
+                        console.warn(`[TeamListItem] Failed to render sprite for pet ${pet.petSpecies}:`, err);
+                        // Fallback to placeholder on error
+                        const placeholder = element("div", {
+                            textContent: "🐾",
+                            className: "team-list-item__sprite-placeholder",
+                        });
+                        spriteSlot.appendChild(placeholder);
+                    }
+                } else {
+                    // Pet not found, show placeholder
                     const placeholder = element("div", {
-                        textContent: "🐾",
+                        textContent: "?",
                         className: "team-list-item__sprite-placeholder",
                     });
                     spriteSlot.appendChild(placeholder);
                 }
-            } else {
-                // Pet not found, show placeholder
-                const placeholder = element("div", {
-                    textContent: "?",
-                    className: "team-list-item__sprite-placeholder",
-                });
-                spriteSlot.appendChild(placeholder);
+            } else if (props.onSlotClick) {
+                // Empty slot in manage mode - add SVG plus icon
+                const plusIcon = createPlusIconSvg();
+                spriteSlot.appendChild(plusIcon);
             }
-        } else if (props.onSlotClick) {
-            // Empty slot in manage mode - add SVG plus icon
-            const plusIcon = createPlusIconSvg();
-            spriteSlot.appendChild(plusIcon);
-        }
 
-        spritesContainer.appendChild(spriteSlot);
+            spritesContainer.appendChild(spriteSlot);
+        }
     }
+
+    // Initial render
+    renderSprites();
+
+    // Subscribe to myPets changes and re-render when they change
+    const unsubscribe = Globals.myPets.subscribe(() => {
+        renderSprites();
+    });
 
     // Drag handle (hidden if hideDragHandle is true)
     if (!props.hideDragHandle) {
@@ -201,6 +223,15 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
     container.appendChild(indicator);
     container.appendChild(nameText);
     container.appendChild(spritesContainer);
+
+    // Cleanup subscription when element is removed from DOM
+    const observer = new MutationObserver(() => {
+        if (!document.contains(container)) {
+            observer.disconnect();
+            unsubscribe();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return container;
 }
