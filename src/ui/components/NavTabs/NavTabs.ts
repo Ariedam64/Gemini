@@ -109,24 +109,28 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
     const tabEl = btns.find(b => (b as HTMLButtonElement).dataset.target === id) || btns[0];
     if (!tabEl) return;
 
-    // Get position relative to tabsRow container (not viewport)
-    // This is needed because pill uses transform which is relative to the flex container
-    const x = tabEl.offsetLeft;
-    const w = tabEl.offsetWidth;
+    // Wait for layout to be recalculated (especially during resize)
+    // offsetLeft/offsetWidth are computed values that need the DOM to be laid out
+    requestAnimationFrame(() => {
+      // Get position relative to tabsRow container (not viewport)
+      // This is needed because pill uses transform which is relative to the flex container
+      const x = tabEl.offsetLeft;
+      const w = tabEl.offsetWidth;
 
-    (pill as HTMLDivElement).style.width = `${w}px`;
-    (pill as HTMLDivElement).style.transform = `translateX(${x}px)`;
+      (pill as HTMLDivElement).style.width = `${w}px`;
+      (pill as HTMLDivElement).style.transform = `translateX(${x}px)`;
 
-    // Keep visible in scroll viewport
-    const left = tabsRow.scrollLeft;
-    const viewL = left;
-    const viewR = left + tabsRow.clientWidth;
-    const needL = x - 12;
-    const needR = x + w + 12;
-    if (needL < viewL) tabsRow.scrollTo({ left: needL, behavior: "smooth" });
-    else if (needR > viewR) tabsRow.scrollTo({ left: needR - tabsRow.clientWidth, behavior: "smooth" });
+      // Keep visible in scroll viewport
+      const left = tabsRow.scrollLeft;
+      const viewL = left;
+      const viewR = left + tabsRow.clientWidth;
+      const needL = x - 12;
+      const needR = x + w + 12;
+      if (needL < viewL) tabsRow.scrollTo({ left: needL, behavior: "smooth" });
+      else if (needR > viewR) tabsRow.scrollTo({ left: needR - tabsRow.clientWidth, behavior: "smooth" });
 
-    setTimeout(updateArrowState, 300);
+      setTimeout(updateArrowState, 300);
+    });
   }
 
   let active = initial || (tabs[0]?.id ?? "");
