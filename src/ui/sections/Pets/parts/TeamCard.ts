@@ -115,20 +115,16 @@ function cleanPetData(pet: any): any {
 
 function showInventoryModal(onPetSelected: (petId: string) => void): void {
     const myInventory = getMyInventory();
-    const currentInventoryData = myInventory.get();
+    const myPets = Globals.myPets.get();
 
     // Clean pet data to avoid crashes
-    const cleanedPets = currentInventoryData.items
-        .filter((item): item is InventoryItem & { id: string } =>
-            item.itemType === "Pet" && "id" in item
-        )
-        .map((pet) => cleanPetData(pet));
+    const cleanedPets = myPets.all.map((pet) => cleanPetData(pet));
 
-    // Show custom modal with cleaned inventory
+    // Show custom modal with all pets
     MGCustomModal.show("inventory", {
         items: cleanedPets,
         storages: [],
-        favoritedItemIds: currentInventoryData.favoritedItemIds,
+        favoritedItemIds: [],
     });
 
     // Hide HUD on mobile
