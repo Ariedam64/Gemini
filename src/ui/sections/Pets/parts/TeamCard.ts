@@ -13,7 +13,6 @@ import { MGPetTeam } from "../../../../features/petTeam";
 import { Globals } from "../../../../globals";
 import { Store } from "../../../../atoms/store";
 import { MGCustomModal } from "../../../../modules";
-import { injectTeamCardStyles } from "./teamCard.css";
 import type { PetTeam } from "../../../../features/petTeam";
 
 type ScrollLockRelease = () => void;
@@ -122,18 +121,12 @@ export class TeamCardPart {
     private onPointerUp: (ev: PointerEvent) => void;
     private onPointerCancel: (ev: PointerEvent) => void;
     private options: TeamCardPartOptions;
-    private static stylesInjected = false;
 
     constructor(options: TeamCardPartOptions = {}) {
         this.options = options;
         this.onPointerMove = this.handlePointerMove.bind(this);
         this.onPointerUp = this.handlePointerUp.bind(this);
         this.onPointerCancel = this.handlePointerCancel.bind(this);
-
-        if (!TeamCardPart.stylesInjected) {
-            injectTeamCardStyles();
-            TeamCardPart.stylesInjected = true;
-        }
     }
 
     build(): HTMLDivElement {

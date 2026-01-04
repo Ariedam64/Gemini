@@ -19,7 +19,7 @@ export const teamListItemCss = `
 }
 
 .team-list-item:not(:last-child) {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .team-list-item:hover {

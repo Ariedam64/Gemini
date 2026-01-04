@@ -74,6 +74,7 @@ import { segmentedControlCss } from "../components/SegmentedControl/segmentedCon
 
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
+import { teamCardCss } from "../sections/Pets/parts/teamCard.css";
 
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
@@ -140,6 +141,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [logCss, "log"],
     [segmentedControlCss, "segmentedControl"],
     [settingsCss, "settings"],
+    [teamCardCss, "teamCard"],
   ];
 
   for (let i = 0; i < styleInjections.length; i++) {

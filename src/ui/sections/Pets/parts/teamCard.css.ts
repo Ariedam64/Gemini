@@ -3,7 +3,7 @@
  * Styling for team management UI
  */
 
-export const teamCardStyles = `
+export const teamCardCss = `
 .team-card-wrapper {
     display: flex;
     flex-direction: column;
@@ -15,10 +15,6 @@ export const teamCardStyles = `
     justify-content: center;
     align-items: center;
     width: 100%;
-}
-
-.team-card__mode-container > * {
-    margin: 0 auto;
 }
 
 .team-card__content {
@@ -47,7 +43,6 @@ export const teamCardStyles = `
 .team-card__list-container {
     display: flex;
     flex-direction: column;
-    gap: 6px;
     position: relative;
     width: 100%;
 }
@@ -63,9 +58,3 @@ export const teamCardStyles = `
     width: 100%;
 }
 `;
-
-export function injectTeamCardStyles(): void {
-    const style = document.createElement("style");
-    style.textContent = teamCardStyles;
-    document.head.appendChild(style);
-}
