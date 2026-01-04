@@ -52,11 +52,11 @@ export const checkboxCss = `
 .lg-checkbox:checked::after {
   content: '';
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 10px;
+  transform: translate(-40%, -50%) rotate(45deg);
+  width: 5px;
+  height: 9px;
   border: solid var(--cb-checkmark);
   border-width: 0 2px 2px 0;
   opacity: 1;
@@ -94,14 +94,14 @@ export const checkboxCss = `
 }
 
 .lg-checkbox--sm:checked::after {
-  width: 4px;
-  height: 8px;
+  width: 3px;
+  height: 7px;
   border-width: 0 1.5px 1.5px 0;
 }
 
 .lg-checkbox--lg:checked::after {
-  width: 8px;
-  height: 12px;
+  width: 7px;
+  height: 11px;
   border-width: 0 2.5px 2.5px 0;
 }
 `;
