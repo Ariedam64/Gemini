@@ -345,17 +345,16 @@ export class TeamCardPart {
                 label: "New Team",
                 variant: "primary",
                 onClick: () => {
-                    console.log('[TeamCardPart] New team clicked');
-                    // TODO: Implement create team logic
+                    this.handleCreateTeam();
                 },
             });
 
             const deleteTeamButton = Button({
                 label: "Delete Team",
                 variant: "danger",
+                disabled: this.selectedTeamIds.size === 0,
                 onClick: () => {
-                    console.log('[TeamCardPart] Delete team clicked');
-                    // TODO: Implement delete team logic
+                    this.handleDeleteTeam();
                 },
             });
 
@@ -363,6 +362,38 @@ export class TeamCardPart {
             actionsContainer.appendChild(deleteTeamButton);
             this.teamContent.appendChild(actionsContainer);
         }
+    }
+
+    private handleCreateTeam(): void {
+        console.log('[TeamCardPart] Creating new team...');
+        const success = MGPetTeam.createTeam("New Team", []);
+        if (success) {
+            console.log('[TeamCardPart] Team created successfully');
+            this.render();
+        } else {
+            console.warn('[TeamCardPart] Failed to create team');
+        }
+    }
+
+    private handleDeleteTeam(): void {
+        if (this.selectedTeamIds.size === 0) {
+            console.warn('[TeamCardPart] No teams selected for deletion');
+            return;
+        }
+
+        const teamIdsToDelete = Array.from(this.selectedTeamIds);
+        console.log('[TeamCardPart] Deleting teams:', teamIdsToDelete);
+
+        let deletedCount = 0;
+        for (const teamId of teamIdsToDelete) {
+            const success = MGPetTeam.deleteTeam(teamId);
+            if (success) {
+                deletedCount++;
+            }
+        }
+
+        console.log(`[TeamCardPart] Deleted ${deletedCount}/${teamIdsToDelete.length} teams`);
+        this.render();
     }
 
     private createCheckboxIndicator(teamId: string): CheckboxHandle {
