@@ -109,8 +109,18 @@ function acquireScrollLock(origin: HTMLElement): ScrollLockRelease {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function cleanPetData(pet: any): any {
-    const { location, currentStrength, maxStrength, ...cleaned } = pet;
-    return cleaned;
+    // Convert myPets.all format to inventory format
+    return {
+        id: pet.id,
+        itemType: "Pet",
+        petSpecies: pet.petSpecies,
+        name: pet.name,
+        xp: pet.xp,
+        hunger: pet.hunger,
+        mutations: pet.mutations,
+        targetScale: pet.targetScale,
+        abilities: pet.abilities,
+    };
 }
 
 function showInventoryModal(onPetSelected: (petId: string) => void): void {
