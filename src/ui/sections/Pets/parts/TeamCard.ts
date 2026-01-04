@@ -124,7 +124,7 @@ function cleanPetData(pet: any): any {
     };
 }
 
-function showInventoryModal(onPetSelected: (petId: string) => void): void {
+async function showInventoryModal(onPetSelected: (petId: string) => void): Promise<void> {
     const myInventory = getMyInventory();
     const myPets = Globals.myPets.get();
 
@@ -145,26 +145,30 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
         (hudElement as HTMLElement).style.display = "none";
     }
 
-    // Subscribe to selection changes
-    const unsubscribe = myInventory.subscribeSelection(async (event) => {
-        if (event.current && "id" in event.current.item) {
-            const selectedPetId = event.current.item.id;
-            onPetSelected(selectedPetId);
+    // Subscribe to atom changes directly to detect all index changes
+    const unsubscribeAtom = await Store.subscribe("myPossiblyNoLongerValidSelectedItemIndexAtom", async (index: number | null) => {
+        // Only process when we have a valid index (pet was selected)
+        if (index !== null && index >= 0) {
+            const selectedItem = myInventory.get().selectedItem;
+            if (selectedItem && "id" in selectedItem.item) {
+                const selectedPetId = selectedItem.item.id;
+                onPetSelected(selectedPetId);
 
-            // Cleanup subscription first
-            unsubscribe();
+                // Cleanup subscription first
+                unsubscribeAtom();
 
-            // Reset selected item index immediately to clear selectedItem
-            // Use -1 as intermediate value to force change detection
-            await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
-            await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+                // Reset selected item index immediately to clear selectedItem
+                // Use -1 as intermediate value to force change detection
+                await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
+                await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
-            // Close modal
-            MGCustomModal.close();
+                // Close modal
+                MGCustomModal.close();
 
-            // Show HUD again on mobile
-            if (isMobile && hudElement) {
-                (hudElement as HTMLElement).style.display = "";
+                // Show HUD again on mobile
+                if (isMobile && hudElement) {
+                    (hudElement as HTMLElement).style.display = "";
+                }
             }
         }
     });
@@ -394,7 +398,7 @@ export class TeamCardPart {
                 },
                 onSlotClick: this.teamMode === "manage"
                     ? (slotIndex) => {
-                        this.handleSlotClick(team.id, slotIndex);
+                        void this.handleSlotClick(team.id, slotIndex);
                     }
                     : undefined,
             });
@@ -488,7 +492,7 @@ export class TeamCardPart {
         }
     }
 
-    private handleSlotClick(teamId: string, slotIndex: number): void {
+    private async handleSlotClick(teamId: string, slotIndex: number): Promise<void> {
         const team = MGPetTeam.getTeam(teamId);
         if (!team) return;
 
@@ -509,7 +513,7 @@ export class TeamCardPart {
         this.editingTeamId = teamId;
         this.editingSlotIndex = slotIndex;
 
-        showInventoryModal((selectedPetId) => {
+        await showInventoryModal((selectedPetId) => {
             this.handlePetSelection(selectedPetId);
         });
     }
