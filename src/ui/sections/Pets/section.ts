@@ -5,8 +5,9 @@
 
 import { BaseSection } from "../core/Section";
 import { Card } from "../../components/Card/Card";
-import { Button } from "../../components/Button/Button";
 import { TeamListItem } from "../../components/TeamListItem/TeamListItem";
+import { SegmentedControl, SegmentedControlHandle } from "../../components/SegmentedControl/SegmentedControl";
+import { Button } from "../../components/Button/Button";
 import { element } from "../../styles/helpers";
 import { MGPetTeam } from "../../../features/petTeam";
 import type { PetTeam } from "../../../features/petTeam";
@@ -107,6 +108,11 @@ export class PetsSection extends BaseSection {
     private lastActiveTeamId: string | null = null;
     private dragState: DragState | null = null;
     private listContainer: HTMLElement | null = null;
+    private teamCard: HTMLDivElement | null = null;
+    private modeControl: SegmentedControlHandle | null = null;
+    private modeContainer: HTMLDivElement | null = null;
+    private teamContent: HTMLDivElement | null = null;
+    private teamMode: "overview" | "manage" = "overview";
 
     constructor() {
         super({ id: "tab-pets", label: "Pets" });
@@ -143,6 +149,11 @@ export class PetsSection extends BaseSection {
 
         // Cleanup drag listeners
         this.cleanupDrag();
+
+        if (this.modeControl) {
+            this.modeControl.destroy();
+            this.modeControl = null;
+        }
     }
 
     private cleanupDrag(): void {
@@ -402,52 +413,139 @@ export class PetsSection extends BaseSection {
         if (!section) return;
 
         console.log('[PetsSection] Rendering content...');
-        section.innerHTML = '';
+        const isEnabled = MGPetTeam.isEnabled();
+        console.log('[PetsSection] Feature enabled:', isEnabled);
 
-        section.appendChild(this.createTeamCard());
+        const card = this.createTeamCard();
+        if (section.firstElementChild !== card || section.children.length !== 1) {
+            section.replaceChildren(card);
+        }
+
+        if (!isEnabled) {
+            this.renderDisabledState();
+            console.log('[PetsSection] Content rendered');
+            return;
+        }
+
+        if (this.modeContainer) {
+            this.modeContainer.style.display = "flex";
+        }
+
+        this.ensureModeControl();
+        this.renderTeamContent();
         console.log('[PetsSection] Content rendered');
     }
 
     private createTeamCard(): HTMLDivElement {
+        if (this.teamCard) return this.teamCard;
+
+        const cardWrapper = element("div", {
+            style: {
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+            },
+        });
+
+        this.modeContainer = element("div", {
+            style: {
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+            },
+        });
+        cardWrapper.appendChild(this.modeContainer);
+
+        this.teamContent = element("div", {
+            style: {
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                width: "100%",
+            },
+        });
+        cardWrapper.appendChild(this.teamContent);
+
         const card = Card({
             title: "Team",
             expandable: true,
             defaultExpanded: true,
+        }, cardWrapper);
+
+        this.teamCard = card;
+        return card;
+    }
+
+    private ensureModeControl(): void {
+        if (!this.modeContainer) return;
+
+        if (!this.modeControl) {
+            this.modeControl = SegmentedControl({
+                segments: [
+                    { id: "overview", label: "Overview" },
+                    { id: "manage", label: "Manage" },
+                ],
+                selected: this.teamMode,
+                onChange: (id) => {
+                    this.teamMode = id as "overview" | "manage";
+                    this.renderTeamContent();
+                },
+            });
+
+            this.modeContainer.appendChild(this.modeControl);
+            return;
+        }
+
+        if (this.modeControl.getSelected() !== this.teamMode) {
+            this.modeControl.select(this.teamMode);
+        }
+    }
+
+    private renderDisabledState(): void {
+        if (!this.teamContent) return;
+
+        this.cleanupDrag();
+        this.listContainer = null;
+
+        if (this.modeContainer) {
+            this.modeContainer.style.display = "none";
+        }
+
+        const disabledState = element("div", {
+            style: {
+                textAlign: "center",
+            },
         });
 
-        // Check if feature is enabled
-        const isEnabled = MGPetTeam.isEnabled();
-        console.log('[PetsSection] Feature enabled:', isEnabled);
+        const message = element("div", {
+            textContent: "Pet Team feature is disabled",
+            style: {
+                color: "var(--muted)",
+                fontSize: "14px",
+                marginBottom: "12px",
+            },
+        });
 
-        if (!isEnabled) {
-            const disabledState = element("div", {
-                styles: {
-                    textAlign: "center",
-                },
-            });
+        const enableButton = Button({
+            label: "Enable Feature",
+            onClick: () => {
+                MGPetTeam.setEnabled(true);
+                this.renderContent();
+            },
+        });
 
-            const message = element("div", {
-                textContent: "Pet Team feature is disabled",
-                styles: {
-                    color: "var(--muted)",
-                    fontSize: "14px",
-                    marginBottom: "12px",
-                },
-            });
+        disabledState.appendChild(message);
+        disabledState.appendChild(enableButton);
+        this.teamContent.replaceChildren(disabledState);
+    }
 
-            const enableButton = Button({
-                label: "Enable Feature",
-                onClick: () => {
-                    MGPetTeam.setEnabled(true);
-                    this.renderContent();
-                },
-            });
+    private renderTeamContent(): void {
+        if (!this.teamContent) return;
 
-            disabledState.appendChild(message);
-            disabledState.appendChild(enableButton);
-            card.appendChild(disabledState);
-            return card;
-        }
+        this.cleanupDrag();
+        this.listContainer = null;
+        this.teamContent.replaceChildren();
 
         const teams = MGPetTeam.getAllTeams();
         const activeTeamId = MGPetTeam.getActiveTeamId();
@@ -458,21 +556,23 @@ export class PetsSection extends BaseSection {
         if (teams.length === 0) {
             const emptyState = element("div", {
                 textContent: "No teams yet. Create your first team!",
-                styles: {
+                style: {
                     color: "var(--muted)",
                     textAlign: "center",
                     fontSize: "14px",
                 },
             });
-            card.appendChild(emptyState);
+            this.teamContent.appendChild(emptyState);
+            return;
         } else {
             // Team list container
             this.listContainer = element("div", {
-                styles: {
+                style: {
                     display: "flex",
                     flexDirection: "column",
-                    gap: "12px",
+                    gap: "6px",
                     position: "relative",
+                    width: "100%",
                 },
             });
 
@@ -484,50 +584,55 @@ export class PetsSection extends BaseSection {
                     isActive,
                 });
 
-                // Add pointer event for drag
-                teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
-                    if (ev.button !== 0) return;
-                    this.startDrag(ev, teamItem, team.id);
-                });
+                // Add pointer event for drag (only in overview mode)
+                if (this.teamMode === "overview") {
+                    teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
+                        if (ev.button !== 0) return;
+                        this.startDrag(ev, teamItem, team.id);
+                    });
+                } else {
+                    // In manage mode, disable dragging
+                    teamItem.style.cursor = "default";
+                }
 
                 this.listContainer!.appendChild(teamItem);
             });
 
-            card.appendChild(this.listContainer);
+            this.teamContent.appendChild(this.listContainer);
+
+            // Action buttons in manage mode
+            if (this.teamMode === "manage") {
+                const actionsContainer = element("div", {
+                    style: {
+                        display: "flex",
+                        gap: "12px",
+                        justifyContent: "center",
+                        width: "100%",
+                    },
+                });
+
+                const newTeamButton = Button({
+                    label: "New Team",
+                    variant: "primary",
+                    onClick: () => {
+                        console.log('[PetsSection] New team clicked');
+                        // TODO: Implement create team logic
+                    },
+                });
+
+                const deleteTeamButton = Button({
+                    label: "Delete Team",
+                    variant: "danger",
+                    onClick: () => {
+                        console.log('[PetsSection] Delete team clicked');
+                        // TODO: Implement delete team logic
+                    },
+                });
+
+                actionsContainer.appendChild(newTeamButton);
+                actionsContainer.appendChild(deleteTeamButton);
+                this.teamContent.appendChild(actionsContainer);
+            }
         }
-
-        // Action buttons
-        const actionsContainer = element("div", {
-            styles: {
-                display: "flex",
-                gap: "8px",
-                marginTop: "16px",
-                paddingTop: "16px",
-                borderTop: "1px solid var(--border)",
-            },
-        });
-
-        const createButton = Button({
-            label: "+ Create New Team",
-            onClick: () => {
-                console.log("[PetsSection] Create team clicked (not implemented yet)");
-            },
-            disabled: true,
-        });
-
-        const deleteButton = Button({
-            label: "🗑️ Delete",
-            onClick: () => {
-                console.log("[PetsSection] Delete team clicked (not implemented yet)");
-            },
-            variant: "danger",
-            disabled: true,
-        });
-
-        actionsContainer.appendChild(createButton);
-        actionsContainer.appendChild(deleteButton);
-        card.appendChild(actionsContainer);
-
-        return card;
     }
 }

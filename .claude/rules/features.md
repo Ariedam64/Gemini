@@ -115,26 +115,106 @@ export function destroy(): void {
 - File pattern: `src/features/featureName/` (camelCase)
 - Storage key: `feature:featureName:*`
 
-## 6) Public API
+## 6) Public API & Exposure
 
-- Features are exposed via `window.Gemini.Features.*` (separate from `Modules`)
-- Keep the API minimal (façade pattern)
-- Export from `src/features/index.ts`
+Features MUST be exposed in two places:
 
-Example:
+### A) Export from `src/features/index.ts`
+```typescript
+// src/features/index.ts
+export { MGMyFeature } from './myFeature';
+export type { MyFeature } from './myFeature';
+```
+
+### B) Expose in `src/api/index.ts`
+```typescript
+// src/api/index.ts
+import { MGMyFeature } from "../features/myFeature";
+
+export const GeminiAPI = {
+  // ...
+  Features: {
+    // ... other features
+    MyFeature: MGMyFeature,
+  },
+};
+```
+
+### C) Initialize in `src/ui/loader/bootstrap.ts`
+```typescript
+// src/ui/loader/bootstrap.ts
+import { MGMyFeature } from "../../features/myFeature";
+
+export function initFeatures(loader: LoaderController): void {
+  const features = [
+    // ... other features
+    { name: "MyFeature", init: MGMyFeature.init.bind(MGMyFeature) },
+  ];
+  // ...
+}
+```
+
+### Feature module structure
+
+**IMPORTANT: Keep the public API minimal and user-focused**
+
+The API exposed via `window.Gemini.Features.*` should contain ONLY essential functions that users need. Internal helpers, validation functions, and constants should NOT be exposed.
+
+**Good example (minimal API):**
 ```typescript
 // index.ts
 export const MGMyFeature = {
+    // Lifecycle
     init,
     destroy,
+
+    // Configuration
     isEnabled,
     setEnabled,
-    getConfig,
-    updateConfig,
+
+    // Core functionality (only essential user-facing functions)
+    createItem,
+    deleteItem,
+    getItem,
+    getAllItems,
 };
 
-export { MyFeature } from './types';
+export type { MyFeature, MyFeatureConfig } from './types';
 ```
+
+**Bad example (too verbose):**
+```typescript
+// ❌ DON'T expose everything
+export const MGMyFeature = {
+    init,
+    destroy,
+    isReady,
+    isEnabled,
+    setEnabled,
+    loadConfig,
+    saveConfig,
+    updateConfig,
+    DEFAULT_CONFIG,      // ❌ Internal constant
+    STORAGE_KEY,         // ❌ Internal constant
+    MAX_ITEMS,           // ❌ Internal constant
+    createItem,
+    deleteItem,
+    getItem,
+    getAllItems,
+    validateItem,        // ❌ Internal validation
+    isItemUnique,        // ❌ Internal helper
+    normalizeItem,       // ❌ Internal helper
+};
+```
+
+**Guidelines:**
+- Only expose functions users will actually call
+- Hide internal helpers (validation, normalization, etc.)
+- Hide constants (MAX_*, STORAGE_KEY, DEFAULT_CONFIG, etc.)
+- Hide low-level state operations (loadConfig, saveConfig, updateConfig)
+- Keep it simple: lifecycle + config + core features
+
+The feature will be accessible via `window.Gemini.Features.MyFeature`
 
 ## 7) Side effects & cleanup
 

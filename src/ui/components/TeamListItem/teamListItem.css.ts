@@ -3,7 +3,7 @@ export const teamListItemCss = `
 .team-list-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 8px 12px;
   background-color: var(--soft);
   border: 1px solid var(--border);
@@ -14,7 +14,7 @@ export const teamListItemCss = `
 }
 
 .team-list-item:not(:last-child) {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .team-list-item:hover {

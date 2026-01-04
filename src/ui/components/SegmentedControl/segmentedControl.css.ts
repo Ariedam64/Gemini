@@ -17,16 +17,17 @@ export const segmentedControlCss = `
   border: 1px solid var(--border);
   border-radius: 10px;
 
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 /* Animated indicator background */
 .sg-indicator {
   position: absolute;
   top: 4px;
-  left: 4px;
+  left: 0;
   height: calc(100% - 8px);
   border-radius: 8px;
+  width: 70px;
 
   background: linear-gradient(
     135deg,
@@ -36,11 +37,12 @@ export const segmentedControlCss = `
 
   box-shadow: inset 0 1px 2px color-mix(in oklab, var(--accent) 20%, transparent);
 
-  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   pointer-events: none;
   z-index: 0;
+  will-change: transform, width;
 }
 
 /* Individual segment buttons */
@@ -53,23 +55,23 @@ export const segmentedControlCss = `
   justify-content: center;
   gap: 6px;
 
-  padding: 8px 14px;
-  min-height: 36px;
-  min-width: 60px;
+  padding: 7px 16px;
+  min-height: 32px;
+  min-width: 70px;
 
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
 
   color: var(--fg);
   font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.2px;
-  line-height: 1;
+  letter-spacing: 0px;
+  line-height: 1.2;
   white-space: nowrap;
 
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -112,9 +114,10 @@ export const segmentedControlCss = `
 
 /* Size variations */
 .sg--sm .sg-btn {
-  padding: 6px 10px;
-  min-height: 32px;
+  padding: 5px 12px;
+  min-height: 28px;
   font-size: 12px;
+  min-width: 60px;
 }
 
 .sg--sm .sg-container {
@@ -127,19 +130,20 @@ export const segmentedControlCss = `
 }
 
 .sg--lg .sg-btn {
-  padding: 12px 18px;
-  min-height: 44px;
+  padding: 9px 18px;
+  min-height: 36px;
   font-size: 14px;
   gap: 8px;
+  min-width: 80px;
 }
 
 .sg--lg .sg-container {
-  padding: 6px;
+  padding: 4px;
 }
 
 .sg--lg .sg-indicator {
-  top: 6px;
-  height: calc(100% - 12px);
+  top: 4px;
+  height: calc(100% - 8px);
 }
 
 /* Full width mode */

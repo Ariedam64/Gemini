@@ -93,11 +93,13 @@ export function SegmentedControl(opts: SegmentedControlOptions): SegmentedContro
     if (!activeBtn) return;
 
     requestAnimationFrame(() => {
+      const ind = indicator as HTMLDivElement;
       const x = activeBtn.offsetLeft;
       const w = activeBtn.offsetWidth;
 
-      (indicator as HTMLDivElement).style.width = `${w}px`;
-      (indicator as HTMLDivElement).style.transform = `translateX(${x}px)`;
+      // Use transform for smooth animation from current position
+      ind.style.width = `${w}px`;
+      ind.style.transform = `translateX(${x}px)`;
     });
   }
 
@@ -180,6 +182,16 @@ export function SegmentedControl(opts: SegmentedControlOptions): SegmentedContro
 
   // Initial render
   reflect();
+
+  // Use queueMicrotask like NavTabs does - this ensures proper timing
+  queueMicrotask(() => {
+    const activeBtn = buttons.find((b) => b.id === _selected);
+    if (activeBtn) {
+      const ind = indicator as HTMLDivElement;
+      ind.style.width = `${activeBtn.offsetWidth}px`;
+      ind.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    }
+  });
 
   // Expose API on root element
   const handle = root as SegmentedControlHandle;

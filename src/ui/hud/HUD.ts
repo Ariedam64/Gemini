@@ -69,6 +69,7 @@ import { sliderCss } from "../components/Slider/slider.css";
 import { reorderableListCss } from "../components/ReorderableList/reorderableList.css";
 import { colorPickerCss } from "../components/ColorPicker/colorPicker.css";
 import { logCss } from "../components/Log/log.css";
+import { segmentedControlCss } from "../components/SegmentedControl/segmentedControl.css";
 
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
@@ -135,6 +136,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [reorderableListCss, "reorderableList"],
     [colorPickerCss, "colorPicker"],
     [logCss, "log"],
+    [segmentedControlCss, "segmentedControl"],
     [settingsCss, "settings"],
   ];
 
