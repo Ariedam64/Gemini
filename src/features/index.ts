@@ -7,6 +7,8 @@ export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
 export { MGAchievements } from "./achievements";
 export { MGCalculators } from "./calculators";
 export { MGAntiAfk } from "./antiAfk";
+export { MGPetTeam } from "./petTeam";
+export type { PetTeam } from "./petTeam";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

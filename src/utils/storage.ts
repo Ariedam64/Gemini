@@ -62,6 +62,8 @@ export const FEATURE_KEYS = {
     ANTI_AFK: 'feature:antiAfk:config',
     /** Master feature settings config */
     CONFIG: 'feature:config',
+    /** Pet team feature config */
+    PET_TEAM: 'feature:petTeam:config',
 } as const;
 
 /** Keys for development/debug purposes */

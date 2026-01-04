@@ -21,6 +21,7 @@ import { MGJournalChecker } from "../features/journalChecker";
 import { MGBulkFavorite } from "../features/bulkFavorite";
 import { MGAchievements } from "../features/achievements";
 import { MGCalculators } from "../features/calculators";
+import { MGPetTeam } from "../features/petTeam";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -56,6 +57,7 @@ export const GeminiAPI = {
     AntiAfk: MGAntiAfk,
     Calculators: MGCalculators,
     Pets: MGPets,
+    PetTeam: MGPetTeam,
   },
 
   WebSocket: {

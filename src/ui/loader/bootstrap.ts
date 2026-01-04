@@ -14,6 +14,7 @@ import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
 import { migrateStorageKeys } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
+import { MGPetTeam } from "../../features/petTeam";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -208,6 +209,7 @@ export function initFeatures(loader: LoaderController): void {
 
   const features = [
     { name: "AntiAfk", init: MGAntiAfk.init.bind(MGAntiAfk) },
+    { name: "PetTeam", init: MGPetTeam.init.bind(MGPetTeam) },
   ];
 
   let initializedCount = 0;

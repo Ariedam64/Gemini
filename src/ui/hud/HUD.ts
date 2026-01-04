@@ -62,6 +62,7 @@ import { searchBarCss } from "../components/SearchBar/searchBar.css";
 import { selectCss } from "../components/Select/select.css";
 import { switchCss } from "../components/Switch/switch.css";
 import { tableCss } from "../components/Table/table.css";
+import { teamListItemCss } from "../components/TeamListItem/teamListItem.css";
 import { timeRangePickerCss } from "../components/TimeRangePicker/timeRangePicker.css";
 import { tooltipCss } from "../components/Tooltip/tooltip.css";
 import { sliderCss } from "../components/Slider/slider.css";
@@ -127,6 +128,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [selectCss, "select"],
     [switchCss, "switch"],
     [tableCss, "table"],
+    [teamListItemCss, "teamListItem"],
     [timeRangePickerCss, "timeRangePicker"],
     [tooltipCss, "tooltip"],
     [sliderCss, "slider"],
