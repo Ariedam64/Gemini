@@ -14,6 +14,7 @@ import type { PetTeam } from "../../../../features/petTeam";
 import { Globals } from "../../../../globals";
 import { getMyInventory } from "../../../../globals/variables/myInventory";
 import { MGCustomModal } from "../../../../modules/customModal";
+import { Store } from "../../../../atoms";
 import type { InventoryItem } from "../../../../atoms/types";
 
 type ScrollLockRelease = () => void;
@@ -126,6 +127,9 @@ function cleanPetData(pet: any): any {
 function showInventoryModal(onPetSelected: (petId: string) => void): void {
     const myInventory = getMyInventory();
     const myPets = Globals.myPets.get();
+
+    // Reset selected item index before opening inventory
+    Store.set("myValidatedSelectedItemIndexAtom", null);
 
     // Clean pet data to avoid crashes
     const cleanedPets = myPets.all.map((pet) => cleanPetData(pet));

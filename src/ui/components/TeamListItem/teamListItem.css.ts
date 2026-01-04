@@ -117,43 +117,34 @@ export const teamListItemCss = `
 
 /* Manage mode - filled slot (red for removal) */
 .team-list-item__sprite-slot--filled {
-  border: 1.5px solid #ef4444;
-  background: color-mix(in oklab, #ef4444 15%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 20%, transparent);
+  border: 1.5px solid #f87171;
+  background: color-mix(in oklab, #f87171 8%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #f87171 10%, transparent);
 }
 
 .team-list-item__sprite-slot--filled:hover {
-  border-color: #dc2626;
-  background: color-mix(in oklab, #ef4444 25%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 30%, transparent);
+  border-color: #ef4444;
+  background: color-mix(in oklab, #f87171 12%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #f87171 15%, transparent);
 }
 
 /* Manage mode - empty slot (green for addition) */
 .team-list-item__sprite-slot--empty {
-  border: 1.5px solid #22c55e;
-  background: color-mix(in oklab, #22c55e 15%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #22c55e 20%, transparent);
+  border: 1.5px solid #86efac;
+  background: color-mix(in oklab, #86efac 8%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #86efac 10%, transparent);
 }
 
-.team-list-item__sprite-slot--empty::before {
-  content: "+";
-  font-size: 18px;
-  font-weight: bold;
-  color: white;
-  line-height: 1;
-  text-shadow: 0 1px 3px color-mix(in oklab, #000 40%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  position: absolute;
+.team-list-item__sprite-slot--empty svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .team-list-item__sprite-slot--empty:hover {
-  border-color: #16a34a;
-  background: color-mix(in oklab, #22c55e 25%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #22c55e 30%, transparent);
+  border-color: #4ade80;
+  background: color-mix(in oklab, #86efac 12%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #86efac 15%, transparent);
 }
 
 .team-list-item__sprite-placeholder {

@@ -9,6 +9,34 @@ import { MGSprite } from "../../../modules/sprite";
 import { Globals } from "../../../globals";
 import { Input } from "../Input/Input";
 
+function createPlusIconSvg(): SVGSVGElement {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "white");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+
+    const horizontal = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    horizontal.setAttribute("x1", "12");
+    horizontal.setAttribute("y1", "5");
+    horizontal.setAttribute("x2", "12");
+    horizontal.setAttribute("y2", "19");
+
+    const vertical = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    vertical.setAttribute("x1", "5");
+    vertical.setAttribute("y1", "12");
+    vertical.setAttribute("x2", "19");
+    vertical.setAttribute("y2", "12");
+
+    svg.appendChild(horizontal);
+    svg.appendChild(vertical);
+
+    return svg;
+}
+
 function createNameInput(currentName: string, onNameChange?: (newName: string) => void): HTMLDivElement {
     const originalName = currentName;
 
@@ -151,6 +179,10 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                 });
                 spriteSlot.appendChild(placeholder);
             }
+        } else if (props.onSlotClick) {
+            // Empty slot in manage mode - add SVG plus icon
+            const plusIcon = createPlusIconSvg();
+            spriteSlot.appendChild(plusIcon);
         }
 
         spritesContainer.appendChild(spriteSlot);
