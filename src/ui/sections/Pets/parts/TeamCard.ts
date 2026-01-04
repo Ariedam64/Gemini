@@ -151,6 +151,12 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
             const selectedPetId = event.current.item.id;
             onPetSelected(selectedPetId);
 
+            // Cleanup subscription first
+            unsubscribe();
+
+            // Reset selected item index immediately to clear selectedItem
+            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+
             // Close modal
             MGCustomModal.close();
 
@@ -158,14 +164,6 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
             if (isMobile && hudElement) {
                 (hudElement as HTMLElement).style.display = "";
             }
-
-            // Cleanup subscription
-            unsubscribe();
-
-            // Reset selected item index after selection (defer to allow re-selection)
-            queueMicrotask(() => {
-                Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
-            });
         }
     });
 }
