@@ -128,9 +128,6 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
     const myInventory = getMyInventory();
     const myPets = Globals.myPets.get();
 
-    // Reset selected item index before opening inventory
-    Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
-
     // Clean pet data to avoid crashes
     const cleanedPets = myPets.all.map((pet) => cleanPetData(pet));
 
@@ -162,11 +159,13 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
                 (hudElement as HTMLElement).style.display = "";
             }
 
-            // Reset selected item index after selection
-            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
-
             // Cleanup subscription
             unsubscribe();
+
+            // Reset selected item index after selection (defer to allow re-selection)
+            queueMicrotask(() => {
+                Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+            });
         }
     });
 }
