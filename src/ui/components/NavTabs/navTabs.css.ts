@@ -55,33 +55,48 @@ export const navTabsCss = `
   flex: 0 0 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
-  background: color-mix(in oklab, var(--soft) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--soft) 75%, transparent) 0%,
+    color-mix(in oklab, var(--soft) 65%, transparent) 100%
+  );
   color: var(--fg);
-  font-size: 18px;
-  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
 
-  transition: all .15s ease;
+  transition: all .2s cubic-bezier(.2,.8,.2,1);
   opacity: 1;
+  box-shadow: 0 2px 6px color-mix(in oklab, var(--shadow) 12%, transparent);
+}
+
+.lg-tabs-arrow svg{
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .lg-tabs-arrow:hover:not(.disabled){
-  background: color-mix(in oklab, var(--soft) 85%, transparent);
-  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--soft) 88%, transparent) 0%,
+    color-mix(in oklab, var(--soft) 78%, transparent) 100%
+  );
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--accent) 25%, transparent);
+  transform: translateY(-2px);
 }
 
 .lg-tabs-arrow:active:not(.disabled){
-  transform: scale(.95);
+  transform: scale(.96) translateY(0);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--shadow) 20%, transparent);
 }
 
 .lg-tabs-arrow.disabled{
-  opacity: .4;
+  opacity: .35;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Tab button */
@@ -130,7 +145,12 @@ export const navTabsCss = `
     gap: 12px;
   }
   .lg-tabs-wrapper{ gap: 6px; }
-  .lg-tabs-arrow{ flex: 0 0 28px; height: 28px; font-size: 16px; }
+  .lg-tabs-arrow{
+    flex: 0 0 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+  .lg-tabs-arrow svg{ width: 15px; height: 15px; }
   .lg-tabs{ padding: 5px; }
   .lg-tab{ padding: 9px 14px; font-size: 13.5px; }
   .lg-pill{ top: 5px; height: calc(100% - 10px); }
@@ -149,10 +169,10 @@ export const navTabsCss = `
   .lg-tabs-arrow{
     flex: 0 0 26px;
     height: 26px;
-    font-size: 15px;
     border-radius: 6px;
     /* Arrows visible but subtle on mobile for users who need them */
   }
+  .lg-tabs-arrow svg{ width: 14px; height: 14px; }
   .lg-tabs{
     border-radius: 14px;
     padding: 4px;
@@ -172,11 +192,12 @@ export const navTabsCss = `
 
 @media (max-width: 360px){
   .lg-tabs-arrow{
-    flex: 0 0 22px;
-    height: 22px;
-    font-size: 13px;
-    opacity: .6; /* Even more subtle on tiny screens */
+    flex: 0 0 24px;
+    height: 24px;
+    border-radius: 5px;
   }
+  .lg-tabs-arrow svg{ width: 12px; height: 12px; }
+  .lg-tabs-arrow.disabled{ opacity: .4; }
   .lg-tab{ padding: 6px 10px; font-size: 12px; }
 }
 `;
