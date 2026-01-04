@@ -128,11 +128,11 @@ export const teamListItemCss = `
   box-shadow: inset 0 2px 4px color-mix(in oklab, #f87171 15%, transparent);
 }
 
-/* Manage mode - empty slot (green for addition) */
+/* Manage mode - empty slot (accent color for addition) */
 .team-list-item__sprite-slot--empty {
-  border: 1.5px solid #86efac;
-  background: color-mix(in oklab, #86efac 8%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #86efac 10%, transparent);
+  border: 1.5px solid var(--accent);
+  background: color-mix(in oklab, var(--accent) 8%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, var(--accent) 10%, transparent);
 }
 
 .team-list-item__sprite-slot--empty svg {
@@ -142,9 +142,10 @@ export const teamListItemCss = `
 }
 
 .team-list-item__sprite-slot--empty:hover {
-  border-color: #4ade80;
-  background: color-mix(in oklab, #86efac 12%, var(--bg));
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #86efac 15%, transparent);
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 12%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, var(--accent) 15%, transparent);
+  opacity: 0.8;
 }
 
 .team-list-item__sprite-placeholder {
