@@ -156,33 +156,33 @@ export const navTabsCss = `
   .lg-pill{ top: 5px; height: calc(100% - 10px); }
 }
 
-/* Mobile: smaller or hide arrows, enable swipe */
+/* Mobile: hide arrows, enable swipe with better feedback */
 @media (max-width: 480px){
   .lg-tabbar{
     padding: 12px max(10px, var(--inset-l)) 12px max(10px, var(--inset-r));
     gap: 12px;
   }
   .lg-tabs-wrapper{
-    gap: 4px;
-    /* Hide arrows on mobile unless scroll is needed, but keep element in DOM for functionality */
+    gap: 0;
   }
+  /* Hide arrow buttons on mobile completely */
   .lg-tabs-arrow{
-    flex: 0 0 26px;
-    height: 26px;
-    border-radius: 6px;
-    /* Arrows visible but subtle on mobile for users who need them */
+    display: none !important;
   }
-  .lg-tabs-arrow svg{ width: 14px; height: 14px; }
   .lg-tabs{
     border-radius: 14px;
     padding: 4px;
-    /* Enable native touch scrolling behavior for better mobile UX */
+    /* Enable native touch scrolling behavior with momentum */
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: auto; /* Faster feedback on mobile */
+    scroll-behavior: smooth;
+    /* Improve touch responsiveness */
+    touch-action: pan-x;
   }
   .lg-tab{
     padding: 8px 12px;
     font-size: 13px;
+    /* Slightly larger touch target on mobile */
+    min-width: 60px;
   }
   .lg-pill{
     top: 4px;
@@ -191,13 +191,10 @@ export const navTabsCss = `
 }
 
 @media (max-width: 360px){
-  .lg-tabs-arrow{
-    flex: 0 0 24px;
-    height: 24px;
-    border-radius: 5px;
+  .lg-tab{
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 50px;
   }
-  .lg-tabs-arrow svg{ width: 12px; height: 12px; }
-  .lg-tabs-arrow.disabled{ opacity: .4; }
-  .lg-tab{ padding: 6px 10px; font-size: 12px; }
 }
 `;

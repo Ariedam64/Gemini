@@ -92,12 +92,18 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
     }
   }, { passive: false });
 
-  // Touch swipe support for mobile
+  // Track if we're in a touch scroll
+  let isTouchScrolling = false;
+  let lastScrollLeft = 0;
+
+  // Touch swipe support for mobile with better animation
   tabsRow.addEventListener("touchstart", (e: TouchEvent) => {
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
     isVerticalScroll = false;
+    isTouchScrolling = false;
+    lastScrollLeft = tabsRow.scrollLeft;
   }, { passive: true });
 
   tabsRow.addEventListener("touchmove", (e: TouchEvent) => {
@@ -107,16 +113,26 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
     const dx = touch.clientX - touchStartX;
     const dy = touch.clientY - touchStartY;
 
+    // Detect if this is a vertical scroll
     if (Math.abs(dy) > Math.abs(dx)) {
       isVerticalScroll = true;
       return;
     }
 
+    // Only start scroll prevention after threshold
     if (Math.abs(dx) > SWIPE_THRESHOLD) {
+      isTouchScrolling = true;
       e.preventDefault();
-      tabsRow.scrollLeft -= dx * 0.5;
+      // Direct drag with smooth interpolation
+      tabsRow.scrollLeft = lastScrollLeft - dx;
     }
   }, { passive: false });
+
+  // Handle touch end with momentum-like effect
+  tabsRow.addEventListener("touchend", () => {
+    isTouchScrolling = false;
+    updateArrowState();
+  }, { passive: true });
 
   // Update arrows on scroll
   tabsRow.addEventListener("scroll", updateArrowState, { passive: true });
