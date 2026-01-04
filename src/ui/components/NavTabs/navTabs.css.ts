@@ -1,5 +1,5 @@
 // ui/components/NavTabs/navTabs.css.ts
-// Styles for the tab bar + animated pill
+// Styles for the tab bar + animated pill + scroll arrows
 export const navTabsCss = `
 /* Bar container (provided by the HUD, also useful when NavTabs is standalone) */
 .lg-tabbar{
@@ -14,6 +14,16 @@ export const navTabsCss = `
   transition: background-color .28s ease, border-color .28s ease;
 }
 
+/* Wrapper containing arrows + tabs container */
+.lg-tabs-wrapper{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
 /* Ribbon containing the tabs */
 .lg-tabs{
   position: relative;
@@ -22,7 +32,7 @@ export const navTabsCss = `
   gap: 2px;
 
   min-width: 0;       /* allow shrink */
-  width: 100%;
+  flex: 1 1 auto;
   max-width: none;
 
   background-color: var(--tab-bg);
@@ -32,11 +42,47 @@ export const navTabsCss = `
 
   box-shadow: 0 4px 12px color-mix(in oklab, var(--shadow) 32%, transparent);
 
-  overflow: auto hidden;   /* horizontal scroll if too many tabs */
+  overflow: hidden;
   scrollbar-width: none;
   transition: background-color .28s ease, color .28s ease;
+  scroll-behavior: smooth;
 }
 .lg-tabs::-webkit-scrollbar{ display:none; }
+
+/* Scroll arrow buttons */
+.lg-tabs-arrow{
+  position: relative;
+  flex: 0 0 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  background: color-mix(in oklab, var(--soft) 70%, transparent);
+  color: var(--fg);
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  transition: all .15s ease;
+  opacity: 1;
+}
+
+.lg-tabs-arrow:hover:not(.disabled){
+  background: color-mix(in oklab, var(--soft) 85%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+}
+
+.lg-tabs-arrow:active:not(.disabled){
+  transform: scale(.95);
+}
+
+.lg-tabs-arrow.disabled{
+  opacity: .4;
+  cursor: not-allowed;
+}
 
 /* Tab button */
 .lg-tab{
@@ -83,19 +129,36 @@ export const navTabsCss = `
     padding: 8px max(8px, var(--inset-l)) 8px max(8px, var(--inset-r));
     gap: 12px;
   }
+  .lg-tabs-wrapper{ gap: 6px; }
+  .lg-tabs-arrow{ flex: 0 0 28px; height: 28px; font-size: 16px; }
   .lg-tabs{ padding: 5px; }
   .lg-tab{ padding: 9px 14px; font-size: 13.5px; }
   .lg-pill{ top: 5px; height: calc(100% - 10px); }
 }
 
+/* Mobile: smaller or hide arrows, enable swipe */
 @media (max-width: 480px){
   .lg-tabbar{
     padding: 12px max(10px, var(--inset-l)) 12px max(10px, var(--inset-r));
     gap: 12px;
   }
+  .lg-tabs-wrapper{
+    gap: 4px;
+    /* Hide arrows on mobile unless scroll is needed, but keep element in DOM for functionality */
+  }
+  .lg-tabs-arrow{
+    flex: 0 0 26px;
+    height: 26px;
+    font-size: 15px;
+    border-radius: 6px;
+    /* Arrows visible but subtle on mobile for users who need them */
+  }
   .lg-tabs{
     border-radius: 14px;
     padding: 4px;
+    /* Enable native touch scrolling behavior for better mobile UX */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto; /* Faster feedback on mobile */
   }
   .lg-tab{
     padding: 8px 12px;
@@ -108,6 +171,12 @@ export const navTabsCss = `
 }
 
 @media (max-width: 360px){
+  .lg-tabs-arrow{
+    flex: 0 0 22px;
+    height: 22px;
+    font-size: 13px;
+    opacity: .6; /* Even more subtle on tiny screens */
+  }
   .lg-tab{ padding: 6px 10px; font-size: 12px; }
 }
 `;
