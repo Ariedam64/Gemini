@@ -97,8 +97,15 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
     // Render pet sprites or empty slots
     for (let i = 0; i < 3; i++) {
         const petId = props.team.petIds[i];
+        const hasPet = petId && petId !== "";
         const spriteSlot = element("div", {
-            className: "team-list-item__sprite-slot",
+            className: `team-list-item__sprite-slot ${
+                props.onSlotClick
+                    ? hasPet
+                        ? "team-list-item__sprite-slot--filled"
+                        : "team-list-item__sprite-slot--empty"
+                    : ""
+            }`,
         });
 
         // Add click handler for slot editing
@@ -109,7 +116,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             });
         }
 
-        if (petId && petId !== "") {
+        if (hasPet) {
             // Find pet in myPets
             const pet = myPets.all.find((p) => p.id === petId);
 

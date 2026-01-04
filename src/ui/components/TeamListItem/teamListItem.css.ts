@@ -112,6 +112,42 @@ export const teamListItemCss = `
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Manage mode - filled slot (red for removal) */
+.team-list-item__sprite-slot--filled {
+  border: 2px solid #ef4444;
+  background: color-mix(in oklab, #ef4444 15%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 20%, transparent);
+}
+
+.team-list-item__sprite-slot--filled:hover {
+  border-color: #dc2626;
+  background: color-mix(in oklab, #ef4444 25%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 30%, transparent);
+}
+
+/* Manage mode - empty slot (green for addition) */
+.team-list-item__sprite-slot--empty {
+  border: 2px solid #22c55e;
+  background: color-mix(in oklab, #22c55e 15%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #22c55e 20%, transparent);
+}
+
+.team-list-item__sprite-slot--empty::before {
+  content: "+";
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  line-height: 1;
+  text-shadow: 0 1px 3px color-mix(in oklab, #000 40%, transparent);
+}
+
+.team-list-item__sprite-slot--empty:hover {
+  border-color: #16a34a;
+  background: color-mix(in oklab, #22c55e 25%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #22c55e 30%, transparent);
 }
 
 .team-list-item__sprite-placeholder {
