@@ -306,9 +306,14 @@ export class TeamCardPart {
 
         teams.forEach((team: PetTeam) => {
             const isActive = activeTeamId === team.id;
+            const customIndicator = this.teamMode === "manage"
+                ? this.createCheckboxIndicator(team.id)
+                : undefined;
+
             const teamItem = TeamListItem({
                 team,
                 isActive,
+                customIndicator,
             });
 
             if (this.teamMode === "overview") {
@@ -316,12 +321,11 @@ export class TeamCardPart {
                     if (ev.button !== 0) return;
                     this.startDrag(ev, teamItem, team.id);
                 });
-                this.listContainer!.appendChild(teamItem);
             } else {
                 teamItem.style.cursor = "default";
-                const wrapper = this.createTeamItemWrapper(teamItem, team.id);
-                this.listContainer!.appendChild(wrapper);
             }
+
+            this.listContainer!.appendChild(teamItem);
         });
 
         this.teamContent.appendChild(this.listContainer);
@@ -360,7 +364,7 @@ export class TeamCardPart {
         }
     }
 
-    private createTeamItemWrapper(teamItem: HTMLDivElement, teamId: string): HTMLDivElement {
+    private createCheckboxIndicator(teamId: string): HTMLDivElement {
         const checkboxHandle = Checkbox({
             checked: this.selectedTeamIds.has(teamId),
             size: "md",
@@ -376,19 +380,7 @@ export class TeamCardPart {
 
         this.teamCheckboxes.set(teamId, checkboxHandle);
 
-        const wrapper = element("div", {
-            style: {
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-            },
-        });
-
-        wrapper.appendChild(checkboxHandle.root);
-        wrapper.appendChild(teamItem);
-
-        return wrapper;
+        return checkboxHandle.root;
     }
 
     private cleanupDrag(): void {

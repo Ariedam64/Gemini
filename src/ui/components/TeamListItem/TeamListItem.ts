@@ -11,6 +11,7 @@ import { Globals } from "../../../globals";
 export interface TeamListItemProps {
     team: PetTeam;
     isActive: boolean;
+    customIndicator?: HTMLElement;
 }
 
 export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
@@ -18,8 +19,8 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
         className: "team-list-item",
     });
 
-    // Active indicator (green dot or gray circle)
-    const indicator = element("div", {
+    // Active indicator (green dot or gray circle) or custom indicator
+    const indicator = props.customIndicator ?? element("div", {
         className: `team-list-item__indicator ${
             props.isActive
                 ? "team-list-item__indicator--active"
