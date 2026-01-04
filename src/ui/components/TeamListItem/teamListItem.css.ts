@@ -117,7 +117,7 @@ export const teamListItemCss = `
 
 /* Manage mode - filled slot (red for removal) */
 .team-list-item__sprite-slot--filled {
-  border: 2px solid #ef4444;
+  border: 1.5px solid #ef4444;
   background: color-mix(in oklab, #ef4444 15%, var(--bg));
   box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 20%, transparent);
 }
@@ -130,18 +130,24 @@ export const teamListItemCss = `
 
 /* Manage mode - empty slot (green for addition) */
 .team-list-item__sprite-slot--empty {
-  border: 2px solid #22c55e;
+  border: 1.5px solid #22c55e;
   background: color-mix(in oklab, #22c55e 15%, var(--bg));
   box-shadow: inset 0 2px 4px color-mix(in oklab, #22c55e 20%, transparent);
 }
 
 .team-list-item__sprite-slot--empty::before {
   content: "+";
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   color: white;
   line-height: 1;
   text-shadow: 0 1px 3px color-mix(in oklab, #000 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
 }
 
 .team-list-item__sprite-slot--empty:hover {
