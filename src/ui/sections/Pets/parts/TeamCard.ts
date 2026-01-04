@@ -317,9 +317,11 @@ export class TeamCardPart {
                 customIndicator: checkboxHandle?.root,
             });
 
-            // Drag is allowed in both modes
+            // Drag is allowed in both modes (but not on checkbox)
             teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
                 if (ev.button !== 0) return;
+                // Don't start drag if clicking on the checkbox
+                if (checkboxHandle && ev.target === checkboxHandle.input) return;
                 this.startDrag(ev, teamItem, team.id);
             });
 
