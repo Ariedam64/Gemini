@@ -618,8 +618,10 @@
     position: fixed;
     top: 0;
     right: 0;
+    bottom: 0;
     width: var(--w);
     max-width: 100vw;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background-color: var(--bg);
