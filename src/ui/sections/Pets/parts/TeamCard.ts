@@ -323,16 +323,6 @@ export class TeamCardPart {
                 this.startDrag(ev, teamItem, team.id);
             });
 
-            // In manage mode, clicking on team item toggles checkbox
-            if (this.teamMode === "manage" && checkboxHandle) {
-                teamItem.style.cursor = "pointer";
-                teamItem.addEventListener("click", (ev: MouseEvent) => {
-                    // Don't toggle if clicking on the checkbox itself
-                    if (ev.target === checkboxHandle!.input) return;
-                    checkboxHandle!.setChecked(!checkboxHandle!.isChecked());
-                });
-            }
-
             this.listContainer!.appendChild(teamItem);
         });
 
