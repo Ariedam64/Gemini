@@ -8,8 +8,8 @@ export type DataBag = Record<DataKey, Record<string, unknown> | null>;
 export interface CaptureState {
   data: DataBag;
   isHookInstalled: boolean;
-  scanInterval: NodeJS.Timeout | null;
+  scanInterval: ReturnType<typeof setTimeout> | null;
   scanAttempts: number;
-  weatherPollingTimer: NodeJS.Timeout | null;
+  weatherPollingTimer: ReturnType<typeof setTimeout> | null;
   weatherPollAttempts: number;
 }

@@ -1,2 +1,2 @@
 export { SettingsSection } from './section';
-export type { SettingsStateController } from './state';
+export type { SettingsStateController } from './State';

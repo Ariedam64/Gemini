@@ -19,7 +19,7 @@ export async function initCosmeticSystem(): Promise<boolean> {
   _initPromise = (async () => {
     state.baseUrl = await MGAssets.base();
 
-    const manifest = await MGManifest.load(state.baseUrl);
+    const manifest = await MGManifest.load({ baseUrl: state.baseUrl });
     const bundle = MGManifest.getBundle(manifest, "cosmetic");
     if (!bundle) throw new Error("No 'cosmetic' bundle in manifest");
 

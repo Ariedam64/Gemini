@@ -1,5 +1,6 @@
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
+import { getMyGarden } from "./myGarden";
 import type {
   MyPetsGlobal,
   MyPetsData,
@@ -29,6 +30,7 @@ type MyPetsSources = {
   active: PetInfo[];
   slotInfos: Record<string, PetSlotInfo>;
   expandedPetSlotId: string | null;
+  myNumPetHutchItems: number;
 };
 
 const atomSources = {
@@ -37,6 +39,7 @@ const atomSources = {
   active: "myPetInfosAtom",
   slotInfos: "myPetSlotInfosAtom",
   expandedPetSlotId: "expandedPetSlotIdAtom",
+  myNumPetHutchItems: "myNumPetHutchItemsAtom",
 };
 
 function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutch"): UnifiedPet {
@@ -123,6 +126,12 @@ function buildData(sources: MyPetsSources): MyPetsData {
   const expandedPetSlotId = sources.expandedPetSlotId ?? null;
   const expandedPet = expandedPetSlotId ? all.find((p) => p.id === expandedPetSlotId) ?? null : null;
 
+  const myGarden = getMyGarden();
+  const gardenData = myGarden.get();
+  const hasHutch = gardenData.decors.all.some((decor) => decor.decorId === "PetHutch");
+  const currentItems = sources.myNumPetHutchItems ?? 0;
+  const maxItems = 25;
+
   return {
     all,
     byLocation: {
@@ -136,6 +145,11 @@ function buildData(sources: MyPetsSources): MyPetsData {
       active: activePets.length,
       total: all.length,
     },
+    hutch: {
+      hasHutch,
+      currentItems,
+      maxItems,
+    },
     expandedPetSlotId,
     expandedPet,
   };
@@ -145,6 +159,7 @@ const initialData: MyPetsData = {
   all: [],
   byLocation: { inventory: [], hutch: [], active: [] },
   counts: { inventory: 0, hutch: 0, active: 0, total: 0 },
+  hutch: { hasHutch: false, currentItems: 0, maxItems: 25 },
   expandedPetSlotId: null,
   expandedPet: null,
 };

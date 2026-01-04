@@ -15,7 +15,7 @@ import {
   MGAudio,
   MGCosmetic,
 } from "../modules";
-import { MGAntiAfk } from "../features/antiafk";
+import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
 import { MGJournalChecker } from "../features/journalChecker";
 import { MGBulkFavorite } from "../features/bulkFavorite";

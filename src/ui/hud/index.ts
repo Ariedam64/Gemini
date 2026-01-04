@@ -4,7 +4,7 @@
  */
 
 // Main HUD factory
-export { createHUD } from "./HUD";
+export { createHUD } from "./hud";
 
 // Types
 export type {

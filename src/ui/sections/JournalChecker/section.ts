@@ -43,7 +43,7 @@ export class JournalCheckerSection extends BaseSection {
 
     private async updateProgress(): Promise<void> {
         try {
-            const { MGJournalChecker } = await import('../../../modules');
+            const { MGJournalChecker } = await import('../../../features/journalChecker');
             this.progress = await MGJournalChecker.aggregateJournalProgress();
             this.renderContent();
         } catch (error) {
@@ -278,7 +278,7 @@ export class JournalCheckerSection extends BaseSection {
         if (!this.progress) return;
 
         try {
-            const { MGJournalChecker } = await import('../../../modules');
+            const { MGJournalChecker } = await import('../../../features/journalChecker');
             const summary = await MGJournalChecker.getMissingSummary();
 
             if (summary.plants.length === 0 && summary.pets.length === 0) {

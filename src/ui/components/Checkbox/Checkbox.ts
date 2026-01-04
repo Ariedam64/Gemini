@@ -42,13 +42,9 @@ export function Checkbox(opts: CheckboxOptions = {}): CheckboxHandle {
     className: `lg-checkbox lg-checkbox--${size}`,
     id,
     type: "checkbox",
-    checked: String(!!checked),
-    disabled: String(!!disabled),
+    checked: !!checked,
+    disabled: !!disabled,
   }) as HTMLInputElement;
-
-  // Override the string values with actual booleans
-  input.checked = !!checked;
-  input.disabled = !!disabled;
 
   let lblEl: HTMLLabelElement | null = null;
   if (label && labelSide !== "none") {
