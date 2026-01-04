@@ -24,19 +24,35 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
   // Tabs scroll container
   const tabsRow = element("div", { className: "lg-tabs", id: "lg-tabs-row" }, pill, ...btns) as HTMLDivElement;
 
+  // Helper to create SVG chevron
+  function createChevronSVG(direction: 'left' | 'right') {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', direction === 'left' ? '15 18 9 12 15 6' : '9 18 15 12 9 6');
+    svg.appendChild(polyline);
+    return svg;
+  }
+
   // Left arrow button with SVG chevron
   const btnLeft = element("button", {
     className: "lg-tabs-arrow lg-tabs-arrow-left",
     ariaLabel: "Scroll left",
-    innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
   }) as HTMLButtonElement;
+  btnLeft.appendChild(createChevronSVG('left'));
 
   // Right arrow button with SVG chevron
   const btnRight = element("button", {
     className: "lg-tabs-arrow lg-tabs-arrow-right",
     ariaLabel: "Scroll right",
-    innerHTML: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
   }) as HTMLButtonElement;
+  btnRight.appendChild(createChevronSVG('right'));
 
   // Container with arrows
   const wrapper = element("div", { className: "lg-tabs-wrapper" }, btnLeft, tabsRow, btnRight) as HTMLDivElement;
