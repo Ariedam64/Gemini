@@ -315,15 +315,16 @@ export class TeamCardPart {
                 team,
                 isActive,
                 customIndicator: checkboxHandle?.root,
+                hideDragHandle: this.teamMode === "manage",
             });
 
-            // Drag is allowed in both modes (but not on checkbox)
-            teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
-                if (ev.button !== 0) return;
-                // Don't start drag if clicking on the checkbox
-                if (checkboxHandle && ev.target === checkboxHandle.input) return;
-                this.startDrag(ev, teamItem, team.id);
-            });
+            // Drag is only allowed in overview mode
+            if (this.teamMode === "overview") {
+                teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
+                    if (ev.button !== 0) return;
+                    this.startDrag(ev, teamItem, team.id);
+                });
+            }
 
             this.listContainer!.appendChild(teamItem);
         });

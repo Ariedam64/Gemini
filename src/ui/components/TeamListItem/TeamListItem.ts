@@ -12,6 +12,7 @@ export interface TeamListItemProps {
     team: PetTeam;
     isActive: boolean;
     customIndicator?: HTMLElement;
+    hideDragHandle?: boolean;
 }
 
 export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
@@ -93,17 +94,19 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
         spritesContainer.appendChild(spriteSlot);
     }
 
-    // Drag handle
-    const dragHandle = element("div", {
-        textContent: "⋮⋮",
-        className: "team-list-item__drag-handle",
-    });
+    // Drag handle (hidden if hideDragHandle is true)
+    if (!props.hideDragHandle) {
+        const dragHandle = element("div", {
+            textContent: "⋮⋮",
+            className: "team-list-item__drag-handle",
+        });
+        container.appendChild(dragHandle);
+    }
 
     // Assemble
     container.appendChild(indicator);
     container.appendChild(nameText);
     container.appendChild(spritesContainer);
-    container.appendChild(dragHandle);
 
     return container;
 }
