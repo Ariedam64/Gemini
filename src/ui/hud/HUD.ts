@@ -61,6 +61,7 @@ import { navTabsCss } from "../components/NavTabs/navTabs.css";
 import { searchBarCss } from "../components/SearchBar/searchBar.css";
 import { selectCss } from "../components/Select/select.css";
 import { switchCss } from "../components/Switch/switch.css";
+import { checkboxCss } from "../components/Checkbox/checkbox.css";
 import { tableCss } from "../components/Table/table.css";
 import { teamListItemCss } from "../components/TeamListItem/teamListItem.css";
 import { timeRangePickerCss } from "../components/TimeRangePicker/timeRangePicker.css";
@@ -122,6 +123,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [cardCss, "card"],
     [badgeCss, "badge"],
     [buttonCss, "button"],
+    [checkboxCss, "checkbox"],
     [inputCss, "input"],
     [labelCss, "label"],
     [navTabsCss, "navTabs"],
