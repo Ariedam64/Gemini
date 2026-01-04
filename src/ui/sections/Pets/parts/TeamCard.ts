@@ -155,6 +155,8 @@ function showInventoryModal(onPetSelected: (petId: string) => void): void {
             unsubscribe();
 
             // Reset selected item index immediately to clear selectedItem
+            // Use -1 as intermediate value to force change detection
+            Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", -1);
             Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
             // Close modal
