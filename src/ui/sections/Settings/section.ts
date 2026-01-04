@@ -27,6 +27,7 @@ function buildThemeOptions(): SelectOption[] {
 }
 
 const THEME_COLOR_KEYS = [
+  // Core Theme
   "--bg",
   "--fg",
   "--accent",
@@ -34,16 +35,45 @@ const THEME_COLOR_KEYS = [
   "--soft",
   "--border",
   "--shadow",
+  // Tabs & Pills
   "--tab-bg",
   "--tab-fg",
   "--pill-from",
   "--pill-to",
 ] as const;
 
+// Journal-specific keys (separate for grouped UI)
+const JOURNAL_COLOR_KEYS = [
+  "--journal-bar-low",
+  "--journal-bar-mid",
+  "--journal-bar-high",
+  "--journal-bar-complete",
+  "--journal-rainbow",
+  "--journal-tab-1",
+  "--journal-tab-2",
+  "--journal-tab-3",
+] as const;
+
 type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
+type JournalColorKey = (typeof JOURNAL_COLOR_KEYS)[number];
 
 function labelForVar(key: ThemeColorKey): string {
   return humanizeName(key.replace(/^--/, ""));
+}
+
+function labelForJournalVar(key: JournalColorKey): string {
+  // Create friendly labels for Journal keys
+  const labels: Record<string, string> = {
+    "--journal-bar-low": "Progress Low",
+    "--journal-bar-mid": "Progress Mid",
+    "--journal-bar-high": "Progress High",
+    "--journal-bar-complete": "Progress Complete",
+    "--journal-rainbow": "Rainbow",
+    "--journal-tab-1": "Tab 1 (All)",
+    "--journal-tab-2": "Tab 2 (Crops)",
+    "--journal-tab-3": "Tab 3 (Pets)",
+  };
+  return labels[key] ?? humanizeName(key.replace(/^--journal-/, ""));
 }
 
 function toCssValue(value: ColorPickerValue): string {
@@ -118,6 +148,21 @@ export class SettingsSection extends BaseSection {
     // Render initial theme pickers
     this.renderThemePickers(currentTheme, themeGrid, activeTheme);
 
+    // Journal customization card
+    const journalGrid = element("div", { className: "settings-theme-grid" }) as HTMLDivElement;
+    this.renderJournalPickers(currentTheme, journalGrid, activeTheme);
+
+    const journalCard = Card(
+      {
+        title: "Journal",
+        padding: "lg",
+        expandable: true,
+        defaultExpanded: false,
+        variant: "soft",
+      },
+      journalGrid
+    );
+
     // Environment card
     const envCard = this.createEnvCard({
       defaultExpanded: !!currentState.ui.expandedCards.system,
@@ -125,6 +170,7 @@ export class SettingsSection extends BaseSection {
     });
 
     section.appendChild(themeCard);
+    section.appendChild(journalCard);
     section.appendChild(envCard);
   }
 
@@ -156,7 +202,7 @@ export class SettingsSection extends BaseSection {
   /**
    * Update a theme variable and re-apply if it's the active theme
    */
-  private updateThemeVar(themeName: string, key: ThemeColorKey, color: ColorPickerValue, activeTheme: string): void {
+  private updateThemeVar(themeName: string, key: ThemeColorKey | JournalColorKey, color: ColorPickerValue, activeTheme: string): void {
     const theme = THEMES[themeName];
     if (!theme) return;
 
@@ -164,6 +210,31 @@ export class SettingsSection extends BaseSection {
 
     if (activeTheme === themeName) {
       this.deps.applyTheme(themeName);
+    }
+  }
+
+  /**
+   * Render Journal-specific color pickers
+   */
+  private renderJournalPickers(themeName: string, journalGrid: HTMLDivElement, activeTheme: string): void {
+    const theme = THEMES[themeName];
+    journalGrid.replaceChildren();
+
+    if (!theme) return;
+
+    for (const key of JOURNAL_COLOR_KEYS) {
+      const currentValue = theme[key];
+      if (currentValue == null) continue;
+
+      const picker = ColorPicker({
+        label: labelForJournalVar(key),
+        value: currentValue,
+        defaultExpanded: false,
+        onInput: (val) => this.updateThemeVar(themeName, key, val, activeTheme),
+        onChange: (val) => this.updateThemeVar(themeName, key, val, activeTheme),
+      });
+
+      journalGrid.appendChild(picker.root);
     }
   }
 

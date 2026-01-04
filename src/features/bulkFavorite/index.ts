@@ -1,9 +1,9 @@
 /**
- * BulkFavorite Module - Public API
- * 
+ * BulkFavorite Feature - Public API
+ *
  * Provides bulk favorite/unfavorite functionality for inventory items.
- * Renders floating buttons when inventory panel is open.
- * 
+ * UI rendering is handled by the UI injection layer (src/ui/inject/qol/bulkFavorite).
+ *
  * @module MGBulkFavorite
  */
 
@@ -13,14 +13,7 @@ import { DEFAULT_CONFIG, STORAGE_KEY } from './types';
 
 // Internal modules
 import { loadConfig, saveConfig, setPosition, isEnabled } from './state';
-import { bulkFavorite } from './logic';
-import {
-    startWatching,
-    stopWatching,
-    setEnabled as setEnabledInternal,
-    renderButton,
-    removeButton,
-} from './render';
+import { bulkFavorite } from './logic/bulkFavorite';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module State
@@ -33,29 +26,26 @@ let initialized = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * BulkFavorite Module
+ * BulkFavorite Feature
  * @module MGBulkFavorite
  */
 export const MGBulkFavorite = {
-    // ─── Required Module API ───
+    // ─── Required Feature API ───
 
     /**
-     * Initialize the BulkFavorite module
-     * Starts watching for inventory panel if enabled
+     * Initialize the BulkFavorite feature
      * Idempotent: safe to call multiple times
+     *
+     * Note: UI injection is handled separately by src/ui/inject/qol/bulkFavorite
      */
     init(): void {
         if (initialized) return;
-        const config = loadConfig();
-        if (config.enabled) {
-            startWatching();
-        }
         initialized = true;
-        console.log('✅ [MGBulkFavorite] Initialized');
+        console.log('✅ [MGBulkFavorite] Feature initialized');
     },
 
     /**
-     * Check if module is ready/initialized
+     * Check if feature is ready/initialized
      */
     isReady(): boolean {
         return initialized;
@@ -93,35 +83,9 @@ export const MGBulkFavorite = {
     // ─── Lifecycle ───
 
     /**
-     * Start watching for inventory panel
-     */
-    start: startWatching,
-
-    /**
-     * Stop watching and remove UI
-     */
-    stop: stopWatching,
-
-    /**
-     * Enable or disable the feature
-     */
-    setEnabled: setEnabledInternal,
-
-    /**
-     * Manually render button on an element
-     */
-    renderButton,
-
-    /**
-     * Remove rendered button
-     */
-    removeButton,
-
-    /**
-     * Cleanup module resources
+     * Cleanup feature resources
      */
     destroy(): void {
-        stopWatching();
         initialized = false;
     },
 } as const;
@@ -140,11 +104,6 @@ export {
     setPosition,
     isEnabled,
     bulkFavorite,
-    startWatching as start,
-    stopWatching as stop,
-    setEnabledInternal as setEnabled,
-    renderButton,
-    removeButton,
 };
 
 // ─── Type Exports ───

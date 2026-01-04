@@ -131,5 +131,19 @@ export const THEMES: Record<string, ThemeVars> = {
     // ===== Scrollbar (matching AutoFavorite) =====
     "--scrollbar-thumb": "rgba(255,255,255,0.2)",
     "--scrollbar-thumb-hover": "rgba(255,255,255,0.3)",
+
+    // ===== Journal Progress Bar =====
+    "--journal-bar-low": "#F98B4B",
+    "--journal-bar-mid": "#F3D32B",
+    "--journal-bar-high": "#5EAC46",
+    "--journal-bar-complete": "#0B893F",
+
+    // ===== Journal Rainbow (single accent) =====
+    "--journal-rainbow": "#FF77A8",
+
+    // ===== Journal Tab Colors =====
+    "--journal-tab-1": "#26a69a",
+    "--journal-tab-2": "#4caf50",
+    "--journal-tab-3": "#9c27b0",
   },
 };

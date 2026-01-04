@@ -116,3 +116,17 @@
 - [x] `Dev/index.ts` created → `registry.ts` updated to use facade
 
 ---
+
+## 9. Journal Checker UI Overhaul
+> ✅ **COMPLETED** — Redesigned for in-game journal accuracy and premium sidebar experience
+
+- [x] Implement 2-level Master-Detail navigation
+- [x] Create **Scrapbook Lined Paper** background with CSS gradients
+- [x] Enforce **Sprites Only** visuals (Zero emoji policy)
+- [x] Implement **Expandable Categories** (See More functionality)
+- [x] Fix **MGSprite** rendering issue with initialization check
+- [x] Integrate **Gemini-native Scrollbars**
+- [ ] Finalize decoration (Clipboard frame, rings, golden corners)
+- [ ] Add `state.ts` for persistent tab/expand preferences
+- [x] Create **JournalProgressBar** component (theme-customizable)
+- [x] Create **JournalTab** component (theme-customizable)

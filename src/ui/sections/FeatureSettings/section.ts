@@ -9,6 +9,7 @@ import { Card } from "../../components/Card/Card";
 import { Label } from "../../components/Label/Label";
 import { Switch } from "../../components/Switch/Switch";
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
+import { BulkFavoriteInject } from "../../inject/qol/bulkFavorite";
 
 /* ───────────────────────── Feature Configurations ───────────────────────── */
 
@@ -71,6 +72,7 @@ export class FeatureSettingsSection extends BaseSection {
             this.createToggleRow("Bulk Favorite", this.config.bulkFavorite.enabled, (v: boolean) => {
                 this.config.bulkFavorite.enabled = v;
                 this.saveConfig();
+                BulkFavoriteInject.setEnabled(v);
             }),
             this.createToggleRow("Journal Checker", this.config.journalChecker.enabled, (v: boolean) => {
                 this.config.journalChecker.enabled = v;
