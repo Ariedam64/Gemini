@@ -306,23 +306,31 @@ export class TeamCardPart {
 
         teams.forEach((team: PetTeam) => {
             const isActive = activeTeamId === team.id;
-            const customIndicator = this.teamMode === "manage"
-                ? this.createCheckboxIndicator(team.id)
-                : undefined;
+            let checkboxHandle: CheckboxHandle | undefined;
+            if (this.teamMode === "manage") {
+                checkboxHandle = this.createCheckboxIndicator(team.id);
+            }
 
             const teamItem = TeamListItem({
                 team,
                 isActive,
-                customIndicator,
+                customIndicator: checkboxHandle?.root,
             });
 
-            if (this.teamMode === "overview") {
-                teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
-                    if (ev.button !== 0) return;
-                    this.startDrag(ev, teamItem, team.id);
+            // Drag is allowed in both modes
+            teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
+                if (ev.button !== 0) return;
+                this.startDrag(ev, teamItem, team.id);
+            });
+
+            // In manage mode, clicking on team item toggles checkbox
+            if (this.teamMode === "manage" && checkboxHandle) {
+                teamItem.style.cursor = "pointer";
+                teamItem.addEventListener("click", (ev: MouseEvent) => {
+                    // Don't toggle if clicking on the checkbox itself
+                    if (ev.target === checkboxHandle!.input) return;
+                    checkboxHandle!.setChecked(!checkboxHandle!.isChecked());
                 });
-            } else {
-                teamItem.style.cursor = "default";
             }
 
             this.listContainer!.appendChild(teamItem);
@@ -364,7 +372,7 @@ export class TeamCardPart {
         }
     }
 
-    private createCheckboxIndicator(teamId: string): HTMLDivElement {
+    private createCheckboxIndicator(teamId: string): CheckboxHandle {
         const checkboxHandle = Checkbox({
             checked: this.selectedTeamIds.has(teamId),
             size: "md",
@@ -380,7 +388,7 @@ export class TeamCardPart {
 
         this.teamCheckboxes.set(teamId, checkboxHandle);
 
-        return checkboxHandle.root;
+        return checkboxHandle;
     }
 
     private cleanupDrag(): void {
