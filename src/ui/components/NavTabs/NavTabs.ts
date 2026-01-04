@@ -106,16 +106,18 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
   tabsRow.addEventListener("scroll", updateArrowState, { passive: true });
 
   function movePillTo(id: string) {
-    const wrapRect = tabsRow.getBoundingClientRect();
     const tabEl = btns.find(b => (b as HTMLButtonElement).dataset.target === id) || btns[0];
     if (!tabEl) return;
-    const r = tabEl.getBoundingClientRect();
-    const x = r.left - wrapRect.left;
-    const w = r.width;
+
+    // Get position relative to tabsRow container (not viewport)
+    // This is needed because pill uses transform which is relative to the flex container
+    const x = tabEl.offsetLeft;
+    const w = tabEl.offsetWidth;
+
     (pill as HTMLDivElement).style.width = `${w}px`;
     (pill as HTMLDivElement).style.transform = `translateX(${x}px)`;
 
-    // Keep visible
+    // Keep visible in scroll viewport
     const left = tabsRow.scrollLeft;
     const viewL = left;
     const viewR = left + tabsRow.clientWidth;
