@@ -57,6 +57,7 @@ export interface TeamListItemProps {
     hideDragHandle?: boolean;
     isNameEditable?: boolean;
     onNameChange?: (newName: string) => void;
+    onSlotClick?: (slotIndex: number) => void;
 }
 
 export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
@@ -99,6 +100,14 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
         const spriteSlot = element("div", {
             className: "team-list-item__sprite-slot",
         });
+
+        // Add click handler for slot editing
+        if (props.onSlotClick) {
+            spriteSlot.style.cursor = "pointer";
+            spriteSlot.addEventListener("click", () => {
+                props.onSlotClick!(i);
+            });
+        }
 
         if (petId && petId !== "") {
             // Find pet in myPets
