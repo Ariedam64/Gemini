@@ -357,6 +357,7 @@ export class TeamCardPart {
                     this.handleDeleteTeam();
                 },
             });
+            deleteTeamButton.setAttribute("data-action", "delete-team");
 
             actionsContainer.appendChild(newTeamButton);
             actionsContainer.appendChild(deleteTeamButton);
@@ -407,12 +408,21 @@ export class TeamCardPart {
                     this.selectedTeamIds.delete(teamId);
                 }
                 console.log('[TeamCardPart] Selection changed:', Array.from(this.selectedTeamIds));
+                this.updateDeleteButtonState();
             },
         });
 
         this.teamCheckboxes.set(teamId, checkboxHandle);
 
         return checkboxHandle;
+    }
+
+    private updateDeleteButtonState(): void {
+        // Find and update the delete button in the DOM
+        const deleteButton = this.teamContent?.querySelector('[data-action="delete-team"]') as HTMLButtonElement | null;
+        if (deleteButton) {
+            deleteButton.disabled = this.selectedTeamIds.size === 0;
+        }
     }
 
     private cleanupDrag(): void {
