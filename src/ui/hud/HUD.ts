@@ -61,6 +61,7 @@ import { navTabsCss } from "../components/NavTabs/navTabs.css";
 import { searchBarCss } from "../components/SearchBar/searchBar.css";
 import { selectCss } from "../components/Select/select.css";
 import { switchCss } from "../components/Switch/switch.css";
+import { checkboxCss } from "../components/Checkbox/checkbox.css";
 import { tableCss } from "../components/Table/table.css";
 import { teamListItemCss } from "../components/TeamListItem/teamListItem.css";
 import { timeRangePickerCss } from "../components/TimeRangePicker/timeRangePicker.css";
@@ -69,9 +70,11 @@ import { sliderCss } from "../components/Slider/slider.css";
 import { reorderableListCss } from "../components/ReorderableList/reorderableList.css";
 import { colorPickerCss } from "../components/ColorPicker/colorPicker.css";
 import { logCss } from "../components/Log/log.css";
+import { segmentedControlCss } from "../components/SegmentedControl/segmentedControl.css";
 
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
+import { teamCardCss } from "../sections/Pets/parts/teamCard.css";
 
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
@@ -121,6 +124,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [cardCss, "card"],
     [badgeCss, "badge"],
     [buttonCss, "button"],
+    [checkboxCss, "checkbox"],
     [inputCss, "input"],
     [labelCss, "label"],
     [navTabsCss, "navTabs"],
@@ -135,7 +139,9 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [reorderableListCss, "reorderableList"],
     [colorPickerCss, "colorPicker"],
     [logCss, "log"],
+    [segmentedControlCss, "segmentedControl"],
     [settingsCss, "settings"],
+    [teamCardCss, "teamCard"],
   ];
 
   for (let i = 0; i < styleInjections.length; i++) {

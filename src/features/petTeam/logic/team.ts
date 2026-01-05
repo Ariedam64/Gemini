@@ -73,6 +73,13 @@ export function isTeamNameUnique(name: string, excludeTeamId?: TeamId): boolean 
 export function isTeamCompositionUnique(petIds: [string, string, string], excludeTeamId?: TeamId): boolean {
     const config = loadConfig();
 
+    // Empty teams (all slots empty) are always considered unique
+    // This allows creating multiple empty teams with different names
+    const hasAnyPet = petIds.some((id) => id !== EMPTY_SLOT);
+    if (!hasAnyPet) {
+        return true;
+    }
+
     // Sort the pet IDs to compare regardless of order
     const sortedNewIds = [...petIds].sort().join(',');
 
@@ -84,7 +91,7 @@ export function isTeamCompositionUnique(petIds: [string, string, string], exclud
 }
 
 /**
- * Validate that pet IDs exist in the player's pet collection
+ * Validate that pet IDs exist in the player's pet collection OR in existing teams
  * @param petIds - Array of pet IDs to validate
  * @returns true if all non-empty IDs are valid, false otherwise
  */
@@ -92,6 +99,16 @@ export function validatePetIds(petIds: string[]): boolean {
     const myPets = getMyPets();
     const petsData = myPets.get();
     const validPetIds = new Set(petsData.all.map((pet) => pet.id));
+
+    // Also include pets that are in existing teams
+    const config = loadConfig();
+    for (const team of config.teams) {
+        for (const petId of team.petIds) {
+            if (petId !== EMPTY_SLOT) {
+                validPetIds.add(petId);
+            }
+        }
+    }
 
     for (const petId of petIds) {
         if (petId !== EMPTY_SLOT && !validPetIds.has(petId)) {
@@ -220,6 +237,7 @@ export function updateTeam(
     // Validate pet IDs if being updated
     if (updates.petIds !== undefined) {
         const normalizedPetIds = normalizePetIds(updates.petIds);
+
         if (!validatePetIds(normalizedPetIds)) {
             throw new Error('One or more pet IDs do not exist');
         }
@@ -319,4 +337,20 @@ export function reorderTeams(teamIds: TeamId[]): boolean {
     saveConfig(config);
 
     return true;
+}
+
+/**
+ * Rename a pet team
+ * @param teamId - Team ID to rename
+ * @param newName - New team name (must be unique)
+ * @returns true if renamed successfully, false otherwise
+ */
+export function renameTeam(teamId: TeamId, newName: string): boolean {
+    try {
+        const result = updateTeam(teamId, { name: newName });
+        return result !== null;
+    } catch (err) {
+        console.warn(`[PetTeam] Failed to rename team ${teamId}:`, err);
+        return false;
+    }
 }

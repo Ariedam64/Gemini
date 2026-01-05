@@ -1,20 +1,41 @@
 // ui/components/TeamListItem/teamListItem.css.ts
 export const teamListItemCss = `
+@keyframes teamClick {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .team-list-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 8px 12px;
   background-color: var(--soft);
   border: 1px solid var(--border);
   border-radius: 6px;
-  cursor: grab;
+  cursor: pointer;
   transition: all 0.15s ease, transform 0.2s ease;
   position: relative;
 }
 
+.team-list-item--clicked {
+  animation: teamClick 0.3s ease;
+}
+
+/* In manage mode, disable drag cursor */
+.team-list-item.team-list-item--manage {
+  cursor: auto;
+}
+
 .team-list-item:not(:last-child) {
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 
 .team-list-item:hover {
@@ -73,6 +94,19 @@ export const teamListItemCss = `
   font-weight: 400;
 }
 
+/* Input in manage mode */
+.team-list-item__name-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-list-item__name-input .input {
+  font-size: 14px;
+  color: var(--fg);
+  padding: 4px 8px;
+  width: 100%;
+}
+
 .team-list-item__sprites {
   display: flex;
   gap: 4px;
@@ -99,6 +133,38 @@ export const teamListItemCss = `
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Manage mode - empty slot (accent color for addition) */
+.team-list-item__sprite-slot--empty {
+  border: 1.5px solid var(--accent);
+  background: color-mix(in oklab, var(--accent) 8%, var(--bg));
+  box-shadow: inset 0 2px 4px color-mix(in oklab, var(--accent) 10%, transparent);
+}
+
+.team-list-item__sprite-slot--empty svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Manage mode - filled slot (danger color for removal) */
+.team-list-item__sprite-slot.team-list-item__sprite-slot--filled {
+  border: 1.5px solid #ef4444 !important;
+  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 15%, transparent);
+}
+
+.team-list-item__sprite-slot-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in oklab, #ef4444 25%, transparent);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .team-list-item__sprite-placeholder {

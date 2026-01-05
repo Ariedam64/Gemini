@@ -5,7 +5,7 @@ import type {
   PlayerStats,
   ShopInventoryItem,
   PetInventoryItem,
-} from "../../../atoms/types";
+} from "../../atoms/types";
 
 export type CustomizableModal = Exclude<QuinoaModal, null>;
 

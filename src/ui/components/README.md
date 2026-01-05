@@ -49,6 +49,7 @@ Always use CSS variables from `src/ui/styles/variables.css.ts`.
 | **Range** | Percentage or value sliders. | `setValue`, `getValue`, `setDisabled` |
 | **ReorderableList** | Drag-to-reorder lists. | — |
 | **SearchBar** | Search input with icon. | — |
+| **SegmentedControl** | Segmented option selection. | `select`, `getSelected`, `setDisabled` |
 | **Select** | Dropdown selection. | — |
 | **Slider** | Styled slider input. | — |
 | **StatRow** | Stats display (label + value). | `setValue`, `setLabel`, `setDescription` |

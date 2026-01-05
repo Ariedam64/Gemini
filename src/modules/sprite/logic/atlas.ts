@@ -170,7 +170,7 @@ export async function loadAtlasesFromManifest(
   baseUrl: string,
   ctors: PixiConstructors
 ): Promise<LoadAtlasesResult> {
-  const manifest = await MGManifest.load(baseUrl);
+  const manifest = await MGManifest.load({ baseUrl });
   const bundle = MGManifest.getBundle(manifest, "default");
   if (!bundle) throw new Error("No default bundle in manifest");
 

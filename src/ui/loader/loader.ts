@@ -262,7 +262,22 @@ function injectStyles(): void {
     }
   `;
 
-  document.head.appendChild(style);
+  const target = document.head || document.documentElement || document.body;
+  if (target) {
+    target.appendChild(style);
+    return;
+  }
+
+  const onReady = () => {
+    const readyTarget = document.head || document.documentElement || document.body;
+    readyTarget?.appendChild(style);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", onReady, { once: true });
+  } else {
+    setTimeout(onReady, 0);
+  }
 }
 
 function appendLog(container: HTMLElement, message: string, tone: LoaderTone): void {

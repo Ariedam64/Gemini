@@ -3,6 +3,7 @@
 
 import type { ListOptions } from "../types";
 import { state } from "../state";
+import { categoryVolume } from "./volume";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // List Operations
@@ -80,8 +81,6 @@ export function getTrackUrl(category: string, name: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function refreshVolumes(): boolean {
-  const { categoryVolume } = require("./volume");
-
   if (state.tracks.music) {
     state.tracks.music.volume = categoryVolume("music").atom;
   }

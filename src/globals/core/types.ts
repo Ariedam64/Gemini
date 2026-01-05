@@ -128,6 +128,11 @@ export type MyPetsData = {
     active: number;
     total: number;
   };
+  hutch: {
+    hasHutch: boolean;
+    currentItems: number;
+    maxItems: number;
+  };
   expandedPetSlotId: string | null;
   expandedPet: UnifiedPet | null;
 };
