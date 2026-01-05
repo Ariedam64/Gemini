@@ -50,30 +50,35 @@ Use these as examples to understand formats (manifest.json, sprite atlases, samp
 Note: Treat `GameSourceFiles/` and `GameFilesExample/` as reference inputs. Do not copy game code into the mod.
 
 ## Rules (source of truth)
-- Core: `@rules/core.md`
-- Modules: `@rules/modules.md` (core infrastructure)
-- Features: `@rules/features.md` (optional features)
-- Utils: `@rules/utils.md`
+- Core: [.claude/rules/core.md](.claude/rules/core.md)
+- Modules: [.claude/rules/modules.md](.claude/rules/modules.md) (core infrastructure)
+- Features: [.claude/rules/features.md](.claude/rules/features.md) (optional features)
+- Utils: [.claude/rules/utils.md](.claude/rules/utils.md)
 
 - State:
-  - Atoms: `@rules/state/atoms.md`
-  - Globals: `@rules/state/globals.md`
+  - Atoms: [.claude/rules/state/atoms.md](.claude/rules/state/atoms.md)
+  - Globals: [.claude/rules/state/globals.md](.claude/rules/state/globals.md)
 
 - UI:
-  - Core: `@rules/ui/core.md`
-  - Components: `@rules/ui/components.md`
-  - Loader: `@rules/ui/loader.md`
-  - Sections: `@rules/ui/sections.md`
-  - Inject: `@rules/ui/ui.inject.md`
+  - Core: [.claude/rules/ui/core.md](.claude/rules/ui/core.md)
+  - Components: [.claude/rules/ui/components.md](.claude/rules/ui/components.md)
+  - Loader: [.claude/rules/ui/loader.md](.claude/rules/ui/loader.md)
+  - Sections: [.claude/rules/ui/sections.md](.claude/rules/ui/sections.md)
+  - Inject: [.claude/rules/ui/ui.inject.md](.claude/rules/ui/ui.inject.md)
 
-- WebSocket: `@rules/websocket/websocket.md`
+- WebSocket: [.claude/rules/websocket/websocket.md](.claude/rules/websocket/websocket.md)
 
 ## Workflows
-- Feature: `@workflows/feature/` (creating optional features)
+- State:
+  - Add Atom: [.claude/workflows/state/add-atom.md](.claude/workflows/state/add-atom.md)
+  - Add Global: [.claude/workflows/state/add-global.md](.claude/workflows/state/add-global.md)
 - UI:
-  - Components: `@workflows/ui/component/`
-  - Loader: `@workflows/ui/loader/`
-  - Sections: `@workflows/ui/section/`
-  - Styles/Themes: `@workflows/ui/style/`
-- State: `@workflows/state/`
-- WebSocket: `@workflows/websocket/`
+  - Add Component: [.claude/workflows/ui/component/add-component.md](.claude/workflows/ui/component/add-component.md)
+  - Reuse Component: [.claude/workflows/ui/component/reuse-existing-component.md](.claude/workflows/ui/component/reuse-existing-component.md)
+  - Add Loader Step: [.claude/workflows/ui/loader/add-loader-step.md](.claude/workflows/ui/loader/add-loader-step.md)
+  - Add Section: [.claude/workflows/ui/section/add-section.md](.claude/workflows/ui/section/add-section.md)
+  - Split Section: [.claude/workflows/ui/section/split-section-into-parts.md](.claude/workflows/ui/section/split-section-into-parts.md)
+  - Add Styles: [.claude/workflows/ui/style/add-styles-or-tokens.md](.claude/workflows/ui/style/add-styles-or-tokens.md)
+  - Theme Change: [.claude/workflows/ui/style/theme-change-safe.md](.claude/workflows/ui/style/theme-change-safe.md)
+- WebSocket:
+  - Add Action: [.claude/workflows/websocket/add-action.md](.claude/workflows/websocket/add-action.md)
