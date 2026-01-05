@@ -3,6 +3,7 @@ import {
   stateHostPlayerIdView,
   stateUserSlotsView,
 } from "../../atoms";
+import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
 import type {
   PlayersGlobal,
@@ -65,6 +66,7 @@ type PlayersSources = {
   players: RawPlayer[];
   hostPlayerId: string;
   userSlots: (RawUserSlot | null)[];
+  myUserSlotIndex: number | null;
 };
 
 const initialData: PlayersData = {
@@ -150,6 +152,7 @@ function buildData(sources: PlayersSources): PlayersData {
   const players = sources.players;
   const hostPlayerId = sources.hostPlayerId ?? "";
   const userSlots = sources.userSlots ?? [];
+  const myUserSlotIndex = sources.myUserSlotIndex;
 
   if (!players || !Array.isArray(players) || players.length === 0) {
     return initialData;
@@ -166,7 +169,9 @@ function buildData(sources: PlayersSources): PlayersData {
 
   const all = players.map((raw) => buildPlayer(raw, hostPlayerId, userSlotMap));
   const host = all.find((p) => p.isHost) ?? null;
-  const myPlayer = all.find((p) => p.slotIndex !== null && p.slotIndex >= 0) ?? null;
+  const myPlayer = myUserSlotIndex !== null
+    ? all.find((p) => p.slotIndex === myUserSlotIndex) ?? null
+    : null;
 
   return {
     all,
@@ -243,7 +248,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
   const sources: Partial<PlayersSources> = {};
   const ready = new Set<keyof PlayersSources>();
-  const sourceCount = 3;
+  const sourceCount = 4;
 
   function notify(): void {
     if (ready.size < sourceCount) return;
@@ -317,6 +322,13 @@ function createPlayersGlobal(): PlayersGlobal {
       notify();
     });
     unsubscribes.push(unsub3);
+
+    const unsub4 = await Store.subscribe("myUserSlotIdxAtom", (value: unknown) => {
+      sources.myUserSlotIndex = value as number | null;
+      ready.add("myUserSlotIndex");
+      notify();
+    });
+    unsubscribes.push(unsub4);
 
     initialized = true;
 

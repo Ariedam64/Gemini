@@ -218,7 +218,7 @@ The feature will be accessible via `window.Gemini.Features.MyFeature`
 
 ## 7) Side effects & cleanup
 
-- No side effects on import (per @rules/core.md)
+- No side effects on import (per [.claude/rules/core.md](.claude/rules/core.md))
 - All event listeners/intervals/observers MUST have cleanup
 - Safe to enable/disable at runtime
 - Cleanup on destroy() must remove all traces
