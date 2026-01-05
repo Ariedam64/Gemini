@@ -69,6 +69,7 @@ export const MGPetTeam = {
     getActiveTeamId: ActiveLogic.getActiveTeamId,
     setActiveTeamId: ActiveLogic.setActiveTeamId,
     isActiveTeam: ActiveLogic.isActiveTeam,
+    activateTeam: ActiveLogic.activateTeam,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────

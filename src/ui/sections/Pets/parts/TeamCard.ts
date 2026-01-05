@@ -28,6 +28,14 @@ type DragState = {
     releaseScrollLock?: () => void;
 };
 
+type LongPressState = {
+    pointerId: number;
+    startX: number;
+    startY: number;
+    timeout: number;
+    target: HTMLElement;
+};
+
 function isScrollable(el: HTMLElement): boolean {
     const style = getComputedStyle(el);
     if (!/(auto|scroll|overlay)/.test(style.overflowY + style.overflowX)) return false;
@@ -114,12 +122,15 @@ export class TeamCardPart {
     private teamContent: HTMLDivElement | null = null;
     private listContainer: HTMLElement | null = null;
     private dragState: DragState | null = null;
+    private longPressState: LongPressState | null = null;
     private teamMode: "overview" | "manage" = "overview";
     private selectedTeamIds: Set<string> = new Set();
     private teamCheckboxes: Map<string, CheckboxHandle> = new Map();
     private onPointerMove: (ev: PointerEvent) => void;
     private onPointerUp: (ev: PointerEvent) => void;
     private onPointerCancel: (ev: PointerEvent) => void;
+    private onLongPressPointerMove: (ev: PointerEvent) => void;
+    private onLongPressPointerUp: (ev: PointerEvent) => void;
     private options: TeamCardPartOptions;
 
     constructor(options: TeamCardPartOptions = {}) {
@@ -127,6 +138,8 @@ export class TeamCardPart {
         this.onPointerMove = this.handlePointerMove.bind(this);
         this.onPointerUp = this.handlePointerUp.bind(this);
         this.onPointerCancel = this.handlePointerCancel.bind(this);
+        this.onLongPressPointerMove = this.handleLongPressPointerMove.bind(this);
+        this.onLongPressPointerUp = this.handleLongPressPointerUp.bind(this);
     }
 
     build(): HTMLDivElement {
@@ -136,6 +149,7 @@ export class TeamCardPart {
 
     destroy(): void {
         this.cleanupDrag();
+        this.cleanupLongPress();
         if (this.modeControl) {
             this.modeControl.destroy();
             this.modeControl = null;
@@ -255,6 +269,7 @@ export class TeamCardPart {
         if (!this.teamContent) return;
 
         this.cleanupDrag();
+        this.cleanupLongPress();
         this.listContainer = null;
         this.teamContent.replaceChildren();
         this.teamCheckboxes.forEach((checkbox) => checkbox.destroy());
@@ -270,6 +285,23 @@ export class TeamCardPart {
                 className: "team-card__empty-state",
             });
             this.teamContent.appendChild(emptyState);
+
+            if (this.teamMode === "manage") {
+                const actionsContainer = element("div", {
+                    className: "team-card__actions",
+                });
+
+                const newTeamButton = Button({
+                    label: "New Team",
+                    variant: "primary",
+                    onClick: () => {
+                        this.handleCreateTeam();
+                    },
+                });
+
+                actionsContainer.appendChild(newTeamButton);
+                this.teamContent.appendChild(actionsContainer);
+            }
             return;
         }
 
@@ -306,11 +338,33 @@ export class TeamCardPart {
                 teamItem.classList.add("team-list-item--manage");
             }
 
-            // Drag is only allowed in overview mode
+            // In overview mode: click to select, drag handle to reorder
             if (this.teamMode === "overview") {
+                teamItem.addEventListener("click", async (ev: PointerEvent) => {
+                    const dragHandle = (ev.target as HTMLElement).closest(".team-list-item__drag-handle");
+                    if (!dragHandle) {
+                        teamItem.classList.add("team-list-item--clicked");
+                        setTimeout(() => {
+                            teamItem.classList.remove("team-list-item--clicked");
+                        }, 300);
+
+                        try {
+                            await MGPetTeam.activateTeam(team);
+                        } catch (error) {
+                            console.error('[TeamCard] Failed to activate team:', error);
+                            // TODO: Show error notification to user
+                        }
+                    }
+                });
+
                 teamItem.addEventListener("pointerdown", (ev: PointerEvent) => {
                     if (ev.button !== 0) return;
-                    this.startDrag(ev, teamItem, team.id);
+                    const dragHandle = (ev.target as HTMLElement).closest(".team-list-item__drag-handle");
+                    if (dragHandle) {
+                        this.startDrag(ev, teamItem, team.id);
+                    } else {
+                        this.startLongPress(ev, teamItem, team.id);
+                    }
                 });
             }
 
@@ -515,6 +569,59 @@ export class TeamCardPart {
             window.removeEventListener("pointercancel", this.onPointerCancel);
             this.dragState = null;
         }
+    }
+
+    private cleanupLongPress(): void {
+        if (this.longPressState) {
+            window.clearTimeout(this.longPressState.timeout);
+            window.removeEventListener("pointermove", this.onLongPressPointerMove);
+            window.removeEventListener("pointerup", this.onLongPressPointerUp);
+            this.longPressState = null;
+        }
+    }
+
+    private startLongPress(ev: PointerEvent, itemEl: HTMLElement, teamId: string): void {
+        this.cleanupLongPress();
+
+        const teams = MGPetTeam.getAllTeams();
+        const fromIndex = teams.findIndex((t) => t.id === teamId);
+        if (fromIndex === -1) return;
+
+        const startX = ev.clientX;
+        const startY = ev.clientY;
+
+        const timeout = window.setTimeout(() => {
+            if (!this.longPressState) return;
+            this.startDrag(ev, itemEl, teamId);
+        }, 500);
+
+        this.longPressState = {
+            pointerId: ev.pointerId,
+            startX,
+            startY,
+            timeout,
+            target: itemEl,
+        };
+
+        window.addEventListener("pointermove", this.onLongPressPointerMove, { passive: false });
+        window.addEventListener("pointerup", this.onLongPressPointerUp, { passive: false });
+    }
+
+    private handleLongPressPointerMove(ev: PointerEvent): void {
+        if (!this.longPressState || ev.pointerId !== this.longPressState.pointerId) return;
+
+        const deltaX = Math.abs(ev.clientX - this.longPressState.startX);
+        const deltaY = Math.abs(ev.clientY - this.longPressState.startY);
+        const threshold = 10;
+
+        if (deltaX > threshold || deltaY > threshold) {
+            this.cleanupLongPress();
+        }
+    }
+
+    private handleLongPressPointerUp(ev: PointerEvent): void {
+        if (!this.longPressState || ev.pointerId !== this.longPressState.pointerId) return;
+        this.cleanupLongPress();
     }
 
     private handlePointerMove(ev: PointerEvent): void {

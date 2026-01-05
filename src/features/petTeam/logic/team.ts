@@ -73,6 +73,13 @@ export function isTeamNameUnique(name: string, excludeTeamId?: TeamId): boolean 
 export function isTeamCompositionUnique(petIds: [string, string, string], excludeTeamId?: TeamId): boolean {
     const config = loadConfig();
 
+    // Empty teams (all slots empty) are always considered unique
+    // This allows creating multiple empty teams with different names
+    const hasAnyPet = petIds.some((id) => id !== EMPTY_SLOT);
+    if (!hasAnyPet) {
+        return true;
+    }
+
     // Sort the pet IDs to compare regardless of order
     const sortedNewIds = [...petIds].sort().join(',');
 

@@ -124,12 +124,12 @@ export function toggleFavoriteItem(itemId: string, win: any = pageWindow): SendR
   return send(T.ToggleFavoriteItem, { scope: "Quinoa", itemId }, win);
 }
 
-export function putItemInStorage(itemId: string, win: any = pageWindow): SendResult {
-  return send(T.PutItemInStorage, { scope: "Quinoa", itemId }, win);
+export function putItemInStorage(itemId: string, storageId: string ="PetHutch", win: any = pageWindow): SendResult {
+  return send(T.PutItemInStorage, { scope: "Quinoa", itemId, storageId }, win);
 }
 
-export function retrieveItemFromStorage(itemId: string, win: any = pageWindow): SendResult {
-  return send(T.RetrieveItemFromStorage, { scope: "Quinoa", itemId }, win);
+export function retrieveItemFromStorage(itemId: string, storageId: string = "PetHutch", win: any = pageWindow): SendResult {
+  return send(T.RetrieveItemFromStorage, { scope: "Quinoa", itemId, storageId }, win);
 }
 
 export function moveStorageItem(fromIndex: number, toIndex: number, win: any = pageWindow): SendResult {
@@ -212,8 +212,9 @@ export function removeGardenObject(objectId: string, win: any = pageWindow): Sen
 // Pets
 // -----------------------------
 
-export function placePet(petId: string, x: number, y: number, win: any = pageWindow): SendResult {
-  return send(T.PlacePet, { scope: "Quinoa", petId, x, y }, win);
+export function placePet(petId: string, position: { x: number; y: number } = { x: 0, y: 0 }, tileType: string = "Dirt", localTileIndex: number = 0, win: any = pageWindow
+): SendResult {
+  return send(T.PlacePet, { scope: "Quinoa", itemId: petId, position, tileType, localTileIndex }, win);
 }
 
 export function feedPet(petId: string, foodItemId: string, win: any = pageWindow): SendResult {
@@ -224,12 +225,12 @@ export function petPositions(positions: unknown, win: any = pageWindow): SendRes
   return send(T.PetPositions, { scope: "Quinoa", positions }, win);
 }
 
-export function swapPet(petIdA: string, petIdB: string, win: any = pageWindow): SendResult {
-  return send(T.SwapPet, { scope: "Quinoa", petIdA, petIdB }, win);
+export function swapPet(petSlotId: string, petInventoryId: string, win: any = pageWindow): SendResult {
+  return send(T.SwapPet, { scope: "Quinoa", petSlotId, petInventoryId }, win);
 }
 
-export function storePet(petId: string, win: any = pageWindow): SendResult {
-  return send(T.StorePet, { scope: "Quinoa", petId }, win);
+export function storePet(itemId: string, win: any = pageWindow): SendResult {
+  return send(T.StorePet, { scope: "Quinoa", itemId }, win);
 }
 
 export function namePet(petId: string, name: string, win: any = pageWindow): SendResult {
