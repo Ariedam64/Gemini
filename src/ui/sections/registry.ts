@@ -29,7 +29,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new FeatureSettingsSection(),
     new AutoFavoriteSettingsSection(),
     new JournalCheckerSection(),
-    new PetsSection(),
+    new PetsSection(deps),
   ];
 
   // Only include developer tools in non-production builds

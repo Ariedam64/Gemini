@@ -12,7 +12,7 @@ import { element } from "../../../styles/helpers";
 import { MGPetTeam } from "../../../../features/petTeam";
 import { Globals } from "../../../../globals";
 import { Store } from "../../../../atoms/store";
-import { MGCustomModal } from "../../../../modules";
+import { MGCustomModal, MGEnvironment } from "../../../../modules";
 import type { PetTeam } from "../../../../features/petTeam";
 
 type ScrollLockRelease = () => void;
@@ -113,6 +113,7 @@ function acquireScrollLock(origin: HTMLElement): ScrollLockRelease {
 
 export interface TeamCardPartOptions {
     onTeamReordered?: (teamIds: string[]) => void;
+    setHUDOpen?: (open: boolean) => void;
 }
 
 export class TeamCardPart {
@@ -501,6 +502,12 @@ export class TeamCardPart {
         // Clear the selected item first
         await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
+        // Close HUD on mobile when opening inventory modal
+        const isMobile = MGEnvironment.isMobile();
+        if (isMobile && this.options.setHUDOpen) {
+            this.options.setHUDOpen(false);
+        }
+
         // Subscribe to selection changes
         const unsubscribeSelection = Globals.myInventory.subscribeSelection((event) => {
             // Check if a pet was selected (not null)
@@ -517,6 +524,10 @@ export class TeamCardPart {
 
                 // Close the modal and re-render the team card
                 MGCustomModal.close().then(() => {
+                    // Reopen HUD on mobile after selection
+                    if (isMobile && this.options.setHUDOpen) {
+                        this.options.setHUDOpen(true);
+                    }
                     this.render();
                 });
             }
@@ -530,6 +541,11 @@ export class TeamCardPart {
 
         // Wait for modal to close
         await MGCustomModal.waitForClose();
+
+        // Reopen HUD on mobile if modal was closed without selection
+        if (isMobile && this.options.setHUDOpen) {
+            this.options.setHUDOpen(true);
+        }
 
         // Cleanup
         unsubscribeSelection();

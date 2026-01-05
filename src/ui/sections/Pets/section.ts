@@ -7,14 +7,17 @@ import { BaseSection } from "../core/Section";
 import { TeamCardPart } from "./parts";
 import { MGPetTeam } from "../../../features/petTeam";
 import { Globals } from "../../../globals";
+import type { SectionsBuilderDeps } from "../../hud/types";
 
 export class PetsSection extends BaseSection {
     private unsubscribeMyPets?: () => void;
     private lastActiveTeamId: string | null = null;
     private teamCardPart: TeamCardPart | null = null;
+    private deps?: SectionsBuilderDeps;
 
-    constructor() {
+    constructor(deps?: SectionsBuilderDeps) {
         super({ id: "tab-pets", label: "Pets" });
+        this.deps = deps;
     }
 
     protected async build(container: HTMLElement): Promise<void> {
@@ -55,6 +58,7 @@ export class PetsSection extends BaseSection {
                 onTeamReordered: (teamIds) => {
                     console.log('[PetsSection] Teams reordered:', teamIds);
                 },
+                setHUDOpen: this.deps?.setHUDOpen,
             });
         }
 

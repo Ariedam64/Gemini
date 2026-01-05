@@ -9,6 +9,8 @@ export type SectionsDeps = {
   applyTheme: (name: string) => void;
   initialTheme: string;
   getCurrentTheme: () => string;
+  setHUDWidth?: (px: number) => void;
+  setHUDOpen?: (open: boolean) => void;
 };
 
 /**
