@@ -14,7 +14,7 @@ import { ColorPicker, ColorPickerValue } from "../../components/ColorPicker/Colo
 import { MGEnvironment } from "../../../modules/environment";
 import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
-import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
+import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./state";
 
 /* ───────────────────────── Utilities ───────────────────────── */
 

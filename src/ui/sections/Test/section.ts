@@ -11,7 +11,7 @@ import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { MGSprite } from "../../../modules/sprite";
 import { MGData } from "../../../modules/data";
-import { initTestState, TestStateController } from "./State";
+import { initTestState, TestStateController } from "./state";
 
 type SpriteRow = {
   name: string;
