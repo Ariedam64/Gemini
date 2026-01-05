@@ -29,4 +29,13 @@ export const journalSeeMoreCss = `
   .journal-see-more-link:active {
     transform: scale(0.98);
   }
+
+  /* MagicGarden theme - use pill-to (greenish) instead of accent (yellow) */
+  :host-context([data-theme="magicGarden"]) .journal-see-more-link {
+    color: var(--pill-to);
+  }
+
+  :host-context([data-theme="magicGarden"]) .journal-see-more-link:hover {
+    color: var(--pill-to);
+  }
 `;

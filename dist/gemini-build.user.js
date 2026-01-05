@@ -998,6 +998,15 @@
   .journal-see-more-link:active {
     transform: scale(0.98);
   }
+
+  /* MagicGarden theme - use pill-to (greenish) instead of accent (yellow) */
+  :host-context([data-theme="magicGarden"]) .journal-see-more-link {
+    color: var(--pill-to);
+  }
+
+  :host-context([data-theme="magicGarden"]) .journal-see-more-link:hover {
+    color: var(--pill-to);
+  }
 `;function Nv(e){const{count:t,expanded:n=false,onClick:r}=e,o=g("div",{className:"journal-see-more"}),i=g("span",{className:"journal-see-more-link"},wo(t,n));r&&i.addEventListener("click",r),o.appendChild(i);const a=o;return a.setCount=s=>{i.textContent=wo(s,n);},a.setExpanded=s=>{i.textContent=wo(t,s);},a}function wo(e,t){return t?"− Show less":`+ and ${e} more...`}const $v=e=>e<15?"#F98B4B":e<25?"#FC6D30":e<50?"#F3D32B":e<75?"#E9B52F":e<100?"#5EAC46":"#0B893F",Dv=e=>e>=100?"var(--complete)":e>=75?"var(--high)":e>=50?"var(--medium)":"var(--low)",jv={Common:1,Uncommon:2,Rare:3,Legendary:4,Mythical:5,Divine:6,Celestial:7};function qa(e){return e?jv[e]??0:0}function Xa(e,t){try{if(t==="pets")return (ue.get("pets")||{})[e]?.rarity||null;if(t==="plants")return (ue.get("plants")||{})[e]?.seed?.rarity||null}catch{}return null}function zv({progress:e,activeTab:t,expandedCategories:n,onSpeciesClick:r,onToggleExpand:o}){const i=g("div",{className:"journal-content"}),a=g("div",{className:"journal-header"},"Garden Journal");if(i.appendChild(a),t!=="all"){const s=t==="plants"?e.plants:e.pets,c=g("div",{className:"journal-progress-indicator"}),u=Math.floor(s.variantsLogged/s.variantsTotal*100),l=g("span",{className:"percentage"},`Collected ${u}%`),d=g("span",{className:"count"},` (${s.variantsLogged}/${s.variantsTotal})`);c.appendChild(l),c.appendChild(d),i.appendChild(c);}return t==="all"?(i.appendChild(cr("Produce",e.plants,"plants",n.has("plants"),r,()=>o("plants"),true)),i.appendChild(cr("Pets",e.pets,"pets",n.has("pets"),r,()=>o("pets"),true))):t==="plants"?i.appendChild(cr("Produce",e.plants,"plants",n.has("plants"),r,()=>o("plants"))):i.appendChild(cr("Pets",e.pets,"pets",n.has("pets"),r,()=>o("pets"))),i}function cr(e,t,n,r,o,i,a=false){const s=g("div",{style:"display: flex; flex-direction: column;"}),c=g("div",{style:`
             max-height: ${r?"480px":"none"};
             overflow-y: ${r?"auto":"visible"};
