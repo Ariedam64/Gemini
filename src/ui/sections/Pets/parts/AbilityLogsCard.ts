@@ -1,11 +1,11 @@
 /**
  * Ability Logs Card Part
  * Displays a log of pet ability activations with filtering
+ * Uses a responsive card-based layout for better mobile experience
  */
 
 import { Card } from "../../../components/Card/Card";
 import { SearchBar } from "../../../components/SearchBar/SearchBar";
-import { Table, ColDef, TableHandle } from "../../../components/Table/Table";
 import { element } from "../../../styles/helpers";
 import { MGSprite } from "../../../../modules";
 
@@ -65,7 +65,7 @@ const TEMPLATE_LOGS: AbilityLog[] = [
 
 export class AbilityLogsCardPart {
     private card: HTMLDivElement | null = null;
-    private tableHandle: TableHandle | null = null;
+    private listContainer: HTMLDivElement | null = null;
     private logs: AbilityLog[] = [];
     private filteredLogs: AbilityLog[] = [];
 
@@ -75,11 +75,8 @@ export class AbilityLogsCardPart {
     }
 
     destroy(): void {
-        if (this.tableHandle) {
-            this.tableHandle.destroy();
-            this.tableHandle = null;
-        }
         this.card = null;
+        this.listContainer = null;
         this.logs = [];
         this.filteredLogs = [];
     }
@@ -88,7 +85,7 @@ export class AbilityLogsCardPart {
         // For now, use template data
         this.logs = TEMPLATE_LOGS;
         this.filteredLogs = [...this.logs];
-        this.updateTable();
+        this.updateList();
     }
 
     private createAbilityLogsCard(): HTMLDivElement {

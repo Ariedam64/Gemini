@@ -59,6 +59,11 @@ export class PetsSection extends BaseSection {
             this.teamCardPart.destroy();
             this.teamCardPart = null;
         }
+
+        if (this.abilityLogsCardPart) {
+            this.abilityLogsCardPart.destroy();
+            this.abilityLogsCardPart = null;
+        }
     }
 
     private initializeTeamCardPart(section: HTMLElement): void {
@@ -71,8 +76,18 @@ export class PetsSection extends BaseSection {
             });
         }
 
-        const card = this.teamCardPart.build();
-        section.replaceChildren(card);
+        const teamCard = this.teamCardPart.build();
+        section.appendChild(teamCard);
         this.teamCardPart.render();
+    }
+
+    private initializeAbilityLogsCardPart(section: HTMLElement): void {
+        if (!this.abilityLogsCardPart) {
+            this.abilityLogsCardPart = new AbilityLogsCardPart();
+        }
+
+        const abilityLogsCard = this.abilityLogsCardPart.build();
+        section.appendChild(abilityLogsCard);
+        this.abilityLogsCardPart.render();
     }
 }
