@@ -502,9 +502,10 @@ export class TeamCardPart {
         // Clear the selected item first
         await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
-        // Close HUD on mobile when opening inventory modal
-        const isMobile = MGEnvironment.isMobile();
-        if (isMobile && this.options.setHUDOpen) {
+        // Close HUD on small screens (mobile or narrow viewport) when opening inventory modal
+        const env = MGEnvironment.detect();
+        const isSmallScreen = env.platform === "mobile" || env.viewportWidth < 768;
+        if (isSmallScreen && this.options.setHUDOpen) {
             this.options.setHUDOpen(false);
         }
 
@@ -524,8 +525,10 @@ export class TeamCardPart {
 
                 // Close the modal and re-render the team card
                 MGCustomModal.close().then(() => {
-                    // Reopen HUD on mobile after selection
-                    if (isMobile && this.options.setHUDOpen) {
+                    // Reopen HUD on small screens after selection
+                    const currentEnv = MGEnvironment.detect();
+                    const shouldReopenHUD = currentEnv.platform === "mobile" || currentEnv.viewportWidth < 768;
+                    if (shouldReopenHUD && this.options.setHUDOpen) {
                         this.options.setHUDOpen(true);
                     }
                     this.render();
@@ -542,8 +545,10 @@ export class TeamCardPart {
         // Wait for modal to close
         await MGCustomModal.waitForClose();
 
-        // Reopen HUD on mobile if modal was closed without selection
-        if (isMobile && this.options.setHUDOpen) {
+        // Reopen HUD on small screens if modal was closed without selection
+        const finalEnv = MGEnvironment.detect();
+        const shouldReopenHUD = finalEnv.platform === "mobile" || finalEnv.viewportWidth < 768;
+        if (shouldReopenHUD && this.options.setHUDOpen) {
             this.options.setHUDOpen(true);
         }
 
