@@ -143,10 +143,8 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             const hasPet = petId && petId !== "";
             const spriteSlot = element("div", {
                 className: `team-list-item__sprite-slot ${
-                    props.showSlotStyles
-                        ? hasPet
-                            ? "team-list-item__sprite-slot--filled"
-                            : "team-list-item__sprite-slot--empty"
+                    props.showSlotStyles && !hasPet
+                        ? "team-list-item__sprite-slot--empty"
                         : ""
                 }`,
             });
@@ -195,6 +193,15 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                         canvas.style.objectFit = "contain";
 
                         spriteSlot.appendChild(canvas);
+
+                        // Add remove overlay in manage mode
+                        if (props.showSlotStyles) {
+                            const removeOverlay = element("div", {
+                                className: "team-list-item__sprite-slot-overlay",
+                            });
+                            spriteSlot.appendChild(removeOverlay);
+                            spriteSlot.classList.add("team-list-item__sprite-slot--filled");
+                        }
                     } catch (err) {
                         console.warn(`[TeamListItem] Failed to render sprite for pet ${pet.petSpecies}:`, err);
                         // Fallback to placeholder on error
@@ -245,11 +252,22 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                                     ctx.drawImage(cachedCanvas, 0, 0);
                                 }
 
+                                // Style canvas to fit slot
                                 canvas.style.width = "100%";
                                 canvas.style.height = "100%";
                                 canvas.style.objectFit = "contain";
 
                                 spriteSlot.appendChild(canvas);
+
+                                // Add remove overlay in manage mode
+                                if (props.showSlotStyles) {
+                                    const removeOverlay = element("div", {
+                                        className: "team-list-item__sprite-slot-overlay",
+                                    });
+                                    spriteSlot.appendChild(removeOverlay);
+                                    spriteSlot.classList.add("team-list-item__sprite-slot--filled");
+                                }
+
                                 console.log(`[TeamListItem] Pet ${petId} sprite updated`);
                             } catch (err) {
                                 console.warn(`[TeamListItem] Failed to render sprite for pet ${foundPet.petSpecies}:`, err);
