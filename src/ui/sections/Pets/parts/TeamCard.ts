@@ -505,7 +505,14 @@ export class TeamCardPart {
         // Close HUD on small screens (mobile or narrow viewport) when opening inventory modal
         const env = MGEnvironment.detect();
         const isSmallScreen = env.platform === "mobile" || env.viewportWidth < 768;
+        console.log('[TeamCard] Environment detection:', {
+            platform: env.platform,
+            viewportWidth: env.viewportWidth,
+            isSmallScreen,
+            hasSetHUDOpen: !!this.options.setHUDOpen
+        });
         if (isSmallScreen && this.options.setHUDOpen) {
+            console.log('[TeamCard] Closing HUD for small screen');
             this.options.setHUDOpen(false);
         }
 
@@ -528,7 +535,14 @@ export class TeamCardPart {
                     // Reopen HUD on small screens after selection
                     const currentEnv = MGEnvironment.detect();
                     const shouldReopenHUD = currentEnv.platform === "mobile" || currentEnv.viewportWidth < 768;
+                    console.log('[TeamCard] After selection - reopening HUD:', {
+                        platform: currentEnv.platform,
+                        viewportWidth: currentEnv.viewportWidth,
+                        shouldReopenHUD,
+                        hasSetHUDOpen: !!this.options.setHUDOpen
+                    });
                     if (shouldReopenHUD && this.options.setHUDOpen) {
+                        console.log('[TeamCard] Reopening HUD after selection');
                         this.options.setHUDOpen(true);
                     }
                     this.render();
@@ -548,7 +562,14 @@ export class TeamCardPart {
         // Reopen HUD on small screens if modal was closed without selection
         const finalEnv = MGEnvironment.detect();
         const shouldReopenHUD = finalEnv.platform === "mobile" || finalEnv.viewportWidth < 768;
+        console.log('[TeamCard] Modal closed without selection - reopening HUD:', {
+            platform: finalEnv.platform,
+            viewportWidth: finalEnv.viewportWidth,
+            shouldReopenHUD,
+            hasSetHUDOpen: !!this.options.setHUDOpen
+        });
         if (shouldReopenHUD && this.options.setHUDOpen) {
+            console.log('[TeamCard] Reopening HUD after modal close');
             this.options.setHUDOpen(true);
         }
 

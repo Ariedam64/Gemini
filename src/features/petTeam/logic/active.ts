@@ -20,10 +20,6 @@ export function detectActiveTeam(): TeamId | null {
     const myPets = getMyPets();
     const activePets = myPets.get().byLocation.active;
 
-    if (activePets.length === 0) {
-        return null;
-    }
-
     // Get active pet IDs (sorted for comparison)
     const activePetIds = activePets.map((p) => p.id).sort();
 
@@ -33,6 +29,7 @@ export function detectActiveTeam(): TeamId | null {
         const teamPetIds = team.petIds.filter((id) => id !== '').sort();
 
         // Check if arrays match (order-independent)
+        // This handles both empty teams (0 pets) and filled teams
         if (
             teamPetIds.length === activePetIds.length &&
             teamPetIds.every((id, index) => id === activePetIds[index])

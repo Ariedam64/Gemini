@@ -112,6 +112,8 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
         applyTheme: deps.applyTheme,
         initialTheme: deps.initialTheme,
         getCurrentTheme: deps.getCurrentTheme,
+        setHUDWidth: deps.setHUDWidth,
+        setHUDOpen: deps.setHUDOpen,
       }),
 
     initialTab: state.activeTab,
