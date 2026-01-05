@@ -35,7 +35,7 @@ export default defineConfig({
             userscript: {
                 name: 'Gemini',
                 namespace: 'Gemini',
-                version: '1.0.0',
+                version: '1.0.1',
                 match: [
                     'https://1227719606223765687.discordsays.com/*',
                     'https://magiccircle.gg/r/*',
@@ -60,6 +60,11 @@ export default defineConfig({
             },
             build: {
                 fileName: 'gemini-build.user.js',
+                // @ts-ignore
+                cssSideEffects: (css) => {
+                    if (!css) return '';
+                    return `(function() { const style = document.createElement('style'); style.textContent = ${JSON.stringify(css)}; document.head.appendChild(style); })();`;
+                }
             },
             server: {
                 mountGmApi: true
