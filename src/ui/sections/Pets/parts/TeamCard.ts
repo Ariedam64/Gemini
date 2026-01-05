@@ -201,6 +201,7 @@ export class TeamCardPart {
 
         const card = Card({
             title: "Team",
+            subtitle: "Organize and switch between pet teams",
             expandable: true,
             defaultExpanded: true,
         }, cardWrapper);

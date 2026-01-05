@@ -4,15 +4,18 @@
  */
 
 import { BaseSection } from "../core/Section";
-import { TeamCardPart } from "./parts";
+import { TeamCardPart, AbilityLogsCardPart } from "./parts";
 import { MGPetTeam } from "../../../features/petTeam";
 import { Globals } from "../../../globals";
 import type { SectionsDeps } from "../core/Types";
+import { injectStyleOnce } from "../../styles/inject";
+import { abilityLogsCardCss } from "./parts/abilityLogsCard.css";
 
 export class PetsSection extends BaseSection {
     private unsubscribeMyPets?: () => void;
     private lastActiveTeamId: string | null = null;
     private teamCardPart: TeamCardPart | null = null;
+    private abilityLogsCardPart: AbilityLogsCardPart | null = null;
     private deps?: SectionsDeps;
 
     constructor(deps?: SectionsDeps) {
@@ -22,11 +25,17 @@ export class PetsSection extends BaseSection {
 
     protected async build(container: HTMLElement): Promise<void> {
         this.container = container;
+
+        // Inject styles
+        const shadow = container.getRootNode() as ShadowRoot;
+        injectStyleOnce(shadow, abilityLogsCardCss, 'ability-logs-card-styles');
+
         const section = this.createGrid("12px");
         section.id = "pets";
         container.appendChild(section);
 
         this.initializeTeamCardPart(section);
+        this.initializeAbilityLogsCardPart(section);
 
         // Subscribe to stable pet changes (composition changes only)
         this.unsubscribeMyPets = Globals.myPets.subscribeStable(() => {

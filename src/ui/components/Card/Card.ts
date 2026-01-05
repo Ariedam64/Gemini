@@ -228,7 +228,7 @@ export function Card(opts: CardOptions = {}, ...children: (Node | string)[]) {
     if (title) {
       const h = element("h3", {
         className: "card-title",
-        style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;color:var(--pill-to);"
+        style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;color:var(--fg);"
       }, title) as HTMLHeadingElement;
       if (badge) h.append(typeof badge === "string" ? element("span", { className: "badge" }, badge) : badge);
       left.appendChild(h);
@@ -315,7 +315,7 @@ export function CardFooter(...children: (Node | string)[]) {
   return element("div", { className: "card-footer" }, ...children) as HTMLDivElement;
 }
 export function CardTitle(text: string, badge?: Node | string) {
-  const h = element("h3", { className: "card-title", style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--pill-to);" }, text) as HTMLHeadingElement;
+  const h = element("h3", { className: "card-title", style: "margin:0;font-size:15px;font-weight:700;line-height:1.25;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg);" }, text) as HTMLHeadingElement;
   if (badge) h.append(typeof badge === "string" ? element("span", { className: "badge" }, badge) : badge);
   return h;
 }

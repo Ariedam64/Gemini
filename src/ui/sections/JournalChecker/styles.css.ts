@@ -61,7 +61,7 @@ export const journalCheckerCss = `
     height: 28px;
     line-height: 28px;
     margin-bottom: 28px;
-    color: var(--pill-to);
+    color: var(--fg);
     text-transform: uppercase;
     letter-spacing: 2px;
     text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
@@ -72,7 +72,7 @@ export const journalCheckerCss = `
   .journal-category-stats {
     font-size: 11px;
     font-weight: 800;
-    color: var(--pill-to);
+    color: var(--fg);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     /* Height and line-height are set inline in OverviewPage */
@@ -236,7 +236,7 @@ export const journalCheckerCss = `
     font-weight: 800;
     text-align: center;
     margin-top: 4px;
-    color: var(--pill-to);
+    color: var(--fg);
     text-transform: uppercase;
     line-height: 1.2;
     max-width: 64px;
@@ -368,13 +368,13 @@ export const journalCheckerCss = `
     font-family: var(--font-game);
     font-weight: 700;
     font-size: 11px;
-    color: var(--pill-to);
+    color: var(--fg);
     margin-bottom: 8px;
     padding: 0 8px;
   }
 
   .journal-progress-indicator .percentage {
-    color: var(--pill-to);
+    color: var(--fg);
   }
 
   .journal-progress-indicator .count {
