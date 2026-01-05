@@ -156,19 +156,19 @@ export const cardCss = `
   /* Explicit tones (force the accent color) */
   .card--tone-info{
     border-left-width: var(--card-accent-w, 4px);
-    border-left-color: #3b82f6;
+    border-left-color: var(--info);
   }
   .card--tone-success{
     border-left-width: var(--card-accent-w, 4px);
-    border-left-color: #16a34a;
+    border-left-color: var(--high);
   }
   .card--tone-warning{
     border-left-width: var(--card-accent-w, 4px);
-    border-left-color: #f59e0b;
+    border-left-color: var(--medium);
   }
   .card--tone-danger{
     border-left-width: var(--card-accent-w, 4px);
-    border-left-color: #ef4444;
+    border-left-color: var(--low);
   }
 }
   

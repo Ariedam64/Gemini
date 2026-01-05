@@ -17,6 +17,7 @@ interface FeatureConfig {
     autoFavorite: { enabled: boolean };
     bulkFavorite: { enabled: boolean };
     journalChecker: { enabled: boolean };
+    pets: { enabled: boolean };
     cropSizeIndicator: { enabled: boolean; showForGrowing: boolean; showForMature: boolean; showJournalBadges: boolean };
     eggProbabilityIndicator: { enabled: boolean };
     cropValueIndicator: { enabled: boolean };
@@ -31,6 +32,7 @@ const DEFAULT_CONFIG: FeatureConfig = {
     autoFavorite: { enabled: false },
     bulkFavorite: { enabled: false },
     journalChecker: { enabled: false },
+    pets: { enabled: true },
     cropSizeIndicator: { enabled: false, showForGrowing: true, showForMature: true, showJournalBadges: true },
     eggProbabilityIndicator: { enabled: false },
     cropValueIndicator: { enabled: false },
@@ -55,11 +57,31 @@ export class FeatureSettingsSection extends BaseSection {
         section.id = "feature-settings";
         container.appendChild(section);
 
-        this.config = storageGet<FeatureConfig>(FEATURE_KEYS.CONFIG, DEFAULT_CONFIG);
+        // Deep merge stored config with defaults to handle new properties
+        const stored = storageGet<Partial<FeatureConfig>>(FEATURE_KEYS.CONFIG, {});
+        this.config = this.mergeConfig(stored);
 
         section.appendChild(this.createQOLCard());
         section.appendChild(this.createVisualIndicatorsCard());
         section.appendChild(this.createTrackingCard());
+    }
+
+    /** Merge stored config with defaults, ensuring all properties exist */
+    private mergeConfig(stored: Partial<FeatureConfig>): FeatureConfig {
+        return {
+            autoFavorite: { ...DEFAULT_CONFIG.autoFavorite, ...stored.autoFavorite },
+            bulkFavorite: { ...DEFAULT_CONFIG.bulkFavorite, ...stored.bulkFavorite },
+            journalChecker: { ...DEFAULT_CONFIG.journalChecker, ...stored.journalChecker },
+            pets: { ...DEFAULT_CONFIG.pets, ...stored.pets },
+            cropSizeIndicator: { ...DEFAULT_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
+            eggProbabilityIndicator: { ...DEFAULT_CONFIG.eggProbabilityIndicator, ...stored.eggProbabilityIndicator },
+            cropValueIndicator: { ...DEFAULT_CONFIG.cropValueIndicator, ...stored.cropValueIndicator },
+            xpTracker: { ...DEFAULT_CONFIG.xpTracker, ...stored.xpTracker },
+            abilityTracker: { ...DEFAULT_CONFIG.abilityTracker, ...stored.abilityTracker },
+            mutationTracker: { ...DEFAULT_CONFIG.mutationTracker, ...stored.mutationTracker },
+            cropBoostTracker: { ...DEFAULT_CONFIG.cropBoostTracker, ...stored.cropBoostTracker },
+            turtleTimer: { ...DEFAULT_CONFIG.turtleTimer, ...stored.turtleTimer },
+        };
     }
 
     private createQOLCard(): HTMLDivElement {
@@ -77,7 +99,11 @@ export class FeatureSettingsSection extends BaseSection {
             this.createToggleRow("Journal Checker", this.config.journalChecker.enabled, (v: boolean) => {
                 this.config.journalChecker.enabled = v;
                 this.saveConfig();
-            })
+            }),
+            this.createToggleRow("Pets Panel", this.config.pets.enabled, (v: boolean) => {
+                this.config.pets.enabled = v;
+                this.saveConfig();
+            }, "Show/hide the Pets tab")
         );
     }
 

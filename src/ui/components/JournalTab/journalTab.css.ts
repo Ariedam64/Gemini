@@ -49,12 +49,12 @@ export const journalTabCss = `
     transform: translateY(0);
   }
 
-  /* Tab index color fallbacks */
-  .journal-tab[data-tab-index="1"] { --tab-color: var(--journal-tab-1, #26a69a); }
-  .journal-tab[data-tab-index="2"] { --tab-color: var(--journal-tab-2, #4caf50); }
-  .journal-tab[data-tab-index="3"] { --tab-color: var(--journal-tab-3, #9c27b0); }
-  .journal-tab[data-tab-index="4"] { --tab-color: var(--journal-tab-4, #2196f3); }
-  .journal-tab[data-tab-index="5"] { --tab-color: var(--journal-tab-5, #ff9800); }
+  /* Tab index color assignments using semantic accents */
+  .journal-tab[data-tab-index="1"] { --tab-color: var(--accent-1); }
+  .journal-tab[data-tab-index="2"] { --tab-color: var(--accent-2); }
+  .journal-tab[data-tab-index="3"] { --tab-color: var(--accent-3); }
+  .journal-tab[data-tab-index="4"] { --tab-color: var(--accent-1); }
+  .journal-tab[data-tab-index="5"] { --tab-color: var(--accent-2); }
 
   /* Active State - Raised and Extended */
   .journal-tab.active {

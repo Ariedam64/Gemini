@@ -29,28 +29,28 @@ export interface JournalProgressBarHandle extends HTMLDivElement {
 
 /**
  * Get the appropriate progress color based on percentage thresholds
- * Rainbow uses single accent color with HSL rotation for gradient
+ * Rainbow uses accent color with HSL rotation for gradient
  */
 function getProgressStyle(percentage: number): { background: string; className: string } {
     if (percentage >= 100) {
-        // Rainbow gradient using HSL rotation from single accent color
+        // Rainbow gradient computed from accent
         return {
             background: `linear-gradient(90deg, 
-        var(--journal-rainbow) 0%, 
-        color-mix(in oklch, var(--journal-rainbow), lime 40%) 25%, 
-        color-mix(in oklch, var(--journal-rainbow), cyan 40%) 50%, 
-        color-mix(in oklch, var(--journal-rainbow), blue 40%) 75%, 
-        color-mix(in oklch, var(--journal-rainbow), magenta 40%) 100%)`,
+        var(--accent) 0%, 
+        color-mix(in oklch, var(--accent), lime 40%) 25%, 
+        color-mix(in oklch, var(--accent), cyan 40%) 50%, 
+        color-mix(in oklch, var(--accent), blue 40%) 75%, 
+        color-mix(in oklch, var(--accent), magenta 40%) 100%)`,
             className: 'journal-bar-rainbow'
         };
     }
     if (percentage >= 75) {
-        return { background: 'var(--journal-bar-high)', className: '' };
+        return { background: 'var(--high)', className: '' };
     }
     if (percentage >= 25) {
-        return { background: 'var(--journal-bar-mid)', className: '' };
+        return { background: 'var(--medium)', className: '' };
     }
-    return { background: 'var(--journal-bar-low)', className: '' };
+    return { background: 'var(--low)', className: '' };
 }
 
 /**

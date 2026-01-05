@@ -19,6 +19,14 @@ const getProgressColor = (percentage: number): string => {
     return '#0B893F';                       // Green.Dark (100%)
 };
 
+// Percentage text color using theme status variables
+const getPercentageColor = (percentage: number): string => {
+    if (percentage >= 100) return 'var(--complete)';
+    if (percentage >= 75) return 'var(--high)';
+    if (percentage >= 50) return 'var(--medium)';
+    return 'var(--low)';
+};
+
 // Rarity ordering (matching Auto Favorite)
 const RARITY_ORDER: Record<string, number> = {
     Common: 1,
@@ -326,9 +334,10 @@ function renderSpeciesRow(
 
     progressContainer.append(barContainer, nameLabel);
 
-    // Percentage on the right
+    // Percentage on the right - colored by completion status
+    const percentColor = getPercentageColor(species.variantsPercentage);
     const percent = element("span", {
-        style: `flex-shrink: 0; font-weight: 800; font-size: 13px; min-width: 50px; text-align: right; ${species.isComplete ? 'color: var(--journal-header);' : ''}`
+        style: `flex-shrink: 0; font-weight: 800; font-size: 13px; min-width: 50px; text-align: right; color: ${percentColor};`
     }, `${Math.round(species.variantsPercentage)}%`);
 
     row.append(iconContainer, progressContainer, percent);

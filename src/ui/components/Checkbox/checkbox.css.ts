@@ -12,7 +12,7 @@ export const checkboxCss = `
 .lg-checkbox {
   --cb-size: 20px;
   --cb-border: var(--border);
-  --cb-bg: var(--surface);
+  --cb-bg: var(--soft);
   --cb-checked-bg: var(--accent);
   --cb-checked-border: var(--accent);
   --cb-checkmark: #fff;
@@ -70,7 +70,7 @@ export const checkboxCss = `
 
 .lg-checkbox-label {
   font-size: 14px;
-  color: var(--text);
+  color: var(--fg);
   user-select: none;
   cursor: pointer;
 }

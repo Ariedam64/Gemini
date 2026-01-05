@@ -5,16 +5,7 @@
 
 export const journalCheckerCss = `
   :host {
-    /* Colors tailored to match the game's journal */
-    --journal-paper: #FDFBF7;
-    --journal-ink: #2D241E;
-    --journal-header: #10725A;
-    --journal-sub: #5EB292;
-    --journal-stamp-bg: #EBDCB2;
-    --journal-stamp-border: #D8C7A4;
-    --journal-progress-bg: #E0D2B6;
-    --journal-progress-from: #FFB800; /* Yellow */
-    --journal-progress-to: #34A853;   /* Green */
+    /* Journal visual elements (not text colors) */
   }
 
   .journal-checker-host {
@@ -37,14 +28,14 @@ export const journalCheckerCss = `
 
   :host-context(.gemini-content) ::-webkit-scrollbar-thumb,
   .gemini-content::-webkit-scrollbar-thumb {
-      background: var(--muted);
+      background: var(--pill-to);
       border-radius: 8px;
   }
 
   .journal-content {
     position: relative;
     padding: 56px 16px 84px 16px; /* Multiples of 28px */
-    background-color: var(--journal-paper);
+    background-color: var(--paper, #FDFBF7);
     
     /* Scrapbook Lined Paper Background */
     background-image: 
@@ -55,7 +46,7 @@ export const journalCheckerCss = `
     background-size: 100% 100%, 100% 28px;
     
     min-height: 100%;
-    color: var(--journal-ink);
+    color: var(--fg);
     font-family: var(--font-game);
     box-shadow: inset 0 0 40px rgba(0,0,0,0.02);
     box-sizing: border-box;
@@ -70,7 +61,7 @@ export const journalCheckerCss = `
     height: 28px;
     line-height: 28px;
     margin-bottom: 28px;
-    color: var(--journal-header);
+    color: var(--pill-to);
     text-transform: uppercase;
     letter-spacing: 2px;
     text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
@@ -81,7 +72,7 @@ export const journalCheckerCss = `
   .journal-category-stats {
     font-size: 11px;
     font-weight: 800;
-    color: var(--journal-sub);
+    color: var(--pill-to);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     /* Height and line-height are set inline in OverviewPage */
@@ -112,11 +103,31 @@ export const journalCheckerCss = `
     align-items: center;
     font-weight: 700;
     font-size: 14px;
+    color: var(--tab-fg);
+  }
+
+  /* Dark theme override - black text for better contrast */
+  :host-context([data-theme="dark"]) .journal-row-info {
+    color: #000000;
+  }
+
+  /* MagicGarden theme override - remove white text-shadow on cream paper */
+  :host-context([data-theme="magicGarden"]) .journal-header {
+    text-shadow: none;
+  }
+
+  :host-context([data-theme="magicGarden"]) .journal-row-info {
+    color: #000000;
+  }
+
+  /* MagicGarden theme - black text for tab buttons */
+  :host-context([data-theme="magicGarden"]) .journal-tab {
+    color: #000000;
   }
 
   .journal-bar-container {
     width: 100%;
-    background: var(--journal-progress-bg);
+    background: var(--border);
     border-radius: 6px;
     overflow: hidden;
     position: relative;
@@ -147,7 +158,7 @@ export const journalCheckerCss = `
     padding: 0;
     font-size: 13px;
     font-weight: 700;
-    color: var(--journal-header);
+    color: var(--pill-from);
     cursor: pointer;
     text-decoration: underline;
     opacity: 0.8;
@@ -156,7 +167,7 @@ export const journalCheckerCss = `
 
   .journal-expand-btn:hover {
     opacity: 1;
-    color: var(--journal-sub);
+    color: var(--pill-from);
   }
 
   .journal-back {
@@ -172,14 +183,14 @@ export const journalCheckerCss = `
     color: white;
     cursor: pointer;
     padding: 4px 8px;
-    background: var(--journal-header);
+    background: var(--pill-to);
     border-radius: 4px;
     box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
     text-transform: uppercase;
   }
 
   .journal-back:hover {
-    background: var(--journal-sub);
+    background: var(--pill-to);
     transform: translateY(-1px);
   }
 
@@ -201,8 +212,8 @@ export const journalCheckerCss = `
   .journal-stamp {
     width: 50px;
     height: 50px;
-    background: var(--journal-stamp-bg);
-    border: 1px solid var(--journal-stamp-border);
+    background: var(--muted);
+    border: 1px solid var(--border);
     border-radius: 4px; /* Square with slight roundness for "stamp" look */
     display: flex;
     align-items: center;
@@ -225,7 +236,7 @@ export const journalCheckerCss = `
     font-weight: 800;
     text-align: center;
     margin-top: 4px;
-    color: var(--journal-ink);
+    color: var(--pill-to);
     text-transform: uppercase;
     line-height: 1.2;
     max-width: 64px;
@@ -246,13 +257,13 @@ export const journalCheckerCss = `
   }
 
   .journal-species-list::-webkit-scrollbar-thumb {
-    background: var(--journal-sub);
+    background: var(--accent);
     border-radius: 4px;
     transition: background 0.2s;
   }
 
   .journal-species-list::-webkit-scrollbar-thumb:hover {
-    background: var(--journal-header);
+    background: var(--soft);
   }
 
   /* ─────────────────────────────────────────────────────────────────────────────
@@ -299,43 +310,43 @@ export const journalCheckerCss = `
     transform: translateY(0);
   }
 
-  /* All Tab - Teal Theme */
+  /* All Tab - Uses accent */
   .journal-tab[data-tab="all"] {
-    background: linear-gradient(180deg, #26a69a 0%, #00897b 100%);
-    border-left: 1px solid #4db6ac;
-    border-right: 1px solid #4db6ac;
-    border-top: 2px solid #80cbc4;
+    background: linear-gradient(180deg, var(--accent) 0%, color-mix(in srgb, var(--accent), black 20%) 100%);
+    border-left: 1px solid color-mix(in srgb, var(--accent), white 30%);
+    border-right: 1px solid color-mix(in srgb, var(--accent), white 30%);
+    border-top: 2px solid color-mix(in srgb, var(--accent), white 40%);
   }
 
   .journal-tab[data-tab="all"].active {
-    background: linear-gradient(180deg, #4db6ac 0%, #26a69a 100%);
-    box-shadow: 0 -2px 8px rgba(38, 166, 154, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent), white 15%) 0%, var(--accent) 100%);
+    box-shadow: 0 -2px 8px color-mix(in srgb, var(--accent), transparent 70%), inset 0 1px 2px rgba(255, 255, 255, 0.2);
   }
 
-  /* Crops Tab - Green Theme */
+  /* Crops Tab - Uses accent-1 */
   .journal-tab[data-tab="plants"] {
-    background: linear-gradient(180deg, #4caf50 0%, #388e3c 100%);
-    border-left: 1px solid #66bb6a;
-    border-right: 1px solid #66bb6a;
-    border-top: 2px solid #81c784;
+    background: linear-gradient(180deg, var(--accent-1) 0%, color-mix(in srgb, var(--accent-1), black 20%) 100%);
+    border-left: 1px solid color-mix(in srgb, var(--accent-1), white 30%);
+    border-right: 1px solid color-mix(in srgb, var(--accent-1), white 30%);
+    border-top: 2px solid color-mix(in srgb, var(--accent-1), white 40%);
   }
 
   .journal-tab[data-tab="plants"].active {
-    background: linear-gradient(180deg, #5ec762 0%, #4caf50 100%);
-    box-shadow: 0 -2px 8px rgba(76, 175, 80, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent-1), white 15%) 0%, var(--accent-1) 100%);
+    box-shadow: 0 -2px 8px color-mix(in srgb, var(--accent-1), transparent 70%), inset 0 1px 2px rgba(255, 255, 255, 0.2);
   }
 
-  /* Pets Tab - Purple Theme */
+  /* Pets Tab - Uses accent-2 */
   .journal-tab[data-tab="pets"] {
-    background: linear-gradient(180deg, #9c27b0 0%, #7b1fa2 100%);
-    border-left: 1px solid #ba68c8;
-    border-right: 1px solid #ba68c8;
-    border-top: 2px solid #ce93d8;
+    background: linear-gradient(180deg, var(--accent-2) 0%, color-mix(in srgb, var(--accent-2), black 20%) 100%);
+    border-left: 1px solid color-mix(in srgb, var(--accent-2), white 30%);
+    border-right: 1px solid color-mix(in srgb, var(--accent-2), white 30%);
+    border-top: 2px solid color-mix(in srgb, var(--accent-2), white 40%);
   }
 
   .journal-tab[data-tab="pets"].active {
-    background: linear-gradient(180deg, #ab47bc 0%, #9c27b0 100%);
-    box-shadow: 0 -2px 8px rgba(156, 39, 176, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent-2), white 15%) 0%, var(--accent-2) 100%);
+    box-shadow: 0 -2px 8px color-mix(in srgb, var(--accent-2), transparent 70%), inset 0 1px 2px rgba(255, 255, 255, 0.2);
   }
 
   /* Active State - Raised and Extended for Seamless Connection */
@@ -357,13 +368,13 @@ export const journalCheckerCss = `
     font-family: var(--font-game);
     font-weight: 700;
     font-size: 11px;
-    color: var(--journal-sub);
+    color: var(--pill-to);
     margin-bottom: 8px;
     padding: 0 8px;
   }
 
   .journal-progress-indicator .percentage {
-    color: var(--journal-header);
+    color: var(--pill-to);
   }
 
   .journal-progress-indicator .count {
