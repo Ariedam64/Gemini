@@ -30,7 +30,8 @@
       "Bash(done)",
       "Bash(git restore:*)",
       "Bash(del \"c:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\src\\\\features\\\\antiafk.ts\")",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git push:*)"
     ]
   }
 }
