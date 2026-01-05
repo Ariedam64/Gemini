@@ -15,6 +15,8 @@ import { MGSprite } from "../../modules/sprite";
 import { migrateStorageKeys } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
+import { MGBulkFavorite } from "../../features/bulkFavorite";
+import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -212,10 +214,16 @@ export function initFeatures(loader: LoaderController): void {
   const features = [
     { name: "AntiAfk", init: MGAntiAfk.init.bind(MGAntiAfk) },
     { name: "PetTeam", init: MGPetTeam.init.bind(MGPetTeam) },
+    { name: "BulkFavorite", init: MGBulkFavorite.init.bind(MGBulkFavorite) },
+  ];
+
+  const uiInjections = [
+    { name: "BulkFavoriteInject", init: BulkFavoriteInject.init.bind(BulkFavoriteInject) },
   ];
 
   let initializedCount = 0;
 
+  // Initialize features (config/logic only)
   for (const feature of features) {
     try {
       feature.init();
@@ -228,6 +236,21 @@ export function initFeatures(loader: LoaderController): void {
   }
 
   loader.logStep("Features", `All features initialized (${features.length}/${features.length})`, "success");
+
+  // Initialize UI injections (if features are enabled)
+  loader.logStep("UIInjections", "Initializing UI injections...");
+  let injectedCount = 0;
+
+  for (const injection of uiInjections) {
+    try {
+      injection.init();
+      injectedCount++;
+    } catch (err) {
+      console.warn(`[Bootstrap] UI injection ${injection.name} init failed`, err);
+    }
+  }
+
+  loader.logStep("UIInjections", `UI injections initialized (${injectedCount}/${uiInjections.length})`, "success");
 }
 
 export { startInjectGamePanelButton };

@@ -6,6 +6,7 @@
 import { createNavTabs } from "../components/NavTabs/NavTabs";
 import { SectionManager } from "../sections";
 import { pageWindow } from "../../utils/windowContext";
+import { storageGet, FEATURE_KEYS, EVENTS } from "../../utils/storage";
 
 /* ================================ Shadow DOM Host ================================ */
 
@@ -75,6 +76,7 @@ import { segmentedControlCss } from "../components/SegmentedControl/segmentedCon
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
 import { teamCardCss } from "../sections/Pets/parts/teamCard.css";
+import { autoFavoriteSettingsCss } from "../sections/AutoFavoriteSettings/styles.css";
 
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
@@ -142,6 +144,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [segmentedControlCss, "segmentedControl"],
     [settingsCss, "settings"],
     [teamCardCss, "teamCard"],
+    [autoFavoriteSettingsCss, "autoFavoriteSettings"],
   ];
 
   for (let i = 0; i < styleInjections.length; i++) {
@@ -245,9 +248,53 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   // Assemble tabbar: nav (flex:1) + close button
   tabbar.append(nav.root, closeButton);
 
+  // ===== 6b. Tab Visibility (inline - controlled by feature toggles) =====
+  const TAB_FEATURE_MAP: Record<string, string> = {
+    'tab-auto-favorite': 'autoFavorite',
+    'tab-journal-checker': 'journalChecker',
+    'tab-pets': 'pets',
+  };
+
+  function applyTabVisibility(): void {
+    const config = storageGet<Record<string, { enabled: boolean }>>(
+      FEATURE_KEYS.CONFIG,
+      { autoFavorite: { enabled: false }, journalChecker: { enabled: false }, pets: { enabled: true } }
+    );
+
+    for (const [tabId, featureKey] of Object.entries(TAB_FEATURE_MAP)) {
+      const isEnabled = config[featureKey]?.enabled ?? false;
+      if (isEnabled) {
+        nav.showTab(tabId);
+      } else {
+        nav.hideTab(tabId);
+      }
+    }
+  }
+
+  function handleTabVisibilityChange(event: Event): void {
+    const { key } = (event as CustomEvent<{ key: string }>).detail;
+    if (key === FEATURE_KEYS.CONFIG || key === 'feature:config') {
+      applyTabVisibility();
+    }
+  }
+
+  window.addEventListener(EVENTS.STORAGE_CHANGE, handleTabVisibilityChange);
+
+  // Apply initial tab visibility
+  applyTabVisibility();
+
+  // Validate active tab is visible after applying visibility
+  let effectiveActiveTab = activeTabId;
+  if (!nav.isTabVisible(activeTabId)) {
+    const visibleTabs = nav.getVisibleTabs();
+    if (visibleTabs.length > 0) {
+      effectiveActiveTab = visibleTabs[0];
+    }
+  }
+
   // Activate initial tab
-  if (activeTabId) {
-    manager.activate(activeTabId);
+  if (effectiveActiveTab) {
+    manager.activate(effectiveActiveTab);
   }
 
   // ===== 7. Keyboard Shortcuts =====
@@ -279,6 +326,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
 
   // ===== 9. Cleanup =====
   function destroy(): void {
+    window.removeEventListener(EVENTS.STORAGE_CHANGE, handleTabVisibilityChange);
     keyboardShortcuts.destroy();
     resizeHandler.destroy();
     pageWindow.removeEventListener("resize", handleResize);

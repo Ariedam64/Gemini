@@ -116,3 +116,38 @@
 - [x] `Dev/index.ts` created → `registry.ts` updated to use facade
 
 ---
+
+## 9. Journal Checker UI Overhaul
+> ✅ **COMPLETED** — Redesigned for in-game journal accuracy and premium sidebar experience
+
+- [x] Implement 2-level Master-Detail navigation
+- [x] Create **Scrapbook Lined Paper** background with CSS gradients
+- [x] Enforce **Sprites Only** visuals (Zero emoji policy)
+- [x] Implement **Expandable Categories** (See More functionality)
+- [x] Fix **MGSprite** rendering issue with initialization check
+- [x] Integrate **Gemini-native Scrollbars**
+- [ ] Finalize decoration (Clipboard frame, rings, golden corners)
+- [ ] Add `state.ts` for persistent tab/expand preferences
+- [x] Create **JournalProgressBar** component (theme-customizable)
+- [x] Create **JournalTab** component (theme-customizable)
+
+---
+
+## 10. CSS Variable Standardization & UI Compliance
+> ✅ **COMPLETED** — Internal game-specific variables + header color consistency + Auto-Favorite architectural fixes
+
+**CSS Variables:**
+- [x] Add 17 internal CSS variables to all 8 themes
+- [x] Update Badge component to use `--rarity-*` variables
+- [x] Update Switch component to use `--switch-thumb`
+- [x] Change header colors to use `--pill-to`
+- [x] Fix MagicGarden Journal text-shadow conflict
+
+**Auto-Favorite Architectural Compliance:**
+- [x] Create required `state.ts` file using `createSectionStore` pattern
+- [x] Remove inline `<style>` element and inject external stylesheet
+- [x] Refactor state management to use section store
+
+**Future Work:**
+- [ ] Comprehensive audit of remaining sections (Settings, Pets, Feature Settings, Test)
+- [ ] Component audit (Input, Label, Checkbox, Select, Slider, ColorPicker)

@@ -32,10 +32,10 @@ export const badgeCss = `
 .badge--solid{ background-color: color-mix(in oklab, var(--border) 18%, transparent); }
 
 .badge--neutral{ --bd: var(--border); }
-.badge--info{    --bd: color-mix(in oklab, #38bdf8 65%, var(--border)); }
-.badge--success{ --bd: color-mix(in oklab, #22c55e 65%, var(--border)); }
-.badge--warning{ --bd: color-mix(in oklab, #f59e0b 65%, var(--border)); }
-.badge--danger{  --bd: color-mix(in oklab, #ef4444 65%, var(--border)); }
+.badge--info{    --bd: color-mix(in oklab, var(--info) 65%, var(--border)); }
+.badge--success{ --bd: color-mix(in oklab, var(--high) 65%, var(--border)); }
+.badge--warning{ --bd: color-mix(in oklab, var(--medium) 65%, var(--border)); }
+.badge--danger{  --bd: color-mix(in oklab, var(--low) 65%, var(--border)); }
 
 .badge.badge--neutral,
 .badge.badge--info,
@@ -45,10 +45,10 @@ export const badgeCss = `
   border-color: var(--bd, var(--border));
 }
 
-.badge--soft.badge--info    { background-color: color-mix(in oklab, #38bdf8 15%, transparent); }
-.badge--soft.badge--success { background-color: color-mix(in oklab, #22c55e 14%, transparent); }
-.badge--soft.badge--warning { background-color: color-mix(in oklab, #f59e0b 16%, transparent); }
-.badge--soft.badge--danger  { background-color: color-mix(in oklab, #ef4444 15%, transparent); }
+.badge--soft.badge--info    { background-color: color-mix(in oklab, var(--info) 15%, transparent); }
+.badge--soft.badge--success { background-color: color-mix(in oklab, var(--high) 14%, transparent); }
+.badge--soft.badge--warning { background-color: color-mix(in oklab, var(--medium) 16%, transparent); }
+.badge--soft.badge--danger  { background-color: color-mix(in oklab, var(--low) 15%, transparent); }
 
 /* ===================== RARITY ===================== */
 .badge.badge--rarity{
@@ -67,12 +67,12 @@ export const badgeCss = `
   color:inherit;
 }
 
-.badge.badge--rarity.badge--rarity-common    { background:#E7E7E7; color:#0b0b0b; }
-.badge.badge--rarity.badge--rarity-uncommon  { background:#67BD4D; color:#0b0b0b; }
-.badge.badge--rarity.badge--rarity-rare      { background:#0071C6; color:#ffffff; }
-.badge.badge--rarity.badge--rarity-legendary { background:#FFC734; color:#0b0b0b; }
-.badge.badge--rarity.badge--rarity-mythical  { background:#9944A7; color:#ffffff; }
-.badge.badge--rarity.badge--rarity-divine    { background:#FF7835; color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-common    { background: var(--rarity-common); color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-uncommon  { background: var(--rarity-uncommon); color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-rare      { background: var(--rarity-rare); color:#ffffff; }
+.badge.badge--rarity.badge--rarity-legendary { background: var(--rarity-legendary); color:#0b0b0b; }
+.badge.badge--rarity.badge--rarity-mythical  { background: var(--rarity-mythical); color:#ffffff; }
+.badge.badge--rarity.badge--rarity-divine    { background: var(--rarity-divine); color:#0b0b0b; }
 
 /* Animated celestial */
 @keyframes badgeCelestialShift {

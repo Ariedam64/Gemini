@@ -5,8 +5,8 @@
  * Handles bulk favoriting operations
  */
 
-import { G_MyInventory } from '../../globals';
-import { toggleFavoriteItem } from '../../websocket/api';
+import { G_MyInventory } from '../../../globals';
+import { toggleFavoriteItem } from '../../../websocket/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -68,4 +68,3 @@ export async function bulkFavorite(favorite: boolean): Promise<number> {
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-

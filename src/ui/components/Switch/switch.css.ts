@@ -17,7 +17,7 @@ export const switchCss = `
   --sw-border: var(--border);
   --sw-off: color-mix(in oklab, var(--soft) 82%, transparent);
   --sw-on:  color-mix(in oklab, var(--accent) 38%, transparent);
-  --thumb: #fff;
+  --thumb: var(--switch-thumb);
 
   position:relative;
   width: var(--sw-w);

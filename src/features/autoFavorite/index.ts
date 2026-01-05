@@ -14,7 +14,7 @@ import type {
 
 import { DEFAULT_CONFIG, STORAGE_KEY } from './types';
 import * as State from './state';
-import * as Logic from './logic';
+import * as Logic from './logic/autoFavorite';
 
 /**
  * AutoFavorite Module

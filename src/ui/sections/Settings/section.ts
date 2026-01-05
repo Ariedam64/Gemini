@@ -14,7 +14,7 @@ import { ColorPicker, ColorPickerValue } from "../../components/ColorPicker/Colo
 import { MGEnvironment } from "../../../modules/environment";
 import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
-import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
+import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./state";
 
 /* ───────────────────────── Utilities ───────────────────────── */
 
@@ -27,6 +27,7 @@ function buildThemeOptions(): SelectOption[] {
 }
 
 const THEME_COLOR_KEYS = [
+  // Core
   "--bg",
   "--fg",
   "--accent",
@@ -34,10 +35,22 @@ const THEME_COLOR_KEYS = [
   "--soft",
   "--border",
   "--shadow",
+  "--paper",
+  // Tabs & Pills
   "--tab-bg",
   "--tab-fg",
   "--pill-from",
   "--pill-to",
+  // Status
+  "--low",
+  "--medium",
+  "--high",
+  "--complete",
+  "--info",
+  // Accents
+  "--accent-1",
+  "--accent-2",
+  "--accent-3",
 ] as const;
 
 type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];

@@ -4,6 +4,71 @@ All notable changes to Gemini. Format: [Keep a Changelog](https://keepachangelog
 
 ---
 
+## [Unreleased] — 2026-01-05
+
+> CSS Variable Standardization: Internal game-specific variables (mutations, rarities) + header color consistency + Auto-Favorite architectural compliance
+
+---
+
+### 🆕 Added
+
+#### Internal CSS Variables — Theme Architecture
+Added 17 internal CSS variables to all 8 themes (NOT exposed in style/theme editor):
+- 9 mutation colors: `--mut-rainbow`, `--mut-gold`, `--mut-wet`, `--mut-chilled`, `--mut-frozen`, `--mut-dawnlit`, `--mut-dawncharged`, `--mut-ambershine`, `--mut-ambercharged`
+- 7 rarity colors: `--rarity-common`, `--rarity-uncommon`, `--rarity-rare`, `--rarity-legendary`, `--rarity-mythical`, `--rarity-divine`, `--rarity-celestial`
+- 1 component variable: `--switch-thumb`
+
+**Why:** Game-authentic colors remain consistent but use CSS variables for proper theme architecture compliance.
+
+**Files:**
+- `src/ui/theme/definitions.ts` — Added variables to all themes
+- `src/ui/components/Badge/badge.css.ts` — Rarity badges use variables
+- `src/ui/components/Switch/switch.css.ts` — Thumb uses variable
+
+#### Auto-Favorite Section State Management
+Created required `state.ts` file following section architecture rules:
+- `src/ui/sections/AutoFavoriteSettings/state.ts` — Persistent state using `createSectionStore` pattern
+
+---
+
+### 🔄 Changed
+
+#### Header Text → `--pill-to` Color
+Changed header text across UI to use `--pill-to` for consistency:
+- Journal "GARDEN JOURNAL" header
+- Card component titles (affects Auto-Favorite section)
+
+**Files:**
+- `src/ui/sections/JournalChecker/styles.css.ts` (Line 64)
+- `src/ui/components/Card/Card.ts` (Line 318)
+
+#### Auto-Favorite Section → Architectural Compliance
+Refactored to comply with `.claude/rules/ui/sections.md`:
+- Created required `state.ts` file using `createSectionStore` pattern
+- Removed inline `<style>` element (85+ lines)
+- Now injects external `styles.css.ts` via `injectStyleOnce()`
+- State management separated from UI logic
+- All state access uses `getStore()` pattern
+
+**Files:**
+- NEW: `src/ui/sections/AutoFavoriteSettings/state.ts`
+- `src/ui/sections/AutoFavoriteSettings/section.ts` (major refactor)
+
+---
+
+### 🐛 Fixed
+
+#### MagicGarden Journal Text Invisible
+Fixed invisible text issue caused by conflicting text-shadow.
+
+**Root Cause:** Black text with white text-shadow on cream background
+**Fix:** Added `text-shadow: none;` to MagicGarden override
+
+**Files:**
+- `src/ui/sections/JournalChecker/styles.css.ts` (Lines 114-121)
+
+---
+
 ## [Unreleased] — 2026-01-02
 
 > Major refactor: Storage layer (GM_*), module API standardization (MG* pattern), UI components (class-based styling), comprehensive compliance audit against `.claude/rules/`.

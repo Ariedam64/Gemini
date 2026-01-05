@@ -8,6 +8,10 @@ export type NavTabs = {
   activate: (id: string) => void;
   recalc: () => void;
   getActive: () => string;
+  showTab: (id: string) => void;
+  hideTab: (id: string) => void;
+  isTabVisible: (id: string) => boolean;
+  getVisibleTabs: () => string[];
 };
 
 const SCROLL_AMOUNT = 150;
@@ -23,6 +27,10 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
 
   // Tabs scroll container
   const tabsRow = element("div", { className: "lg-tabs", id: "lg-tabs-row" }, pill, ...btns) as HTMLDivElement;
+
+  // Track tab visibility state
+  const visibilityMap = new Map<string, boolean>(tabs.map(t => [t.id, true]));
+  const btnMap = new Map<string, HTMLButtonElement>(btns.map((b, i) => [tabs[i].id, b]));
 
   // Helper to create SVG chevron
   function createChevronSVG(direction: 'left' | 'right') {
@@ -165,8 +173,54 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
     });
   }
 
+  // Get first visible tab for fallback when hiding active tab
+  function getFirstVisibleTab(): string | null {
+    for (const [id, visible] of visibilityMap) {
+      if (visible) return id;
+    }
+    return null;
+  }
+
+  // Hide a tab from the navigation
+  function hideTab(id: string): void {
+    const btn = btnMap.get(id);
+    if (!btn) return;
+
+    visibilityMap.set(id, false);
+    btn.style.display = 'none';
+
+    // If hiding the active tab, switch to first visible
+    if (active === id) {
+      const firstVisible = getFirstVisibleTab();
+      if (firstVisible) {
+        activate(firstVisible);
+      }
+    } else {
+      recalc();
+    }
+  }
+
+  // Show a previously hidden tab
+  function showTab(id: string): void {
+    const btn = btnMap.get(id);
+    if (!btn) return;
+
+    visibilityMap.set(id, true);
+    btn.style.display = '';
+    recalc();
+  }
+
+  // Recalc helper (defined early for use in show/hide)
+  function recalc(): void {
+    movePillTo(active);
+    updateArrowState();
+  }
+
   let active = initial || (tabs[0]?.id ?? "");
   function activate(id: string) {
+    // Guard: do not activate hidden tabs
+    if (!visibilityMap.get(id)) return;
+
     active = id;
     btns.forEach(b => b.classList.toggle("active", (b as HTMLButtonElement).dataset.target === id));
     movePillTo(id);
@@ -183,10 +237,11 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
   return {
     root,
     activate,
-    recalc: () => {
-      movePillTo(active);
-      updateArrowState();
-    },
+    recalc,
     getActive: () => active,
+    showTab,
+    hideTab,
+    isTabVisible: (id: string) => visibilityMap.get(id) ?? false,
+    getVisibleTabs: () => [...visibilityMap.entries()].filter(([_, visible]) => visible).map(([id]) => id),
   };
 }

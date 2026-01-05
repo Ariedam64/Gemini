@@ -12,34 +12,22 @@ import { Table, ColDef } from "../../components/Table/Table";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
 import { Badge } from "../../components/Badge/Badge";
 import { element } from "../../styles/helpers";
+import { injectStyleOnce } from "../../styles/inject";
+import { autoFavoriteSettingsCss } from "./styles.css";
+import { initSectionState, getStore } from "./state";
 import { MGData, MGSprite } from "../../../modules";
 import { MGAutoFavorite } from "../../../features";
-import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
-
-interface AutoFavoriteUIConfig {
-    enabled: boolean;
-    favoriteProduceList: string[];
-    favoritePetsList: string[];
-    favoriteMutations: string[];
-}
-
-const DEFAULT_CONFIG: AutoFavoriteUIConfig = {
-    enabled: false,
-    favoriteProduceList: [],
-    favoritePetsList: [],
-    favoriteMutations: [],
-};
 
 const MUTATION_DATA = [
-    { id: 'Rainbow', color: '#FF00FF', desc: 'All Rainbow items' },
-    { id: 'Gold', color: '#EBC800', desc: 'All Gold items' },
-    { id: 'Wet', color: '#5FFFFF', desc: 'All Wet items' },
-    { id: 'Chilled', color: '#B4E6FF', desc: 'All Chilled items' },
-    { id: 'Frozen', color: '#B9C8FF', desc: 'All Frozen items' },
-    { id: 'Dawnlit', color: '#F59BE1', desc: 'Dawn mutations' },
-    { id: 'Dawncharged', color: '#C896FF', desc: 'Dawn charged' },
-    { id: 'Ambershine', color: '#FFB478', desc: 'Amber mutations' },
-    { id: 'Ambercharged', color: '#FA8C4B', desc: 'Amber charged' },
+    { id: 'Rainbow', desc: 'All Rainbow items' },
+    { id: 'Gold', desc: 'All Gold items' },
+    { id: 'Wet', desc: 'All Wet items' },
+    { id: 'Chilled', desc: 'All Chilled items' },
+    { id: 'Frozen', desc: 'All Frozen items' },
+    { id: 'Dawnlit', desc: 'Dawn mutations' },
+    { id: 'Dawncharged', desc: 'Dawn charged' },
+    { id: 'Ambershine', desc: 'Amber mutations' },
+    { id: 'Ambercharged', desc: 'Amber charged' },
 ];
 
 const RARITY_ORDER: Record<string, number> = {
@@ -58,7 +46,6 @@ function getRarityOrder(rarity: string | null): number {
 }
 
 export class AutoFavoriteSettingsSection extends BaseSection {
-    private config: AutoFavoriteUIConfig = DEFAULT_CONFIG;
     private allPlants: string[] = [];
     private allPets: string[] = [];
     private sectionElement: HTMLElement | null = null;
@@ -68,100 +55,19 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     }
 
     protected async build(container: HTMLElement): Promise<void> {
+        // Initialize persistent state (per ui/sections.md)
+        await initSectionState();
+
+        // Inject external stylesheet (per ui/sections.md)
+        const shadow = container.getRootNode() as ShadowRoot;
+        injectStyleOnce(shadow, autoFavoriteSettingsCss, 'auto-favorite-settings-styles');
+
         const section = this.createGrid("12px");
         section.id = "auto-favorite-settings";
-
-        const style = document.createElement('style');
-        style.textContent = `
-      /* Themed scrollbar using CSS variables */
-      #auto-favorite-settings .selection-grid::-webkit-scrollbar {
-        width: 6px;
-      }
-      #auto-favorite-settings .selection-grid::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      #auto-favorite-settings .selection-grid::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb, rgba(255,255,255,0.2));
-        border-radius: 3px;
-      }
-      #auto-favorite-settings .selection-grid::-webkit-scrollbar-thumb:hover {
-        background: var(--scrollbar-thumb-hover, rgba(255,255,255,0.3));
-      }
-
-      /* Game-style checkbox using theme variables */
-      #auto-favorite-settings .game-checkbox {
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border: 2px solid color-mix(in oklab, var(--tab-bg) 60%, transparent);
-        border-radius: 3px;
-        background: var(--bg);
-        cursor: pointer;
-        position: relative;
-        transition: all 0.2s;
-      }
-
-      #auto-favorite-settings .game-checkbox:hover {
-        border-color: var(--accent);
-        box-shadow: 0 0 4px color-mix(in oklab, var(--accent) 40%, transparent);
-      }
-
-      #auto-favorite-settings .game-checkbox:checked {
-        background: linear-gradient(135deg, var(--tab-bg) 0%, var(--accent) 100%);
-        border-color: var(--accent);
-      }
-
-      #auto-favorite-settings .game-checkbox:checked::after {
-        content: '✓';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: var(--bg);
-        font-size: 14px;
-        font-weight: bold;
-      }
-
-      /* Item row using theme variables */
-      #auto-favorite-settings .item-row {
-        background: color-mix(in oklab, var(--tab-bg) 8%, transparent);
-        border: 1px solid color-mix(in oklab, var(--tab-bg) 20%, transparent);
-        transition: all 0.15s ease;
-      }
-
-      #auto-favorite-settings .item-row:hover {
-        background: color-mix(in oklab, var(--tab-bg) 15%, transparent);
-        border-color: var(--accent);
-        transform: translateX(2px);
-      }
-
-      #auto-favorite-settings .item-row.checked {
-        background: color-mix(in oklab, var(--accent) 12%, transparent);
-        border-color: var(--accent);
-      }
-
-      /* Responsive Mutation Rows - Fluid Flexbox */
-      #auto-favorite-settings .mut-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 8px;
-        width: 100%;
-      }
-
-      #auto-favorite-settings .mut-btn {
-        flex: 1 1 130px;
-        min-width: 0; /* Allow shrinking below content size */
-      }
-
-      /* On narrow containers, buttons will stack automatically due to flex-basis */
-    `;
-        container.appendChild(style);
 
         this.sectionElement = section;
         container.appendChild(section);
 
-        this.config = storageGet<AutoFavoriteUIConfig>(FEATURE_KEYS.AUTO_FAVORITE_UI, DEFAULT_CONFIG);
         await this.loadGameData();
 
         await this.waitForSprites();
@@ -237,10 +143,12 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         const row = element("div", { className: "kv" }) as HTMLDivElement;
         const label = Label({ text: "Enable Auto-Favorite", tone: "default", size: "lg" });
         const toggle = Switch({
-            checked: this.config.enabled,
-            onChange: (enabled: boolean) => {
-                this.config.enabled = enabled;
-                this.saveConfig();
+            checked: getStore().get().enabled,
+            onChange: async (enabled: boolean) => {
+                const store = getStore();
+                const config = store.get();
+                await store.set({ ...config, enabled });
+                await this.saveConfig();
             }
         });
 
@@ -286,49 +194,22 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             { title: "Mutations Priority", variant: "soft", padding: "lg", expandable: true, defaultExpanded: true },
             container,
             element("p", { style: "margin-top: 8px; font-size: 11px; color: var(--muted);" },
-                `${this.config.favoriteMutations.length} / ${MUTATION_DATA.length} active`)
+                `${getStore().get().favoriteMutations.length} / ${MUTATION_DATA.length} active`)
         );
     }
 
     private createMutationButton(data: typeof MUTATION_DATA[0]): HTMLDivElement {
-        let isActive = this.config.favoriteMutations.includes(data.id);
-        const color = data.color;
+        let isActive = getStore().get().favoriteMutations.includes(data.id);
 
-        const r = parseInt(color.slice(1, 3), 16);
-        const g = parseInt(color.slice(3, 5), 16);
-        const b = parseInt(color.slice(5, 7), 16);
-
-        const getButtonStyles = (active: boolean) => {
-            // Brighter Rainbow gradient
-            let activeBg = `rgba(${r}, ${g}, ${b}, 0.25)`;
-            let activeBorder = color;
-
-            if (data.id === 'Rainbow' && active) {
-                activeBg = 'linear-gradient(135deg, rgba(255,0,0,0.3) 0%, rgba(255,165,0,0.3) 20%, rgba(255,255,0,0.3) 40%, rgba(0,128,0,0.3) 60%, rgba(0,0,255,0.3) 80%, rgba(75,0,130,0.3) 100%)';
-                activeBorder = '#fff9c4';
-            }
-
-            return `
-                padding: 8px 12px;
-                min-height: 52px;
-                border-radius: var(--card-radius, 12px);
-                cursor: pointer;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                background: ${active ? activeBg : 'color-mix(in oklab, var(--bg) 12%, transparent)'};
-                border: 2px solid ${active ? activeBorder : 'color-mix(in oklab, var(--border) 40%, transparent)'};
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 12px;
-                box-shadow: ${active ? (data.id === 'Rainbow' ? '0 4px 18px rgba(255,255,255,0.25)' : `0 4px 12px rgba(${r}, ${g}, ${b}, 0.3)`) : 'none'};
-                opacity: ${active ? '1' : '0.8'};
-                width: 100%;
-            `;
-        };
+        // Build CSS classes for mutation button
+        const mutationClass = `mut-btn--${data.id.toLowerCase()}`;
+        const classes = ['mut-btn', mutationClass];
+        if (isActive) {
+            classes.push('active');
+        }
 
         const btn = element("div", {
-            className: "mut-btn",
-            style: getButtonStyles(isActive)
+            className: classes.join(' ')
         }) as HTMLDivElement;
 
         const leftSprite = element("div", { style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" }) as HTMLDivElement;
@@ -367,25 +248,29 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             btn.append(spacer);
         }
 
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            const store = getStore();
+            const config = store.get();
+
             if (isActive) {
-                this.config.favoriteMutations = this.config.favoriteMutations.filter(m => m !== data.id);
+                const updated = config.favoriteMutations.filter((m: string) => m !== data.id);
+                await store.set({ ...config, favoriteMutations: updated });
                 isActive = false;
+                btn.classList.remove('active');
             } else {
-                this.config.favoriteMutations.push(data.id);
+                const updated = [...config.favoriteMutations, data.id];
+                await store.set({ ...config, favoriteMutations: updated });
                 isActive = true;
+                btn.classList.add('active');
             }
 
-            // UI Update: Fast and performant
-            btn.style.cssText = getButtonStyles(isActive);
-
-            this.saveConfig();
+            await this.saveConfig();
 
             // Update counter without full re-render
             const counter = this.sectionElement?.querySelector('.card p');
             if (counter) {
-                counter.textContent = `${this.config.favoriteMutations.length} / ${MUTATION_DATA.length} active`;
+                counter.textContent = `${getStore().get().favoriteMutations.length} / ${MUTATION_DATA.length} active`;
             }
         });
 
@@ -394,15 +279,25 @@ export class AutoFavoriteSettingsSection extends BaseSection {
 
     private createProduceCard(): HTMLDivElement {
         return this.createItemSelectionCard({
-            title: "Produce", items: this.allPlants, category: 'plant', selected: this.config.favoriteProduceList,
-            onUpdate: (newList) => { this.config.favoriteProduceList = newList; this.saveConfig(); }
+            title: "Produce", items: this.allPlants, category: 'plant', selected: getStore().get().favoriteProduceList,
+            onUpdate: async (newList) => {
+                const store = getStore();
+                const config = store.get();
+                await store.set({ ...config, favoriteProduceList: newList });
+                await this.saveConfig();
+            }
         });
     }
 
     private createPetsCard(): HTMLDivElement {
         return this.createItemSelectionCard({
-            title: "Pets", items: this.allPets, category: 'pet', selected: this.config.favoritePetsList,
-            onUpdate: (newList) => { this.config.favoritePetsList = newList; this.saveConfig(); }
+            title: "Pets", items: this.allPets, category: 'pet', selected: getStore().get().favoritePetsList,
+            onUpdate: async (newList) => {
+                const store = getStore();
+                const config = store.get();
+                await store.set({ ...config, favoritePetsList: newList });
+                await this.saveConfig();
+            }
         });
     }
 
@@ -487,7 +382,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         // Create sprite renderer
         const createSpriteCell = (itemId: string): Node => {
             const wrapper = element("div", {
-                style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.05); border-radius: 6px;"
+                style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: color-mix(in oklab, var(--bg) 5%, transparent); border-radius: 6px;"
             }) as HTMLDivElement;
 
             try {
@@ -614,17 +509,18 @@ export class AutoFavoriteSettingsSection extends BaseSection {
     }
 
     private async saveConfig(): Promise<void> {
-        storageSet(FEATURE_KEYS.AUTO_FAVORITE_UI, this.config);
+        const config = getStore().get();
+        // Store is automatically persisted by createSectionStore
+
         try {
-            const { setEnabled, updateSimpleConfig } = MGAutoFavorite;
+            const { updateSimpleConfig } = MGAutoFavorite;
             await updateSimpleConfig({
-                enabled: this.config.enabled,
-                favoriteSpecies: [...this.config.favoriteProduceList, ...this.config.favoritePetsList],
-                favoriteMutations: this.config.favoriteMutations,
+                enabled: config.enabled,
+                favoriteSpecies: [...config.favoriteProduceList, ...config.favoritePetsList],
+                favoriteMutations: config.favoriteMutations,
             });
-            await setEnabled(this.config.enabled);
         } catch (error) {
-            console.error('[AutoFavorite UI] Failed to apply config:', error);
+            console.error('[AutoFavoriteSettings] Failed to update feature config:', error);
         }
     }
 }

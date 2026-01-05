@@ -37,6 +37,9 @@ export function createThemeManager(options: ThemeManagerOptions): ThemeManager {
   function applyTheme(themeName: string): void {
     const themeDefinition = themes[themeName] || themes[currentTheme] || {};
 
+    // Set data-theme attribute to enable :host-context([data-theme="..."]) selectors
+    host.setAttribute('data-theme', themeName);
+
     // Add animation class after first initialization
     if (isInitialized) {
       host.classList.add("theme-anim");
