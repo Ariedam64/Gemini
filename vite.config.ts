@@ -60,11 +60,6 @@ export default defineConfig({
             },
             build: {
                 fileName: 'gemini-build.user.js',
-                // @ts-ignore
-                cssSideEffects: (css) => {
-                    if (!css) return '';
-                    return `(function() { const style = document.createElement('style'); style.textContent = ${JSON.stringify(css)}; document.head.appendChild(style); })();`;
-                }
             },
             server: {
                 mountGmApi: true
