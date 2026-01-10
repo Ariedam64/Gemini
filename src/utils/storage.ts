@@ -64,6 +64,8 @@ export const FEATURE_KEYS = {
     CONFIG: 'feature:config',
     /** Pet team feature config */
     PET_TEAM: 'feature:petTeam:config',
+    /** XP Tracker feature config */
+    XP_TRACKER: 'feature:xpTracker:config',
 } as const;
 
 /** Keys for development/debug purposes */

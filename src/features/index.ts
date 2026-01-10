@@ -5,10 +5,13 @@ export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
 export { MGJournalChecker, JournalChecker } from "./journalChecker";
 export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
 export { MGAchievements } from "./achievements";
-export { MGCalculators } from "./calculators";
 export { MGAntiAfk } from "./antiAfk";
 export { MGPetTeam } from "./petTeam";
 export type { PetTeam } from "./petTeam";
+export { MGXPTracker } from "./xpTracker";
+export type { PetXpProgress, XpBoostStats, CombinedXpBoostStats, XpTrackerConfig } from "./xpTracker";
+export { MGGrowthTimers } from "./growthTimers";
+export type { GrowthTimer, BoostInfo, GrowthTimersConfig } from "./growthTimers";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

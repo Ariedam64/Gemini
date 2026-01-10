@@ -19,6 +19,9 @@ export { MGPixiHooks } from "./pixi/logic/hooks";
 export { MGAudio } from "./audio";
 export { MGCosmetic } from "./cosmetic";
 
+// Utility modules
+export { MGCalculators } from "./calculators";
+
 // Re-import for initialization
 import { MGData } from "./data";
 import { MGCustomModal } from "./customModal";

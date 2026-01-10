@@ -1,0 +1,9 @@
+{
+  "ai": "gemini",
+  "script": "ps",
+  "here": true,
+  "noGit": false,
+  "ignoreAgentTools": false,
+  "debug": false,
+  "lastProjectName": "my-project"
+}

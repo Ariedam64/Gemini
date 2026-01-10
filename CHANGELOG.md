@@ -4,7 +4,277 @@ All notable changes to Gemini. Format: [Keep a Changelog](https://keepachangelog
 
 ---
 
-## [Unreleased] — 2026-01-05
+## [Unreleased] — 2026-01-10
+
+> Growth Panel UI Overhaul: Mobile-responsive layout, CSS variable standardization, Celestial sprite support, progress percentage overlay, and BasePetCard component
+
+---
+
+### 🆕 Added
+
+#### Growth Timer Feature (`src/features/growthTimers/`)
+Complete growth timer tracking system for eggs and plants:
+- `index.ts` — Main entry point with boost calculation exports
+- `types.ts` — Type definitions (PlantGrowthData, EggGrowthData)
+- `logic/boostCalculator.ts` — Calculates reduction effects from pet abilities
+
+#### Feature Panel Registry System (`src/ui/sections/Pets/parts/featurePanels/`)
+Extensible panel system for pet team cards:
+- `registry.ts` — Panel registration with isAvailable/getSummary/buildPanel
+- `xpPanel.ts` — XP Tracker panel definition
+- `GrowthPanel.ts` — Growth Timer panel definition
+- `growthPanel.css.ts` — Growth panel styles (CSS variables only)
+
+#### BasePetCard Component (`src/ui/components/BasePetCard/`)
+Blank shell component implementing "Stat Grid Protocol":
+- `BasePetCard.ts` — Reusable pet card shell with left/content slots
+- `basePetCard.css.ts` — Theme-compliant CSS (mobile responsive)
+
+#### New UI Components
+- **ArcadeButton** — 3D arcade-style button with click sound
+- **GeminiIconButton** — Icon button with Gemini styling
+- **ProgressBar** — Reusable progress bar with variants
+- **SeeMore** — Generic expand/collapse toggle
+- **Tab** — Tab navigation component
+
+#### Pet Team Expansion System (`src/ui/sections/Pets/parts/`)
+- `TeamCardExpansion.ts` — Expansion handler for team cards
+- `TeamCardDrag.ts` — Drag/drop reordering for teams
+- `TeamXpPanel.ts` — Team-specific XP panel
+- `featureCard.css.ts` — Feature card styles (collapsed summary bar)
+
+#### Calculator Module (`src/modules/calculators/`)
+**MOVED FROM FEATURES** — Calculators now in modules for shared access:
+- `crop.ts`, `mutation.ts`, `pet.ts` — Game calculation logic
+
+---
+
+### 🔄 Changed
+
+#### Growth Panel — Mobile Responsive Layout
+Comprehensive mobile layout improvements:
+- Progress bar width now respects container (no overflow)
+- Percentage overlayed ON progress bar (centered)
+- Mobile stat-row spacing increased (8px margin-bottom)
+- Mobile controls centered (justify-content: center)
+- Mobile-first flex ordering (sprite → timer → progress)
+
+**Files:**
+- `src/ui/components/BasePetCard/basePetCard.css.ts` — Progress bar relative, percent absolute
+- `src/ui/sections/Pets/parts/featureCard.css.ts` — Mobile centering rules
+
+#### Growth Panel — CSS Variable Standardization
+All text colors use correct CSS variables per user specification:
+- `bar-percent` → `--accent` with black outline
+- `bar-info` → `--pill-from` with black outline
+- `growth-next-time` → `--pill-to`
+- `growth-next-date` → `--fg`
+- Time formatting: `162min/h` → `2h 42m/h`
+
+**Files:**
+- `src/ui/sections/Pets/parts/featureCard.css.ts`
+- `src/ui/sections/Pets/parts/TeamCardExpansion.ts`
+
+#### XP Panel — Progress Percentage Centered
+Moved percentage span INSIDE progress bar div for proper CSS centering:
+- Both NEXT STR and MAX STR rows affected
+- Percentage now visually overlays progress fill
+
+**Files:**
+- `src/ui/sections/Pets/parts/featurePanels/xpPanel.ts`
+
+#### Growth Panel — Sprite Bunching
+Improved stacked sprites layout:
+- CSS grid-based 2x2 layout
+- 50-65% overlap visibility
+- Smaller scale (0.2) for compact display
+
+**Files:**
+- `src/ui/sections/Pets/parts/featurePanels/GrowthPanel.ts`
+
+---
+
+### 🐛 Fixed
+
+#### Celestial Plant Sprites
+Added sprite mapping for Celestial crops:
+- `DawnCelestial` → `DawnCelestialCrop`
+- `MoonCelestial` → `MoonCelestialCrop`
+- Applied to: dropdown selection, collapsed summary bar, stat rows
+
+**Files:**
+- `src/ui/sections/Pets/parts/TeamCardExpansion.ts`
+- `src/ui/sections/Pets/parts/featurePanels/GrowthPanel.ts`
+
+#### Mobile Horizontal Scroll
+Fixed horizontal scrolling when Growth team expanded on mobile:
+- Added `max-width: 100%` to team progress bars
+- Added `flex-wrap: wrap` to summary bar container
+- Added responsive breakpoints (480px, 360px, 320px)
+
+**Files:**
+- `src/ui/sections/Pets/parts/featureCard.css.ts`
+
+#### x Count Display Removed
+Removed "x9", "x11" count displays from stat rows:
+- Removed `count` parameter from `buildStatRow()` function
+- Updated all 6 call sites
+- Sprites now closer to progress bars
+
+**Files:**
+- `src/ui/sections/Pets/parts/featurePanels/GrowthPanel.ts`
+
+#### Gemini Scrollbar in Dropdown
+Added themed scrollbar to Growth dropdown:
+- `scrollbar-width: thin`
+- `scrollbar-color: var(--border) transparent`
+- `-webkit-overflow-scrolling: touch` for mobile
+- Custom webkit scrollbar styles
+
+**Files:**
+- `src/ui/sections/Pets/parts/featureCard.css.ts`
+
+---
+
+### ❌ Removed
+
+#### Calculator Feature Files
+Moved to `src/modules/calculators/`:
+- `src/features/calculators/index.ts`
+- `src/features/calculators/logic/crop.ts`
+- `src/features/calculators/logic/mutation.ts`
+- `src/features/calculators/logic/pet.ts`
+
+#### Journal-Specific Components (Refactored)
+Replaced with generic components:
+- `src/ui/components/JournalProgressBar/`
+- `src/ui/components/JournalSeeMore/`
+- `src/ui/components/JournalTab/`
+
+---
+
+## [Unreleased] — 2026-01-07
+
+
+### 🆕 Added
+
+#### Inline Pet Team XP Tracking
+Integrated XP tracking directly into the Pets section for better UX:
+- Expandable XP panels for each pet team (click ▶ button in Overview mode)
+- Mini progress bars showing average team progress to max STR when collapsed
+- Auto-updates every 3 seconds for expanded teams
+- Maximum 5 teams can be expanded simultaneously (FIFO auto-collapse)
+- Per-pet stats: current/max strength, XP/hour, time to next/max STR, feeds required
+- XP Boost ability detection with tier badges (⚡I, ⚡II, ⚡III, ❄ for Snowy)
+- Team-wide XP summary showing base + bonus XP rates
+- Special handling for max-strength XP Boost pets (shows "supporting feeds" for leveling teammates)
+- Starving pet indicators with 0 XP/hr warning
+
+**Files:**
+- `src/ui/sections/Pets/parts/TeamXpPanel.ts` — New XP panel component
+- `src/ui/sections/Pets/parts/teamXpPanel.css.ts` — Panel styling
+- `src/features/xpTracker/logic/teamXpCalculations.ts` — Team-specific XP calculations
+- `src/ui/components/TeamListItem/TeamListItem.ts` — Enhanced with expand button + progress badge
+- `src/ui/sections/Pets/parts/TeamCard.ts` — XP panel integration logic
+
+---
+
+### 🔄 Changed
+
+#### XP Tracking → Inline in Pets Section
+XP tracking moved from standalone section to inline display:
+- XP panels now appear directly under pet teams in Overview mode
+- Only available in Overview mode (disabled in Manage mode)
+- Tied to existing XP Tracker feature toggle (no separate toggle)
+
+---
+
+### ❌ Removed
+
+#### Standalone XP Tracker Section
+Removed standalone XP Tracker section (replaced by inline tracking):
+- Deleted `src/ui/sections/XpTracker/` directory
+- Removed from sections registry
+- XP calculation logic preserved in `src/features/xpTracker/`
+
+---
+
+### 🐛 Fixed
+
+#### Team XP Panel — Pet Sprite Rendering
+Fixed pet sprites not displaying correctly by replicating JournalChecker sprite pattern:
+- Added `await MGSprite.init()` in PetsSection before building panels
+- Added `MGSprite.has()` check before attempting to render sprites
+- Applied explicit canvas styles (width: 64px, height: 64px, objectFit: contain, display: block)
+- Used `boundsMode: 'padded'` option for proper sprite bounds
+- Reduced scale from 2 to 1 (matches Journal pattern)
+- Added warning logs for failed sprite renders
+
+**Why:** MGSprite requires initialization and proper canvas styling for correct rendering. Following the proven JournalChecker pattern ensures sprites display properly with mutations.
+
+**Files:**
+- `src/ui/sections/Pets/section.ts` — Added MGSprite.init() call
+- `src/ui/sections/Pets/parts/TeamXpPanel.ts` — Sprite rendering using Journal pattern
+
+#### Team XP Panel — Comprehensive UI/UX Overhaul
+Major refinements addressing all user-reported issues:
+
+**Multi-Team Expand Fix:**
+- Fixed critical bug preventing multiple teams from being expanded simultaneously
+- Implemented DOM preservation during re-renders (detach/reattach pattern)
+- Expand/collapse now directly manipulates DOM without full re-render
+- Supports up to 5 simultaneously expanded teams (FIFO auto-collapse)
+
+**Progress Badge Visibility:**
+- Progress badge now always visible when XP tracking is enabled (even when expanded)
+- Provides at-a-glance team progress without needing to expand panel
+
+**Seamless Expand Animation:**
+- Eliminated animation delay by populating panel data BEFORE DOM insertion
+- Removed render() calls from expand/collapse (prevents destroy/rebuild cycle)
+- Content now expands smoothly with animation (no empty-then-populate flash)
+
+**Hover State Refinement:**
+- Removed conflicting border color change (was causing double-border artifact)
+- Accent bar now smoothly transitions color on hover (pill-from → accent)
+- Shadow and transform provide subtle depth on hover without border conflicts
+
+**Progress Bar Format Overhaul:**
+- Completely redesigned format per specifications
+- **NEXT STR** row: `12.8h (🍖: 13) [████████░░ 69%]`
+- **MAX STR** row: `48.5h (🍖: 52) [████░░░░░░ 15%]`
+- Removed separate "Progress" row
+- Each row shows: time estimate, feed count with emoji, inline progress bar with percentage
+- Progress calculations: Next STR shows progress within current level (1-99%), Max STR shows overall progress (0-100%)
+
+**Theme Compatibility:**
+- All colors use CSS variables (`--mut-gold`, `--mut-ambercharged`, `--fg`, `--bg`, `--soft`, `--border`, etc.)
+- Only exceptions: badge text colors (#fff/#1a1a1a) for accessibility on colored backgrounds (documented with comments)
+- Zero color-mix() usage
+- Full compatibility across all 8 themes
+
+**Files:**
+- `src/ui/sections/Pets/parts/TeamCard.ts` — Multi-team expand fix, DOM preservation, expand button state management
+- `src/ui/sections/Pets/parts/TeamXpPanel.ts` — New progress row format, buildProgressWithStats()
+- `src/ui/sections/Pets/parts/teamXpPanel.css.ts` — New progress row styles, hover state fixes, theme variable compliance
+
+#### Team XP Panel CSS — Variable Standardization
+Refactored `teamXpPanel.css.ts` to use direct CSS variables instead of excessive color-mix():
+- Replaced ~40 instances of `color-mix()` with direct variable usage
+- Now uses `var(--bg)`, `var(--soft)`, `var(--muted)`, `var(--border)`, `var(--shadow)` directly
+- Simplified gradients to use `var(--pill-from)` and `var(--pill-to)` without mixing
+- Status colors (`var(--low)`, `var(--medium)`, `var(--high)`, `var(--complete)`) used directly
+- Converted remaining gold/warning color-mix instances to `rgba()` for XP boost theming
+- Better theme compatibility and maintainability
+
+**Why:** GEMINI's theme system provides comprehensive CSS variables - color-mix() should only be used when truly necessary for dynamic opacity adjustments not covered by existing variables.
+
+**Files:**
+- `src/ui/sections/Pets/parts/teamXpPanel.css.ts` — CSS variable refactor
+
+---
+
+## [Previous] — 2026-01-05
 
 > CSS Variable Standardization: Internal game-specific variables (mutations, rarities) + header color consistency + Auto-Favorite architectural compliance
 

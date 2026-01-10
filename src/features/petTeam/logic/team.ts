@@ -143,6 +143,68 @@ export function getPetsForTeam(team: PetTeam): UnifiedPet[] {
     return pets;
 }
 
+/**
+ * Check if a team is full (all 3 slots occupied)
+ * @param team - Pet team to check
+ * @returns true if all slots are filled, false otherwise
+ */
+export function isTeamFull(team: PetTeam): boolean {
+    return team.petIds.every((petId) => petId !== EMPTY_SLOT);
+}
+
+/**
+ * Get indices of empty slots in a team
+ * @param team - Pet team to check
+ * @returns Array of empty slot indices (0-2)
+ */
+export function getEmptySlots(team: PetTeam): number[] {
+    const emptySlots: number[] = [];
+    for (let i = 0; i < MAX_PETS_PER_TEAM; i++) {
+        if (team.petIds[i] === EMPTY_SLOT) {
+            emptySlots.push(i);
+        }
+    }
+    return emptySlots;
+}
+
+/**
+ * Get the number of filled slots in a team
+ * @param team - Pet team to check
+ * @returns Number of filled slots (0-3)
+ */
+export function getFilledSlotCount(team: PetTeam): number {
+    return team.petIds.filter((petId) => petId !== EMPTY_SLOT).length;
+}
+
+/**
+ * Check if a team is empty (no pets assigned)
+ * @param team - Pet team to check
+ * @returns true if all slots are empty, false otherwise
+ */
+export function isTeamEmpty(team: PetTeam): boolean {
+    return team.petIds.every((petId) => petId === EMPTY_SLOT);
+}
+
+/**
+ * Check if a specific pet is in a team
+ * @param team - Pet team to check
+ * @param petId - Pet ID to look for
+ * @returns true if pet is in the team, false otherwise
+ */
+export function isPetInTeam(team: PetTeam, petId: string): boolean {
+    return team.petIds.includes(petId);
+}
+
+/**
+ * Get the slot index of a pet in a team
+ * @param team - Pet team to search
+ * @param petId - Pet ID to find
+ * @returns Slot index (0-2) or -1 if pet is not in team
+ */
+export function getPetSlotIndex(team: PetTeam, petId: string): number {
+    return team.petIds.indexOf(petId);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CRUD Operations
 // ─────────────────────────────────────────────────────────────────────────────

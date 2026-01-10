@@ -14,9 +14,9 @@ import { OverviewPage } from "./parts/OverviewPage";
 import { SpeciesPage } from "./parts/SpeciesPage";
 import { MGSprite } from "../../../modules";
 import type { JournalProgress, SpeciesProgress } from "../../../features/journalChecker/types";
-import { JournalTab, journalTabCss } from "../../components/JournalTab";
-import { journalProgressBarCss } from "../../components/JournalProgressBar";
-import { journalSeeMoreCss } from "../../components/JournalSeeMore";
+import { Tab, tabCss } from "../../components/Tab";
+import { progressBarCss } from "../../components/ProgressBar";
+import { seeMoreCss } from "../../components/SeeMore";
 import { initSectionState, getStore, isStoreReady, type TabId, type CategoryId } from "./state";
 
 // Extensible tab configuration
@@ -57,9 +57,9 @@ export class JournalCheckerSection extends BaseSection {
         // Inject styles
         const shadow = container.getRootNode() as ShadowRoot;
         injectStyleOnce(shadow, journalCheckerCss, 'journal-checker-styles');
-        injectStyleOnce(shadow, journalTabCss, 'journal-tab-styles');
-        injectStyleOnce(shadow, journalProgressBarCss, 'journal-progress-bar-styles');
-        injectStyleOnce(shadow, journalSeeMoreCss, 'journal-see-more-styles');
+        injectStyleOnce(shadow, tabCss, 'journal-tab-styles');
+        injectStyleOnce(shadow, progressBarCss, 'journal-progress-bar-styles');
+        injectStyleOnce(shadow, seeMoreCss, 'journal-see-more-styles');
 
         this.container.classList.add('journal-checker-host');
         this.container.style.height = '100%';
@@ -162,7 +162,7 @@ export class JournalCheckerSection extends BaseSection {
         const tabsContainer = element("div", { className: "journal-tabs-container" });
 
         JOURNAL_TABS.forEach((tab, index) => {
-            const button = JournalTab({
+            const button = Tab({
                 label: tab.label,
                 tabId: tab.id,
                 tabIndex: index + 1,

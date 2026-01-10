@@ -7,7 +7,7 @@ import { element } from "../../../styles/helpers";
 import { MGSprite, MGData } from "../../../../modules";
 import type { JournalProgress, CategoryProgress, SpeciesProgress } from "../../../../features/journalChecker/types";
 import type { MutationName } from "../../../../modules/sprite/types";
-import { JournalSeeMore } from "../../../components/JournalSeeMore";
+import { SeeMore } from "../../../components/SeeMore";
 
 // Game-authentic progress bar color thresholds
 const getProgressColor = (percentage: number): string => {
@@ -230,7 +230,7 @@ function renderCategorySection(
 
     // Toggle expansion button using JournalSeeMore component
     if (category.speciesDetails.length > 5) {
-        const seeMore = JournalSeeMore({
+        const seeMore = SeeMore({
             count: category.speciesDetails.length - 5,
             expanded: isExpanded,
             onClick: () => {

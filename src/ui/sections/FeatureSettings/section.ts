@@ -10,6 +10,7 @@ import { Label } from "../../components/Label/Label";
 import { Switch } from "../../components/Switch/Switch";
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
 import { BulkFavoriteInject } from "../../inject/qol/bulkFavorite";
+import { MGXPTracker } from "../../../features/xpTracker";
 
 /* ───────────────────────── Feature Configurations ───────────────────────── */
 
@@ -131,6 +132,7 @@ export class FeatureSettingsSection extends BaseSection {
             this.createToggleRow("XP Tracker", this.config.xpTracker.enabled, (v: boolean) => {
                 this.config.xpTracker.enabled = v;
                 this.saveConfig();
+                MGXPTracker.setEnabled(v);
             }),
             this.createToggleRow("Ability Tracker", this.config.abilityTracker.enabled, (v: boolean) => {
                 this.config.abilityTracker.enabled = v;

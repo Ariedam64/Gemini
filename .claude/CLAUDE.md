@@ -1,6 +1,6 @@
 # Gemini Mod (Claude Code)
 
-Project memory for Claude Code. Keep it short and actionable.
+Project memory for Claude Code. Keep it short and actionable. Always read the rest of the Gemini-main\.claude directory including all sub-files and sub-folders.
 
 ## TL;DR
 - Project: userscript mod (Tampermonkey/Violetmonkey) that hooks into the game’s minified runtime bundle in the browser.
@@ -77,3 +77,5 @@ Note: Treat `GameSourceFiles/` and `GameFilesExample/` as reference inputs. Do n
   - Styles/Themes: `@workflows/ui/style/`
 - State: `@workflows/state/`
 - WebSocket: `@workflows/websocket/`
+
+- Always launch Sonnet 4.5 or Opus subagents

@@ -151,3 +151,43 @@
 **Future Work:**
 - [ ] Comprehensive audit of remaining sections (Settings, Pets, Feature Settings, Test)
 - [ ] Component audit (Input, Label, Checkbox, Select, Slider, ColorPicker)
+
+---
+
+## 11. Growth Panel & XP Tracker UI Overhaul
+> ✅ **COMPLETED** — 2026-01-10 Mobile-responsive layout, CSS variables, Celestial sprites, percentage overlay
+
+### Growth Panel
+- [x] Collapsed summary bar CSS variable standardization (`--accent`, `--pill-from`, `--pill-to`, `--fg`)
+- [x] Time formatting conversion (`162min/h` → `2h 42m/h`)
+- [x] Celestial sprite mapping (DawnCelestial, MoonCelestial → crop variants)
+- [x] Gemini scrollbar in dropdown
+- [x] Mobile horizontal scroll fix
+- [x] Mobile button/controls centering
+- [x] Removed x count displays ("x9", "x11")
+- [x] Progress percentage overlayed on bar
+- [x] Sprite bunching with CSS grid
+
+### XP Panel
+- [x] Progress percentage centered in progress bar
+- [x] Moved percent span inside progress-mini div
+
+### New Components
+- [x] BasePetCard — Blank shell with stat grid protocol
+- [x] ArcadeButton — 3D arcade-style button
+- [x] GeminiIconButton — Icon button with Gemini styling
+- [x] ProgressBar — Reusable progress bar
+- [x] SeeMore — Expand/collapse toggle
+- [x] Tab — Tab navigation component
+
+### Feature Panel Registry
+- [x] Registry system (`src/ui/sections/Pets/parts/featurePanels/registry.ts`)
+- [x] XP Panel definition (`xpPanel.ts`)
+- [x] Growth Panel definition (`GrowthPanel.ts`)
+- [x] Growth Timer feature (`src/features/growthTimers/`)
+
+### Remaining
+- [ ] Add JSDoc comments to new components
+- [ ] Create README.md for new components (ArcadeButton, BasePetCard, etc.)
+- [ ] Review file sizes (<500 lines per .claude rules)
+- [ ] Manual verification on multiple screen sizes

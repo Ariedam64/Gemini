@@ -64,6 +64,13 @@ export const MGPetTeam = {
     getAllTeams: TeamLogic.getAllTeams,
     getTeamByName: TeamLogic.getTeamByName,
     reorderTeams: TeamLogic.reorderTeams,
+    getPetsForTeam: TeamLogic.getPetsForTeam,
+    isTeamFull: TeamLogic.isTeamFull,
+    getEmptySlots: TeamLogic.getEmptySlots,
+    getFilledSlotCount: TeamLogic.getFilledSlotCount,
+    isTeamEmpty: TeamLogic.isTeamEmpty,
+    isPetInTeam: TeamLogic.isPetInTeam,
+    getPetSlotIndex: TeamLogic.getPetSlotIndex,
 
     // ─── Active Team ───
     getActiveTeamId: ActiveLogic.getActiveTeamId,

@@ -99,6 +99,10 @@ export interface TeamListItemProps {
     showSlotStyles?: boolean;
     onSlotClick?: (slotIndex: number) => void;
     onNameChange?: (newName: string) => void;
+    /** Whether this team's feature cards are expanded */
+    isExpanded?: boolean;
+    /** Callback when expand button is clicked */
+    onExpandClick?: () => void;
 }
 
 export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
@@ -108,11 +112,10 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
 
     // Active indicator (green dot or gray circle) or custom indicator
     const indicator = props.customIndicator ?? element("div", {
-        className: `team-list-item__indicator ${
-            props.isActive
-                ? "team-list-item__indicator--active"
-                : "team-list-item__indicator--inactive"
-        }`,
+        className: `team-list-item__indicator ${props.isActive
+            ? "team-list-item__indicator--active"
+            : "team-list-item__indicator--inactive"
+            }`,
     });
 
     // Team name - show Input directly in manage mode, otherwise show div
@@ -120,11 +123,10 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
         ? createNameInput(props.team.name, props.onNameChange)
         : element("div", {
             textContent: props.team.name,
-            className: `team-list-item__name ${
-                props.isActive
-                    ? "team-list-item__name--active"
-                    : "team-list-item__name--inactive"
-            }`,
+            className: `team-list-item__name ${props.isActive
+                ? "team-list-item__name--active"
+                : "team-list-item__name--inactive"
+                }`,
         });
 
     // Pet sprites container
@@ -142,11 +144,10 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
             const petId = props.team.petIds[i];
             const hasPet = petId && petId !== "";
             const spriteSlot = element("div", {
-                className: `team-list-item__sprite-slot ${
-                    props.showSlotStyles && !hasPet
-                        ? "team-list-item__sprite-slot--empty"
-                        : ""
-                }`,
+                className: `team-list-item__sprite-slot ${props.showSlotStyles && !hasPet
+                    ? "team-list-item__sprite-slot--empty"
+                    : ""
+                    }`,
             });
 
             // Add click handler for filled slots to remove pet, empty slots to add pet
@@ -307,6 +308,19 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
     container.appendChild(indicator);
     container.appendChild(nameText);
     container.appendChild(spritesContainer);
+
+    // Expand button (chevron) for showing feature cards
+    if (props.onExpandClick) {
+        const expandBtn = element("button", {
+            className: `team-list-item__expand ${props.isExpanded ? "team-list-item__expand--open" : ""}`,
+        });
+        expandBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+        expandBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation(); // Don't trigger team activation
+            props.onExpandClick?.();
+        });
+        container.appendChild(expandBtn);
+    }
 
     // Cleanup subscription when element is removed from DOM
     const observer = new MutationObserver(() => {

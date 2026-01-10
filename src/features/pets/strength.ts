@@ -11,7 +11,7 @@ import {
   calculateStrengthPerHour,
   calculateHoursToMaxStrength,
   calculateStrengthProgress,
-} from '../calculators';
+} from '../../modules/calculators/logic/pet';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

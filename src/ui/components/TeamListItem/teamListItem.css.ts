@@ -67,7 +67,7 @@ export const teamListItemCss = `
 }
 
 .team-list-item__indicator--active {
-  background-color: #4ade80;
+  background-color: var(--complete);
   opacity: 1;
 }
 
@@ -151,8 +151,8 @@ export const teamListItemCss = `
 
 /* Manage mode - filled slot (danger color for removal) */
 .team-list-item__sprite-slot.team-list-item__sprite-slot--filled {
-  border: 1.5px solid #ef4444 !important;
-  box-shadow: inset 0 2px 4px color-mix(in oklab, #ef4444 15%, transparent);
+  border: 1.5px solid var(--low) !important;
+  box-shadow: inset 0 2px 4px color-mix(in oklab, var(--low) 15%, transparent);
 }
 
 .team-list-item__sprite-slot-overlay {
@@ -161,7 +161,7 @@ export const teamListItemCss = `
   left: 0;
   width: 100%;
   height: 100%;
-  background: color-mix(in oklab, #ef4444 25%, transparent);
+  background: color-mix(in oklab, var(--low) 25%, transparent);
   border-radius: 6px;
   pointer-events: none;
   z-index: 1;

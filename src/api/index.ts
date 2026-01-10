@@ -14,14 +14,15 @@ import {
   MGPixi,
   MGAudio,
   MGCosmetic,
+  MGCalculators,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
 import { MGJournalChecker } from "../features/journalChecker";
 import { MGBulkFavorite } from "../features/bulkFavorite";
 import { MGAchievements } from "../features/achievements";
-import { MGCalculators } from "../features/calculators";
 import { MGPetTeam } from "../features/petTeam";
+import { MGXPTracker } from "../features/xpTracker";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -46,6 +47,7 @@ export const GeminiAPI = {
     Pixi: MGPixi,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
+    Calculators: MGCalculators,
   },
 
   Features: {
@@ -55,9 +57,9 @@ export const GeminiAPI = {
     Achievements: MGAchievements,
     Tracker: MGTracker,
     AntiAfk: MGAntiAfk,
-    Calculators: MGCalculators,
     Pets: MGPets,
     PetTeam: MGPetTeam,
+    XPTracker: MGXPTracker,
   },
 
   WebSocket: {

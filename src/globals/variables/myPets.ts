@@ -22,7 +22,7 @@ import {
   calculateMaxStrength,
   calculateCurrentStrength,
   isPetMature,
-} from "../../features/calculators";
+} from "../../modules/calculators/logic/pet";
 
 type MyPetsSources = {
   inventory: PetInventoryItem[];
