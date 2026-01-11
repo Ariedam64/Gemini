@@ -6,68 +6,28 @@
 
 import { Card } from "../../../components/Card/Card";
 import { SearchBar } from "../../../components/SearchBar/SearchBar";
+import { Badge } from "../../../components/Badge/Badge";
 import { element } from "../../../styles/helpers";
-import { MGSprite } from "../../../../modules";
+import { MGSprite, MGData, filterPetAbilityLogs, formatAbilityLog, type ActivityLogEntry } from "../../../../modules";
+import { Store } from "../../../../atoms";
+import type { Unsubscribe } from "../../../../globals/core/types";
 
-// Template data for demonstration
-interface AbilityLog {
+// UI display format
+interface AbilityLogDisplay {
     timestamp: number;
     petName: string;
     petSpecies: string;
     abilityName: string;
-    data: string;
+    abilityId: string;
+    description: string;
 }
-
-const TEMPLATE_LOGS: AbilityLog[] = [
-    {
-        timestamp: Date.now() - 5000,
-        petName: "Fluffy",
-        petSpecies: "Capybara",
-        abilityName: "Water Boost",
-        data: "+15% water speed"
-    },
-    {
-        timestamp: Date.now() - 60000,
-        petName: "Shadow",
-        petSpecies: "Cat",
-        abilityName: "Night Vision",
-        data: "Revealed 3 hidden items"
-    },
-    {
-        timestamp: Date.now() - 120000,
-        petName: "Buddy",
-        petSpecies: "Dog",
-        abilityName: "Treasure Hunter",
-        data: "Found: Gold Coin x2"
-    },
-    {
-        timestamp: Date.now() - 180000,
-        petName: "Whiskers",
-        petSpecies: "Ferret",
-        abilityName: "Quick Dig",
-        data: "Harvested 5 plots instantly"
-    },
-    {
-        timestamp: Date.now() - 240000,
-        petName: "Fluffy",
-        petSpecies: "Capybara",
-        abilityName: "Water Boost",
-        data: "+15% water speed"
-    },
-    {
-        timestamp: Date.now() - 300000,
-        petName: "Shadow",
-        petSpecies: "Cat",
-        abilityName: "Stealth",
-        data: "Avoided 2 encounters"
-    },
-];
 
 export class AbilityLogsCardPart {
     private card: HTMLDivElement | null = null;
     private listContainer: HTMLDivElement | null = null;
-    private logs: AbilityLog[] = [];
-    private filteredLogs: AbilityLog[] = [];
+    private logs: AbilityLogDisplay[] = [];
+    private filteredLogs: AbilityLogDisplay[] = [];
+    private unsubscribe: Unsubscribe | null = null;
 
     build(): HTMLDivElement {
         if (this.card) return this.card;
@@ -75,17 +35,75 @@ export class AbilityLogsCardPart {
     }
 
     destroy(): void {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+            this.unsubscribe = null;
+        }
         this.card = null;
         this.listContainer = null;
         this.logs = [];
         this.filteredLogs = [];
     }
 
-    render(): void {
-        // For now, use template data
-        this.logs = TEMPLATE_LOGS;
+    async render(): Promise<void> {
+        // Subscribe to myDataAtom and extract activityLogs
+        this.unsubscribe = await Store.subscribe('myDataAtom', (myData: unknown) => {
+            const data = myData as { activityLogs?: ActivityLogEntry[] } | null;
+            const activityLogs = data?.activityLogs || [];
+            this.updateFromActivityLogs(activityLogs);
+        });
+    }
+
+    private updateFromActivityLogs(activityLogs: ActivityLogEntry[]): void {
+        if (!activityLogs || !Array.isArray(activityLogs)) {
+            this.logs = [];
+            this.filteredLogs = [];
+            this.updateList();
+            return;
+        }
+
+        // Filter only pet ability actions
+        const abilityLogs = filterPetAbilityLogs(activityLogs);
+
+        // Transform to display format
+        this.logs = abilityLogs.map((log) => {
+            const params = log.parameters as any;
+
+            // Extract pet info
+            const pet = params.pet || {};
+            const petName = pet.name || pet.petSpecies || "Unknown Pet";
+            const petSpecies = pet.petSpecies || "Unknown";
+
+            // Get ability name from MGData
+            const abilities = MGData.get("abilities") as Record<string, { name?: string }> | null;
+            const ability = abilities?.[log.action];
+            const abilityName = ability?.name || log.action || "Unknown Ability";
+
+            // Format description using activity log data
+            const description = formatAbilityLog(log);
+
+            return {
+                timestamp: log.timestamp,
+                petName,
+                petSpecies,
+                abilityName,
+                abilityId: log.action,
+                description,
+            };
+        });
+
         this.filteredLogs = [...this.logs];
         this.updateList();
+    }
+
+    private createAbilityBadge(abilityId: string, abilityName: string): HTMLSpanElement {
+        const badge = Badge({
+            variant: "ability",
+            abilityId,
+            abilityName,
+        });
+
+        return badge.root;
     }
 
     private createAbilityLogsCard(): HTMLDivElement {
@@ -113,106 +131,24 @@ export class AbilityLogsCardPart {
                         log.petName.toLowerCase().includes(query) ||
                         log.petSpecies.toLowerCase().includes(query) ||
                         log.abilityName.toLowerCase().includes(query) ||
-                        log.data.toLowerCase().includes(query)
+                        log.description.toLowerCase().includes(query)
                     );
                 } else {
                     this.filteredLogs = [...this.logs];
                 }
-                this.updateTable();
+                this.updateList();
             },
         });
         searchContainer.appendChild(search.root);
         container.appendChild(searchContainer);
 
-        // Table
-        const columns: ColDef[] = [
-            {
-                id: "datetime",
-                header: "Date/Time",
-                sortable: true,
-                width: "140px",
-                render: (log: AbilityLog) => {
-                    const date = new Date(log.timestamp);
-                    const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                    const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-                    return element("div", {
-                        style: "font-size: 12px; color: var(--fg);"
-                    }, `${dateStr} ${timeStr}`);
-                }
-            },
-            {
-                id: "pet",
-                header: "Pet",
-                sortable: true,
-                width: "180px",
-                render: (log: AbilityLog) => {
-                    const petCell = element("div", {
-                        style: "display: flex; align-items: center; gap: 8px;"
-                    }) as HTMLDivElement;
+        // List container (scrollable, max height for ~6 items)
+        this.listContainer = element("div", {
+            className: "ability-logs-list",
+            style: "display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; overflow-x: hidden;"
+        }) as HTMLDivElement;
 
-                    // Pet sprite
-                    const spriteContainer = element("div", {
-                        style: "width: 32px; height: 32px; flex-shrink: 0;"
-                    }) as HTMLDivElement;
-
-                    try {
-                        const canvas = MGSprite.toCanvas("pet", log.petSpecies);
-                        if (canvas) {
-                            canvas.style.width = "100%";
-                            canvas.style.height = "100%";
-                            canvas.style.objectFit = "contain";
-                            spriteContainer.appendChild(canvas);
-                        }
-                    } catch (error) {
-                        // Fallback if sprite fails
-                        spriteContainer.textContent = "🐾";
-                        spriteContainer.style.display = "flex";
-                        spriteContainer.style.alignItems = "center";
-                        spriteContainer.style.justifyContent = "center";
-                        spriteContainer.style.fontSize = "20px";
-                    }
-
-                    // Pet name
-                    const nameEl = element("div", {
-                        style: "font-size: 13px; font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                    }, log.petName);
-
-                    petCell.appendChild(spriteContainer);
-                    petCell.appendChild(nameEl);
-                    return petCell;
-                }
-            },
-            {
-                id: "ability",
-                header: "Ability",
-                sortable: true,
-                width: "150px",
-                render: (log: AbilityLog) => {
-                    return element("div", {
-                        style: "font-size: 13px; font-weight: 600; color: var(--fg);"
-                    }, log.abilityName);
-                }
-            },
-            {
-                id: "data",
-                header: "Data",
-                sortable: false,
-                render: (log: AbilityLog) => {
-                    return element("div", {
-                        style: "font-size: 12px; color: color-mix(in oklab, var(--fg) 80%, #9ca3af); overflow: hidden; text-overflow: ellipsis;"
-                    }, log.data);
-                }
-            }
-        ];
-
-        this.tableHandle = Table({
-            columns,
-            data: [],
-            maxRows: 6,
-            emptyText: "No ability logs yet",
-        });
-
-        container.appendChild(this.tableHandle.root);
+        container.appendChild(this.listContainer);
 
         this.card = Card({
             title: "Ability Logs",
@@ -224,12 +160,105 @@ export class AbilityLogsCardPart {
         return this.card;
     }
 
-    private updateTable(): void {
-        if (!this.tableHandle) return;
+    private updateList(): void {
+        if (!this.listContainer) return;
+
+        // Clear existing items
+        this.listContainer.replaceChildren();
 
         // Sort by timestamp descending (most recent first)
         const sortedLogs = [...this.filteredLogs].sort((a, b) => b.timestamp - a.timestamp);
 
-        this.tableHandle.setData(sortedLogs);
+        if (sortedLogs.length === 0) {
+            const emptyState = element("div", {
+                className: "ability-logs-empty",
+                style: "padding: 24px; text-align: center; color: color-mix(in oklab, var(--fg) 60%, #9ca3af); font-size: 14px;"
+            }, "No ability logs yet");
+            this.listContainer.appendChild(emptyState);
+            return;
+        }
+
+        // Create compact card for each log (scrollable container handles overflow)
+        sortedLogs.forEach((log) => {
+            const logCard = this.createLogItemCard(log);
+            this.listContainer!.appendChild(logCard);
+        });
+    }
+
+    private createLogItemCard(log: AbilityLogDisplay): HTMLDivElement {
+        const logItem = element("div", {
+            className: "ability-log-item",
+            style: "background: var(--soft); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; transition: all 0.2s ease;"
+        }) as HTMLDivElement;
+
+        // Add hover effect
+        logItem.addEventListener("mouseenter", () => {
+            logItem.style.background = "color-mix(in oklab, var(--soft) 90%, var(--fg) 10%)";
+            logItem.style.borderColor = "color-mix(in oklab, var(--border) 70%, var(--fg) 30%)";
+        });
+        logItem.addEventListener("mouseleave", () => {
+            logItem.style.background = "var(--soft)";
+            logItem.style.borderColor = "var(--border)";
+        });
+
+        // Pet sprite
+        const spriteContainer = element("div", {
+            style: "width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--muted); border-radius: 6px;"
+        }) as HTMLDivElement;
+
+        try {
+            const canvas = MGSprite.toCanvas("pet", log.petSpecies);
+            if (canvas) {
+                canvas.style.width = "100%";
+                canvas.style.height = "100%";
+                canvas.style.objectFit = "contain";
+                spriteContainer.appendChild(canvas);
+            }
+        } catch (error) {
+            spriteContainer.textContent = "🐾";
+            spriteContainer.style.fontSize = "24px";
+        }
+
+        logItem.appendChild(spriteContainer);
+
+        // Content area
+        const content = element("div", {
+            style: "flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;"
+        }) as HTMLDivElement;
+
+        // Top row: Pet name + Date/time
+        const topRow = element("div", {
+            style: "display: flex; align-items: center; justify-content: space-between; gap: 8px;"
+        }) as HTMLDivElement;
+
+        const petName = element("div", {
+            style: "font-size: 14px; font-weight: 700; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+        }, log.petName);
+
+        const date = new Date(log.timestamp);
+        const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        const timestamp = element("div", {
+            style: "font-size: 11px; font-weight: 500; color: color-mix(in oklab, var(--fg) 60%, #9ca3af); white-space: nowrap;"
+        }, `${dateStr} ${timeStr}`);
+
+        topRow.appendChild(petName);
+        topRow.appendChild(timestamp);
+        content.appendChild(topRow);
+
+        // Middle row: Ability badge with dynamic color
+        const abilityBadge = this.createAbilityBadge(log.abilityId, log.abilityName);
+        content.appendChild(abilityBadge);
+
+        // Bottom row: Description
+        const descriptionText = element("div", {
+            style: "font-size: 12px; color: color-mix(in oklab, var(--fg) 70%, #9ca3af); line-height: 1.4; overflow: hidden; text-overflow: ellipsis;"
+        }, log.description);
+
+        content.appendChild(descriptionText);
+
+        logItem.appendChild(content);
+
+        return logItem;
     }
 }

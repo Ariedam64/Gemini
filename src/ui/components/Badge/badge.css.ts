@@ -98,4 +98,18 @@ export const badgeCss = `
   color:#fff;
   box-shadow:0 0 0 1px #000 inset; /* background already black; inner border invisible but kept for structure */
 }
+
+/* ===================== ABILITY ===================== */
+.badge.badge--ability{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:600;
+  color:white;
+  transition:background 0.2s ease;
+  border:none;
+  max-width:fit-content;
+}
 `;

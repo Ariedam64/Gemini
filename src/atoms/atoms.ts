@@ -109,6 +109,7 @@ export const numPlayersAtom = makeAtom<number>("numPlayersAtom");
 
 // Derived player views
 export const playerIdView = makeView<PlayerData | null, PlayerId | null>("playerAtom", { path: "id" });
+export const activityLogsView = makeView<PlayerData | null, unknown[]>("myDataAtom", { path: "activityLogs" });
 
 // =============================================================================
 // USER SLOTS

@@ -4,11 +4,15 @@
 import { installObjectHooks, restoreObjectHooks } from "./logic/hooks";
 import { startPulseScanning, stopPulseScanning } from "./logic/scanning";
 import { startWeatherPolling, stopWeatherPolling } from "./logic/weather";
+import { startColorPolling, stopColorPolling } from "./logic/abilityColors";
 import { resolveSprites } from "./logic/sprites";
 import { getData, getAllData, hasData, waitForData, waitForAnyData } from "./logic/accessors";
 import { isAllDataCaptured } from "./logic/capture";
 
 export type { CapturedDataKey, DataKey, DataBag } from "./types";
+export type { AbilityColor } from "./logic/abilityColors";
+export type { ActivityLogEntry, PetAbilityAction } from "./logic/abilityFormatter";
+export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction, PET_ABILITY_ACTIONS } from "./logic/abilityFormatter";
 
 /**
  * MGData module - Game data capture via Object.* hooks
@@ -48,13 +52,14 @@ export type { CapturedDataKey, DataKey, DataBag } from "./types";
  */
 export const MGData = {
   /**
-   * Initialize module (install hooks, start scanning and weather polling)
+   * Initialize module (install hooks, start scanning, weather and color polling)
    * Safe to call multiple times
    */
   async init(): Promise<void> {
     installObjectHooks();
     startPulseScanning();
     startWeatherPolling();
+    startColorPolling();
   },
 
   /**
@@ -100,5 +105,6 @@ export const MGData = {
     restoreObjectHooks();
     stopPulseScanning();
     stopWeatherPolling();
+    stopColorPolling();
   },
 };
