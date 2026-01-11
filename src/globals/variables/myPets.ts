@@ -2,6 +2,7 @@ import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
 import { getMyGarden } from "./myGarden";
 import { storageGet, storageSet, KEYS } from "../../utils/storage";
+import { filterPetAbilityLogs, type ActivityLogEntry } from "../../modules/data";
 import type {
   MyPetsGlobal,
   MyPetsData,
@@ -33,6 +34,7 @@ type MyPetsSources = {
   slotInfos: Record<string, PetSlotInfo>;
   expandedPetSlotId: string | null;
   myNumPetHutchItems: number;
+  activityLogs: ActivityLogEntry[];
 };
 
 const atomSources = {
@@ -42,6 +44,7 @@ const atomSources = {
   slotInfos: "myPetSlotInfosAtom",
   expandedPetSlotId: "expandedPetSlotIdAtom",
   myNumPetHutchItems: "myNumPetHutchItemsAtom",
+  activityLogs: "myDataAtom",
 };
 
 function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutch"): UnifiedPet {
@@ -100,6 +103,7 @@ function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): Uni
 // Global storage for ability logs (max 500 entries)
 const MAX_ABILITY_LOGS = 500;
 let abilityLogsStorage: AbilityLog[] = [];
+let lastProcessedTimestamp = 0;
 
 // Load logs from storage on init
 function loadAbilityLogs(): AbilityLog[] {
@@ -124,6 +128,11 @@ function loadAbilityLogs(): AbilityLog[] {
       console.log(`[myPets] Migrated ability logs: removed ${stored.length - validLogs.length} old entries`);
     }
 
+    // Set lastProcessedTimestamp to the most recent log timestamp
+    if (validLogs.length > 0) {
+      lastProcessedTimestamp = Math.max(...validLogs.map(log => log.performedAt));
+    }
+
     return validLogs;
   } catch (error) {
     console.error("[myPets] Failed to load ability logs from storage:", error);
@@ -138,6 +147,67 @@ function saveAbilityLogs(logs: AbilityLog[]): void {
   } catch (error) {
     console.error("[myPets] Failed to save ability logs to storage:", error);
   }
+}
+
+// Convert ActivityLogEntry to AbilityLog format
+function convertActivityLogToAbilityLog(activityLog: ActivityLogEntry): AbilityLog | null {
+  try {
+    const params = activityLog.parameters as any;
+    const pet = params.pet;
+
+    if (!pet || !pet.id || !pet.petSpecies) {
+      return null;
+    }
+
+    return {
+      petId: pet.id,
+      petName: pet.name || pet.petSpecies,
+      petSpecies: pet.petSpecies,
+      abilityId: activityLog.action,
+      data: activityLog.parameters,
+      performedAt: activityLog.timestamp,
+    };
+  } catch (error) {
+    console.error("[myPets] Failed to convert activity log:", error);
+    return null;
+  }
+}
+
+// Process new activity logs from server
+function processActivityLogs(activityLogs: ActivityLogEntry[]): void {
+  if (!activityLogs || !Array.isArray(activityLogs)) return;
+
+  // Filter only pet ability actions
+  const abilityLogs = filterPetAbilityLogs(activityLogs);
+
+  // Convert and filter new logs (only those we haven't seen yet)
+  const newLogs: AbilityLog[] = [];
+  for (const log of abilityLogs) {
+    if (log.timestamp > lastProcessedTimestamp) {
+      const converted = convertActivityLogToAbilityLog(log);
+      if (converted) {
+        newLogs.push(converted);
+      }
+    }
+  }
+
+  if (newLogs.length === 0) return;
+
+  // Update lastProcessedTimestamp
+  lastProcessedTimestamp = Math.max(...newLogs.map(log => log.performedAt), lastProcessedTimestamp);
+
+  // Add new logs to beginning (newest first)
+  abilityLogsStorage = [...newLogs, ...abilityLogsStorage];
+
+  // Trim to max size
+  if (abilityLogsStorage.length > MAX_ABILITY_LOGS) {
+    abilityLogsStorage = abilityLogsStorage.slice(0, MAX_ABILITY_LOGS);
+  }
+
+  // Save to storage
+  saveAbilityLogs(abilityLogsStorage);
+
+  console.log(`[myPets] Processed ${newLogs.length} new ability logs (total: ${abilityLogsStorage.length})`);
 }
 
 function buildData(sources: MyPetsSources): MyPetsData {
@@ -367,6 +437,14 @@ function createMyPetsGlobal(): MyPetsGlobal {
   function notify(): void {
     if (ready.size < sourceKeys.length) return;
 
+    // Process activity logs from server if available
+    if (sources.activityLogs) {
+      const rawActivityLogs = (sources.activityLogs as any)?.activityLogs || sources.activityLogs;
+      if (Array.isArray(rawActivityLogs)) {
+        processActivityLogs(rawActivityLogs);
+      }
+    }
+
     const nextData = buildData(sources as MyPetsSources);
 
     if (deepEqual(currentData, nextData)) return;
@@ -394,34 +472,6 @@ function createMyPetsGlobal(): MyPetsGlobal {
     }
 
     const abilityEvents = detectAbilityEvents(previousData, currentData);
-
-    // Accumulate ability logs (max 500 entries, newest first)
-    if (abilityEvents.length > 0) {
-      for (const event of abilityEvents) {
-        const log: AbilityLog = {
-          petId: event.pet.id,
-          petName: event.pet.name || event.pet.petSpecies, // Use species if no name
-          petSpecies: event.pet.petSpecies,
-          abilityId: event.trigger.abilityId ?? "",
-          data: event.trigger.data,
-          performedAt: event.trigger.performedAt ?? Date.now(),
-        };
-
-        // Add to beginning of array (newest first)
-        abilityLogsStorage.unshift(log);
-
-        // Trim to max size
-        if (abilityLogsStorage.length > MAX_ABILITY_LOGS) {
-          abilityLogsStorage = abilityLogsStorage.slice(0, MAX_ABILITY_LOGS);
-        }
-      }
-
-      // Save to storage
-      saveAbilityLogs(abilityLogsStorage);
-
-      // Rebuild currentData with updated logs
-      currentData = buildData(sources as MyPetsSources);
-    }
 
     for (const event of abilityEvents) {
       for (const cb of listeners.ability) {

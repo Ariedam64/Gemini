@@ -8,9 +8,9 @@ import { Card } from "../../../components/Card/Card";
 import { SearchBar } from "../../../components/SearchBar/SearchBar";
 import { Badge } from "../../../components/Badge/Badge";
 import { element } from "../../../styles/helpers";
-import { MGSprite, MGData, filterPetAbilityLogs, formatAbilityLog, type ActivityLogEntry } from "../../../../modules";
-import { Store } from "../../../../atoms";
-import type { Unsubscribe } from "../../../../globals/core/types";
+import { MGSprite, MGData, formatAbilityLog } from "../../../../modules";
+import { getMyPets } from "../../../../globals/variables/myPets";
+import type { Unsubscribe, AbilityLog } from "../../../../globals/core/types";
 
 // UI display format
 interface AbilityLogDisplay {
@@ -46,48 +46,43 @@ export class AbilityLogsCardPart {
     }
 
     async render(): Promise<void> {
-        // Subscribe to myDataAtom and extract activityLogs
-        this.unsubscribe = await Store.subscribe('myDataAtom', (myData: unknown) => {
-            const data = myData as { activityLogs?: ActivityLogEntry[] } | null;
-            const activityLogs = data?.activityLogs || [];
-            this.updateFromActivityLogs(activityLogs);
+        // Subscribe to myPets global for ability logs
+        const myPets = getMyPets();
+        this.unsubscribe = myPets.subscribe((data) => {
+            this.updateFromAbilityLogs(data.abilityLogs);
         });
     }
 
-    private updateFromActivityLogs(activityLogs: ActivityLogEntry[]): void {
-        if (!activityLogs || !Array.isArray(activityLogs)) {
+    private updateFromAbilityLogs(abilityLogs: AbilityLog[]): void {
+        if (!abilityLogs || !Array.isArray(abilityLogs)) {
             this.logs = [];
             this.filteredLogs = [];
             this.updateList();
             return;
         }
 
-        // Filter only pet ability actions
-        const abilityLogs = filterPetAbilityLogs(activityLogs);
-
         // Transform to display format
         this.logs = abilityLogs.map((log) => {
-            const params = log.parameters as any;
-
-            // Extract pet info
-            const pet = params.pet || {};
-            const petName = pet.name || pet.petSpecies || "Unknown Pet";
-            const petSpecies = pet.petSpecies || "Unknown";
-
             // Get ability name from MGData
             const abilities = MGData.get("abilities") as Record<string, { name?: string }> | null;
-            const ability = abilities?.[log.action];
-            const abilityName = ability?.name || log.action || "Unknown Ability";
+            const ability = abilities?.[log.abilityId];
+            const abilityName = ability?.name || log.abilityId || "Unknown Ability";
 
             // Format description using activity log data
-            const description = formatAbilityLog(log);
+            // Create a fake ActivityLogEntry for formatAbilityLog
+            const fakeEntry = {
+                action: log.abilityId,
+                timestamp: log.performedAt,
+                parameters: (log.data as Record<string, unknown>) || {},
+            };
+            const description = formatAbilityLog(fakeEntry);
 
             return {
-                timestamp: log.timestamp,
-                petName,
-                petSpecies,
+                timestamp: log.performedAt,
+                petName: log.petName,
+                petSpecies: log.petSpecies,
                 abilityName,
-                abilityId: log.action,
+                abilityId: log.abilityId,
                 description,
             };
         });
