@@ -1,6 +1,7 @@
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
 import { getMyGarden } from "./myGarden";
+import { storageGet, storageSet, KEYS } from "../../utils/storage";
 import type {
   MyPetsGlobal,
   MyPetsData,
@@ -13,6 +14,7 @@ import type {
   PetGrowthEvent,
   PetStrengthGainEvent,
   PetMaxStrengthEvent,
+  AbilityLog,
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
@@ -95,6 +97,49 @@ function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): Uni
   };
 }
 
+// Global storage for ability logs (max 500 entries)
+const MAX_ABILITY_LOGS = 500;
+let abilityLogsStorage: AbilityLog[] = [];
+
+// Load logs from storage on init
+function loadAbilityLogs(): AbilityLog[] {
+  try {
+    const stored = storageGet<AbilityLog[]>(KEYS.GLOBAL.MY_PETS_ABILITY_LOGS, []);
+    if (!Array.isArray(stored)) return [];
+
+    // Filter out old logs that don't have petName/petSpecies (migration)
+    const validLogs = stored.filter((log): log is AbilityLog => {
+      return (
+        typeof log === "object" &&
+        log !== null &&
+        typeof log.petId === "string" &&
+        typeof log.petName === "string" &&
+        typeof log.petSpecies === "string" &&
+        typeof log.abilityId === "string" &&
+        typeof log.performedAt === "number"
+      );
+    });
+
+    if (validLogs.length < stored.length) {
+      console.log(`[myPets] Migrated ability logs: removed ${stored.length - validLogs.length} old entries`);
+    }
+
+    return validLogs;
+  } catch (error) {
+    console.error("[myPets] Failed to load ability logs from storage:", error);
+    return [];
+  }
+}
+
+// Save logs to storage
+function saveAbilityLogs(logs: AbilityLog[]): void {
+  try {
+    storageSet(KEYS.GLOBAL.MY_PETS_ABILITY_LOGS, logs);
+  } catch (error) {
+    console.error("[myPets] Failed to save ability logs to storage:", error);
+  }
+}
+
 function buildData(sources: MyPetsSources): MyPetsData {
   const seenIds = new Set<string>();
 
@@ -152,6 +197,7 @@ function buildData(sources: MyPetsSources): MyPetsData {
     },
     expandedPetSlotId,
     expandedPet,
+    abilityLogs: [...abilityLogsStorage],
   };
 }
 
@@ -162,6 +208,7 @@ const initialData: MyPetsData = {
   hutch: { hasHutch: false, currentItems: 0, maxItems: 25 },
   expandedPetSlotId: null,
   expandedPet: null,
+  abilityLogs: [],
 };
 
 function arraysEqual<T>(a: T[], b: T[]): boolean {
@@ -347,6 +394,35 @@ function createMyPetsGlobal(): MyPetsGlobal {
     }
 
     const abilityEvents = detectAbilityEvents(previousData, currentData);
+
+    // Accumulate ability logs (max 500 entries, newest first)
+    if (abilityEvents.length > 0) {
+      for (const event of abilityEvents) {
+        const log: AbilityLog = {
+          petId: event.pet.id,
+          petName: event.pet.name || event.pet.petSpecies, // Use species if no name
+          petSpecies: event.pet.petSpecies,
+          abilityId: event.trigger.abilityId ?? "",
+          data: event.trigger.data,
+          performedAt: event.trigger.performedAt ?? Date.now(),
+        };
+
+        // Add to beginning of array (newest first)
+        abilityLogsStorage.unshift(log);
+
+        // Trim to max size
+        if (abilityLogsStorage.length > MAX_ABILITY_LOGS) {
+          abilityLogsStorage = abilityLogsStorage.slice(0, MAX_ABILITY_LOGS);
+        }
+      }
+
+      // Save to storage
+      saveAbilityLogs(abilityLogsStorage);
+
+      // Rebuild currentData with updated logs
+      currentData = buildData(sources as MyPetsSources);
+    }
+
     for (const event of abilityEvents) {
       for (const cb of listeners.ability) {
         cb(event);
@@ -396,6 +472,10 @@ function createMyPetsGlobal(): MyPetsGlobal {
 
   async function init(): Promise<void> {
     if (initialized) return;
+
+    // Load persisted ability logs from storage
+    abilityLogsStorage = loadAbilityLogs();
+    console.log(`[myPets] Loaded ${abilityLogsStorage.length} ability logs from storage`);
 
     const subscriptionPromises = sourceKeys.map(async (key) => {
       const atomLabel = atomSources[key];

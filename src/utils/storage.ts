@@ -44,6 +44,12 @@ export const MODULE_KEYS = {
     // Add here if needed for caching or configuration
 } as const;
 
+/** Keys for global variables persistent state */
+export const GLOBAL_KEYS = {
+    /** myPets ability logs storage */
+    MY_PETS_ABILITY_LOGS: 'global:myPets:abilityLogs',
+} as const;
+
 /** Keys for optional features (per .claude/rules/features.md) */
 export const FEATURE_KEYS = {
     /** Auto-favorite feature config */
@@ -79,6 +85,7 @@ export const KEYS = {
     HUD: HUD_KEYS,
     SECTION: SECTION_KEYS,
     MODULE: MODULE_KEYS,
+    GLOBAL: GLOBAL_KEYS,
     FEATURE: FEATURE_KEYS,
     DEV: DEV_KEYS,
 } as const;

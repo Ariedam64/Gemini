@@ -1,32 +1,76 @@
 /**
  * Ability Logs Card Styles
+ * Mobile-first responsive design with compact card layout
  */
 
 export const abilityLogsCardCss = `
   .ability-logs-container {
-    /* Container styles are inline in AbilityLogsCard.ts */
+    width: 100%;
   }
 
-  /* Pet sprite container alignment */
-  .ability-logs-container .lg-td {
-    vertical-align: middle;
+  .ability-logs-list {
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
 
-  /* Ensure proper spacing in table cells */
-  .ability-logs-container .lg-table {
-    border-spacing: 0;
+  .ability-logs-list::-webkit-scrollbar {
+    width: 6px;
   }
 
-  .ability-logs-container .lg-tr {
-    border-bottom: 1px solid var(--border);
+  .ability-logs-list::-webkit-scrollbar-track {
+    background: transparent;
   }
 
-  .ability-logs-container .lg-tr:last-child {
-    border-bottom: none;
+  .ability-logs-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
   }
 
-  /* Hover effect for rows */
-  .ability-logs-container .lg-tr:hover {
-    background: color-mix(in oklab, var(--fg) 3%, transparent);
+  .ability-logs-list::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--border) 70%, var(--fg) 30%);
+  }
+
+  .ability-log-item {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch-friendly on mobile */
+  @media (hover: none) and (pointer: coarse) {
+    .ability-log-item {
+      padding: 14px !important;
+    }
+
+    .ability-log-item:active {
+      transform: scale(0.98);
+    }
+  }
+
+  /* Responsive text sizing */
+  @media (max-width: 480px) {
+    .ability-log-item {
+      padding: 10px !important;
+      gap: 10px !important;
+    }
+  }
+
+  /* Empty state styling */
+  .ability-logs-empty {
+    /* Styles are inline in AbilityLogsCard.ts */
+  }
+
+  /* Smooth animations */
+  @media (prefers-reduced-motion: no-preference) {
+    .ability-log-item {
+      transition: all 0.2s ease;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ability-log-item {
+      transition: none;
+    }
   }
 `;

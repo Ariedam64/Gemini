@@ -135,6 +135,7 @@ export type MyPetsData = {
   };
   expandedPetSlotId: string | null;
   expandedPet: UnifiedPet | null;
+  abilityLogs: AbilityLog[];
 };
 
 export type PetLocationChange = {
@@ -146,6 +147,15 @@ export type PetLocationChange = {
 export type PetAbilityEvent = {
   pet: UnifiedPet;
   trigger: NonNullable<PetAbilityTrigger>;
+};
+
+export type AbilityLog = {
+  petId: string;
+  petName: string;
+  petSpecies: string;
+  abilityId: string;
+  data: unknown;
+  performedAt: number;
 };
 
 export type PetCountChange = {

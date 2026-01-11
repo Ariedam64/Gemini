@@ -31,6 +31,7 @@ export function isAllDataCaptured(): boolean {
   return Object.values(captureState.data).every((v) => v != null);
 }
 
+
 /**
  * Scan an object for game data based on signature keys
  */

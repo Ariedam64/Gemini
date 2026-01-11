@@ -12,4 +12,6 @@ export interface CaptureState {
   scanAttempts: number;
   weatherPollingTimer: ReturnType<typeof setTimeout> | null;
   weatherPollAttempts: number;
+  colorPollingTimer: ReturnType<typeof setTimeout> | null;
+  colorPollAttempts: number;
 }
