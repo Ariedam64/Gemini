@@ -98,17 +98,39 @@ export function extractBalancedObjectLiteral(text: string, anchorIndex: number):
 }
 
 /**
- * Fetch main bundle text
+ * Bundle cache (shared across weather/colors to avoid duplicate downloads)
+ */
+let bundleCache: string | null = null;
+let bundleFetchInFlight: Promise<string | null> | null = null;
+
+/**
+ * Fetch main bundle text (cached)
+ * If multiple callers request simultaneously, only one fetch occurs
  */
 export async function fetchMainBundle(): Promise<string | null> {
-  const url = findMainBundleUrl();
-  if (!url) return null;
+  // Return cached bundle if available
+  if (bundleCache) return bundleCache;
 
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) return null;
-    return await res.text();
-  } catch {
-    return null;
-  }
+  // Return in-flight promise if fetch is already happening
+  if (bundleFetchInFlight) return bundleFetchInFlight;
+
+  // Start new fetch
+  bundleFetchInFlight = (async () => {
+    const url = findMainBundleUrl();
+    if (!url) return null;
+
+    try {
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) return null;
+      const text = await res.text();
+      bundleCache = text; // Cache the result
+      return text;
+    } catch {
+      return null;
+    } finally {
+      bundleFetchInFlight = null;
+    }
+  })();
+
+  return bundleFetchInFlight;
 }
