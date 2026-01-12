@@ -27,6 +27,7 @@ import {
     calculatePlantBoosts,
     calculateBoostStats
 } from "../../../../features/growthTimers/logic/boostCalculator";
+import { calculateItemEffectiveGrowth } from "../../../../features/growthTimers/logic/effectiveTime";
 import type { EggWithTile, PlantWithTile } from "../../../../globals/core/types";
 import type { FeaturePanelDefinition } from "./featurePanels";
 
@@ -102,6 +103,10 @@ export class TeamCardExpansionHandler {
             return;
         }
 
+        // Detect team configuration before building sub-components
+        const isGrowthTeam = detectTeamPurpose(team)?.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
+        const growthViewType = isGrowthTeam ? 'plant' : undefined;
+
         const expandedContainer = element('div', {
             className: 'team-expanded-container',
         });
@@ -137,7 +142,8 @@ export class TeamCardExpansionHandler {
                     const slot = shell.getContentSlot();
                     slot.innerHTML = '';
                     if (newFeature.renderPetSlot) {
-                        newFeature.renderPetSlot(pet, team, slot);
+                        const state = this.expandedTeams.get(teamId);
+                        newFeature.renderPetSlot(pet, team, slot, state?.growthViewType);
                     }
 
                     const isMax = pet.currentStrength >= pet.maxStrength;
@@ -179,7 +185,7 @@ export class TeamCardExpansionHandler {
                 rowContent = shell.build();
                 if (selectedFeature.renderPetSlot) {
                     const slot = shell.getContentSlot();
-                    selectedFeature.renderPetSlot(pet, team, slot);
+                    selectedFeature.renderPetSlot(pet, team, slot, isGrowthTeam ? 'plant' : undefined);
 
                     const isMax = pet.currentStrength >= pet.maxStrength;
                     const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
@@ -209,14 +215,11 @@ export class TeamCardExpansionHandler {
             });
         }
 
-        // Set state BEFORE rendering the progress bar (so state exists for toggle/dropdown)
-        const isGrowthTeam = detectTeamPurpose(team)?.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
-
         this.expandedTeams.set(teamId, {
             cards: cardStates,
             expandedAt: Date.now(),
             container: expandedContainer,
-            growthViewType: isGrowthTeam ? 'plant' : undefined
+            growthViewType
         });
 
         // Team progress bar (now state exists)
@@ -322,17 +325,22 @@ export class TeamCardExpansionHandler {
         const plantReduction = calculateBoostStats(plantBoosts).timeReductionPerHour;
         const currentReduction = Math.round(viewType === 'egg' ? eggReduction : plantReduction);
 
-        let avgPercent = 0;
+        let avgPercent = totalItemsCount > 0 ? 0 : 100;
         if (totalItemsCount > 0) {
+            const speedMultiplier = (60 + currentReduction) / 60;
             avgPercent = Math.round(items.reduce((sum, item) => {
-                // CropInfo uses startTime/endTime, EggWithTile uses plantedAt/maturedAt
                 const startTime = viewType === 'egg' ? (item as EggWithTile).plantedAt : (item as any).startTime;
                 const endTime = viewType === 'egg' ? (item as EggWithTile).maturedAt : (item as any).endTime;
-                const total = endTime - startTime;
+
                 const elapsed = now - startTime;
-                // Clamp percentage between 0 and 100 (matching growthPanel.ts logic)
-                const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                return sum + percent;
+                const remainingRaw = endTime - now;
+                const remainingEffective = remainingRaw / speedMultiplier;
+
+                // Effective Progress = Elapsed / (Elapsed + (Remaining / Speed))
+                const totalEffective = elapsed + remainingEffective;
+                const percent = totalEffective > 0 ? (elapsed / totalEffective) * 100 : 0;
+
+                return sum + Math.min(100, Math.max(0, percent));
             }, 0) / totalItemsCount);
         }
 
@@ -366,10 +374,16 @@ export class TeamCardExpansionHandler {
             return h > 0 && m > 0 ? `${h}h ${m}m/h` : h > 0 ? `${h}h/h` : `${m}m/h`;
         };
 
+        // Calculate team multiplier (showing time boost as a multiplier)
+        // Formula: (60 + hourlyReduction) / 60
+        const teamMultiplier = currentReduction > 0
+            ? ((60 + currentReduction) / 60).toFixed(2) + 'x'
+            : '1.00x';
+
         const barText = element('div', { className: 'team-progress-bar__overlay' });
         barText.innerHTML = `
             <span class="bar-percent">${avgPercent}%</span>
-            <span class="bar-info">${totalItemsCount} growing +${formatMinPerHour(currentReduction)}</span>
+            <span class="bar-info">${totalItemsCount} total +${formatMinPerHour(currentReduction)}</span>
         `;
 
         progressBar.appendChild(progressFill);
@@ -390,8 +404,29 @@ export class TeamCardExpansionHandler {
 
             // CropInfo uses endTime, EggWithTile uses maturedAt
             const itemEndTime = viewType === 'egg' ? activeItem.maturedAt : activeItem.endTime;
-            const remainingMs = Math.max(0, itemEndTime - now);
-            const date = new Date(itemEndTime);
+            const itemStartTime = viewType === 'egg' ? activeItem.plantedAt : activeItem.startTime;
+
+            // Calculate effective time based on boost
+            const effective = calculateItemEffectiveGrowth(
+                itemStartTime,
+                itemEndTime,
+                now,
+                currentReduction // This is already hourly reduction, but the function expects minutes reduced per proc?
+                // Wait, calculateItemEffectiveGrowth expects boostMinPerProc (minutes added per proc).
+                // currentReduction is minutes reduction per HOUR.
+            );
+
+            // Actually, we calculated currentReduction as hourly reduction.
+            // Let's check calculateItemEffectiveGrowth signature again.
+            // export function calculateItemEffectiveGrowth(startTime, endTime, now, boostMinPerProc)
+            // It uses speedMultiplier = (10 + boostMinPerProc) / 10.
+
+            // If we have hourlyReduction, speedMultiplier = (60 + hourlyReduction) / 60.
+            const speedMultiplier = (60 + currentReduction) / 60;
+            const effectiveRemainingMs = Math.max(0, Math.round((itemEndTime - now) / speedMultiplier));
+            const effectiveEndTime = now + effectiveRemainingMs;
+
+            const date = new Date(effectiveEndTime);
             const isTomorrow = date.getDate() !== new Date().getDate();
             const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
             const dateStr = `${isTomorrow ? 'Tomorrow ' : ''}${timeStr}`;
@@ -424,7 +459,7 @@ export class TeamCardExpansionHandler {
 
             nextItemRow.innerHTML = `
                 <div class="growth-next-details">
-                    <span class="growth-next-time">${formatTime(remainingMs)}</span>
+                    <span class="growth-next-time">${formatTime(effectiveRemainingMs)}</span>
                     <span class="growth-next-date">| ${dateStr}</span>
                 </div>
             `;
@@ -493,6 +528,36 @@ export class TeamCardExpansionHandler {
             const team = MGPetTeam.getTeam(teamId);
             const pets = team ? MGPetTeam.getPetsForTeam(team) : [];
             this.renderGrowthSummaryBar(state.container, pets, teamId);
+
+            // Immediately update the pet slots too, so there is no lag
+            this.updateSpecificTeam(teamId, state);
+        }
+    }
+
+    private updateSpecificTeam(teamId: string, state: ExpandedTeamState): void {
+        const team = MGPetTeam.getTeam(teamId);
+        if (!team) return;
+
+        const myPets = Globals.myPets.get();
+        for (const card of state.cards) {
+            const petId = team.petIds[card.slotIndex];
+            const pet = petId ? myPets.all.find(p => p.id === petId) : null;
+
+            if (pet && card.shell) {
+                card.shell.update(pet);
+                if (card.featureData.renderPetSlot) {
+                    try {
+                        const slot = card.shell.getContentSlot();
+                        card.featureData.renderPetSlot(pet, team, slot, state.growthViewType);
+
+                        const isMax = pet.currentStrength >= pet.maxStrength;
+                        const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
+                        card.shell.setCentered(isMax && !hasStats);
+                    } catch (err) {
+                        console.error(`[TeamCardExpansion] Failed to render slot for ${pet.id}:`, err);
+                    }
+                }
+            }
         }
     }
 
@@ -607,31 +672,8 @@ export class TeamCardExpansionHandler {
     }
 
     private updateAllFeatures(): void {
-        const myPets = Globals.myPets.get();
         for (const [teamId, state] of this.expandedTeams) {
-            const team = MGPetTeam.getTeam(teamId);
-            if (!team) continue;
-
-            for (const card of state.cards) {
-                const petId = team.petIds[card.slotIndex];
-                const pet = petId ? myPets.all.find(p => p.id === petId) : null;
-
-                if (pet && card.shell) {
-                    card.shell.update(pet);
-                    if (card.featureData.renderPetSlot) {
-                        try {
-                            const slot = card.shell.getContentSlot();
-                            card.featureData.renderPetSlot(pet, team, slot);
-
-                            const isMax = pet.currentStrength >= pet.maxStrength;
-                            const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
-                            card.shell.setCentered(isMax && !hasStats);
-                        } catch (err) {
-                            console.error(`[TeamCardExpansion] Failed to render slot for ${pet.id}:`, err);
-                        }
-                    }
-                }
-            }
+            this.updateSpecificTeam(teamId, state);
         }
     }
 }
