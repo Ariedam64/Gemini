@@ -9,7 +9,7 @@
  */
 
 import type { InjectionConfig, InjectionAPI } from './types';
-import { storageGet, storageSet } from '@/utils/storage';
+import { storageGet, storageSet } from '../../../utils/storage';
 
 interface RegistryState {
   [injectionId: string]: boolean; // enabled state per injection

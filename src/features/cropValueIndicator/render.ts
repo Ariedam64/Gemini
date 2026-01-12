@@ -8,7 +8,7 @@
  * - Idempotent init(), reversible destroy()
  */
 
-import { createCleanupTracker, addObserverWithCleanup } from '../../../ui/inject/core/lifecycle';
+import { createCleanupTracker, addObserverWithCleanup } from '../../ui/inject/core/lifecycle';
 import { calculateCropSellPrice } from '../../modules/calculators/logic/crop';
 import { loadConfig } from './state';
 
