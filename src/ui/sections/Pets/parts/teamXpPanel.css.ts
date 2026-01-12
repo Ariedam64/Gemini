@@ -283,7 +283,7 @@ export const teamXpPanelCss = `
 }
 
 .xp-str__label {
-    color: var(--muted);
+    color: var(--pill-to); /* Updated per user request */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -294,6 +294,11 @@ export const teamXpPanelCss = `
     color: var(--fg);
     font-weight: 800;
     font-size: 13px;
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 
 .xp-str__separator {
@@ -304,6 +309,11 @@ export const teamXpPanelCss = `
 .xp-str__max {
     color: var(--muted);
     font-size: 11px;
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -345,7 +355,7 @@ export const teamXpPanelCss = `
 
 .xp-stats-table__label {
     padding: 6px 12px 6px 0;
-    color: var(--muted);
+    color: var(--pill-to); /* Updated per user request */
     font-weight: 600;
     font-size: 11px;
     text-transform: uppercase;

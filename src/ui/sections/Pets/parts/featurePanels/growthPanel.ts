@@ -17,9 +17,13 @@ import type { PetTeam } from '../../../../../features/petTeam/types';
 import type { UnifiedPet } from '../../../../../globals/core/types';
 import { Globals } from '../../../../../globals';
 import { MGSprite } from '../../../../../modules/sprite';
+import { MGPetTeam } from '../../../../../features/petTeam';
 import {
     hasEggBoosts,
     hasPlantBoosts,
+    calculateEggBoosts,
+    calculatePlantBoosts,
+    calculateBoostStats
 } from '../../../../../features/growthTimers/logic/boostCalculator';
 import { EGG_BOOST_ABILITIES, PLANT_BOOST_ABILITIES } from '../../../../../features/growthTimers/types';
 import { growthPanelCss } from './growthPanel.css';
@@ -85,17 +89,15 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
  */
 function getSpriteElement(type: 'egg' | 'plant', species: string | null): HTMLElement {
     const category = type === 'egg' ? 'pet' : 'plant';
-    const defaultSpecies = type === 'egg' ? 'UncommonEgg' : 'Carrot';
-    let targetSpecies = species || defaultSpecies;
+    const wrapper = el('span', 'sprite-wrapper');
+    if (!species) return wrapper; // Return empty wrapper if no species (no placeholder)
+    let targetSpecies = species;
 
     // Handle Celestial plant sprite mapping (pattern from JournalChecker)
     if (type === 'plant') {
         if (targetSpecies === 'DawnCelestial') targetSpecies = 'DawnCelestialCrop';
         if (targetSpecies === 'MoonCelestial') targetSpecies = 'MoonCelestialCrop';
     }
-
-    const wrapper = el('span', 'sprite-wrapper');
-    // Remove inline styles - handled by CSS
 
     try {
         if (MGSprite.isReady() && MGSprite.has(category, targetSpecies)) {
@@ -104,14 +106,9 @@ function getSpriteElement(type: 'egg' | 'plant', species: string | null): HTMLEl
             canvas.style.width = 'auto';
             canvas.style.imageRendering = 'pixelated';
             wrapper.appendChild(canvas);
-            return wrapper;
         }
-    } catch (e) {
-        // Fallback
-    }
+    } catch (e) { }
 
-    // Fallback emoji
-    wrapper.textContent = type === 'egg' ? '🥚' : '🌱';
     return wrapper;
 }
 
@@ -124,8 +121,7 @@ function getStackedSpritesElement(type: 'egg' | 'plant', items: { species?: stri
     // Remove inline styles - handled by CSS
 
     if (items.length === 0) {
-        wrapper.textContent = type === 'egg' ? '🥚' : '🌱';
-        return wrapper;
+        return wrapper; // Return empty wrapper (no placeholder)
     }
 
     const category = type === 'egg' ? 'pet' : 'plant';
@@ -136,8 +132,7 @@ function getStackedSpritesElement(type: 'egg' | 'plant', items: { species?: stri
     const toShow = uniqueSpecies.slice(0, maxSprites);
 
     if (toShow.length === 0) {
-        wrapper.textContent = type === 'egg' ? '🥚' : '🌱';
-        return wrapper;
+        return wrapper; // Return empty wrapper (no placeholder)
     }
 
     // Use CSS grid for 2x2 layout with overlap (50-65% visible per user request)
@@ -208,7 +203,9 @@ function buildStatRow(
 
     // Append in correct order: label, sprite, timer, progress (with percent overlayed)
     row.appendChild(labelEl);
-    row.appendChild(spriteLabel);  // Sprite first
+    if (spriteElement && spriteElement.innerHTML !== '' && spriteElement.textContent !== '🥚' && spriteElement.textContent !== '🌱') {
+        row.appendChild(spriteLabel);  // Only append if sprite has content
+    }
     row.appendChild(timerEl);      // Timer second
     row.appendChild(progressMini); // Progress bar with overlayed percent
 
@@ -216,14 +213,26 @@ function buildStatRow(
 }
 
 /**
- * Build a boost row using DOM APIs
+ * Build a boost row with sprite indicators
  */
-function buildBoostRow(boostText: string): HTMLElement {
+function buildBoostRow(boosts: { text: string; sprite: HTMLElement }[]): HTMLElement {
     const row = el('div', 'stat-row stat-row--boost');
     const labelEl = el('span', 'stat__label', 'BOOST');
-    const valueEl = el('span', 'stat__value stat__value--accent', boostText);
     row.appendChild(labelEl);
-    row.appendChild(valueEl);
+
+    const valuesWrapper = el('span', 'stat__values-row');
+    boosts.forEach((boost, idx) => {
+        const item = el('span', 'stat__boost-item');
+        item.appendChild(boost.sprite);
+        item.appendChild(el('span', 'stat__value stat__value--accent', boost.text));
+        valuesWrapper.appendChild(item);
+
+        if (idx < boosts.length - 1) {
+            valuesWrapper.appendChild(el('span', 'stat__separator', ' '));
+        }
+    });
+
+    row.appendChild(valuesWrapper);
     return row;
 }
 
@@ -233,45 +242,92 @@ function buildBoostRow(boostText: string): HTMLElement {
 function getPetBoostInfo(pet: UnifiedPet, type: 'egg' | 'plant'): {
     hasBoost: boolean;
     minutesPerProc: number;
+    hourlyReduction: number;
     abilityName: string;
 } {
-    const abilities = type === 'egg' ? EGG_BOOST_ABILITIES : PLANT_BOOST_ABILITIES;
+    const capacities = type === 'egg' ? EGG_BOOST_ABILITIES : PLANT_BOOST_ABILITIES;
+    let totalHourlyReduction = 0;
+    let hasAnyBoost = false;
+    const combinedNames: string[] = [];
 
     for (const ability of pet.abilities) {
-        if (ability in abilities) {
-            const data = abilities[ability];
-            return {
-                hasBoost: true,
-                minutesPerProc: data.minutesPerProc,
-                abilityName: ability,
-            };
+        if (ability in capacities) {
+            const data = capacities[ability];
+            const procsPerHour = data.procRate * 60;
+            totalHourlyReduction += procsPerHour * data.minutesPerProc;
+            hasAnyBoost = true;
+            combinedNames.push(ability);
         }
     }
 
-    return { hasBoost: false, minutesPerProc: 0, abilityName: '' };
+    return {
+        hasBoost: hasAnyBoost,
+        minutesPerProc: 0, // No longer single-ability specific
+        hourlyReduction: totalHourlyReduction,
+        abilityName: combinedNames.join(', '),
+    };
+}
+
+/**
+ * Calculate individual pet boost multiplier
+ * Formula: (60 + hourlyReduction) / 60
+ * Example: 60m base + 60m reduction = 120/60 = 2.00x faster
+ */
+function calculatePetMultiplier(pet: UnifiedPet, type: 'egg' | 'plant'): string {
+    const capacities = type === 'egg' ? EGG_BOOST_ABILITIES : PLANT_BOOST_ABILITIES;
+    let hourlyReduction = 0;
+
+    for (const ability of pet.abilities) {
+        if (ability in capacities) {
+            const data = capacities[ability];
+            const procsPerHour = data.procRate * 60;
+            hourlyReduction += procsPerHour * data.minutesPerProc;
+        }
+    }
+
+    const multiplier = (60 + hourlyReduction) / 60;
+    return `${multiplier.toFixed(2)}x`;
+}
+
+/**
+ * Calculate team boost multiplier
+ */
+function calculateTeamMultiplier(team: PetTeam, type: 'egg' | 'plant'): string {
+    const pets = MGPetTeam.getPetsForTeam(team);
+    const boosts = type === 'egg' ? calculateEggBoosts(pets) : calculatePlantBoosts(pets);
+    const stats = calculateBoostStats(boosts);
+
+    const multiplier = (60 + stats.timeReductionPerHour) / 60;
+    return `${multiplier.toFixed(2)}x`;
 }
 
 /**
  * Calculate average progress percentage for eggs (uses plantedAt/maturedAt)
  */
-function calcAvgPercentEggs(items: { maturedAt: number; plantedAt: number }[], now: number): number {
+function calcAvgPercentEggs(items: { maturedAt: number; plantedAt: number }[], now: number, speedMultiplier: number = 1): number {
     if (items.length === 0) return 0;
     return Math.round(items.reduce((sum, item) => {
-        const total = item.maturedAt - item.plantedAt;
         const elapsed = now - item.plantedAt;
-        return sum + Math.min(100, Math.max(0, (elapsed / total) * 100));
+        const remainingRaw = item.maturedAt - now;
+        const remainingEffective = remainingRaw / speedMultiplier;
+        const totalEffective = elapsed + remainingEffective;
+        const percent = totalEffective > 0 ? (elapsed / totalEffective) * 100 : 0;
+        return sum + Math.min(100, Math.max(0, percent));
     }, 0) / items.length);
 }
 
 /**
  * Calculate average progress percentage for crops (uses startTime/endTime)
  */
-function calcAvgPercentCrops(items: { startTime: number; endTime: number }[], now: number): number {
+function calcAvgPercentCrops(items: { startTime: number; endTime: number }[], now: number, speedMultiplier: number = 1): number {
     if (items.length === 0) return 0;
     return Math.round(items.reduce((sum, item) => {
-        const total = item.endTime - item.startTime;
         const elapsed = now - item.startTime;
-        return sum + Math.min(100, Math.max(0, (elapsed / total) * 100));
+        const remainingRaw = item.endTime - now;
+        const remainingEffective = remainingRaw / speedMultiplier;
+        const totalEffective = elapsed + remainingEffective;
+        const percent = totalEffective > 0 ? (elapsed / totalEffective) * 100 : 0;
+        return sum + Math.min(100, Math.max(0, percent));
     }, 0) / items.length);
 }
 
@@ -333,14 +389,7 @@ export const growthPanel: FeaturePanelDefinition = {
         };
     },
 
-    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement) => {
-        // Inject CSS once (idempotent - won't duplicate if already exists)
-        if (!document.getElementById('growth-panel-styles')) {
-            const style = document.createElement('style');
-            style.id = 'growth-panel-styles';
-            style.textContent = growthPanelCss;
-            document.head.appendChild(style);
-        }
+    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string) => {
 
         const garden = Globals.myGarden.get();
         const now = Date.now();
@@ -361,51 +410,90 @@ export const growthPanel: FeaturePanelDefinition = {
         // Create wrapper
         const wrapper = el('div', 'growth-stats-compact');
 
-        // ─────── DUAL BOOST (both egg + plant) ───────
-        if (eggBoost.hasBoost && plantBoost.hasBoost) {
-            // BOOST row
-            wrapper.appendChild(buildBoostRow(`+${eggBoost.minutesPerProc}min (egg) +${plantBoost.minutesPerProc}min (plant)`));
+        // Check if pet contributes to current view
+        const hasActiveBoost = (viewType === 'egg' && eggBoost.hasBoost) ||
+            (viewType === 'plant' && plantBoost.hasBoost);
 
-            // NEXT EGG row
+        // If no viewType is specified (e.g. summary view), show what the pet has
+        const isSummaryView = !viewType;
+
+        if (!hasActiveBoost && !isSummaryView) {
+            const lackingType = viewType === 'egg' ? 'Egg' : 'Plant';
+            const row = el('div', 'stat-row stat-row--message');
+            row.appendChild(el('span', 'stat__message', `No ${lackingType} Growth Boost, Click the Button to Switch View`));
+            wrapper.appendChild(row);
+            container.appendChild(wrapper);
+            return;
+        }
+
+        // 1. Context-Aware BOOST Row (Percentage based)
+        const boostItems: { text: string; sprite: HTMLElement }[] = [];
+
+        const showEggBoost = eggBoost.hasBoost && (viewType === 'egg' || isSummaryView);
+        const showPlantBoost = plantBoost.hasBoost && (viewType === 'plant' || isSummaryView);
+
+        if (showEggBoost) {
+            const speedIncrease = Math.round((eggBoost.hourlyReduction / 60) * 100);
+            boostItems.push({
+                text: `+${speedIncrease}%`,
+                sprite: getSpriteElement('egg', 'UncommonEgg')
+            });
+        }
+        if (showPlantBoost) {
+            const speedIncrease = Math.round((plantBoost.hourlyReduction / 60) * 100);
+            boostItems.push({
+                text: `+${speedIncrease}%`,
+                sprite: getSpriteElement('plant', 'Carrot')
+            });
+        }
+
+        if (boostItems.length > 0) {
+            wrapper.appendChild(buildBoostRow(boostItems));
+        }
+
+        // Pre-calculate team multipliers for unified progress bars
+        const teamEggMultStr = calculateTeamMultiplier(team, 'egg');
+        const teamEggMultVal = parseFloat(teamEggMultStr.replace('x', ''));
+        const teamPlantMultStr = calculateTeamMultiplier(team, 'plant');
+        const teamPlantMultVal = parseFloat(teamPlantMultStr.replace('x', ''));
+
+        // 2. Build NEXT Row (STRICT contextual filtering)
+        // Values: Display pet's individual power, Progres: Display team's effective progress
+        if (eggBoost.hasBoost && (viewType === 'egg' || isSummaryView)) {
+            const eggMult = calculatePetMultiplier(pet, 'egg');
             const eggNext = findNextReadyEgg(growingEggs, now);
-            const eggPercent = calcAvgPercentEggs(growingEggs, now);
+            const eggPercent = growingEggs.length > 0
+                ? calcAvgPercentEggs(growingEggs, now, teamEggMultVal)
+                : 100; // 100% if nothing growing
             wrapper.appendChild(buildStatRow(
                 'NEXT EGG',
-                formatTimeCompact(eggNext.remainingMs),
+                eggMult,
                 getSpriteElement('egg', eggNext.name),
                 eggPercent,
                 'stat__progress-fill--egg'
             ));
+        }
 
-            // NEXT PLANT row
+        if (plantBoost.hasBoost && (viewType === 'plant' || isSummaryView)) {
+            const plantMult = calculatePetMultiplier(pet, 'plant');
             const cropNext = findNextReadyCrop(growingCrops, now);
-            const cropPercent = calcAvgPercentCrops(growingCrops, now);
+            const cropPercent = growingCrops.length > 0
+                ? calcAvgPercentCrops(growingCrops, now, teamPlantMultVal)
+                : 100; // 100% if nothing growing
             wrapper.appendChild(buildStatRow(
                 'NEXT PLANT',
-                formatTimeCompact(cropNext.remainingMs),
+                plantMult,
                 getSpriteElement('plant', cropNext.name),
                 cropPercent,
                 'stat__progress-fill--plant'
             ));
         }
-        // ─────── SINGLE BOOST: EGG ───────
-        else if (eggBoost.hasBoost) {
-            // BOOST row
-            wrapper.appendChild(buildBoostRow(`+${eggBoost.minutesPerProc}min/proc`));
 
-            // NEXT EGG row
-            const eggNext = findNextReadyEgg(growingEggs, now);
-            const eggPercent = calcAvgPercentEggs(growingEggs, now);
-            wrapper.appendChild(buildStatRow(
-                'NEXT EGG',
-                formatTimeCompact(eggNext.remainingMs),
-                getSpriteElement('egg', eggNext.name),
-                eggPercent,
-                'stat__progress-fill--egg'
-            ));
-
-            // ALL EGGS row
-            const allEggPercent = calcAvgPercentEggs(growingEggs, now);
+        // 3. Build ALL Row (STRICT contextual filtering)
+        if (eggBoost.hasBoost && (viewType === 'egg' || isSummaryView)) {
+            const allEggPercent = growingEggs.length > 0
+                ? calcAvgPercentEggs(growingEggs, now, teamEggMultVal)
+                : 100; // 100% if nothing growing
             wrapper.appendChild(buildStatRow(
                 'ALL EGGS',
                 `${growingEggs.length} total`,
@@ -413,25 +501,10 @@ export const growthPanel: FeaturePanelDefinition = {
                 allEggPercent,
                 'stat__progress-fill--egg'
             ));
-        }
-        // ─────── SINGLE BOOST: PLANT ───────
-        else if (plantBoost.hasBoost) {
-            // BOOST row
-            wrapper.appendChild(buildBoostRow(`+${plantBoost.minutesPerProc}min/proc`));
-
-            // NEXT PLANT row
-            const cropNext = findNextReadyCrop(growingCrops, now);
-            const cropPercent = calcAvgPercentCrops(growingCrops, now);
-            wrapper.appendChild(buildStatRow(
-                'NEXT PLANT',
-                formatTimeCompact(cropNext.remainingMs),
-                getSpriteElement('plant', cropNext.name),
-                cropPercent,
-                'stat__progress-fill--plant'
-            ));
-
-            // ALL PLANTS row
-            const allCropPercent = calcAvgPercentCrops(growingCrops, now);
+        } else if (plantBoost.hasBoost && (viewType === 'plant' || isSummaryView)) {
+            const allCropPercent = growingCrops.length > 0
+                ? calcAvgPercentCrops(growingCrops, now, teamPlantMultVal)
+                : 100; // 100% if nothing growing
             wrapper.appendChild(buildStatRow(
                 'ALL PLANTS',
                 `${growingCrops.length} total`,

@@ -100,8 +100,23 @@ export const basePetCardCss = `
 }
 
 .base-str__label { color: var(--muted); }
-.base-str__current { color: var(--pill-to); font-weight: 800; }
-.base-str__max { color: var(--muted); }
+.base-str__current { 
+    color: var(--pill-to); 
+    font-weight: 800; 
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+.base-str__max { 
+    color: var(--muted); 
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8);
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RIGHT SECTION - The Content Slot (Stat Grid Protocol)
@@ -255,7 +270,11 @@ export const basePetCardCss = `
 .base-pet-card .badge {
     background: var(--pill-to);
     color: var(--pill-from);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8) !important;
     border: none;
     font-size: 11px;
     padding: 3px 10px;

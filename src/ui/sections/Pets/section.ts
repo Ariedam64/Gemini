@@ -16,6 +16,7 @@ import { badgeCss } from "../../components/Badge/badge.css";
 import { arcadeButtonCss } from "../../components/ArcadeButton";
 import { geminiIconButtonCss } from "../../components/GeminiIconButton";
 import { abilityLogsCardCss } from "./parts/abilityLogsCard.css";
+import { growthPanelCss } from "./parts/featurePanels/growthPanel.css";
 import type { SectionsDeps } from "../core/Types";
 
 export class PetsSection extends BaseSection {
@@ -47,6 +48,7 @@ export class PetsSection extends BaseSection {
         injectStyleOnce(shadow, arcadeButtonCss, 'arcade-button-styles');
         injectStyleOnce(shadow, geminiIconButtonCss, 'gemini-icon-button-styles');
         injectStyleOnce(shadow, abilityLogsCardCss, 'ability-logs-card-styles');
+        injectStyleOnce(shadow, growthPanelCss, 'growth-panel-styles');
 
         const section = this.createGrid("12px");
         section.id = "pets";

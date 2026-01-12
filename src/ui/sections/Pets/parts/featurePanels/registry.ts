@@ -53,8 +53,9 @@ export interface FeaturePanelDefinition {
     /** 
      * Render feature-specific stats for an individual pet card slot.
      * Part of the "Blank Shell" architecture.
+     * @param viewType - Optional context (e.g., 'egg' or 'plant' for growth panel)
      */
-    renderPetSlot?: (pet: UnifiedPet, team: PetTeam, container: HTMLElement) => void;
+    renderPetSlot?: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string) => void;
 
     /** Should this feature display for this team? (optional smart filtering) */
     shouldDisplay?: (team: PetTeam, pets: UnifiedPet[]) => boolean;

@@ -13,6 +13,11 @@ export const badgeCss = `
   font-weight:600;
   white-space:nowrap;
   opacity:.98;
+  text-shadow: 
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8);
   transition:
     background-color .28s ease,
     border-color .28s ease,
@@ -62,9 +67,13 @@ export const badgeCss = `
   line-height:1.1;
   white-space:nowrap;
   box-shadow:0 0 0 1px #0006 inset;
-  border:none;
   background:transparent;
   color:inherit;
+  text-shadow: 
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 
 .badge.badge--rarity.badge--rarity-common    { background: var(--rarity-common); color:#0b0b0b; }
@@ -108,6 +117,11 @@ export const badgeCss = `
   font-size:12px;
   font-weight:600;
   color:white;
+  text-shadow: 
+    -1px -1px 0 rgba(0, 0, 0, 0.8),
+    1px -1px 0 rgba(0, 0, 0, 0.8),
+    -1px 1px 0 rgba(0, 0, 0, 0.8),
+    1px 1px 0 rgba(0, 0, 0, 0.8);
   transition:background 0.2s ease;
   border:none;
   max-width:fit-content;
