@@ -1,80 +1,9 @@
 // src/modules/data/logic/weather.ts
 // Weather data extraction from main bundle
 
-import { pageWindow } from "../../../utils/windowContext";
 import { captureState } from "../state";
-import { WEATHER_IDS, MAIN_BUNDLE_PATTERN, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
-
-const pageContext = pageWindow as Window & typeof globalThis;
-
-/**
- * Find main bundle URL from scripts or performance entries
- */
-function findMainBundleUrl(): string | null {
-  try {
-    for (const script of pageContext.document?.scripts || []) {
-      const src = script?.src ? String(script.src) : "";
-      if (MAIN_BUNDLE_PATTERN.test(src)) return src;
-    }
-  } catch { }
-
-  try {
-    for (const entry of pageContext.performance?.getEntriesByType?.("resource") || []) {
-      const name = entry?.name ? String(entry.name) : "";
-      if (MAIN_BUNDLE_PATTERN.test(name)) return name;
-    }
-  } catch { }
-
-  return null;
-}
-
-/**
- * Extract balanced object literal from text starting at anchor index
- */
-function extractBalancedObjectLiteral(text: string, anchorIndex: number): string | null {
-  const declStart = Math.max(
-    text.lastIndexOf("const ", anchorIndex),
-    text.lastIndexOf("let ", anchorIndex),
-    text.lastIndexOf("var ", anchorIndex)
-  );
-  if (declStart < 0) return null;
-
-  const eq = text.indexOf("=", declStart);
-  if (eq < 0 || eq > anchorIndex) return null;
-
-  const braceStart = text.indexOf("{", eq);
-  if (braceStart < 0 || braceStart > anchorIndex) return null;
-
-  let depth = 0;
-  let quote = "";
-  let escaped = false;
-
-  for (let i = braceStart; i < text.length; i++) {
-    const ch = text[i];
-
-    if (quote) {
-      if (escaped) {
-        escaped = false;
-        continue;
-      }
-      if (ch === "\\") {
-        escaped = true;
-        continue;
-      }
-      if (ch === quote) quote = "";
-      continue;
-    }
-
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-      continue;
-    }
-    if (ch === "{") depth++;
-    else if (ch === "}" && --depth === 0) return text.slice(braceStart, i + 1);
-  }
-
-  return null;
-}
+import { WEATHER_IDS, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
+import { fetchMainBundle, extractBalancedObjectLiteral } from "./bundleParser";
 
 /**
  * Build weather catalog from extracted data
@@ -114,17 +43,8 @@ function buildWeather(data: any): Record<string, any> | null {
 async function loadWeatherFromBundle(): Promise<boolean> {
   if (captureState.data.weather) return true;
 
-  const url = findMainBundleUrl();
-  if (!url) return false;
-
-  let bundleText = "";
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) return false;
-    bundleText = await res.text();
-  } catch {
-    return false;
-  }
+  const bundleText = await fetchMainBundle();
+  if (!bundleText) return false;
 
   let anchor = bundleText.indexOf("fixedTimeSlots:[0,48,96,144,192,240]");
   if (anchor < 0) anchor = bundleText.indexOf('name:"Amber Moon"');

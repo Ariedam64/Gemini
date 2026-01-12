@@ -22,3 +22,7 @@ export const PULSE_SCAN_INTERVAL_MS = 2000;
 
 export const MAX_WEATHER_POLL_ATTEMPTS = 200;
 export const WEATHER_POLL_INTERVAL_MS = 50;
+
+export const MAX_COLOR_POLL_ATTEMPTS = 10;
+export const COLOR_POLL_INTERVAL_MS = 1000;
+export const ABILITY_COLOR_ANCHOR = "ProduceScaleBoost";
