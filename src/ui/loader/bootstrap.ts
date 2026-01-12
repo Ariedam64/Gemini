@@ -12,13 +12,14 @@ import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
-import { migrateStorageKeys } from "../../utils/storage";
+import { migrateStorageKeys, FEATURE_KEYS } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
 import { MGBulkFavorite } from "../../features/bulkFavorite";
 import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
+import { getRegistry } from "../inject/core/registry";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -221,10 +222,6 @@ export function initFeatures(loader: LoaderController): void {
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
   ];
 
-  const uiInjections = [
-    { name: "BulkFavoriteInject", init: BulkFavoriteInject.init.bind(BulkFavoriteInject) },
-  ];
-
   let initializedCount = 0;
 
   // Initialize features (config/logic only)
@@ -241,20 +238,39 @@ export function initFeatures(loader: LoaderController): void {
 
   loader.logStep("Features", `All features initialized (${features.length}/${features.length})`, "success");
 
-  // Initialize UI injections (if features are enabled)
-  loader.logStep("UIInjections", "Initializing UI injections...");
-  let injectedCount = 0;
+  // Initialize QOL Injections (DOM rendering via registry)
+  loader.logStep("Injections", "Initializing QOL injections...");
 
-  for (const injection of uiInjections) {
-    try {
-      injection.init();
-      injectedCount++;
-    } catch (err) {
-      console.warn(`[Bootstrap] UI injection ${injection.name} init failed`, err);
-    }
+  try {
+    const registry = getRegistry();
+
+    // Register all QOL injections
+    registry.register({
+      id: 'bulkFavoriteInject',
+      name: 'Bulk Favorite Inject',
+      description: 'Quick favorite/unfavorite multiple mutations',
+      injection: BulkFavoriteInject,
+      storageKey: FEATURE_KEYS.BULK_FAVORITE,
+      defaultEnabled: false,
+    });
+
+    registry.register({
+      id: 'cropValueIndicator',
+      name: 'Crop Price',
+      description: 'Shows coin value in crop tooltips',
+      injection: MGCropValueIndicator.render,
+      storageKey: FEATURE_KEYS.CROP_VALUE_INDICATOR,
+      defaultEnabled: false,
+    });
+
+    // Initialize all enabled injections
+    registry.initAll();
+
+    loader.logStep("Injections", "QOL injections registered and initialized", "success");
+  } catch (err) {
+    loader.logStep("Injections", "QOL injections initialization failed", "error");
+    console.warn("[Bootstrap] Injections init failed", err);
   }
-
-  loader.logStep("UIInjections", `UI injections initialized (${injectedCount}/${uiInjections.length})`, "success");
 }
 
 export { startInjectGamePanelButton };

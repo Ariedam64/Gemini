@@ -19,6 +19,7 @@ import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } fr
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
 import { BulkFavoriteInject } from "../../inject/qol/bulkFavorite";
 import { MGCropValueIndicator } from "../../../features/cropValueIndicator";
+import { getRegistry } from "../../inject/core/registry";
 
 /* ───────────────────────── Utilities ───────────────────────── */
 
@@ -298,48 +299,77 @@ export class SettingsSection extends BaseSection {
   }
 
   /**
-   * Create In-Game Enhancements card
+   * Create a section row for an injection/feature toggle
+   */
+  private createSectionRow(
+    label: string,
+    enabled: boolean,
+    onChange: (val: boolean) => void,
+    description: string,
+    isFirst: boolean = false,
+    isLast: boolean = false
+  ): HTMLDivElement {
+    const row = element("div", {
+      style: `
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        padding: ${isFirst ? '0' : '12px'} 0 ${isLast ? '0' : '12px'} 0;
+        ${!isLast ? 'border-bottom: 1px solid var(--border);' : ''}
+        transition: opacity 0.2s ease;
+        opacity: ${enabled ? '1' : '0.5'};
+      `
+    }) as HTMLDivElement;
+
+    // Content
+    const content = element("div") as HTMLDivElement;
+    const labelEl = element("div", {
+      style: "font-weight: 500; margin-bottom: 4px;"
+    }, label);
+    const descEl = element("div", {
+      style: "font-size: 12px; color: var(--fg); opacity: 0.7;"
+    }, description);
+    content.append(labelEl, descEl);
+
+    // Switch
+    const switchEl = Switch({ checked: enabled, onChange });
+
+    row.append(content, switchEl.root);
+    return row;
+  }
+
+  /**
+   * Create In-Game Enhancements card (dynamic from registry)
    */
   private createEnhancementsCard(params?: {
     defaultExpanded?: boolean;
     onExpandChange?: (v: boolean) => void;
   }): HTMLDivElement {
-    const createSectionRow = (
-      label: string,
-      enabled: boolean,
-      onChange: (val: boolean) => void,
-      description: string,
-      isFirst: boolean = false,
-      isLast: boolean = false
-    ): HTMLDivElement => {
-      const row = element("div", {
-        style: `
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 12px;
-          padding: ${isFirst ? '0' : '12px'} 0 ${isLast ? '0' : '12px'} 0;
-          ${!isLast ? 'border-bottom: 1px solid var(--border);' : ''}
-          transition: opacity 0.2s ease;
-          opacity: ${enabled ? '1' : '0.5'};
-        `
-      }) as HTMLDivElement;
+    const registry = getRegistry();
+    const injections = registry.getAll();
 
-      // Content
-      const content = element("div") as HTMLDivElement;
-      const labelEl = element("div", {
-        style: "font-weight: 500; margin-bottom: 4px;"
-      }, label);
-      const descEl = element("div", {
-        style: "font-size: 12px; color: var(--fg); opacity: 0.7;"
-      }, description);
-      content.append(labelEl, descEl);
+    // Sort injections alphabetically
+    const sortedInjections = [...injections].sort((a, b) => a.name.localeCompare(b.name));
 
-      // Switch
-      const switchEl = Switch({ checked: enabled, onChange });
+    // Create rows for each injection
+    const rows = sortedInjections.map((config, index) => {
+      const isFirst = index === 0;
+      const isLast = index === sortedInjections.length - 1;
+      const enabled = registry.isEnabled(config.id);
 
-      row.append(content, switchEl.root);
-      return row;
-    };
+      return this.createSectionRow(
+        config.name,
+        enabled,
+        (v: boolean) => {
+          // Toggle injection via registry
+          registry.setEnabled(config.id, v);
+          this.saveFeatureConfig();
+        },
+        config.description,
+        isFirst,
+        isLast
+      );
+    });
 
     return Card(
       {
@@ -350,49 +380,7 @@ export class SettingsSection extends BaseSection {
         defaultExpanded: params?.defaultExpanded ?? false,
         onExpandChange: params?.onExpandChange,
       },
-      element("div", {},
-        createSectionRow(
-          "Bulk Favorite",
-          this.featureConfig.bulkFavorite.enabled,
-          (v: boolean) => {
-            this.featureConfig.bulkFavorite.enabled = v;
-            this.saveFeatureConfig();
-            BulkFavoriteInject.setEnabled(v);
-          },
-          "Quick favorite/unfavorite multiple mutations",
-          true // First item
-        ),
-        createSectionRow(
-          "Crop Size",
-          this.featureConfig.cropSizeIndicator.enabled,
-          (v: boolean) => {
-            this.featureConfig.cropSizeIndicator.enabled = v;
-            this.saveFeatureConfig();
-          },
-          "Shows size % and journal badges"
-        ),
-        createSectionRow(
-          "Crop Value",
-          this.featureConfig.cropValueIndicator.enabled,
-          (v: boolean) => {
-            this.featureConfig.cropValueIndicator.enabled = v;
-            this.saveFeatureConfig();
-            MGCropValueIndicator.setEnabled(v);
-          },
-          "Shows coin value"
-        ),
-        createSectionRow(
-          "Egg Probability",
-          this.featureConfig.eggProbabilityIndicator.enabled,
-          (v: boolean) => {
-            this.featureConfig.eggProbabilityIndicator.enabled = v;
-            this.saveFeatureConfig();
-          },
-          "Shows hatch chances + mutation %",
-          false, // Not first
-          true // Last item
-        )
-      )
+      element("div", {}, ...rows)
     );
   }
 

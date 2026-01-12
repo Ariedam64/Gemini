@@ -1,12 +1,12 @@
 /**
  * Crop Value Indicator Feature
- * Displays coin value for crops in the game
+ * Displays coin value for crops in the game (console logging + DOM injection)
  */
 
-import { storageGet, storageSet } from '../../utils/storage';
-import { DEFAULT_CONFIG, STORAGE_KEY } from './types';
-import type { CropValueIndicatorConfig } from './types';
 import * as Core from './logic/core';
+import { render } from './render';
+import { loadConfig, saveConfig } from './state';
+import type { CropValueIndicatorConfig } from './types';
 
 let initialized = false;
 
@@ -28,7 +28,7 @@ export function init(): void {
   initialized = true;
   console.log('[CropValueIndicator] Initializing...');
 
-  // Start monitoring plant info changes
+  // Start monitoring plant info changes (console logging)
   Core.startMonitoring();
 
   console.log('[CropValueIndicator] Initialized successfully');
@@ -91,20 +91,6 @@ export function setEnabled(enabled: boolean): void {
 }
 
 /**
- * Load configuration from storage
- */
-function loadConfig(): CropValueIndicatorConfig {
-  return storageGet<CropValueIndicatorConfig>(STORAGE_KEY, DEFAULT_CONFIG);
-}
-
-/**
- * Save configuration to storage
- */
-function saveConfig(config: CropValueIndicatorConfig): void {
-  storageSet(STORAGE_KEY, config);
-}
-
-/**
  * Public API
  */
 export const MGCropValueIndicator = {
@@ -116,6 +102,9 @@ export const MGCropValueIndicator = {
   isReady,
   isEnabled,
   setEnabled,
+
+  // QOL Rendering (DOM injection)
+  render,
 };
 
 export type { CropValueIndicatorConfig } from './types';
