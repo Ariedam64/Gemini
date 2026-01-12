@@ -146,9 +146,9 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
 
   function setAbility(id: string, name?: string) {
     // Get ability colors from MGData
-    const abilities = MGData.get("abilities") as Record<string, { name?: string; colors?: AbilityColor }> | null;
+    const abilities = MGData.get("abilities") as Record<string, { name?: string; color?: AbilityColor }> | null;
     const ability = abilities?.[id];
-    const colors = ability?.colors;
+    const colors = ability?.color;
 
     // Default gray if no color found
     const bgColor = colors?.bg || "rgba(100, 100, 100, 0.9)";
