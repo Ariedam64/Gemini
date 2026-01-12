@@ -150,6 +150,7 @@ export {
   myCoinsCountAtom,
   numPlayersAtom,
   playerIdView,
+  activityLogsView,
 
   // User Slots
   userSlotsAtom,

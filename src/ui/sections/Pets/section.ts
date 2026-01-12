@@ -4,7 +4,7 @@
  */
 
 import { BaseSection } from "../core/Section";
-import { TeamCardPart } from "./parts";
+import { TeamCardPart, AbilityLogsCardPart } from "./parts";
 import { MGPetTeam } from "../../../features/petTeam";
 import { Globals } from "../../../globals";
 import { injectStyleOnce } from "../../styles/inject";
@@ -15,13 +15,14 @@ import { basePetCardCss } from "../../components/BasePetCard";
 import { badgeCss } from "../../components/Badge/badge.css";
 import { arcadeButtonCss } from "../../components/ArcadeButton";
 import { geminiIconButtonCss } from "../../components/GeminiIconButton";
+import { abilityLogsCardCss } from "./parts/abilityLogsCard.css";
 import type { SectionsDeps } from "../core/Types";
-
 
 export class PetsSection extends BaseSection {
     private unsubscribeMyPets?: () => void;
     private lastActiveTeamId: string | null = null;
     private teamCardPart: TeamCardPart | null = null;
+    private abilityLogsCardPart: AbilityLogsCardPart | null = null;
     private deps?: SectionsDeps;
 
     constructor(deps?: SectionsDeps) {
@@ -45,12 +46,14 @@ export class PetsSection extends BaseSection {
         injectStyleOnce(shadow, badgeCss, 'badge-styles');
         injectStyleOnce(shadow, arcadeButtonCss, 'arcade-button-styles');
         injectStyleOnce(shadow, geminiIconButtonCss, 'gemini-icon-button-styles');
+        injectStyleOnce(shadow, abilityLogsCardCss, 'ability-logs-card-styles');
 
         const section = this.createGrid("12px");
         section.id = "pets";
         container.appendChild(section);
 
         this.initializeTeamCardPart(section);
+        this.initializeAbilityLogsCardPart(section);
 
         // Subscribe to stable pet changes (composition changes only)
         this.unsubscribeMyPets = Globals.myPets.subscribeStable(() => {
@@ -74,6 +77,11 @@ export class PetsSection extends BaseSection {
             this.teamCardPart.destroy();
             this.teamCardPart = null;
         }
+
+        if (this.abilityLogsCardPart) {
+            this.abilityLogsCardPart.destroy();
+            this.abilityLogsCardPart = null;
+        }
     }
 
     private initializeTeamCardPart(section: HTMLElement): void {
@@ -86,8 +94,18 @@ export class PetsSection extends BaseSection {
             });
         }
 
-        const card = this.teamCardPart.build();
-        section.replaceChildren(card);
+        const teamCard = this.teamCardPart.build();
+        section.appendChild(teamCard);
         this.teamCardPart.render();
+    }
+
+    private initializeAbilityLogsCardPart(section: HTMLElement): void {
+        if (!this.abilityLogsCardPart) {
+            this.abilityLogsCardPart = new AbilityLogsCardPart();
+        }
+
+        const abilityLogsCard = this.abilityLogsCardPart.build();
+        section.appendChild(abilityLogsCard);
+        this.abilityLogsCardPart.render();
     }
 }

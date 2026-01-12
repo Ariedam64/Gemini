@@ -32,6 +32,8 @@ function createInitialState(): CaptureState {
     scanAttempts: 0,
     weatherPollingTimer: null,
     weatherPollAttempts: 0,
+    colorPollingTimer: null,
+    colorPollAttempts: 0,
   };
 }
 

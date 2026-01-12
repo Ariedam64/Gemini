@@ -1,8 +1,10 @@
 import { element } from "../../styles/helpers";
+import { MGData } from "../../../modules";
+import type { AbilityColor } from "../../../modules/data";
 
 export type BadgeType = "neutral" | "info" | "success" | "warning" | "danger";
 export type BadgeTone = "soft" | "outline" | "solid";
-export type BadgeVariant = "default" | "rarity";
+export type BadgeVariant = "default" | "rarity" | "ability";
 
 export type BadgeOptions = {
   id?: string;
@@ -18,6 +20,10 @@ export type BadgeOptions = {
   // Rarity mode
   variant?: BadgeVariant;
   rarity?: string | null; // "Common" | "Uncommon" | "Rare" | ... | "Unknown"
+
+  // Ability mode
+  abilityId?: string;
+  abilityName?: string;
 };
 
 export type BadgeHandle = {
@@ -27,6 +33,7 @@ export type BadgeHandle = {
   setBorder: (cssBorder?: string) => void;
   setWithBorder: (on: boolean) => void;
   setRarity: (r: string | null | undefined) => void;
+  setAbility: (abilityId: string, abilityName?: string) => void;
 };
 
 type RarityKey =
@@ -65,6 +72,8 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
     onClick,
     variant = "default",
     rarity = null,
+    abilityId = "",
+    abilityName = "",
   } = opts;
 
   const root = element("span", { className: "badge", id }) as HTMLSpanElement;
@@ -130,14 +139,63 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
     const key = normalizeRarity(r);
     if (!key) { root.textContent = String(r ?? "—"); return; }
 
-    // “Unknown” literally displays “???”
+    // "Unknown" literally displays "???"
     root.textContent = key;
     root.classList.add("badge--rarity", `badge--rarity-${rarityClassSuffix(key)}`);
+  }
+
+  function setAbility(id: string, name?: string) {
+    // Get ability colors from MGData
+    const abilities = MGData.get("abilities") as Record<string, { name?: string; colors?: AbilityColor }> | null;
+    const ability = abilities?.[id];
+    const colors = ability?.colors;
+
+    // Default gray if no color found
+    const bgColor = colors?.bg || "rgba(100, 100, 100, 0.9)";
+    const hoverColor = colors?.hover || "rgba(150, 150, 150, 1)";
+
+    // Reset classes
+    root.classList.remove(
+      "badge--neutral","badge--info","badge--success","badge--warning","badge--danger",
+      "badge--soft","badge--outline","badge--solid",
+      "badge--rarity",
+      "badge--rarity-common","badge--rarity-uncommon","badge--rarity-rare",
+      "badge--rarity-legendary","badge--rarity-mythical","badge--rarity-divine",
+      "badge--rarity-celestial","badge--rarity-unknown"
+    );
+
+    // Add ability class
+    root.classList.add("badge--ability");
+
+    // Set text
+    root.textContent = name || ability?.name || id || "Unknown Ability";
+
+    // Set colors
+    root.style.background = bgColor;
+    root.style.color = "white";
+    root.style.border = "none";
+    root.style.webkitTextStroke = "";
+    root.style.animation = "";
+    root.style.backgroundSize = "";
+
+    // Add hover listeners
+    const handleMouseEnter = () => { root.style.background = hoverColor; };
+    const handleMouseLeave = () => { root.style.background = bgColor; };
+
+    // Remove old listeners if any
+    root.removeEventListener("mouseenter", handleMouseEnter);
+    root.removeEventListener("mouseleave", handleMouseLeave);
+
+    // Add new listeners
+    root.addEventListener("mouseenter", handleMouseEnter);
+    root.addEventListener("mouseleave", handleMouseLeave);
   }
 
   // init
   if (variant === "rarity") {
     setRarity(rarity);
+  } else if (variant === "ability") {
+    setAbility(abilityId, abilityName);
   } else {
     root.textContent = label;
     applyType(type, tone);
@@ -145,5 +203,5 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
     if (border) setBorder(border);
   }
 
-  return { root, setLabel, setType, setBorder, setWithBorder, setRarity };
+  return { root, setLabel, setType, setBorder, setWithBorder, setRarity, setAbility };
 }
