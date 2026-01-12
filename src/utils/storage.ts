@@ -72,6 +72,8 @@ export const FEATURE_KEYS = {
     PET_TEAM: 'feature:petTeam:config',
     /** XP Tracker feature config */
     XP_TRACKER: 'feature:xpTracker:config',
+    /** Crop value indicator feature config */
+    CROP_VALUE_INDICATOR: 'feature:cropValueIndicator:config',
 } as const;
 
 /** Keys for development/debug purposes */

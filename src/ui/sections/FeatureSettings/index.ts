@@ -1,1 +1,0 @@
-export { FeatureSettingsSection } from './section';

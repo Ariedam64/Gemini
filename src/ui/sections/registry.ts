@@ -5,7 +5,6 @@ import type { SectionsDeps } from "./core/Types";
 import { SettingsSection } from "./Settings";
 import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
-import { FeatureSettingsSection } from "./FeatureSettings";
 import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
 import { DevSection } from "./Dev";
@@ -26,7 +25,6 @@ function getTestSection(): TestSection {
 export function buildSections(deps: SectionsDeps): BaseSection[] {
   const sections: BaseSection[] = [
     new SettingsSection(deps),
-    new FeatureSettingsSection(),
     new AutoFavoriteSettingsSection(),
     new JournalCheckerSection(),
     new PetsSection(deps),

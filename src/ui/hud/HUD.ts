@@ -258,11 +258,11 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   function applyTabVisibility(): void {
     const config = storageGet<Record<string, { enabled: boolean }>>(
       FEATURE_KEYS.CONFIG,
-      { autoFavorite: { enabled: false }, journalChecker: { enabled: false }, pets: { enabled: true } }
+      { autoFavorite: { enabled: true }, journalChecker: { enabled: true }, pets: { enabled: true } }
     );
 
     for (const [tabId, featureKey] of Object.entries(TAB_FEATURE_MAP)) {
-      const isEnabled = config[featureKey]?.enabled ?? false;
+      const isEnabled = config[featureKey]?.enabled ?? true; // Default to true (show tabs by default)
       if (isEnabled) {
         nav.showTab(tabId);
       } else {

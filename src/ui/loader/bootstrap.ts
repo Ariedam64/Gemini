@@ -18,6 +18,7 @@ import { MGPetTeam } from "../../features/petTeam";
 import { MGBulkFavorite } from "../../features/bulkFavorite";
 import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
+import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -217,6 +218,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "PetTeam", init: MGPetTeam.init.bind(MGPetTeam) },
     { name: "BulkFavorite", init: MGBulkFavorite.init.bind(MGBulkFavorite) },
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
+    { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
   ];
 
   const uiInjections = [
