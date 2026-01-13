@@ -7,6 +7,7 @@ import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
+import { TrackersSection } from "./Trackers";
 import { DevSection } from "./Dev";
 
 let testSectionInstance: TestSection | null = null;
@@ -28,6 +29,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new AutoFavoriteSettingsSection(),
     new JournalCheckerSection(),
     new PetsSection(deps),
+    new TrackersSection(deps),
   ];
 
   // Only include developer tools in non-production builds
