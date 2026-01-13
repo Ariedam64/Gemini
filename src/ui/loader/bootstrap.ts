@@ -19,6 +19,7 @@ import { MGBulkFavorite } from "../../features/bulkFavorite";
 import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
+import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
 import { getRegistry } from "../inject/core/registry";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
@@ -220,6 +221,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "BulkFavorite", init: MGBulkFavorite.init.bind(MGBulkFavorite) },
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
+    { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
   ];
 
   let initializedCount = 0;
@@ -260,6 +262,15 @@ export function initFeatures(loader: LoaderController): void {
       description: 'Shows coin value in crop tooltips',
       injection: MGCropValueIndicator.render,
       storageKey: FEATURE_KEYS.CROP_VALUE_INDICATOR,
+      defaultEnabled: false,
+    });
+
+    registry.register({
+      id: 'cropSizeIndicator',
+      name: 'Crop Size',
+      description: 'Shows size percentage in crop tooltips',
+      injection: MGCropSizeIndicator.render,
+      storageKey: FEATURE_KEYS.CROP_SIZE_INDICATOR,
       defaultEnabled: false,
     });
 

@@ -12,6 +12,8 @@ export { MGXPTracker } from "./xpTracker";
 export type { PetXpProgress, XpBoostStats, CombinedXpBoostStats, XpTrackerConfig } from "./xpTracker";
 export { MGGrowthTimers } from "./growthTimers";
 export type { GrowthTimer, BoostInfo, GrowthTimersConfig } from "./growthTimers";
+export { MGCropValueIndicator } from "./cropValueIndicator";
+export { MGCropSizeIndicator } from "./cropSizeIndicator";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

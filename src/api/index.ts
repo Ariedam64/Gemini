@@ -23,6 +23,8 @@ import { MGBulkFavorite } from "../features/bulkFavorite";
 import { MGAchievements } from "../features/achievements";
 import { MGPetTeam } from "../features/petTeam";
 import { MGXPTracker } from "../features/xpTracker";
+import { MGCropValueIndicator } from "../features/cropValueIndicator";
+import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -60,6 +62,8 @@ export const GeminiAPI = {
     Pets: MGPets,
     PetTeam: MGPetTeam,
     XPTracker: MGXPTracker,
+    CropValueIndicator: MGCropValueIndicator,
+    CropSizeIndicator: MGCropSizeIndicator,
   },
 
   WebSocket: {

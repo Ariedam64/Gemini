@@ -249,7 +249,15 @@ export class SettingsSection extends BaseSection {
       content.append(labelEl, descEl);
 
       // Switch
-      const switchEl = Switch({ checked: enabled, onChange });
+      const switchEl = Switch({
+        checked: enabled,
+        onChange: (v: boolean) => {
+          // Update row opacity when toggle changes
+          row.style.opacity = v ? '1' : '0.5';
+          // Call original handler
+          onChange(v);
+        }
+      });
 
       row.append(content, switchEl.root);
       return row;
@@ -332,7 +340,15 @@ export class SettingsSection extends BaseSection {
     content.append(labelEl, descEl);
 
     // Switch
-    const switchEl = Switch({ checked: enabled, onChange });
+    const switchEl = Switch({
+      checked: enabled,
+      onChange: (v: boolean) => {
+        // Update row opacity when toggle changes
+        row.style.opacity = v ? '1' : '0.5';
+        // Call original handler
+        onChange(v);
+      }
+    });
 
     row.append(content, switchEl.root);
     return row;

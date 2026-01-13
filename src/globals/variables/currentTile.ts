@@ -168,7 +168,9 @@ function isPlantInfoChanged(prev: PlantInfo | null, next: PlantInfo | null): boo
   if (prev.currentSlotIndex !== next.currentSlotIndex) return true;
   if (prev.nextHarvestSlotIndex !== next.nextHarvestSlotIndex) return true;
   if (prev.slots.length !== next.slots.length) return true;
-  return !deepEqual(prev.sortedSlotIndices, next.sortedSlotIndices);
+  if (!deepEqual(prev.sortedSlotIndices, next.sortedSlotIndices)) return true;
+  // Check if slot data changed (targetScale, mutations, etc.)
+  return !deepEqual(prev.slots, next.slots);
 }
 
 function isGardenChanged(prev: GardenContext, next: GardenContext): boolean {

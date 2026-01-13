@@ -10,7 +10,16 @@
 
 import { createCleanupTracker, addObserverWithCleanup } from '../../ui/inject/core/lifecycle';
 import { calculateCropSellPrice } from '../../modules/calculators/logic/crop';
-import { loadConfig } from './state';
+import { getCurrentTile } from '../../globals/variables/currentTile';
+import { MGSprite } from '../../modules/sprite';
+import type { Unsubscribe } from '../../globals/core/types';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Selectors (update these if game UI structure changes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CROP_CONTAINER_CLASS_MATURE = 'css-qnqsp4';
+const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -19,6 +28,9 @@ import { loadConfig } from './state';
 let tracker = createCleanupTracker();
 let stylesInjected = false;
 let initialized = false;
+let plantInfoUnsubscribe: Unsubscribe | null = null;
+let lastRenderedPrice: number | null = null;
+let rafHandle: number | null = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
@@ -27,29 +39,40 @@ let initialized = false;
 const CROP_PRICE_STYLES = `
   .gemini-qol-cropPrice {
     display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem 0 0 0;
-    margin-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.9rem;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 6px;
   }
 
-  .gemini-qol-cropPrice__label {
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 500;
+  .gemini-qol-cropPrice-sprite {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
-  .gemini-qol-cropPrice__value {
-    color: #4ade80;
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
+  .gemini-qol-cropPrice-text {
+    font-size: 14px;
+    color: #FFD84D;
+    font-weight: 700;
   }
 
   @media (max-width: 768px) {
     .gemini-qol-cropPrice {
-      font-size: 0.8rem;
-      padding: 0.4rem 0 0 0;
-      margin-top: 0.4rem;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .gemini-qol-cropPrice-sprite {
+      width: 16px;
+      height: 16px;
+    }
+
+    .gemini-qol-cropPrice-text {
+      font-size: 12px;
     }
   }
 `;
@@ -85,16 +108,44 @@ function createPriceElement(price: number): HTMLElement {
   const root = document.createElement('div');
   root.className = 'gemini-qol-cropPrice';
 
-  const label = document.createElement('span');
-  label.className = 'gemini-qol-cropPrice__label';
-  label.textContent = 'Price: ';
+  // Sprite container
+  const spriteContainer = document.createElement('div');
+  spriteContainer.className = 'gemini-qol-cropPrice-sprite';
 
-  const value = document.createElement('span');
-  value.className = 'gemini-qol-cropPrice__value';
-  value.textContent = price > 0 ? price.toLocaleString() : 'N/A';
+  // Canvas for the coin sprite
+  const canvas = document.createElement('canvas');
+  canvas.width = 20;
+  canvas.height = 20;
+  spriteContainer.appendChild(canvas);
 
-  root.appendChild(label);
-  root.appendChild(value);
+  // Price text
+  const priceText = document.createElement('div');
+  priceText.className = 'gemini-qol-cropPrice-text';
+  priceText.textContent = price > 0 ? price.toLocaleString() : '';
+
+  root.appendChild(spriteContainer);
+  root.appendChild(priceText);
+
+  // Render the coin sprite on the canvas
+  try {
+    const coinCanvas = MGSprite.toCanvas('ui', 'Coin');
+    if (coinCanvas && canvas.parentElement) {
+      // Scale the coin sprite to fit the canvas
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Draw the coin sprite centered on the canvas
+        const scale = Math.min(canvas.width / coinCanvas.width, canvas.height / coinCanvas.height);
+        const scaledWidth = coinCanvas.width * scale;
+        const scaledHeight = coinCanvas.height * scale;
+        const x = (canvas.width - scaledWidth) / 2;
+        const y = (canvas.height - scaledHeight) / 2;
+
+        ctx.drawImage(coinCanvas, x, y, scaledWidth, scaledHeight);
+      }
+    }
+  } catch (err) {
+    console.warn('[CropValueIndicator.render] Failed to render coin sprite:', err);
+  }
 
   return root;
 }
@@ -103,26 +154,204 @@ function createPriceElement(price: number): HTMLElement {
 // Tooltip Detection & Injection
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Extract mutations from tooltip
+ * Looks for <span> elements with crop mutation names
+ */
+function extractMutations(el: HTMLElement): string[] {
+  const mutations: string[] = [];
+
+  // Look for spans with mutation names
+  const spans = el.querySelectorAll('span.chakra-text');
+
+  for (const span of spans) {
+    const text = span.textContent?.trim();
+    if (!text) continue;
+
+    // Known mutation/condition names
+    const knownMutations = [
+      'Gold', 'Rainbow',
+      'Wet', 'Chilled', 'Frozen',
+      'Dawnlit', 'Dawnbound',
+      'Amberlit', 'Amberbound',
+    ];
+
+    if (knownMutations.includes(text)) {
+      mutations.push(text);
+    }
+  }
+
+  return mutations;
+}
+
+/**
+ * Extract target scale (weight) from tooltip
+ * Looks for text like "0.50 kg" in <p> elements
+ */
+function extractTargetScale(el: HTMLElement): number {
+  const paragraphs = el.querySelectorAll('p.chakra-text');
+
+  for (const p of paragraphs) {
+    const text = p.textContent?.trim();
+    if (!text) continue;
+
+    // Match pattern like "0.50 kg" or "1.25 kg"
+    const match = text.match(/^([\d.]+)\s*kg$/i);
+    if (match) {
+      return parseFloat(match[1]);
+    }
+  }
+
+  // Default to 1.0 if not found
+  return 1.0;
+}
+
 function findCropTooltips(): CropTooltip[] {
   const tooltips: CropTooltip[] = [];
 
-  // Strategy: Look for tooltip elements with crop-related content
-  const candidates = document.querySelectorAll<HTMLElement>(
-    '[role="tooltip"], .tooltip, .popup, [class*="tooltip"]'
+  // Find all mature crop containers (with mutations/scale)
+  const matureCropContainers = document.querySelectorAll<HTMLElement>(
+    `.${CROP_CONTAINER_CLASS_MATURE}`
   );
 
-  for (const el of candidates) {
+  for (const container of matureCropContainers) {
     // Check if visible
-    if (!el.offsetParent) continue;
+    if (!container.offsetParent) continue;
 
-    // Check for crop indicators (e.g., "Starweaver Fruit", size percentages, etc.)
-    const text = el.textContent || '';
-    if (text.includes('%') || text.match(/\d+h\s+\d+m/)) {
-      tooltips.push({ element: el });
+    // Skip if inside a pet button
+    if (container.closest('button.chakra-button')) continue;
+
+    tooltips.push({ element: container });
+  }
+
+  // Find all growth crop containers (timer/info panels)
+  const growthCropContainers = document.querySelectorAll<HTMLElement>(
+    `.${CROP_CONTAINER_CLASS_GROWTH}`
+  );
+
+  for (const container of growthCropContainers) {
+    // Check if visible
+    if (!container.offsetParent) continue;
+
+    // Skip if inside a pet button
+    if (container.closest('button.chakra-button')) continue;
+
+    // Find the timer container (last McFlex with paragraphs)
+    const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
+    if (mcFlexes.length > 0) {
+      const timerContainer = mcFlexes[mcFlexes.length - 1]; // Last McFlex is the timer/info
+      if (timerContainer.querySelector('p.chakra-text')) {
+        tooltips.push({ element: timerContainer });
+      }
     }
   }
 
   return tooltips;
+}
+
+function updateTooltipPrice(infoContainer: HTMLElement): void {
+  try {
+    // Find existing price element
+    const existingPrice = infoContainer.querySelector('.gemini-qol-cropPrice') as HTMLElement | null;
+    if (!existingPrice) return;
+
+    // Find the price text element
+    const priceTextEl = existingPrice.querySelector('.gemini-qol-cropPrice-text') as HTMLElement | null;
+    if (!priceTextEl) return;
+
+    // Find the name element to extract species
+    const nameEl = infoContainer.querySelector('p.chakra-text');
+    if (!nameEl) return;
+
+    const species = nameEl.textContent?.trim();
+    if (!species) return;
+
+    // Extract crop information
+    const targetScale = extractTargetScale(infoContainer);
+    const mutations = extractMutations(infoContainer);
+
+    // Calculate new price
+    const price = calculateCropSellPrice(species, targetScale, mutations);
+
+    // Update the price element text
+    priceTextEl.textContent = price > 0 ? price.toLocaleString() : '';
+
+    console.log(`[CropValueIndicator.render] 🔄 Updated price for ${species}:`, { targetScale, mutations, price });
+  } catch (err) {
+    console.warn('[CropValueIndicator.render] Failed to update price:', err);
+  }
+}
+
+function calculateCurrentPrice(): number {
+  // Get plant data from currentTile
+  const tile = getCurrentTile().get();
+  const plant = tile.plant;
+
+  if (!plant) return 0;
+
+  const currentSlot = plant.currentSlotIndex !== null ? plant.slots[plant.currentSlotIndex] : null;
+
+  if (!currentSlot) return 0;
+
+  // Calculate price from the actual plant data
+  return calculateCropSellPrice(
+    currentSlot.species,
+    currentSlot.targetScale,
+    currentSlot.mutations || []
+  );
+}
+
+function doRender(price: number, currentSlot: any): void {
+  // Update all visible crop price elements
+  const allPriceElements = document.querySelectorAll<HTMLElement>('.gemini-qol-cropPrice');
+
+  for (const priceEl of allPriceElements) {
+    if (!priceEl.offsetParent) continue;
+    if (priceEl.closest('button.chakra-button')) continue;
+
+    // Update the price text element
+    const priceTextEl = priceEl.querySelector('.gemini-qol-cropPrice-text') as HTMLElement | null;
+    if (priceTextEl) {
+      priceTextEl.textContent = price > 0 ? price.toLocaleString() : '';
+    }
+  }
+
+  console.log(`[CropValueIndicator.render] 🔄 Updated all prices:`, {
+    species: currentSlot.species,
+    scale: currentSlot.targetScale,
+    mutations: currentSlot.mutations || [],
+    price,
+    count: allPriceElements.length,
+  });
+}
+
+function scheduleRender(): void {
+  // Cancel previous RAF if pending
+  if (rafHandle !== null) {
+    cancelAnimationFrame(rafHandle);
+  }
+
+  rafHandle = requestAnimationFrame(() => {
+    rafHandle = null;
+
+    const price = calculateCurrentPrice();
+
+    // Skip if price hasn't changed
+    if (price === lastRenderedPrice) {
+      return;
+    }
+
+    lastRenderedPrice = price;
+
+    const tile = getCurrentTile().get();
+    const plant = tile.plant;
+    if (!plant) return;
+
+    const currentSlot = plant.currentSlotIndex !== null ? plant.slots[plant.currentSlotIndex] : null;
+    if (!currentSlot) return;
+
+    doRender(price, currentSlot);
+  });
 }
 
 function injectPriceToTooltip(tooltip: CropTooltip): void {
@@ -132,29 +361,52 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
   }
 
   try {
-    // Try to extract crop info from tooltip
-    // Strategy: Look for crop species name in tooltip
-    const titleEl = tooltip.element.querySelector('p, h3, h4, strong, span[class*="name"]');
-    if (!titleEl) return;
+    // Find the crop info container (McFlex that contains the name)
+    const nameEl = tooltip.element.querySelector('p.chakra-text');
+    if (!nameEl) {
+      console.log('[CropValueIndicator.render] No name element found in tooltip');
+      return;
+    }
 
-    const species = titleEl.textContent?.trim();
-    if (!species) return;
+    const infoContainer = nameEl.closest('.McFlex') as HTMLElement | null;
+    if (!infoContainer) {
+      console.log('[CropValueIndicator.render] No McFlex container found');
+      return;
+    }
 
-    // For now, use a default scale and empty mutations
-    // In a full implementation, we'd extract these from the tooltip data
-    const targetScale = 1.0;
-    const mutations: string[] = [];
+    // Get price from currentTile data (accurate and fast)
+    const tile = getCurrentTile().get();
+    const plant = tile.plant;
 
-    // Calculate price
-    const price = calculateCropSellPrice(species, targetScale, mutations);
+    let price = 0;
+    if (plant && plant.currentSlotIndex !== null) {
+      const currentSlot = plant.slots[plant.currentSlotIndex];
+      if (currentSlot) {
+        price = calculateCropSellPrice(
+          currentSlot.species,
+          currentSlot.targetScale,
+          currentSlot.mutations || []
+        );
+      }
+    }
 
-    // Inject price element
+    // Fallback: extract from DOM if plant data not available
+    if (price === 0) {
+      const species = nameEl.textContent?.trim();
+      if (species) {
+        const targetScale = extractTargetScale(infoContainer);
+        const mutations = extractMutations(infoContainer);
+        price = calculateCropSellPrice(species, targetScale, mutations);
+      }
+    }
+
+    // Inject price element at the end of the info container
     const priceEl = createPriceElement(price);
-    tooltip.element.appendChild(priceEl);
+    infoContainer.appendChild(priceEl);
 
     tracker.add(() => priceEl.remove());
 
-    console.log(`[CropValueIndicator.render] Injected price for ${species}`);
+    console.log(`[CropValueIndicator.render] ✅ Injected price:`, { price });
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);
   }
@@ -165,32 +417,67 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function startObservingTooltips(): void {
-  // Inject prices for existing tooltips
+  // Inject prices for existing crops
   const existing = findCropTooltips();
-  for (const tooltip of existing) {
-    injectPriceToTooltip(tooltip);
+  for (const crop of existing) {
+    injectPriceToTooltip(crop);
   }
 
-  // Watch for new tooltips
+  // Subscribe to plant info changes to update tooltip prices
+  plantInfoUnsubscribe = getCurrentTile().subscribePlantInfo(() => {
+    scheduleRender();
+  });
+
+  // Watch for new crops added to the page
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
-        // Check if any new tooltip nodes were added
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Check if this is a tooltip or contains tooltips
-            if (node.getAttribute('role') === 'tooltip' ||
-                node.className?.includes('tooltip') ||
-                node.className?.includes('popup')) {
-              setTimeout(() => injectPriceToTooltip({ element: node }), 50);
+            // Check if this node is a mature crop container
+            if (node.classList.contains(CROP_CONTAINER_CLASS_MATURE)) {
+              if (!node.closest('button.chakra-button')) {
+                injectPriceToTooltip({ element: node });
+              }
             }
 
-            // Also check children
-            const children = node.querySelectorAll<HTMLElement>(
-              '[role="tooltip"], .tooltip, .popup, [class*="tooltip"]'
+            // Also check children for mature crop containers
+            const matureCropContainers = node.querySelectorAll<HTMLElement>(
+              `.${CROP_CONTAINER_CLASS_MATURE}`
             );
-            children.forEach((child) => {
-              setTimeout(() => injectPriceToTooltip({ element: child }), 50);
+            matureCropContainers.forEach((container) => {
+              if (!container.closest('button.chakra-button')) {
+                injectPriceToTooltip({ element: container });
+              }
+            });
+
+            // Check if this node is a growth crop container
+            if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
+              if (!node.closest('button.chakra-button')) {
+                const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
+                if (mcFlexes.length > 0) {
+                  const timerContainer = mcFlexes[mcFlexes.length - 1];
+                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
+                    injectPriceToTooltip({ element: timerContainer });
+                  }
+                }
+              }
+            }
+
+            // Also check children for growth crop containers
+            const growthCropContainers = node.querySelectorAll<HTMLElement>(
+              `.${CROP_CONTAINER_CLASS_GROWTH}`
+            );
+            growthCropContainers.forEach((container) => {
+              if (!container.closest('button.chakra-button')) {
+                const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
+                if (mcFlexes.length > 0) {
+                  const timerContainer = mcFlexes[mcFlexes.length - 1];
+                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
+                    injectPriceToTooltip({ element: timerContainer });
+                  }
+                }
+              }
             });
           }
         });
@@ -205,7 +492,7 @@ function startObservingTooltips(): void {
 
   addObserverWithCleanup(tracker, observer);
 
-  console.log('[CropValueIndicator.render] Started observing tooltips');
+  console.log('[CropValueIndicator.render] Started observing crops');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -220,12 +507,6 @@ export const render = {
   init(): void {
     if (initialized) {
       console.log('[CropValueIndicator.render] Already initialized');
-      return;
-    }
-
-    const config = loadConfig();
-    if (!config.enabled) {
-      console.log('[CropValueIndicator.render] Feature disabled');
       return;
     }
 
@@ -245,20 +526,34 @@ export const render = {
     if (!initialized) return;
 
     initialized = false;
+
+    // Cancel pending RAF
+    if (rafHandle !== null) {
+      cancelAnimationFrame(rafHandle);
+      rafHandle = null;
+    }
+
+    // Cleanup plant info subscription
+    if (plantInfoUnsubscribe) {
+      plantInfoUnsubscribe();
+      plantInfoUnsubscribe = null;
+    }
+
     tracker.run();
     tracker.clear();
 
     // Reset tracker for next init
     tracker = createCleanupTracker();
     stylesInjected = false;
+    lastRenderedPrice = null;
 
     console.log('🛑 [CropValueIndicator.render] Destroyed');
   },
 
   /**
-   * Check if enabled
+   * Check if currently initialized
    */
   isEnabled(): boolean {
-    return loadConfig().enabled;
+    return initialized;
   },
 };
