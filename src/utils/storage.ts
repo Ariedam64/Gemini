@@ -76,6 +76,8 @@ export const FEATURE_KEYS = {
     CROP_VALUE_INDICATOR: 'feature:cropValueIndicator:config',
     /** Crop size indicator feature config */
     CROP_SIZE_INDICATOR: 'feature:cropSizeIndicator:config',
+    /** Shop notifier feature config */
+    SHOP_NOTIFIER: 'feature:shopNotifier:config',
 } as const;
 
 /** Keys for development/debug purposes */

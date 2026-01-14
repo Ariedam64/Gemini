@@ -7,9 +7,11 @@ import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
+// import { ShopNotifierSection } from "./ShopNotifier";
 import { DevSection } from "./Dev";
 
 let testSectionInstance: TestSection | null = null;
+// let shopNotifierSectionInstance: ShopNotifierSection | null = null;
 
 function getTestSection(): TestSection {
   if (!testSectionInstance) {
@@ -17,6 +19,13 @@ function getTestSection(): TestSection {
   }
   return testSectionInstance;
 }
+
+// function getShopNotifierSection(): ShopNotifierSection {
+//   if (!shopNotifierSectionInstance) {
+//     shopNotifierSectionInstance = new ShopNotifierSection();
+//   }
+//   return shopNotifierSectionInstance;
+// }
 
 /**
  * Build all available sections
@@ -27,6 +36,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new SettingsSection(deps),
     new AutoFavoriteSettingsSection(),
     new JournalCheckerSection(),
+    // getShopNotifierSection(),
     new PetsSection(deps),
   ];
 
@@ -44,7 +54,13 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
  * Preload heavy sections in background during mod loading
  */
 export async function preloadSections(): Promise<void> {
+  // const shopNotifierSection = getShopNotifierSection();
   const testSection = getTestSection();
-  await testSection.preload();
+
+  // Preload in parallel
+  await Promise.all([
+    // shopNotifierSection.preload(),
+    testSection.preload(),
+  ]);
 }
 

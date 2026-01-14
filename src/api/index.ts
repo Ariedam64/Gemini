@@ -25,6 +25,7 @@ import { MGPetTeam } from "../features/petTeam";
 import { MGXPTracker } from "../features/xpTracker";
 import { MGCropValueIndicator } from "../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
+// import { MGShopNotifier } from "../features/shopNotifier";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -64,6 +65,7 @@ export const GeminiAPI = {
     XPTracker: MGXPTracker,
     CropValueIndicator: MGCropValueIndicator,
     CropSizeIndicator: MGCropSizeIndicator,
+    // ShopNotifier: MGShopNotifier,
   },
 
   WebSocket: {

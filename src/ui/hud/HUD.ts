@@ -75,7 +75,7 @@ import { segmentedControlCss } from "../components/SegmentedControl/segmentedCon
 
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
-import { teamCardCss } from "../sections/Pets/parts/teamCard.css";
+import { teamCardCss } from "../sections/Pets/parts/team/teamCard.css";
 import { autoFavoriteSettingsCss } from "../sections/AutoFavoriteSettings/styles.css";
 
 function yieldToMain(): Promise<void> {

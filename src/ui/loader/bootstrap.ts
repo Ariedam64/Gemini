@@ -20,6 +20,7 @@ import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
+// import { MGShopNotifier } from "../../features/shopNotifier";
 import { getRegistry } from "../inject/core/registry";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
@@ -152,12 +153,14 @@ export async function initModules(loader: LoaderController): Promise<void> {
 }
 
 export async function initSpriteWarmup(loader: LoaderController): Promise<void> {
-  loader.logStep("Sprites", "Warming up sprite cache...");
-
   try {
+    // MGSprite is already initialized in initModules(), just resolve sprites and warm cache silently
     if (!MGSprite.isReady()) {
       await MGSprite.init();
     }
+
+    // Resolve sprite IDs now that MGSprite is ready
+    MGData.resolveSprites();
 
     const spriteIds: string[] = [];
 
@@ -178,24 +181,10 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
     }
 
     const uniqueIds = [...new Set(spriteIds)];
-    const total = uniqueIds.length;
-
-    if (total === 0) {
-      loader.logStep("Sprites", "No sprites to warmup", "success");
-      return;
+    if (uniqueIds.length > 0) {
+      await MGSprite.warmup(uniqueIds, () => {}, 5);
     }
-
-    await MGSprite.warmup(
-      uniqueIds,
-      (loaded, totalCount) => {
-        loader.logStep("Sprites", `Loading sprites (${loaded}/${totalCount})...`);
-      },
-      5
-    );
-
-    loader.logStep("Sprites", `${total} sprites loaded`, "success");
   } catch (err) {
-    loader.logStep("Sprites", "Sprite warmup failed", "error");
     console.warn("[Bootstrap] Sprite warmup failed", err);
   }
 }
@@ -222,6 +211,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
+    // { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
   ];
 
   let initializedCount = 0;

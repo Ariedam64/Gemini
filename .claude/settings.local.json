@@ -34,7 +34,16 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "Bash(node -e:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(__NEW_LINE_55ae8d5a49343352__ mkdir -p 'c:\\\\Users\\\\Romann\\\\Desktop\\\\Codage\\\\Gemini\\\\src\\\\ui\\\\sections\\\\Pets\\\\parts\\\\team')",
+      "Bash(for dir in team ability teamDetails)",
+      "Bash(do find \"$dir\" -name \"*.ts\" ! -name \"index.ts\" -exec sed -i -e 's|from \"\"../../../components/|from \"\"../../../../components/|g' -e 's|from \"\"../../../styles/|from \"\"../../../../styles/|g' -e 's|from \"\"../../../../features/|from \"\"../../../../../features/|g' -e 's|from \"\"../../../../globals|from \"\"../../../../../globals|g' -e 's|from \"\"../../../../modules|from \"\"../../../../../modules|g' {} +)",
+      "Bash(do find \"$dir\" -name \"*.ts\" ! -name \"index.ts\" -exec sed -i -e 's|from \"\"../../../../modules|from \"\"../../../../../modules|g' -e 's|from \"\"../../../../features|from \"\"../../../../../features|g' -e 's|from \"\"../../../../globals|from \"\"../../../../../globals|g' {} +)",
+      "Bash(do find \"$dir\" -name \"*.ts\" ! -name \"index.ts\" -type f -exec sed -i -e 's|from \"\"../../../../|from \"\"../../../../../|g' -e 's|from '\"''\"'../../../../|from '\"''\"'../../../../../|g' {} +)",
+      "Bash(do find \"$dir\" -name \"*.ts\" ! -name \"index.ts\" -type f -exec sed -i -e 's|from \"\"../../../../../../features/|from \"\"../../../../../features/|g' -e 's|from \"\"../../../../../../modules/|from \"\"../../../../../modules/|g' -e 's|from \"\"../../../../../../globals|from \"\"../../../../../globals|g' -e 's|from \"\"../../../../../../atoms|from \"\"../../../../../atoms|g' {} +)",
+      "Bash(do find \"$dir\" -name \"*.ts\" ! -name \"index.ts\" -type f -exec sed -i -e 's|from \"\"../../../../../../modules\"\"|from \"\"../../../../../modules\"\"|g' -e 's|from \"\"../../../../../../features\"\"|from \"\"../../../../../features\"\"|g' -e 's|from \"\"../../../../../../globals\"\"|from \"\"../../../../../globals\"\"|g' -e 's|from \"\"../../../../../../atoms\"\"|from \"\"../../../../../atoms\"\"|g' {} +)"
     ]
   }
 }

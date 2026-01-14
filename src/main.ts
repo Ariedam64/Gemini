@@ -39,11 +39,12 @@ installReactDevToolsHook();
     initReactiveGlobals(loader);
     initAPI(loader);
 
+    // Run all init tasks in parallel (modules + features + sections + sprites)
     await Promise.all([
-      initModules(loader),
-      (async () => { await initSpriteWarmup(loader); })(),
-      (async () => { await initSectionsPreload(loader); })(),
+      (async () => { await initModules(loader); })(),
       (async () => { initFeatures(loader); })(),
+      (async () => { await initSectionsPreload(loader); })(),
+      (async () => { await initSpriteWarmup(loader); })(),
     ]);
 
     loader.succeed("Gemini is ready!");
