@@ -8,14 +8,13 @@ import { BaseSection } from "../core/Section";
 import { injectStyleOnce } from "../../styles/inject";
 import { shopNotifierCss } from "./styles.css";
 import { initSectionState } from "./state";
-import { createSettingsCard, createShopCard } from "./parts";
+import { createShopCard } from "./parts";
 import type { ShopType } from "../../../globals/core/types";
 
 const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor"];
 
 export class ShopNotifierSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
-  private settingsCard: ReturnType<typeof createSettingsCard> | null = null;
   private shopCards: Map<ShopType, ReturnType<typeof createShopCard>> = new Map();
 
   constructor() {
@@ -35,6 +34,15 @@ export class ShopNotifierSection extends BaseSection {
     section.id = "shop-notifier-section";
     this.sectionElement = section;
 
+    // Wait for MGData categories needed for shop items
+    const { MGData } = await import("../../../modules");
+    await Promise.all([
+      MGData.waitFor("plants"),
+      MGData.waitFor("items"),
+      MGData.waitFor("eggs"),
+      MGData.waitFor("decor"),
+    ]);
+
     // Build parts
     this.buildParts();
 
@@ -44,17 +52,10 @@ export class ShopNotifierSection extends BaseSection {
   render(container: HTMLElement): void {
     // Call parent render to show preloaded content
     super.render(container);
-
-    // Refresh shop card data to ensure latest state is displayed
-    this.refreshShopCards();
   }
 
   private buildParts(): void {
     if (!this.sectionElement) return;
-
-    // Settings card at the top
-    this.settingsCard = createSettingsCard();
-    this.sectionElement.appendChild(this.settingsCard.root);
 
     // Shop cards for each shop type
     for (const shopType of SHOP_TYPES) {
@@ -64,16 +65,14 @@ export class ShopNotifierSection extends BaseSection {
     }
   }
 
-  private refreshShopCards(): void {
-    for (const [shopType, shopCard] of this.shopCards) {
-      shopCard.refresh?.();
-    }
-  }
-
   protected async destroy(): Promise<void> {
-    // Cleanup
-    this.settingsCard = null;
+    // Cleanup shop cards
+    for (const shopCard of this.shopCards.values()) {
+      shopCard.destroy?.();
+    }
     this.shopCards.clear();
+
+    // Cleanup
     this.sectionElement = null;
   }
 }

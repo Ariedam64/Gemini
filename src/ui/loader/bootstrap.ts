@@ -180,6 +180,28 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
       }
     }
 
+    // Add sprites for shop items (used in ShopNotifier section)
+    const itemsData = MGData.get("items") as Record<string, any> | null;
+    if (itemsData) {
+      for (const item of Object.values(itemsData)) {
+        if ((item as any)?.spriteId) spriteIds.push((item as any).spriteId);
+      }
+    }
+
+    const eggsData = MGData.get("eggs") as Record<string, any> | null;
+    if (eggsData) {
+      for (const egg of Object.values(eggsData)) {
+        if ((egg as any)?.spriteId) spriteIds.push((egg as any).spriteId);
+      }
+    }
+
+    const decorData = MGData.get("decor") as Record<string, any> | null;
+    if (decorData) {
+      for (const decor of Object.values(decorData)) {
+        if ((decor as any)?.spriteId) spriteIds.push((decor as any).spriteId);
+      }
+    }
+
     const uniqueIds = [...new Set(spriteIds)];
     if (uniqueIds.length > 0) {
       await MGSprite.warmup(uniqueIds, () => {}, 5);
