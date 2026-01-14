@@ -20,7 +20,7 @@ import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
-// import { MGShopNotifier } from "../../features/shopNotifier";
+import { MGShopNotifier } from "../../features/shopNotifier";
 import { getRegistry } from "../inject/core/registry";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
@@ -233,7 +233,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
-    // { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
+    { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
   ];
 
   let initializedCount = 0;

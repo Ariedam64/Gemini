@@ -8,6 +8,7 @@ import { Switch } from "../../../../components/Switch/Switch";
 import { Badge } from "../../../../components/Badge/Badge";
 import { getShops } from "../../../../../globals/variables/shops";
 import { MGData, MGSprite } from "../../../../../modules";
+import { MGShopNotifier } from "../../../../../features/shopNotifier";
 import { element } from "../../../../styles/helpers";
 import type { ShopType, Shop, ShopItem, ShopsData } from "../../../../../globals/core/types";
 
@@ -67,6 +68,7 @@ interface ShopItemRow extends ShopItem {
   rarity: string | null;
   spriteId: string | null;
   itemName: string;
+  isTracked: boolean;
 }
 
 /**
@@ -151,14 +153,27 @@ function getItemName(itemId: string, shopType: ShopType): string {
   }
 }
 
-function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemRow> {
-  // Convert ShopItem[] to ShopItemRow[] (add rarity, spriteId, and itemName fields)
-  const rows: ShopItemRow[] = shop.items.map(item => ({
+function getTrackedIdSet(shopType: ShopType): Set<string> {
+  const tracked = MGShopNotifier.getTrackedItems();
+  const ids = tracked.filter((item) => item.shopType === shopType).map((item) => item.itemId);
+  return new Set(ids);
+}
+
+function buildRows(shop: Shop, shopType: ShopType): ShopItemRow[] {
+  const trackedIds = getTrackedIdSet(shopType);
+
+  return shop.items.map((item) => ({
     ...item,
     rarity: getRarity(item.id, shopType),
     spriteId: getSpriteId(item.id, shopType),
     itemName: getItemName(item.id, shopType),
+    isTracked: trackedIds.has(item.id),
   }));
+}
+
+function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemRow> {
+  // Convert ShopItem[] to ShopItemRow[] (add rarity, spriteId, and itemName fields)
+  const rows = buildRows(shop, shopType);
 
   // Define columns separately (like in AutoFavorite section)
   const columns: ColDef<ShopItemRow>[] = [
@@ -233,10 +248,15 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
       render: (row) => {
         const container = element("div", { className: "shop-item-toggle" });
         const switchHandle = Switch({
-          checked: false,
+          checked: row.isTracked,
           size: "sm",
           onChange: (checked) => {
-            console.log(`[ShopNotifier] Item ${row.id} tracking ${checked ? "enabled" : "disabled"}`);
+            row.isTracked = checked;
+            if (checked) {
+              MGShopNotifier.addTrackedItem(shopType, row.id);
+            } else {
+              MGShopNotifier.removeTrackedItem(shopType, row.id);
+            }
           },
         });
         container.appendChild(switchHandle.root);
@@ -293,12 +313,7 @@ export function createShopCard(options: ShopCardOptions): ShopCardPart {
     if (!table) return;
 
     const updatedShop = shops.getShop(shopType);
-    const rows: ShopItemRow[] = updatedShop.items.map(item => ({
-      ...item,
-      rarity: getRarity(item.id, shopType),
-      spriteId: getSpriteId(item.id, shopType),
-      itemName: getItemName(item.id, shopType),
-    }));
+    const rows = buildRows(updatedShop, shopType);
 
     table.setData(rows);
   }
