@@ -20,6 +20,7 @@ interface AbilityLogDisplay {
     abilityName: string;
     abilityId: string;
     description: string;
+    formattedDate: string; // Pre-calculated for performance
 }
 
 export class AbilityLogsCardPart {
@@ -36,6 +37,7 @@ export class AbilityLogsCardPart {
     private readonly VIEWPORT_HEIGHT = 480; // Match the max-height in CSS
     private renderedRange: { start: number; end: number } = { start: 0, end: 0 };
     private scrollListener: (() => void) | null = null;
+    private scrollScheduled: boolean = false; // Throttle scroll events
 
     build(): HTMLDivElement {
         if (this.card) return this.card;
@@ -80,7 +82,7 @@ export class AbilityLogsCardPart {
             return;
         }
 
-        // Transform to display format
+        // Transform to display format (pre-calculate expensive values)
         this.logs = abilityLogs.map((log) => {
             // Get ability name from MGData
             const abilities = MGData.get("abilities") as Record<string, { name?: string }> | null;
@@ -88,13 +90,18 @@ export class AbilityLogsCardPart {
             const abilityName = ability?.name || log.abilityId || "Unknown Ability";
 
             // Format description using activity log data
-            // Create a fake ActivityLogEntry for formatAbilityLog
             const fakeEntry = {
                 action: log.abilityId,
                 timestamp: log.performedAt,
                 parameters: (log.data as Record<string, unknown>) || {},
             };
             const description = formatAbilityLog(fakeEntry);
+
+            // Pre-calculate formatted date to avoid Date creation during render
+            const date = new Date(log.performedAt);
+            const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+            const formattedDate = `${dateStr} ${timeStr}`;
 
             return {
                 timestamp: log.performedAt,
@@ -103,6 +110,7 @@ export class AbilityLogsCardPart {
                 abilityName,
                 abilityId: log.abilityId,
                 description,
+                formattedDate, // Pre-calculated
             };
         });
 
@@ -169,8 +177,16 @@ export class AbilityLogsCardPart {
 
         this.listContainer.appendChild(this.innerContent);
 
-        // Attach scroll listener for virtual scrolling
-        this.scrollListener = () => this.handleScroll();
+        // Attach scroll listener for virtual scrolling (throttled via requestAnimationFrame)
+        this.scrollListener = () => {
+            if (!this.scrollScheduled) {
+                this.scrollScheduled = true;
+                requestAnimationFrame(() => {
+                    this.handleScroll();
+                    this.scrollScheduled = false;
+                });
+            }
+        };
         this.listContainer.addEventListener("scroll", this.scrollListener);
 
         container.appendChild(this.listContainer);
@@ -188,8 +204,9 @@ export class AbilityLogsCardPart {
     private updateList(): void {
         if (!this.listContainer || !this.innerContent) return;
 
-        // Clear existing items
+        // Clear existing items and reset rendered range
         this.innerContent.replaceChildren();
+        this.renderedRange = { start: 0, end: 0 }; // Reset so handleScroll() will re-render
 
         // Sort by timestamp descending (most recent first)
         const sortedLogs = [...this.filteredLogs].sort((a, b) => b.timestamp - a.timestamp);
@@ -266,14 +283,14 @@ export class AbilityLogsCardPart {
             style: "background: var(--soft); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; transition: all 0.2s ease;"
         }) as HTMLDivElement;
 
-        // Add hover effect
-        logItem.addEventListener("mouseenter", () => {
-            logItem.style.background = "color-mix(in oklab, var(--soft) 90%, var(--fg) 10%)";
-            logItem.style.borderColor = "color-mix(in oklab, var(--border) 70%, var(--fg) 30%)";
+        // Use pointerenter/pointerleave for better touch support and performance
+        logItem.addEventListener("pointerenter", function(this: HTMLDivElement) {
+            this.style.background = "color-mix(in oklab, var(--soft) 90%, var(--fg) 10%)";
+            this.style.borderColor = "color-mix(in oklab, var(--border) 70%, var(--fg) 30%)";
         });
-        logItem.addEventListener("mouseleave", () => {
-            logItem.style.background = "var(--soft)";
-            logItem.style.borderColor = "var(--border)";
+        logItem.addEventListener("pointerleave", function(this: HTMLDivElement) {
+            this.style.background = "var(--soft)";
+            this.style.borderColor = "var(--border)";
         });
 
         // Pet sprite
@@ -310,12 +327,10 @@ export class AbilityLogsCardPart {
             style: "font-size: 14px; font-weight: 700; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
         }, log.petName);
 
-        const date = new Date(log.timestamp);
-        const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const timeStr = date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+        // Use pre-calculated date from updateFromAbilityLogs (avoid Date creation during render)
         const timestamp = element("div", {
             style: "font-size: 11px; font-weight: 500; color: color-mix(in oklab, var(--fg) 60%, #9ca3af); white-space: nowrap;"
-        }, `${dateStr} ${timeStr}`);
+        }, log.formattedDate);
 
         topRow.appendChild(petName);
         topRow.appendChild(timestamp);
