@@ -4,25 +4,26 @@
  */
 
 import { BaseSection } from "../core/Section";
-import { TeamCardPart, AbilityLogsCardPart } from "./parts";
+import { TeamCardPart, TeamDetailsCardPart, AbilityLogsCardPart } from "./parts";
 import { MGPetTeam } from "../../../features/petTeam";
 import { Globals } from "../../../globals";
 import { injectStyleOnce } from "../../styles/inject";
-import { teamXpPanelCss } from "./parts/teamXpPanel.css";
-import { featureCardCss } from "./parts/featureCard.css";
-import { teamCardCss } from "./parts/teamCard.css";
+import { teamXpPanelCss } from "./parts/teamDetails/teamXpPanel.css";
+import { featureCardCss } from "./parts/teamDetails/featureCard.css";
+import { teamCardCss } from "./parts/team/teamCard.css";
 import { basePetCardCss } from "../../components/BasePetCard";
 import { badgeCss } from "../../components/Badge/badge.css";
 import { arcadeButtonCss } from "../../components/ArcadeButton";
 import { geminiIconButtonCss } from "../../components/GeminiIconButton";
-import { abilityLogsCardCss } from "./parts/abilityLogsCard.css";
-import { growthPanelCss } from "./parts/featurePanels/growthPanel.css";
+import { abilityLogsCardCss } from "./parts/ability/abilityLogsCard.css";
+import { growthPanelCss } from "./parts/teamDetails/featurePanels/growthPanel.css";
 import type { SectionsDeps } from "../core/Types";
 
 export class PetsSection extends BaseSection {
     private unsubscribeMyPets?: () => void;
     private lastActiveTeamId: string | null = null;
     private teamCardPart: TeamCardPart | null = null;
+    private teamDetailsCardPart: TeamDetailsCardPart | null = null;
     private abilityLogsCardPart: AbilityLogsCardPart | null = null;
     private deps?: SectionsDeps;
 
@@ -55,6 +56,7 @@ export class PetsSection extends BaseSection {
         container.appendChild(section);
 
         this.initializeTeamCardPart(section);
+        this.initializeTeamDetailsCardPart(section);
         this.initializeAbilityLogsCardPart(section);
 
         // Subscribe to stable pet changes (composition changes only)
@@ -63,6 +65,7 @@ export class PetsSection extends BaseSection {
             if (currentActiveTeamId !== this.lastActiveTeamId) {
                 this.lastActiveTeamId = currentActiveTeamId;
                 this.teamCardPart?.render();
+                this.teamDetailsCardPart?.render();
             }
         });
 
@@ -80,6 +83,11 @@ export class PetsSection extends BaseSection {
             this.teamCardPart = null;
         }
 
+        if (this.teamDetailsCardPart) {
+            this.teamDetailsCardPart.destroy();
+            this.teamDetailsCardPart = null;
+        }
+
         if (this.abilityLogsCardPart) {
             this.abilityLogsCardPart.destroy();
             this.abilityLogsCardPart = null;
@@ -92,6 +100,9 @@ export class PetsSection extends BaseSection {
                 onTeamReordered: (teamIds) => {
                     console.log('[PetsSection] Teams reordered:', teamIds);
                 },
+                onTeamsUpdated: () => {
+                    this.teamDetailsCardPart?.render();
+                },
                 setHUDOpen: this.deps?.setHUDOpen,
             });
         }
@@ -99,6 +110,18 @@ export class PetsSection extends BaseSection {
         const teamCard = this.teamCardPart.build();
         section.appendChild(teamCard);
         this.teamCardPart.render();
+    }
+
+    private initializeTeamDetailsCardPart(section: HTMLElement): void {
+        if (!this.teamDetailsCardPart) {
+            this.teamDetailsCardPart = new TeamDetailsCardPart({
+                getActiveTeamId: () => MGPetTeam.getActiveTeamId(),
+            });
+        }
+
+        const teamDetailsCard = this.teamDetailsCardPart.build();
+        section.appendChild(teamDetailsCard);
+        this.teamDetailsCardPart.render();
     }
 
     private initializeAbilityLogsCardPart(section: HTMLElement): void {

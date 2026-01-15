@@ -13,7 +13,7 @@
  */
 
 import { pageWindow } from "../utils/windowContext";
-import { pushWSLog } from "../ui/sections/Dev/WSLogger";
+import { pushWSLog } from "../ui/sections/Dev/tools/WSLogger";
 
 export type BestWsResult = {
   ws: WebSocket | null;

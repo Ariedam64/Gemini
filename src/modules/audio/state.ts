@@ -30,6 +30,11 @@ export function createAudioState(): AudioState {
       music: null,
     },
 
+    customAudio: {
+      current: null,
+      onEnd: undefined,
+    },
+
     ctx: null,
   };
 }

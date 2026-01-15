@@ -1,13 +1,14 @@
 // src/modules/audio/index.ts
 // MGAudio - Audio management (SFX, music, ambience)
 
-import type { PlayOptions, PlaySfxResult, ListOptions } from "./types";
+import type { PlayOptions, PlaySfxResult, ListOptions, CustomAudioPlayOptions, CustomAudioHandle } from "./types";
 import { isReady } from "./state";
 import { initAudioSystem } from "./logic/init";
 import { playSfx } from "./logic/sfx";
 import { stop, playTrack } from "./logic/tracks";
 import { list, getCategories, getGroups, hasTrack, hasGroup, getTrackUrl, refreshVolumes } from "./logic/query";
 import { categoryVolume } from "./logic/volume";
+import { playCustomAudio, stopCustomAudio, setCustomAudioVolume, isCustomAudioPlaying, getCustomAudioHandle } from "./logic/custom";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -82,4 +83,36 @@ export const MGAudio = {
     ensureReady();
     return getTrackUrl(category, name);
   },
+
+  // ─── Custom Audio (for notifications, alerts, etc.) ───
+  playCustom: async (url: string, opts?: CustomAudioPlayOptions): Promise<CustomAudioHandle> => {
+    ensureReady();
+    return playCustomAudio(url, opts);
+  },
+
+  stopCustom: (): boolean => {
+    ensureReady();
+    return stopCustomAudio();
+  },
+
+  setCustomVolume: (volume: number): boolean => {
+    ensureReady();
+    return setCustomAudioVolume(volume);
+  },
+
+  isCustomPlaying: (): boolean => {
+    ensureReady();
+    return isCustomAudioPlaying();
+  },
+
+  getCustomHandle: (): CustomAudioHandle | null => {
+    ensureReady();
+    return getCustomAudioHandle();
+  },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Type Exports
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type { CustomAudioPlayOptions, CustomAudioHandle };

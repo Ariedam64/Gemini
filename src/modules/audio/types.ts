@@ -39,6 +39,19 @@ export interface PlayOptions {
   loop?: boolean;
 }
 
+export interface CustomAudioPlayOptions {
+  volume?: number;      // 0-1
+  loop?: boolean;
+  onEnd?: () => void;   // Callback when audio ends
+}
+
+export interface CustomAudioHandle {
+  element: HTMLAudioElement;
+  isPlaying: boolean;
+  duration: number;
+  currentTime: number;
+}
+
 export interface ListOptions {
   groups?: boolean;
 }
@@ -67,6 +80,11 @@ export interface AudioState {
   tracks: {
     ambience: HTMLAudioElement | null;
     music: HTMLAudioElement | null;
+  };
+
+  customAudio: {
+    current: HTMLAudioElement | null;
+    onEnd?: () => void;
   };
 
   ctx: AudioContext | null;

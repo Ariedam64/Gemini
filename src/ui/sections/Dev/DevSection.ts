@@ -1,10 +1,10 @@
 import { BaseSection } from '../core/Section';
 import { element } from '../../styles/helpers';
 import { createNavTabs } from '../../components/NavTabs/NavTabs';
-import { AtomInspector } from './AtomInspector';
-import { WSLogger } from './WSLogger';
-import { UIGallery } from './UIGallery';
-import { PixiInspector } from './PixiInspector';
+import { AtomInspector } from './inspectors/AtomInspector';
+import { WSLogger } from './tools/WSLogger';
+import { UIGallery } from './tools/UIGallery';
+import { PixiInspector } from './inspectors/PixiInspector';
 // Per .claude/rules/core.md: use unified storage wrapper
 import { storageGet, storageSet, DEV_KEYS } from '../../../utils/storage';
 import { isAllDataCaptured, tryCapture  } from '../../../modules/data/logic/capture';

@@ -3,6 +3,7 @@
 
 import type { CapturedDataKey, DataBag } from "../types";
 import { captureState } from "../state";
+import { MGSprite } from "../../sprite";
 
 /**
  * Normalize a name for sprite lookup
@@ -47,8 +48,10 @@ function pickSpriteId(
   extraCats: string[] = [],
   idFallbacks: string[] = []
 ): string | null {
-  const MGSprite = (window.Gemini?.Modules as any)?.Sprite;
-  if (!MGSprite) return null;
+  if (!MGSprite) {
+    console.warn("[MGData] MGSprite not available in pickSpriteId");
+    return null;
+  }
 
   const cats = catCandidates(cat, extraCats);
   if (!cats.length) return null;
@@ -84,6 +87,7 @@ function pickSpriteId(
       const idLcList = idCandidates.map((x) => String(x || "").toLowerCase());
       const nameLc = String(nameHint || normName || "").toLowerCase();
 
+      // First pass: exact match
       for (const k of ids) {
         const leaf = k.split("/").pop() || "";
         const leafLc = leaf.toLowerCase();
@@ -91,11 +95,14 @@ function pickSpriteId(
         if (leafLc === nameLc) return k;
       }
 
+      // Second pass: bidirectional partial matching
       for (const k of ids) {
         const leaf = k.split("/").pop() || "";
         const leafLc = leaf.toLowerCase();
-        if (idLcList.some((c) => c && leafLc.includes(c))) return k;
-        if (nameLc && leafLc.includes(nameLc)) return k;
+
+        // Check both directions: does leaf contain candidate, or does candidate contain leaf?
+        if (idLcList.some((c) => c && (leafLc.includes(c) || c.includes(leafLc)))) return k;
+        if (nameLc && (leafLc.includes(nameLc) || nameLc.includes(leafLc))) return k;
       }
     }
   } catch { }
@@ -247,7 +254,9 @@ function resolveAllSprites(bag: DataBag): void {
  */
 export function resolveSprites(): void {
   try {
+    console.log("[MGData] Resolving sprites...");
     resolveAllSprites(captureState.data);
+    console.log("[MGData] Sprite resolution complete");
   } catch (err) {
     try { console.warn("[MGData] sprite resolution failed", err); } catch { }
   }

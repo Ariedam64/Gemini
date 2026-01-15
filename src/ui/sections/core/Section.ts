@@ -27,6 +27,14 @@ export abstract class BaseSection {
   protected abstract build(container: HTMLElement): void | Promise<void>;
 
   /**
+   * Optional lifecycle hook - override to cleanup section-specific resources
+   * Called automatically when section is unmounted
+   */
+  protected destroy(): void | Promise<void> {
+    // Override in subclasses to cleanup resources (listeners, subscriptions, etc.)
+  }
+
+  /**
    * Preload the section content in background
    * Creates content in a detached container for later use
    */
@@ -92,6 +100,15 @@ export abstract class BaseSection {
    * Cleans up listeners/DOM specific to the section
    */
   unmount(): void {
+    // Call destroy hook first (for section-specific cleanup)
+    const destroyResult = this.destroy();
+    if (destroyResult instanceof Promise) {
+      destroyResult.catch((err) => {
+        console.error(`[Gemini] Destroy error in section ${this.id}:`, err);
+      });
+    }
+
+    // Then execute registered cleanup functions
     this.executeCleanup();
     this.container = null;
   }

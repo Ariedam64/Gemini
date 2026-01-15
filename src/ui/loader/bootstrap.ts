@@ -20,6 +20,7 @@ import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
+import { MGShopNotifier } from "../../features/shopNotifier";
 import { getRegistry } from "../inject/core/registry";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
@@ -152,12 +153,14 @@ export async function initModules(loader: LoaderController): Promise<void> {
 }
 
 export async function initSpriteWarmup(loader: LoaderController): Promise<void> {
-  loader.logStep("Sprites", "Warming up sprite cache...");
-
   try {
+    // MGSprite is already initialized in initModules(), just resolve sprites and warm cache silently
     if (!MGSprite.isReady()) {
       await MGSprite.init();
     }
+
+    // Resolve sprite IDs now that MGSprite is ready
+    MGData.resolveSprites();
 
     const spriteIds: string[] = [];
 
@@ -177,25 +180,33 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
       }
     }
 
-    const uniqueIds = [...new Set(spriteIds)];
-    const total = uniqueIds.length;
-
-    if (total === 0) {
-      loader.logStep("Sprites", "No sprites to warmup", "success");
-      return;
+    // Add sprites for shop items (used in ShopNotifier section)
+    const itemsData = MGData.get("items") as Record<string, any> | null;
+    if (itemsData) {
+      for (const item of Object.values(itemsData)) {
+        if ((item as any)?.spriteId) spriteIds.push((item as any).spriteId);
+      }
     }
 
-    await MGSprite.warmup(
-      uniqueIds,
-      (loaded, totalCount) => {
-        loader.logStep("Sprites", `Loading sprites (${loaded}/${totalCount})...`);
-      },
-      5
-    );
+    const eggsData = MGData.get("eggs") as Record<string, any> | null;
+    if (eggsData) {
+      for (const egg of Object.values(eggsData)) {
+        if ((egg as any)?.spriteId) spriteIds.push((egg as any).spriteId);
+      }
+    }
 
-    loader.logStep("Sprites", `${total} sprites loaded`, "success");
+    const decorData = MGData.get("decor") as Record<string, any> | null;
+    if (decorData) {
+      for (const decor of Object.values(decorData)) {
+        if ((decor as any)?.spriteId) spriteIds.push((decor as any).spriteId);
+      }
+    }
+
+    const uniqueIds = [...new Set(spriteIds)];
+    if (uniqueIds.length > 0) {
+      await MGSprite.warmup(uniqueIds, () => {}, 5);
+    }
   } catch (err) {
-    loader.logStep("Sprites", "Sprite warmup failed", "error");
     console.warn("[Bootstrap] Sprite warmup failed", err);
   }
 }
@@ -222,6 +233,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
+    { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
   ];
 
   let initializedCount = 0;
