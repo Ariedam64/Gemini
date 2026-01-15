@@ -1,159 +1,103 @@
 /**
  * Trackers Section State
  *
+ * Persistent state for the Trackers section (mode, expanded teams).
+ * Uses createSectionStore for GM_* persistence.
+ *
  * Per .claude/rules/ui/sections.md:
  * - All fields must be JSON-serializable
- * - Section ID must be stable (used as storage key)
- * - Increment version when state shape changes
+ * - Section ID must be stable ('tab-trackers')
+ * - Version increment when state shape changes
  *
- * @module state
+ * NOTE: Uses async initialization pattern since createSectionStore returns Promise.
  */
 
 import { createSectionStore, type SectionStateController } from '../core/State';
 
-/**
- * Deep equality check for state objects (PERFORMANCE FIX)
- * Prevents unnecessary subscriber notifications when state hasn't actually changed
- */
-function deepEqual(a: any, b: any): boolean {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
-
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-
-  if (keysA.length !== keysB.length) return false;
-
-  for (const key of keysA) {
-    if (!keysB.includes(key)) return false;
-
-    const valA = a[key];
-    const valB = b[key];
-
-    // Handle arrays
-    if (Array.isArray(valA) && Array.isArray(valB)) {
-      if (valA.length !== valB.length) return false;
-      for (let i = 0; i < valA.length; i++) {
-        if (valA[i] !== valB[i]) return false;
-      }
-      continue;
-    }
-
-    // Handle nested objects
-    if (typeof valA === 'object' && typeof valB === 'object') {
-      if (!deepEqual(valA, valB)) return false;
-      continue;
-    }
-
-    // Handle primitives
-    if (valA !== valB) return false;
-  }
-
-  return true;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 export interface TrackersState {
-  /**
-   * Selected team IDs (max 2 for comparison)
-   * Empty array = no teams selected
-   */
-  selectedTeamIds: string[];
+    /** Display mode: 'simple' shows summary only, 'detailed' shows full panels */
+    mode: 'simple' | 'detailed';
 
-  /**
-   * Last active tracker view per team (for persistence)
-   * Maps teamId to trackerId (e.g., 'team-123' -> 'xp')
-   */
-  lastTrackerView: Record<string, string>;
-
-  /**
-   * Expanded state (future: collapsible sections)
-   */
-  expanded: boolean;
-
-  /**
-   * Comparison details expanded state (accordion)
-   */
-  comparisonDetailsExpanded: boolean;
+    /** Team IDs currently expanded to show tracker panels */
+    expandedTeamIds: string[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Default State
+// ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_STATE: TrackersState = {
-  selectedTeamIds: [],
-  lastTrackerView: {},
-  expanded: true,
-  comparisonDetailsExpanded: false,
+    mode: 'simple',
+    expandedTeamIds: [],
 };
 
-export type TrackersStateController = SectionStateController<TrackersState> & {
-  subscribe(callback: (state: TrackersState) => void): () => void;
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// State Store (Singleton with async init)
+// ─────────────────────────────────────────────────────────────────────────────
 
-let stateController: TrackersStateController | null = null;
-const subscribers: Set<(state: TrackersState) => void> = new Set();
+let stateController: SectionStateController<TrackersState> | null = null;
+let initPromise: Promise<SectionStateController<TrackersState>> | null = null;
 
 /**
- * Initialize Trackers state
- * Must be called before using state
+ * Initialize the Trackers state store.
+ * Must be called before using getTrackersState() or other helpers.
  */
-export async function initTrackersState(): Promise<TrackersStateController> {
-  if (stateController) return stateController;
+export async function initTrackersState(): Promise<SectionStateController<TrackersState>> {
+    if (stateController) return stateController;
 
-  const base = await createSectionStore<TrackersState>('tab-trackers', {
-    version: 2,
-    defaults: DEFAULT_STATE,
-  });
-
-  function notify() {
-    const currentState = base.get();
-    for (const callback of subscribers) {
-      callback(currentState);
+    if (!initPromise) {
+        initPromise = createSectionStore<TrackersState>('tab-trackers', {
+            version: 2, // New schema - replaces old selectedTeamIds approach
+            defaults: DEFAULT_STATE,
+        });
     }
-  }
 
-  function subscribe(callback: (state: TrackersState) => void): () => void {
-    subscribers.add(callback);
-    return () => {
-      subscribers.delete(callback);
-    };
-  }
-
-  function set(next: TrackersState): void {
-    const prev = base.get();
-    // PERFORMANCE: Only notify if state actually changed
-    if (!deepEqual(prev, next)) {
-      base.set(next);
-      notify();
-    }
-  }
-
-  function update(patch: Partial<TrackersState> | ((draft: TrackersState) => void)): void {
-    const prev = base.get();
-    base.update(patch);
-    const next = base.get();
-    // PERFORMANCE: Only notify if state actually changed
-    if (!deepEqual(prev, next)) {
-      notify();
-    }
-  }
-
-  stateController = {
-    get: base.get,
-    set,
-    update,
-    save: base.save,
-    subscribe,
-  };
-
-  return stateController;
+    stateController = await initPromise;
+    return stateController;
 }
 
 /**
- * Get initialized state controller
- * Throws if not initialized
+ * Get the Trackers state controller.
+ * Throws if initTrackersState() hasn't been called.
  */
-export function getTrackersState(): TrackersStateController {
-  if (!stateController) {
-    throw new Error('[TrackersState] Not initialized. Call initTrackersState() first.');
-  }
-  return stateController;
+export function getTrackersState(): SectionStateController<TrackersState> {
+    if (!stateController) {
+        throw new Error('[TrackersState] State not initialized. Call initTrackersState() first.');
+    }
+    return stateController;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function isTeamExpanded(teamId: string): boolean {
+    if (!stateController) return false;
+    return stateController.get().expandedTeamIds.includes(teamId);
+}
+
+export function toggleTeamExpanded(teamId: string): void {
+    if (!stateController) return;
+
+    const current = stateController.get();
+    const isExpanded = current.expandedTeamIds.includes(teamId);
+
+    if (isExpanded) {
+        stateController.update({
+            expandedTeamIds: current.expandedTeamIds.filter((id: string) => id !== teamId),
+        });
+    } else {
+        stateController.update({
+            expandedTeamIds: [...current.expandedTeamIds, teamId],
+        });
+    }
+}
+
+export function setTrackerMode(mode: 'simple' | 'detailed'): void {
+    if (!stateController) return;
+    stateController.update({ mode });
 }

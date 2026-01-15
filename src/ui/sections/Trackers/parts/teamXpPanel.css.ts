@@ -1,8 +1,5 @@
 /**
- * XP Tracker Styles - GEMINI Design System
- *
- * MOVED FROM: src/ui/sections/Pets/parts/teamXpPanel.css.ts
- * CHANGES: Export name updated (teamXpPanelCss → xpTrackerCss)
+ * Team XP Panel Styles - GEMINI Design System
  *
  * Modern card-based layout with:
  * - Horizontal pet cards with sprites on left
@@ -11,7 +8,7 @@
  * - Full theme compatibility using direct CSS variables
  */
 
-export const xpTrackerCss = `
+export const teamXpPanelCss = `
 /* ═══════════════════════════════════════════════════════════════════════════
    XP PANEL - Main Container
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -20,8 +17,8 @@ export const xpTrackerCss = `
     background: linear-gradient(145deg, var(--bg), var(--soft));
     border: 1px solid var(--border);
     border-left: 3px solid var(--pill-to);
-    border-radius: 0 0 16px 16px;
-    margin: 0;
+    border-radius: 16px;
+    margin: 12px 0 16px 12px;
     overflow: hidden;
     box-shadow:
         0 8px 32px var(--shadow),
@@ -52,6 +49,7 @@ export const xpTrackerCss = `
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
+    /* Task 6: Theme-semantic colors */
     background: linear-gradient(90deg, var(--accent), var(--pill-to));
     border-bottom: 1px solid var(--border);
 }
@@ -64,7 +62,7 @@ export const xpTrackerCss = `
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--fg);
+    color: var(--fg);  /* Task 6: Use --fg for better contrast */
 }
 
 .xp-panel__header-icon {
@@ -273,19 +271,19 @@ export const xpTrackerCss = `
     text-shadow: 0 1px 0 rgba(255,255,255,0.3);
 }
 
-/* STR display under sprite/badges (tight 2px spacing) */
+/* Task 9-10: STR display under sprite/badges (tight 2px spacing) */
 .xp-pet-card__str-display {
     display: flex;
     align-items: baseline;
     justify-content: center;
     gap: 3px;
-    margin-top: 4px;
+    margin-top: 2px; /* Task 9: tight spacing */
     font-size: 11px;
     font-weight: 600;
 }
 
 .xp-str__label {
-    color: var(--pill-to);
+    color: var(--pill-to); /* Updated per user request */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -296,7 +294,7 @@ export const xpTrackerCss = `
     color: var(--fg);
     font-weight: 800;
     font-size: 13px;
-    text-shadow:
+    text-shadow: 
         -1px -1px 0 rgba(0, 0, 0, 0.8),
         1px -1px 0 rgba(0, 0, 0, 0.8),
         -1px 1px 0 rgba(0, 0, 0, 0.8),
@@ -311,7 +309,7 @@ export const xpTrackerCss = `
 .xp-str__max {
     color: var(--muted);
     font-size: 11px;
-    text-shadow:
+    text-shadow: 
         -1px -1px 0 rgba(0, 0, 0, 0.8),
         1px -1px 0 rgba(0, 0, 0, 0.8),
         -1px 1px 0 rgba(0, 0, 0, 0.8),
@@ -346,13 +344,18 @@ export const xpTrackerCss = `
     font-size: 13px;
 }
 
+/* Task 3: Remove row dividers for cleaner look */
 .xp-stats-table__row {
-    /* Clean, minimal design - no borders */
+    /* No border - clean, minimal design */
+}
+
+.xp-stats-table__row:last-child {
+    /* No special treatment needed */
 }
 
 .xp-stats-table__label {
     padding: 6px 12px 6px 0;
-    color: var(--pill-to);
+    color: var(--pill-to); /* Updated per user request */
     font-weight: 600;
     font-size: 11px;
     text-transform: uppercase;
@@ -527,6 +530,7 @@ export const xpTrackerCss = `
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
+    /* Task 5: Theme-semantic colors */
     background: linear-gradient(90deg, var(--accent), var(--pill-to));
     border-top: 1px solid var(--border);
 }
@@ -537,7 +541,7 @@ export const xpTrackerCss = `
 
 .xp-panel__footer-icon {
     font-size: 24px;
-    color: var(--fg);
+    color: var(--fg);  /* Task 5: Use --fg */
     animation: boostPulse 1.5s ease-in-out infinite;
 }
 
@@ -553,7 +557,7 @@ export const xpTrackerCss = `
 .xp-panel__footer-title {
     font-size: 13px;
     font-weight: 800;
-    color: var(--fg);
+    color: var(--fg);  /* Task 5: Use --fg */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -561,12 +565,12 @@ export const xpTrackerCss = `
 .xp-panel__footer-detail {
     font-size: 14px;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--fg);  /* Task 5: Use --fg */
     margin-top: 2px;
 }
 
 .xp-panel__footer-names {
-    color: var(--pill-to);
+    color: var(--pill-to);  /* Task 5: Use --pill-to for subtle contrast */
     font-size: 12px;
     font-weight: 500;
 }
