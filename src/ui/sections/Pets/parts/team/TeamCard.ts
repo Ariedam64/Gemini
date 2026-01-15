@@ -2,7 +2,7 @@
  * Team Card Part
  * Manages the Team card UI with overview and manage modes
  * 
- * Orchestrates TeamCardDrag and TeamCardExpansion handlers
+ * Orchestrates TeamCardDrag handler
  * Per .claude/rules/ui/sections.md
  */
 
@@ -18,10 +18,10 @@ import { Store } from "../../../../../atoms/store";
 import { MGCustomModal, MGEnvironment } from "../../../../../modules";
 import type { PetTeam } from "../../../../../features/petTeam";
 import { TeamCardDragHandler } from "./TeamCardDrag";
-import { TeamCardExpansionHandler } from "../teamDetails/TeamCardExpansion";
 
 export interface TeamCardPartOptions {
     onTeamReordered?: (teamIds: string[]) => void;
+    onTeamsUpdated?: () => void;
     setHUDOpen?: (open: boolean) => void;
 }
 
@@ -38,7 +38,6 @@ export class TeamCardPart {
 
     // Extracted handlers
     private dragHandler: TeamCardDragHandler;
-    private expansionHandler: TeamCardExpansionHandler;
 
     constructor(options: TeamCardPartOptions = {}) {
         this.options = options;
@@ -46,11 +45,10 @@ export class TeamCardPart {
         // Initialize handlers with dependency injection
         this.dragHandler = new TeamCardDragHandler({
             getListContainer: () => this.listContainer,
-            onReorder: (teamIds) => this.options.onTeamReordered?.(teamIds),
-        });
-
-        this.expansionHandler = new TeamCardExpansionHandler({
-            getListContainer: () => this.listContainer,
+            onReorder: (teamIds) => {
+                this.options.onTeamReordered?.(teamIds);
+                this.options.onTeamsUpdated?.();
+            },
         });
     }
 
@@ -61,7 +59,6 @@ export class TeamCardPart {
 
     destroy(): void {
         this.dragHandler.cleanup();
-        this.expansionHandler.destroy();
         if (this.modeControl) {
             this.modeControl.destroy();
             this.modeControl = null;
@@ -228,12 +225,6 @@ export class TeamCardPart {
                         this.handleRemovePet(team.id, slotIndex);
                     }
                     : undefined,
-                isExpanded: this.teamMode === "overview" ? this.expansionHandler.isExpanded(team.id) : undefined,
-                onExpandClick: this.teamMode === "overview"
-                    ? () => {
-                        this.expansionHandler.toggle(team.id);
-                    }
-                    : undefined,
             });
 
             if (this.teamMode === "manage") {
@@ -243,8 +234,7 @@ export class TeamCardPart {
             if (this.teamMode === "overview") {
                 teamItem.addEventListener("click", async (ev: PointerEvent) => {
                     const dragHandle = (ev.target as HTMLElement).closest(".team-list-item__drag-handle");
-                    const expandBtn = (ev.target as HTMLElement).closest(".team-list-item__expand");
-                    if (dragHandle || expandBtn) return;
+                    if (dragHandle) return;
 
                     teamItem.classList.add("team-list-item--clicked");
                     setTimeout(() => {
@@ -253,6 +243,7 @@ export class TeamCardPart {
 
                     try {
                         await MGPetTeam.activateTeam(team);
+                        this.options.onTeamsUpdated?.();
                     } catch (error) {
                         console.error('[TeamCard] Failed to activate team:', error);
                     }
@@ -357,6 +348,7 @@ export class TeamCardPart {
             const success = MGPetTeam.createTeam(teamName, []);
             if (success) {
                 this.render();
+                this.options.onTeamsUpdated?.();
             }
         } catch (err) {
             // Error handled silently
@@ -372,10 +364,12 @@ export class TeamCardPart {
         }
 
         this.render();
+        this.options.onTeamsUpdated?.();
     }
 
     private handleRenameTeam(teamId: string, newName: string): void {
         MGPetTeam.renameTeam(teamId, newName);
+        this.options.onTeamsUpdated?.();
     }
 
     private handleRemovePet(teamId: string, slotIndex: number): void {
@@ -399,6 +393,7 @@ export class TeamCardPart {
         newPetIds[slotIndex] = "";
         MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
         this.render();
+        this.options.onTeamsUpdated?.();
     }
 
     private async handleAddPet(teamId: string, slotIndex: number): Promise<void> {
@@ -437,6 +432,7 @@ export class TeamCardPart {
                 const newPetIds = [...team.petIds];
                 newPetIds[slotIndex] = selectedPet.id;
                 MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
+                this.options.onTeamsUpdated?.();
 
                 Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
 
@@ -447,6 +443,7 @@ export class TeamCardPart {
                         this.options.setHUDOpen(true);
                     }
                     this.render();
+                    this.options.onTeamsUpdated?.();
                 });
             }
         });

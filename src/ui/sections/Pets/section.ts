@@ -100,6 +100,9 @@ export class PetsSection extends BaseSection {
                 onTeamReordered: (teamIds) => {
                     console.log('[PetsSection] Teams reordered:', teamIds);
                 },
+                onTeamsUpdated: () => {
+                    this.teamDetailsCardPart?.render();
+                },
                 setHUDOpen: this.deps?.setHUDOpen,
             });
         }
