@@ -12,6 +12,11 @@ export const featureCardCss = `
 
 /* Growth Panel structural styles moved to growthPanel.css.ts */
 
+.feature-card,
+.feature-card__content {
+    box-sizing: border-box;
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE

@@ -3,6 +3,6 @@
  */
 
 export { AbilityLogsCardPart } from "./AbilityLogsCard";
-export type { AbilityLogsCardPartOptions } from "./AbilityLogsCard";
+
 
 export { abilityLogsCardCss } from "./abilityLogsCard.css";

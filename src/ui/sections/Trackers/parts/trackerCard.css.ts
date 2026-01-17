@@ -16,7 +16,7 @@ export const trackerCardCss = `
   flex-direction: column;
   gap: var(--spacing-md);
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   box-sizing: border-box;
 }
 
@@ -38,7 +38,7 @@ export const trackerCardCss = `
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -50,7 +50,7 @@ export const trackerCardCss = `
   flex-direction: column;
   gap: 0;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: visible;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */

@@ -99,6 +99,7 @@ export const teamCardCss = `
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .team-expanded-container {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -340,13 +341,13 @@ export const teamCardCss = `
 
 /* Color coding for team progress bar */
 .team-progress-bar__fill--low {
-    background: linear-gradient(90deg, var(--low), var(--medium));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 30%, transparent), color-mix(in srgb, var(--xp-fill) 50%, transparent));
 }
 .team-progress-bar__fill--medium {
-    background: linear-gradient(90deg, var(--medium), var(--high));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 50%, transparent), color-mix(in srgb, var(--xp-fill) 80%, transparent));
 }
 .team-progress-bar__fill--high {
-    background: linear-gradient(90deg, var(--high), var(--complete));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 80%, transparent), var(--xp-fill));
 }
 
 .team-progress-bar__percent {
@@ -400,6 +401,100 @@ export const teamCardCss = `
     
     .xp-stat__label {
         font-size: 9px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMBINED PANEL MODE
+   Merges multiple panels into single view when total rows ≤ 3
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.expanded-pet-row--combined {
+    /* Same base styling as grouped */
+}
+
+.pet-row__header--combined {
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(90deg, var(--soft), var(--tab-bg), var(--soft));
+}
+
+.combined-panel__icons {
+    font-size: 13px;
+    opacity: 0.9;
+    letter-spacing: 2px;
+}
+
+/* Combined content area */
+.base-pet-card__content--combined {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Individual panel sections within combined view */
+.combined-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.combined-section + .combined-section {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 2px;
+}
+
+.combined-section__icon {
+    font-size: 12px;
+    opacity: 0.75;
+    min-width: 20px;
+    text-align: center;
+    padding-top: 2px;
+}
+
+.combined-section__content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Ensure stat rows within combined sections flow correctly */
+.combined-section__content .stat-row,
+.combined-section__content .hatching-stats-compact,
+.combined-section__content .xp-stats-compact,
+.combined-section__content .value-stats-compact,
+.combined-section__content .growth-stats-compact {
+    /* Remove any margin that might cause issues */
+    margin: 0;
+}
+
+/* Combined section specific colors */
+.combined-section--xp .combined-section__icon {
+    color: var(--xp-fill, #6ba6ff);
+}
+
+.combined-section--hatch .combined-section__icon {
+    color: #f0a050;
+}
+
+.combined-section--growth .combined-section__icon {
+    color: #60c060;
+}
+
+.combined-section--coin .combined-section__icon {
+    color: #ffd700;
+}
+
+/* Mobile adjustments for combined panel */
+@media (max-width: 480px) {
+    .combined-section {
+        gap: 6px;
+    }
+    
+    .combined-section__icon {
+        font-size: 11px;
+        min-width: 16px;
     }
 }
 

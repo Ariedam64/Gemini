@@ -84,6 +84,43 @@ export interface BoostAbilityData {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Team Growth Data Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface TeamPetGrowthData {
+    id: string;
+    name: string;
+    species: string;
+    currentStrength: number;
+    maxStrength: number;
+    isMaxStrength: boolean;
+    mutations: string[];
+    growthBoosts: {
+        type: 'egg' | 'plant';
+        multiplier: number;
+    }[];
+}
+
+export interface GrowthStats {
+    type: 'egg' | 'plant';
+    teamMultiplier: number;
+    timeReductionPerHour: number;
+    growingCount: number;
+    nextReadyMs: number;
+    nextReadyName: string | null;
+    nextReadyId: string | null;
+    avgProgressPercent: number;
+}
+
+export interface TeamGrowthData {
+    teamId: string;
+    teamName: string;
+    pets: TeamPetGrowthData[];
+    eggStats: GrowthStats | null;
+    plantStats: GrowthStats | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Configuration
 // ─────────────────────────────────────────────────────────────────────────────
 

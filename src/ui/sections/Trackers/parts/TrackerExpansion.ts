@@ -31,6 +31,18 @@ import { calculateItemEffectiveGrowth } from "../../../../features/growthTimers/
 import type { EggWithTile, PlantWithTile } from "../../../../globals/core/types";
 import type { FeaturePanelDefinition } from "./featurePanels";
 import { analyzeTeamGrouping } from "../../../../features/growthTimers/logic/petAbilityUtils";
+import { ABILITY_CATEGORIES } from "../../../../features/petTeam/constants";
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Maximum total rows across all panels to trigger combined panel mode
+ * When panels have ≤ this many rows combined, merge into single view
+ */
+const COMBINED_PANEL_MAX_ROWS = 3;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -55,6 +67,66 @@ export type ExpandedTeamState = {
 
 export interface ExpansionHandlerOptions {
     getListContainer: () => HTMLElement | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper Functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Detect the best feature panel for a single pet based on its abilities
+ * Used for individual pet rows to show relevant stats instead of team-wide defaults
+ */
+function detectBestFeatureForPet(
+    pet: any,
+    availableFeatures: FeaturePanelDefinition[]
+): string {
+    const abilities = pet.abilities || [];
+
+    // Helper to check if abilities array contains any from a category
+    const hasAbilityFrom = (category: readonly string[]) =>
+        abilities.some((a: string) => category.includes(a));
+
+    // Priority 1: Hatching abilities (most specific)
+    const hasHatching =
+        hasAbilityFrom(ABILITY_CATEGORIES.DOUBLE_HATCH) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.PET_REFUND) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.PET_MUTATION) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.MAX_STR_BOOST);
+    if (hasHatching && availableFeatures.some(f => f.id === 'hatch')) {
+        return 'hatch';
+    }
+
+    // Priority 2: Economy/Value abilities (coin/crop farming)
+    const hasEconomy =
+        hasAbilityFrom(ABILITY_CATEGORIES.COIN_FINDER) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.SELL_BOOST) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.CROP_REFUND_HARVEST) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.CROP_SIZE) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.CROP_MUTATION) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.RARE_GRANTERS) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.COMMON_GRANTERS);
+    if (hasEconomy && availableFeatures.some(f => f.id === 'coin')) {
+        return 'coin';
+    }
+
+    // Priority 3: Growth abilities (egg/plant speed)
+    const hasGrowth =
+        hasAbilityFrom(ABILITY_CATEGORIES.EGG_GROWTH) ||
+        hasAbilityFrom(ABILITY_CATEGORIES.PLANT_GROWTH);
+    if (hasGrowth && availableFeatures.some(f => f.id === 'growth')) {
+        return 'growth';
+    }
+
+    // Priority 4: XP (default if pet is leveling or has XP boost)
+    const isLeveling = pet.currentStrength < pet.maxStrength;
+    const hasXpBoost = hasAbilityFrom(ABILITY_CATEGORIES.XP_BOOST);
+    if ((isLeveling || hasXpBoost) && availableFeatures.some(f => f.id === 'xp')) {
+        return 'xp';
+    }
+
+    // Fallback: First available feature
+    return availableFeatures[0]?.id || 'xp';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,9 +166,13 @@ export class TrackerExpansionHandler {
         const pets = MGPetTeam.getPetsForTeam(team);
         const myPets = Globals.myPets.get();
 
+        // Detect team purpose for strict filtering (Phase 3)
+        const purpose = detectTeamPurpose(team);
+
         const availableFeatures = FEATURE_PANELS.filter(f => {
             if (!f.isAvailable()) return false;
-            if (f.shouldDisplay && !f.shouldDisplay(team, pets)) return false;
+            // Pass purpose to shouldDisplay for strict filtering
+            if (f.shouldDisplay && !f.shouldDisplay(team, pets, purpose)) return false;
             return true;
         });
 
@@ -106,7 +182,7 @@ export class TrackerExpansionHandler {
         }
 
         // Detect team configuration before building sub-components
-        const isGrowthTeam = detectTeamPurpose(team)?.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
+        const isGrowthTeam = purpose.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
 
         // Intelligent growth view selection
         let growthViewType: 'egg' | 'plant' | undefined = undefined;
@@ -143,13 +219,39 @@ export class TrackerExpansionHandler {
 
         // Check if we should group pets (only for growth teams, not if forceIndividual)
         // Pass growthViewType for view-dependent grouping (less strict rules)
-        const groupingAnalysis = forceIndividual
+        let groupingAnalysis = forceIndividual
             ? { shouldGroup: false, matchingPets: [], remainingPets: pets }
             : this.analyzeTeamForGrouping(team, pets, growthViewType);
 
+        // Determine which feature will be selected for grouped view
+        // Grouping is allowed for Growth, Hatching, and Coin panels
+        // XP panels only group if all pets are max strength
+        const hasGroupableFeature = availableFeatures.some(f =>
+            f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+        );
+
+        // If no groupable feature (e.g. only XP), only allow grouping if ALL pets are max-STR
+        if (groupingAnalysis.shouldGroup && !hasGroupableFeature) {
+            const allMaxStrength = groupingAnalysis.matchingPets.every(
+                (pet: any) => pet.currentStrength >= pet.maxStrength
+            );
+            if (!allMaxStrength) {
+                // Force individual cards for XP teams with non-max-STR pets
+                groupingAnalysis = { shouldGroup: false, matchingPets: [], remainingPets: pets };
+            }
+        }
+
         if (groupingAnalysis.shouldGroup && groupingAnalysis.matchingPets.length >= 2) {
-            // Create grouped card for matching pets
-            const selectedFeature = availableFeatures.find(f => f.id === 'growth') || availableFeatures[0];
+            // Filter features to only those with content for these specific pets
+            const featuresWithContent = availableFeatures.filter(f =>
+                !f.hasContent || f.hasContent(groupingAnalysis.matchingPets, team)
+            );
+
+            // Select feature from those that have content, prioritizing Growth/Hatching/Coin
+            const selectedFeature = featuresWithContent.find(f =>
+                f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+            ) || featuresWithContent[0] || availableFeatures[0];
+
             const groupedRow = this.createGroupedPetRow(
                 team,
                 groupingAnalysis.matchingPets,
@@ -283,6 +385,10 @@ export class TrackerExpansionHandler {
 
         const team = MGPetTeam.getTeam(teamId);
         if (!team) return;
+
+        // Only update progress bar for xp and growth features
+        // Other features (coin, hatch) should leave the current bar unchanged
+        if (featureId !== 'xp' && featureId !== 'growth') return;
 
         const pets = MGPetTeam.getPetsForTeam(team);
         const newBarMode = featureId === 'xp' ? 'xp' : 'growth';
@@ -524,7 +630,11 @@ export class TrackerExpansionHandler {
             this.showGrowthDropdown(dropdownBtn, items, viewType, teamId);
         };
 
-        controls.appendChild(toggleBtn);
+        // Only show toggle button if team has BOTH egg and plant growth abilities
+        const hasBothAbilities = eggReduction > 0 && plantReduction > 0;
+        if (hasBothAbilities) {
+            controls.appendChild(toggleBtn);
+        }
         controls.appendChild(dropdownBtn);
 
         barWrapper.appendChild(progressBar);
@@ -557,7 +667,8 @@ export class TrackerExpansionHandler {
             // If grouping state changed, re-expand to rebuild structure
             if (currentlyGrouped !== shouldNowGroup) {
                 this.collapse(teamId);
-                setTimeout(() => this.expand(teamId, false), 50);
+                // Use requestAnimationFrame for smoother transition
+                requestAnimationFrame(() => this.expand(teamId, false));
                 return;
             }
 
@@ -572,7 +683,8 @@ export class TrackerExpansionHandler {
                             : 0;
                     if (currentGroupSize !== newGrouping.matchingPets.length) {
                         this.collapse(teamId);
-                        setTimeout(() => this.expand(teamId, false), 50);
+                        // Use requestAnimationFrame for smoother transition
+                        requestAnimationFrame(() => this.expand(teamId, false));
                         return;
                     }
                 }
@@ -648,14 +760,24 @@ export class TrackerExpansionHandler {
     }
 
     private showGrowthDropdown(anchor: HTMLElement, items: any[], viewType: 'egg' | 'plant', teamId: string): void {
-        // Remove any existing dropdown
-        const existingMenu = anchor.closest('.growth-summary-overhaul')?.querySelector('.growth-dropdown-menu');
+        // Remove any existing dropdown (global lookup to close others)
+        const existingMenu = document.querySelector('.growth-dropdown-menu');
         if (existingMenu) {
+            const isSameToggle = existingMenu.getAttribute('data-owner-id') === teamId &&
+                existingMenu.getAttribute('data-view-type') === viewType;
             existingMenu.remove();
-            return; // Toggle behavior: if open, just close
+
+            // If we just closed the menu for THIS button, we're done (toggle off).
+            // Otherwise (different button clicked), we continue to open the new one.
+            if (isSameToggle) {
+                return;
+            }
         }
 
         const menu = element('div', { className: 'growth-dropdown-menu' });
+        // Tag valid menu with owner info for toggle logic
+        menu.setAttribute('data-owner-id', teamId);
+        menu.setAttribute('data-view-type', viewType);
 
         if (items.length === 0) {
             const emptyOption = element('div', { className: 'growth-dropdown-option' });
@@ -717,19 +839,21 @@ export class TrackerExpansionHandler {
             });
         }
 
-        // Position dropdown below button (relative to container, not document.body)
-        menu.style.position = 'absolute';
-        menu.style.top = '100%';
-        menu.style.right = '0';
-        menu.style.marginTop = '4px';
-        menu.style.zIndex = '100';
+        // Use FIXED positioning to escape container clipping
+        const rect = anchor.getBoundingClientRect();
 
-        // Make parent relative for positioning
-        const controls = anchor.parentElement;
-        if (controls) {
-            controls.style.position = 'relative';
-            controls.appendChild(menu);
-        }
+        menu.style.position = 'fixed';
+        // Open ABOVE the button (not below)
+        menu.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+        menu.style.top = 'auto';
+        // Align right edge of menu with right edge of button
+        menu.style.left = 'auto';
+        menu.style.right = `${window.innerWidth - rect.right}px`;
+        menu.style.marginTop = '0'; // reset
+        menu.style.zIndex = '999999';
+
+        // Append to document.body to ensure it's on top of everything
+        document.body.appendChild(menu);
 
         // Close on click outside
         const close = (e: MouseEvent) => {
@@ -753,15 +877,47 @@ export class TrackerExpansionHandler {
         teamId: string,
         preferredFeature?: 'xp' | 'growth'
     ): { container: HTMLElement; cardState: FeatureCardState } {
+        // Filter features by hasContent() to remove empty panels for THIS pet
+        const featuresWithContent = pet
+            ? availableFeatures.filter(f => !f.hasContent || f.hasContent(pet, team))
+            : availableFeatures;
+
+        // Use filtered features for carousel (prevents empty panel navigation)
+        const carouselFeatures = featuresWithContent.length > 0 ? featuresWithContent : availableFeatures;
+
         // Use preferredFeature if specified, otherwise use intelligent selection
-        let selectedFeature: FeaturePanelDefinition;
+        let selectedFeature: FeaturePanelDefinition = carouselFeatures[0]; // Initialize with fallback
+
         if (preferredFeature) {
-            selectedFeature = availableFeatures.find(f => f.id === preferredFeature) || availableFeatures[0];
+            selectedFeature = carouselFeatures.find(f => f.id === preferredFeature) || carouselFeatures[0];
+        } else if (pet) {
+            // Intelligent feature selection based on THIS PET'S abilities (not team-wide)
+            const bestFeatureId = detectBestFeatureForPet(pet, carouselFeatures);
+            selectedFeature = carouselFeatures.find(f => f.id === bestFeatureId) || carouselFeatures[0];
         } else {
-            // Intelligent feature selection: prefer growth for growth teams, XP for XP teams
-            selectedFeature = viewType
-                ? (availableFeatures.find(f => f.id === 'growth') || availableFeatures[0])
-                : (availableFeatures.find(f => f.id === 'xp') || availableFeatures[0]);
+            // No pet (empty slot) - use team-wide defaults
+            const teamPurpose = detectTeamPurpose(team);
+            const suggestedFeatures = teamPurpose?.suggestedFeatures || [];
+
+            // Try to find a suggested feature that's available
+            let foundSuggested = false;
+            for (const suggested of suggestedFeatures) {
+                const feature = carouselFeatures.find(f => f.id === suggested);
+                if (feature) {
+                    selectedFeature = feature;
+                    foundSuggested = true;
+                    break;
+                }
+            }
+
+            // Fallback to growth/xp based on viewType if no suggested feature found
+            if (!foundSuggested) {
+                if (viewType) {
+                    selectedFeature = carouselFeatures.find(f => f.id === 'growth') || carouselFeatures[0];
+                } else {
+                    selectedFeature = carouselFeatures.find(f => f.id === 'xp') || carouselFeatures[0];
+                }
+            }
         }
 
         const petRow = element('div', { className: 'expanded-pet-row' });
@@ -786,7 +942,7 @@ export class TrackerExpansionHandler {
         };
 
         const updateFeature = (newIndex: number) => {
-            const newFeature = availableFeatures[newIndex];
+            const newFeature = carouselFeatures[newIndex];
 
             // Check if switching TO growth from XP - might need to restore grouping
             if (newFeature.id === 'growth') {
@@ -825,21 +981,26 @@ export class TrackerExpansionHandler {
 
         rowHeader.className = `pet-row__header pet-row__header--${selectedFeature.id}`;
 
-        let currentIndex = availableFeatures.findIndex(f => f.id === selectedFeature.id);
+        let currentIndex = carouselFeatures.findIndex(f => f.id === selectedFeature.id);
         prevBtn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            currentIndex = (currentIndex - 1 + availableFeatures.length) % availableFeatures.length;
+            currentIndex = (currentIndex - 1 + carouselFeatures.length) % carouselFeatures.length;
             updateFeature(currentIndex);
         });
         nextBtn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            currentIndex = (currentIndex + 1) % availableFeatures.length;
+            currentIndex = (currentIndex + 1) % carouselFeatures.length;
             updateFeature(currentIndex);
         });
 
-        rowHeader.appendChild(prevBtn);
+        // Only show nav buttons if more than one feature has content
+        if (carouselFeatures.length > 1) {
+            rowHeader.appendChild(prevBtn);
+        }
         rowHeader.appendChild(featureLabel);
-        rowHeader.appendChild(nextBtn);
+        if (carouselFeatures.length > 1) {
+            rowHeader.appendChild(nextBtn);
+        }
 
         let rowContent: HTMLElement;
         if (shell && pet) {
@@ -863,14 +1024,19 @@ export class TrackerExpansionHandler {
         petRow.appendChild(rowHeader);
         petRow.appendChild(rowContent);
 
+        // Add container to cardState directly (not spread) to maintain reference
+        // so updateFeature callback can modify the state stored in state.cards
+        cardState.container = petRow;
+
         return {
             container: petRow,
-            cardState: { ...cardState, container: petRow }
+            cardState: cardState  // Return same reference, not a copy
         };
     }
 
     /**
      * Create a grouped pet row for 2-3 matching pets with team-aggregated stats
+     * Renders bundled sprites in triad/duo formation with individual MAX badges
      */
     private createGroupedPetRow(
         team: PetTeam,
@@ -880,6 +1046,20 @@ export class TrackerExpansionHandler {
         viewType: 'egg' | 'plant' | undefined,
         teamId: string
     ): { container: HTMLElement; cardState: FeatureCardState } {
+        // Filter features by hasContent() to remove empty panels for these grouped pets
+        const featuresWithContent = availableFeatures.filter(f =>
+            !f.hasContent || f.hasContent(matchingPets, team)
+        );
+
+        // Use filtered features for carousel (prevents empty panel navigation)
+        const carouselFeatures = featuresWithContent.length > 0 ? featuresWithContent : availableFeatures;
+
+        // CHECK: Should panels be combined into single view?
+        // If total rows across all panels ≤ 3, use combined panel instead of carousel
+        if (this.shouldUseCombinedPanel(carouselFeatures, matchingPets, team, viewType)) {
+            return this.createCombinedPanelRow(team, matchingPets, carouselFeatures, viewType, teamId);
+        }
+
         const petRow = element('div', { className: 'expanded-pet-row expanded-pet-row--grouped' });
         const rowHeader = element('div', { className: 'pet-row__header' });
         const prevBtn = element('button', { textContent: '<', className: 'pet-row__nav' });
@@ -889,10 +1069,82 @@ export class TrackerExpansionHandler {
         });
         const nextBtn = element('button', { textContent: '>', className: 'pet-row__nav' });
 
-        const shell = new BasePetCard(matchingPets[0], {
-            groupedPets: matchingPets,
-            hideStr: true
+        // Build custom grouped card layout (not using BasePetCard for sprite rendering)
+        const rowContent = element('div', {
+            className: `base-pet-card base-pet-card--grouped${matchingPets.length === 2 ? '-2' : ''}`
         });
+
+        // Left section with grouped sprites
+        const left = element('div', { className: 'base-pet-card__left' });
+
+        // Grouped sprite container with triad/duo formation
+        const spriteContainer = element('div', {
+            className: `grouped-sprite-container${matchingPets.length === 2 ? ' grouped-sprite-container--duo' : ''}`
+        });
+
+        // Render each pet sprite
+        for (const pet of matchingPets) {
+            try {
+                const mutations = (pet.mutations || []) as string[];
+                if (MGSprite.has('pet', pet.petSpecies)) {
+                    const canvas = MGSprite.toCanvas('pet', pet.petSpecies, {
+                        mutations: mutations as any,
+                        scale: 1,
+                        boundsMode: 'padded'
+                    });
+                    canvas.style.imageRendering = 'pixelated';
+                    spriteContainer.appendChild(canvas);
+                }
+            } catch (e) {
+                // Skip failed sprites
+            }
+        }
+        left.appendChild(spriteContainer);
+
+        // Grouped badges row with individual STR badges - triangle layout
+        const badgesRow = element('div', {
+            className: `grouped-badges${matchingPets.length === 2 ? ' grouped-badges--duo' : ''}`
+        });
+        for (const pet of matchingPets) {
+            const isMax = pet.currentStrength >= pet.maxStrength;
+            const badgeText = isMax ? `MAX ${pet.maxStrength}` : `STR ${pet.currentStrength}/${pet.maxStrength}`;
+            const badge = element('span', {
+                className: 'badge badge--neutral badge--soft badge--sm badge--pill',
+                textContent: badgeText
+            });
+            badgesRow.appendChild(badge);
+        }
+        left.appendChild(badgesRow);
+        rowContent.appendChild(left);
+
+        // Right content slot for feature stats
+        const contentSlot = element('div', { className: 'base-pet-card__content' });
+        rowContent.appendChild(contentSlot);
+
+        // Create a shell-like object to maintain compatibility with updateFeature
+        const shell = {
+            root: rowContent,
+            getContentSlot: () => contentSlot,
+            setCentered: (centered: boolean) => {
+                rowContent.classList.toggle('base-pet-card--centered', centered);
+            },
+            destroy: () => {
+                rowContent.remove();
+            },
+            update: () => {
+                // Re-render badges on update
+                badgesRow.innerHTML = '';
+                for (const pet of matchingPets) {
+                    const isMax = pet.currentStrength >= pet.maxStrength;
+                    const badgeText = isMax ? `MAX ${pet.maxStrength}` : `STR ${pet.currentStrength}/${pet.maxStrength}`;
+                    const badge = element('span', {
+                        className: 'badge badge--neutral badge--soft badge--sm badge--pill',
+                        textContent: badgeText
+                    });
+                    badgesRow.appendChild(badge);
+                }
+            }
+        };
 
         const cardState: any = {
             slotIndex: -1,
@@ -902,30 +1154,34 @@ export class TrackerExpansionHandler {
         };
 
         const updateFeature = (newIndex: number) => {
-            const newFeature = availableFeatures[newIndex];
+            const newFeature = carouselFeatures[newIndex];
 
-            // Check for feature incompatibility (XP should never be grouped)
+            // XP feature requires ALL grouped pets to be at max STR
+            // If not all max STR, collapse and re-expand with individual cards
             if (newFeature.id === 'xp') {
-                // Need to re-expand with individual cards
-                this.collapseAndReexpandForXP(teamId);
-                return;
+                const allMaxStrength = matchingPets.every(
+                    (pet: any) => pet.currentStrength >= pet.maxStrength
+                );
+                if (!allMaxStrength) {
+                    this.collapseAndReexpandForXP(teamId);
+                    return;
+                }
             }
 
             featureLabel.textContent = `${newFeature.icon} ${newFeature.label.toUpperCase()}`;
 
-            const slot = shell.getContentSlot();
-            slot.innerHTML = '';
+            contentSlot.innerHTML = '';
 
             if ((newFeature as any).renderGroupedSlot) {
                 const state = this.expandedTeams.get(teamId);
-                (newFeature as any).renderGroupedSlot(matchingPets, team, slot, state?.growthViewType);
+                (newFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, state?.growthViewType);
             } else if (newFeature.renderPetSlot) {
                 const state = this.expandedTeams.get(teamId);
-                newFeature.renderPetSlot(matchingPets[0], team, slot, state?.growthViewType);
+                newFeature.renderPetSlot(matchingPets[0], team, contentSlot, state?.growthViewType);
             }
 
             // Prevent centering when stats are present
-            const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
+            const hasStats = contentSlot.children.length > 0 || contentSlot.textContent.trim().length > 0;
             shell.setCentered(!hasStats);
 
             cardState.currentFeatureId = newFeature.id;
@@ -935,33 +1191,39 @@ export class TrackerExpansionHandler {
 
         rowHeader.className = `pet-row__header pet-row__header--${selectedFeature.id}`;
 
-        let currentIndex = availableFeatures.findIndex(f => f.id === selectedFeature.id);
+        let currentIndex = carouselFeatures.findIndex(f => f.id === selectedFeature.id);
         prevBtn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            currentIndex = (currentIndex - 1 + availableFeatures.length) % availableFeatures.length;
+            currentIndex = (currentIndex - 1 + carouselFeatures.length) % carouselFeatures.length;
             updateFeature(currentIndex);
         });
         nextBtn.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            currentIndex = (currentIndex + 1) % availableFeatures.length;
+            currentIndex = (currentIndex + 1) % carouselFeatures.length;
             updateFeature(currentIndex);
         });
 
-        rowHeader.appendChild(prevBtn);
+        // Only show nav buttons if more than one feature has content
+        if (carouselFeatures.length > 1) {
+            rowHeader.appendChild(prevBtn);
+        }
         rowHeader.appendChild(featureLabel);
-        rowHeader.appendChild(nextBtn);
+        if (carouselFeatures.length > 1) {
+            rowHeader.appendChild(nextBtn);
+        }
 
-        const rowContent = shell.build();
-        const slot = shell.getContentSlot();
-
+        // Render initial feature content
         if ((selectedFeature as any).renderGroupedSlot) {
-            (selectedFeature as any).renderGroupedSlot(matchingPets, team, slot, viewType);
+            (selectedFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, viewType);
         } else if (selectedFeature.renderPetSlot) {
-            selectedFeature.renderPetSlot(matchingPets[0], team, slot, viewType);
+            selectedFeature.renderPetSlot(matchingPets[0], team, contentSlot, viewType);
         }
 
         petRow.appendChild(rowHeader);
         petRow.appendChild(rowContent);
+
+        // Apply grouped class for CSS detection
+        rowContent.classList.add('base-pet-card--grouped');
 
         return {
             container: petRow,
@@ -970,34 +1232,379 @@ export class TrackerExpansionHandler {
     }
 
     /**
-     * Collapse and re-expand team for XP feature (incompatible with grouping)
+     * Smoothly transition to XP view with individual cards (in-place rebuild)
+     * Eliminates flash by using CSS transitions instead of full collapse/expand
      */
     private collapseAndReexpandForXP(teamId: string): void {
-        // Collapse the current grouped display
-        this.collapse(teamId);
+        const state = this.expandedTeams.get(teamId);
+        if (!state) {
+            // Fallback to original behavior if no state
+            this.collapse(teamId);
+            setTimeout(() => this.expand(teamId, true, 'xp'), 100);
+            return;
+        }
 
-        // Re-expand after a moment - will naturally create individual cards
-        setTimeout(() => {
-            this.expand(teamId, true, 'xp'); // Force individual cards with XP view
-        }, 100);
+        // Apply fade-out transition
+        state.container.style.transition = 'opacity 0.15s ease-out';
+        state.container.style.opacity = '0.4';
+
+        // Rebuild in-place after brief fade
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.rebuildInPlace(teamId, true, 'xp');
+                // Fade back in
+                state.container.style.opacity = '1';
+            });
+        });
     }
 
     /**
-     * Collapse and re-expand team to restore grouping (for switching FROM XP to Growth)
+     * Smoothly transition to Growth view with grouping (in-place rebuild)
+     * Eliminates flash by using CSS transitions instead of full collapse/expand
      */
     private collapseAndReexpandForGrowth(teamId: string): void {
-        // Collapse the current individual display
-        this.collapse(teamId);
+        const state = this.expandedTeams.get(teamId);
+        if (!state) {
+            // Fallback to original behavior if no state
+            this.collapse(teamId);
+            setTimeout(() => this.expand(teamId, false, 'growth'), 100);
+            return;
+        }
 
-        // Re-expand with forceIndividual=false to allow natural grouping
-        setTimeout(() => {
-            this.expand(teamId, false, 'growth'); // Allow grouping with growth view
-        }, 100);
+        // Apply fade-out transition  
+        state.container.style.transition = 'opacity 0.15s ease-out';
+        state.container.style.opacity = '0.4';
+
+        // Rebuild in-place after brief fade
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.rebuildInPlace(teamId, false, 'growth');
+                // Fade back in
+                state.container.style.opacity = '1';
+            });
+        });
+    }
+
+    /**
+     * Rebuild expanded cards in-place without removing the container
+     * Provides smooth transition between grouping states
+     */
+    private rebuildInPlace(teamId: string, forceIndividual: boolean, preferredFeature?: string): void {
+        const state = this.expandedTeams.get(teamId);
+        if (!state) return;
+
+        const team = MGPetTeam.getTeam(teamId);
+        if (!team) return;
+
+        const pets = MGPetTeam.getPetsForTeam(team);
+        const myPets = Globals.myPets.get();
+        const availableFeatures = this.getAvailableFeaturesForTeam(team, pets);
+        const growthViewType = state.growthViewType;
+
+        // Destroy existing cards but keep container
+        for (const card of state.cards) {
+            if (card.shell) card.shell.destroy();
+            if (card.container && card.container.parentNode) {
+                card.container.remove();
+            }
+        }
+
+        // Remove progress bar if exists
+        const existingBar = state.container.querySelector('.team-progress-bar');
+        if (existingBar) existingBar.remove();
+
+        // Build new cards
+        const cardStates: FeatureCardState[] = [];
+
+        let groupingAnalysis = forceIndividual
+            ? { shouldGroup: false, matchingPets: [], remainingPets: pets }
+            : this.analyzeTeamForGrouping(team, pets, growthViewType);
+
+        // Check if groupable feature exists
+        const hasGroupableFeature = availableFeatures.some(f =>
+            f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+        );
+
+        if (groupingAnalysis.shouldGroup && !hasGroupableFeature) {
+            const allMaxStrength = groupingAnalysis.matchingPets.every(
+                (pet: any) => pet.currentStrength >= pet.maxStrength
+            );
+            if (!allMaxStrength) {
+                groupingAnalysis = { shouldGroup: false, matchingPets: [], remainingPets: pets };
+            }
+        }
+
+        if (groupingAnalysis.shouldGroup && groupingAnalysis.matchingPets.length >= 2) {
+            // Filter features to only those with content for these specific pets  
+            const featuresWithContent = availableFeatures.filter(f =>
+                !f.hasContent || f.hasContent(groupingAnalysis.matchingPets, team)
+            );
+
+            // Select feature from those that have content, prioritizing Growth/Hatching/Coin
+            const selectedFeature = featuresWithContent.find(f =>
+                f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+            ) || featuresWithContent[0] || availableFeatures[0];
+            const groupedRow = this.createGroupedPetRow(
+                team,
+                groupingAnalysis.matchingPets,
+                availableFeatures,
+                selectedFeature,
+                growthViewType,
+                teamId
+            );
+            state.container.appendChild(groupedRow.container);
+            cardStates.push(groupedRow.cardState);
+
+            for (const remainingPet of groupingAnalysis.remainingPets) {
+                const slotIndex = team.petIds.indexOf(remainingPet.id);
+                const individualRow = this.createIndividualPetRow(
+                    team,
+                    remainingPet,
+                    slotIndex,
+                    availableFeatures,
+                    growthViewType,
+                    teamId
+                );
+                state.container.appendChild(individualRow.container);
+                cardStates.push(individualRow.cardState);
+            }
+        } else {
+            for (let slotIndex = 0; slotIndex < 3; slotIndex++) {
+                const petId = team.petIds[slotIndex];
+                const pet = petId ? (myPets.all.find(p => p.id === petId) ?? null) : null;
+
+                const individualRow = this.createIndividualPetRow(
+                    team,
+                    pet,
+                    slotIndex,
+                    availableFeatures,
+                    growthViewType,
+                    teamId,
+                    preferredFeature as 'xp' | 'growth' | undefined
+                );
+                state.container.appendChild(individualRow.container);
+                cardStates.push(individualRow.cardState);
+            }
+        }
+
+        // Update state
+        state.cards = cardStates;
+
+        // Re-add progress bar
+        const barMode = preferredFeature === 'xp' ? 'xp' : (preferredFeature === 'growth' ? 'growth' : undefined);
+        this.addProgressBar(state.container, pets, teamId, barMode);
+    }
+
+    /**
+     * Get available features for a team (helper for rebuildInPlace)
+     */
+    private getAvailableFeaturesForTeam(team: PetTeam, pets: any[]): FeaturePanelDefinition[] {
+        const purposeAnalysis = detectTeamPurpose(team);
+        return FEATURE_PANELS.filter(panel =>
+            panel.isAvailable()
+        );
+    }
+
+    /**
+     * Count total rows across all panels for combined panel detection
+     * @param panels - Panels to count rows for
+     * @param pets - Pets to count rows for
+     * @param team - Team context
+     * @param viewType - Growth view type
+     * @returns Total row count across all panels
+     */
+    private countTotalRows(
+        panels: FeaturePanelDefinition[],
+        pets: any[],
+        team: PetTeam,
+        viewType?: 'egg' | 'plant'
+    ): number {
+        let totalRows = 0;
+
+        for (const panel of panels) {
+            if (panel.countRows) {
+                totalRows += panel.countRows(pets, team, viewType);
+            } else if (panel.hasContent?.(pets, team)) {
+                // Default to 1 row if hasContent but no countRows
+                totalRows += 1;
+            }
+        }
+
+        return totalRows;
+    }
+
+    /**
+     * Check if panels should be combined into single view
+     * @param panels - Available panels with content
+     * @param pets - Pets to check
+     * @param team - Team context
+     * @param viewType - Growth view type
+     * @returns true if panels should merge (total rows ≤ threshold and multiple panels)
+     */
+    private shouldUseCombinedPanel(
+        panels: FeaturePanelDefinition[],
+        pets: any[],
+        team: PetTeam,
+        viewType?: 'egg' | 'plant'
+    ): boolean {
+        // Need at least 2 panels to combine
+        if (panels.length < 2) return false;
+
+        const totalRows = this.countTotalRows(panels, pets, team, viewType);
+        return totalRows <= COMBINED_PANEL_MAX_ROWS;
+    }
+
+    /**
+     * Create a combined panel row that merges all panels into a single view
+     * Used when total rows across all panels ≤ COMBINED_PANEL_MAX_ROWS
+     * 
+     * Eliminates carousel navigation for sparse content - all stats visible at once
+     */
+    private createCombinedPanelRow(
+        team: PetTeam,
+        matchingPets: any[],
+        panels: FeaturePanelDefinition[],
+        viewType: 'egg' | 'plant' | undefined,
+        teamId: string
+    ): { container: HTMLElement; cardState: FeatureCardState } {
+        const petRow = element('div', { className: 'expanded-pet-row expanded-pet-row--combined' });
+
+        // Header without carousel buttons - show combined panel icons
+        const rowHeader = element('div', { className: 'pet-row__header pet-row__header--combined' });
+
+        // Build icons string from all panels
+        const iconsSpan = element('span', {
+            className: 'combined-panel__icons',
+            textContent: panels.map(p => p.icon).join(' ')
+        });
+        rowHeader.appendChild(iconsSpan);
+
+        const featureLabel = element('div', {
+            textContent: 'COMBINED',
+            className: 'pet-label'
+        });
+        rowHeader.appendChild(featureLabel);
+
+        // Build grouped card layout (same as regular grouped row)
+        const rowContent = element('div', {
+            className: `base-pet-card base-pet-card--grouped${matchingPets.length === 2 ? '-2' : ''}`
+        });
+
+        // Left section with grouped sprites
+        const left = element('div', { className: 'base-pet-card__left' });
+        const spriteContainer = element('div', {
+            className: `grouped-sprite-container${matchingPets.length === 2 ? ' grouped-sprite-container--duo' : ''}`
+        });
+
+        // Render each pet sprite
+        for (const pet of matchingPets) {
+            try {
+                const mutations = (pet.mutations || []) as string[];
+                if (MGSprite.has('pet', pet.petSpecies)) {
+                    const canvas = MGSprite.toCanvas('pet', pet.petSpecies, {
+                        mutations: mutations as any,
+                        scale: 1,
+                        boundsMode: 'padded'
+                    });
+                    canvas.style.imageRendering = 'pixelated';
+                    spriteContainer.appendChild(canvas);
+                }
+            } catch (e) {
+                // Skip failed sprites
+            }
+        }
+        left.appendChild(spriteContainer);
+
+        // Grouped badges row
+        const badgesRow = element('div', {
+            className: `grouped-badges${matchingPets.length === 2 ? ' grouped-badges--duo' : ''}`
+        });
+        for (const pet of matchingPets) {
+            const isMax = pet.currentStrength >= pet.maxStrength;
+            const badgeText = isMax ? `MAX ${pet.maxStrength}` : `STR ${pet.currentStrength}/${pet.maxStrength}`;
+            const badge = element('span', {
+                className: 'badge badge--neutral badge--soft badge--sm badge--pill',
+                textContent: badgeText
+            });
+            badgesRow.appendChild(badge);
+        }
+        left.appendChild(badgesRow);
+        rowContent.appendChild(left);
+
+        // Right content slot - COMBINED panel content
+        const contentSlot = element('div', { className: 'base-pet-card__content base-pet-card__content--combined' });
+
+        // Render each panel's content into a section
+        for (const panel of panels) {
+            const section = element('div', { className: `combined-section combined-section--${panel.id}` });
+
+            // Add panel icon prefix
+            const iconPrefix = element('span', {
+                className: 'combined-section__icon',
+                textContent: panel.icon
+            });
+            section.appendChild(iconPrefix);
+
+            // Render panel content
+            const panelContent = element('div', { className: 'combined-section__content' });
+            if (panel.renderGroupedSlot) {
+                panel.renderGroupedSlot(matchingPets, team, panelContent, viewType);
+            } else if (panel.renderPetSlot) {
+                panel.renderPetSlot(matchingPets[0], team, panelContent, viewType);
+            }
+
+            // Only add section if it has content
+            if (panelContent.children.length > 0 || panelContent.textContent?.trim()) {
+                section.appendChild(panelContent);
+                contentSlot.appendChild(section);
+            }
+        }
+
+        rowContent.appendChild(contentSlot);
+
+        // Create shell-like object for compatibility
+        const shell = {
+            root: rowContent,
+            getContentSlot: () => contentSlot,
+            setCentered: (centered: boolean) => {
+                rowContent.classList.toggle('base-pet-card--centered', centered);
+            },
+            destroy: () => {
+                rowContent.remove();
+            },
+            update: () => {
+                // Update badges
+                badgesRow.innerHTML = '';
+                for (const pet of matchingPets) {
+                    const isMax = pet.currentStrength >= pet.maxStrength;
+                    const badgeText = isMax ? `MAX ${pet.maxStrength}` : `STR ${pet.currentStrength}/${pet.maxStrength}`;
+                    const badge = element('span', {
+                        className: 'badge badge--neutral badge--soft badge--sm badge--pill',
+                        textContent: badgeText
+                    });
+                    badgesRow.appendChild(badge);
+                }
+            },
+            build: () => rowContent
+        } as any;
+
+        const cardState: FeatureCardState = {
+            slotIndex: -1, // Grouped
+            currentFeatureId: 'combined',
+            shell,
+            container: petRow,
+            featureData: panels[0] // Primary panel for reference
+        };
+
+        petRow.appendChild(rowHeader);
+        petRow.appendChild(rowContent);
+
+        return { container: petRow, cardState };
     }
 
     /**
      * Analyze team to determine if pets should be grouped
-     * Only groups for growth teams (not XP) with relevant abilities for the view
+     * Supports growth teams (egg/plant) and hatching teams
      *
      * @param team - Pet team to analyze
      * @param pets - Pets in the team
@@ -1012,16 +1619,63 @@ export class TrackerExpansionHandler {
         matchingPets: any[];
         remainingPets: any[];
     } {
-        // Must be growth team (not XP - XP always shows individual cards)
-        const purpose = detectTeamPurpose(team);
-        const isGrowthTeam = purpose?.primary === 'time-reduction' ||
-            hasEggBoosts(pets) || hasPlantBoosts(pets);
+        // Detect if this is a hatching team (has hatching abilities)
+        const hasHatchingAbilities = (pet: any) => {
+            const abilities = pet.abilities || [];
+            return abilities.some((a: string) =>
+                (ABILITY_CATEGORIES.MAX_STR_BOOST as readonly string[]).includes(a) ||
+                (ABILITY_CATEGORIES.PET_MUTATION as readonly string[]).includes(a) ||
+                (ABILITY_CATEGORIES.DOUBLE_HATCH as readonly string[]).includes(a) ||
+                (ABILITY_CATEGORIES.PET_REFUND as readonly string[]).includes(a)
+            );
+        };
 
-        if (!isGrowthTeam) {
-            return { shouldGroup: false, matchingPets: [], remainingPets: pets };
+        const hatchingPets = pets.filter(hasHatchingAbilities);
+
+        // If 2+ pets have hatching abilities, group them together
+        if (hatchingPets.length >= 2 && hatchingPets.length <= 3) {
+            const remainingPets = pets.filter(p => !hatchingPets.includes(p));
+            return {
+                shouldGroup: true,
+                matchingPets: hatchingPets,
+                remainingPets
+            };
         }
 
-        // Check for 2-3 matching pets using view-dependent grouping
+        // Detect if this is a crop economy team (capybaras with DoubleHarvest/ProduceRefund)
+        const CROP_HARVEST_ABILITIES = ['DoubleHarvest', 'ProduceRefund', 'ProduceRefundII'] as const;
+        const hasCropHarvestAbilities = (pet: any) => {
+            const abilities = pet.abilities || [];
+            return abilities.some((a: string) =>
+                CROP_HARVEST_ABILITIES.includes(a as any)
+            );
+        };
+
+        const cropHarvestPets = pets.filter(hasCropHarvestAbilities);
+
+        // If 2+ pets have crop harvest abilities (and no growth/mutation), group them
+        if (cropHarvestPets.length >= 2 && cropHarvestPets.length <= 3) {
+            // Check that these pets don't have growth/mutation abilities (which would use standard grouping)
+            const hasGrowthOrMutation = cropHarvestPets.some(pet => {
+                const abilities = pet.abilities || [];
+                return abilities.some((a: string) =>
+                    (ABILITY_CATEGORIES.EGG_GROWTH as readonly string[]).includes(a) ||
+                    (ABILITY_CATEGORIES.PLANT_GROWTH as readonly string[]).includes(a) ||
+                    (ABILITY_CATEGORIES.CROP_MUTATION as readonly string[]).includes(a)
+                );
+            });
+
+            if (!hasGrowthOrMutation) {
+                const remainingPets = pets.filter(p => !cropHarvestPets.includes(p));
+                return {
+                    shouldGroup: true,
+                    matchingPets: cropHarvestPets,
+                    remainingPets
+                };
+            }
+        }
+
+        // Otherwise, use standard growth-based grouping
         return analyzeTeamGrouping(pets, viewCategory);
     }
 

@@ -22,6 +22,7 @@ export const THEMES: Record<string, ThemeVars> = {
     "--high": "#16a34a",
     "--complete": "#15803d",
     "--info": "#2563eb",
+    "--xp-fill": "#0febff",
     // Accents
     "--accent-1": "#16a34a",
     "--accent-2": "#7c3aed",
@@ -43,6 +44,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #b000b0, #d00000, #b08000, #008000, #0000b0, #4b0082, #9400d3)", // Darker rainbow for light bg
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -67,6 +70,7 @@ export const THEMES: Record<string, ThemeVars> = {
     "--high": "#22c55e",
     "--complete": "#16a34a",
     "--info": "#3b82f6",
+    "--xp-fill": "#0febff",
     // Accents
     "--accent-1": "#22c55e",
     "--accent-2": "#a855f7",
@@ -88,6 +92,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter/Neon for dark bg
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -133,6 +139,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #b000b0, #d00000, #b08000, #008000, #0000b0, #4b0082, #9400d3)", // Darker rainbow for light (sepia) bg
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -178,6 +186,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter for forest
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -223,6 +233,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter for violet
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -268,6 +280,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter for ocean
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -313,6 +327,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter for ember
     // Component-specific
     "--switch-thumb": "#ffffff",
     // Journal-specific (theme-dependent ink color)
@@ -387,6 +403,8 @@ export const THEMES: Record<string, ThemeVars> = {
     "--rarity-mythical": "#9944A7",
     "--rarity-divine": "#FF7835",
     "--rarity-celestial": "#FF00FF",
+    // Special Text Gradients
+    "--rainbow-text-gradient": "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #ff00ff)", // Brighter for magic garden
 
     // ===== Component-specific =====
     "--switch-thumb": "#ffffff",

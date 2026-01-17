@@ -10,7 +10,7 @@
 import { Globals } from '../../../globals';
 import { MGData } from '../../../modules/data';
 import type { UnifiedPet } from '../../../globals/core/types';
-import type { TeamXpData, TeamPetXpData, TeamXpSummary } from '../../../ui/sections/Trackers/parts/XpTracker';
+import type { TeamXpData, TeamPetXpData, TeamXpSummary } from '../../../ui/sections/Trackers/parts/TeamXpPanel';
 import type { PetTeam } from '../../petTeam/types';
 import { MGPetTeam } from '../../petTeam';
 import {

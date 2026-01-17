@@ -401,8 +401,9 @@ export const growthPanelCss = `
     }
 
     .stat__label {
-        min-width: 80px; /* Fixed width for alignment */
-        flex-shrink: 0;
+        min-width: auto;
+        max-width: 70px;
+        flex-shrink: 1;
         font-size: 9px;
     }
 
@@ -444,7 +445,9 @@ export const growthPanelCss = `
     }
 
     .stat__label {
-        min-width: 60px;
+        min-width: auto; /* Allow shrinking */
+        max-width: 60px; /* Cap width */
+        flex-shrink: 1;
     }
 
     .stat__progress-mini {
@@ -468,6 +471,72 @@ export const growthPanelCss = `
     .bar-info {
         font-size: 10px;
     }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPRITE GRID - Egg Sprite Overlays (Hatching Panel)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.stat__sprite-grid {
+    display: flex;
+    gap: 12px;  /* Increased from 8px for better spacing */
+    align-items: center;
+    flex-wrap: wrap;
+    margin-left: 8px;  /* Add some left margin to separate from label */
+}
+
+.stat__sprite-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;  /* Ensure minimum width for sprite + overlay */
+}
+
+.stat__sprite-value {
+    position: absolute;
+    top: -8px;  /* Increased from -6px for better visibility */
+    right: -6px;  /* Increased from -4px for more spacing */
+    font-size: 0.7rem;  /* Slightly smaller for compactness */
+    font-weight: 700;  /* Increased from 600 for better readability */
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 4px;  /* Slightly more padding */
+    color: var(--pill-from);
+    text-shadow: none;
+    z-index: 10;
+    white-space: nowrap;  /* Prevent text wrapping */
+}
+
+.stat__values-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;  /* Increased from 4px */
+}
+
+.stat__separator {
+    color: var(--border);
+    font-weight: 400;
+    margin: 0 4px;  /* Add horizontal margin */
+}
+
+.stat__boost-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;  /* Increased from 4px */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MUTATION COLORS - Rainbow and Gold
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.stat__value.stat__value--gold {
+    color: var(--mut-gold) !important;
+}
+
+.stat__value.stat__value--rainbow {
+    color: var(--mut-rainbow) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

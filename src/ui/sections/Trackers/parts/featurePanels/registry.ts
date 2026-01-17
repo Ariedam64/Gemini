@@ -19,6 +19,7 @@
 
 import type { PetTeam } from '../../../../../features/petTeam/types';
 import type { UnifiedPet } from '../../../../../globals/core/types';
+import type { TeamPurposeAnalysis } from '../../../../../features/petTeam/logic/purpose';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -73,8 +74,32 @@ export interface FeaturePanelDefinition {
         viewType?: 'egg' | 'plant'
     ) => void;
 
-    /** Should this feature display for this team? (optional smart filtering) */
-    shouldDisplay?: (team: PetTeam, pets: UnifiedPet[]) => boolean;
+    /**
+     * Should this feature display for this team? (optional strict filtering)
+     * Receives purpose analysis for strict mode filtering
+     */
+    shouldDisplay?: (team: PetTeam, pets: UnifiedPet[], purpose: TeamPurposeAnalysis) => boolean;
+
+    /**
+     * Check if this feature has content to display for specific pet(s)
+     * Used to filter empty panels from carousel navigation
+     *
+     * @param pets - Pet or pets to check (can be single pet or group)
+     * @param team - Team context
+     * @returns true if panel will display content, false if empty
+     */
+    hasContent?: (pets: UnifiedPet | UnifiedPet[], team: PetTeam) => boolean;
+
+    /**
+     * Count the number of stat rows this panel would render for given pets
+     * Used for combined panel detection - when total rows ≤3, panels merge
+     * 
+     * @param pets - Pet or pets to count rows for
+     * @param team - Team context
+     * @param viewType - Growth view type for growth panels
+     * @returns Number of stat rows (0 if no content)
+     */
+    countRows?: (pets: UnifiedPet | UnifiedPet[], team: PetTeam, viewType?: 'egg' | 'plant') => number;
 }
 
 /**
@@ -139,12 +164,14 @@ export interface FeaturePanelContext {
  * @param team - Team to check features for
  * @param pets - Pets in team
  * @param allFeatures - All registered feature panels
+ * @param purpose - Team purpose analysis (optional, for strict filtering)
  * @returns Available features for this team
  */
 export function getAvailableFeatures(
     team: PetTeam,
     pets: UnifiedPet[],
-    allFeatures: FeaturePanelDefinition[]
+    allFeatures: FeaturePanelDefinition[],
+    purpose?: TeamPurposeAnalysis
 ): FeaturePanelDefinition[] {
     return allFeatures.filter(feature => {
         // Check if feature is enabled
@@ -152,9 +179,19 @@ export function getAvailableFeatures(
             return false;
         }
 
-        // Check if feature should display for this team
-        if (feature.shouldDisplay && !feature.shouldDisplay(team, pets)) {
-            return false;
+        // Check if feature should display for this team (with purpose if available)
+        if (feature.shouldDisplay) {
+            // If purpose is not provided, pass a default "unknown" purpose
+            const defaultPurpose: TeamPurposeAnalysis = {
+                primary: 'unknown',
+                confidence: 0,
+                secondary: [],
+                suggestedFeatures: [],
+                reasons: []
+            };
+            if (!feature.shouldDisplay(team, pets, purpose || defaultPurpose)) {
+                return false;
+            }
         }
 
         return true;

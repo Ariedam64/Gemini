@@ -29,6 +29,8 @@ export {
 // Import registered features
 import { xpPanel } from './xpPanel';
 import { growthPanel } from './growthPanel';
+import { valuePanel } from './valuePanel';
+import { hatchingPanel } from './hatchingPanel';
 
 /**
  * All registered feature panels
@@ -43,5 +45,8 @@ import type { FeaturePanelDefinition } from './registry';
 export const FEATURE_PANELS: FeaturePanelDefinition[] = [
     xpPanel,
     growthPanel,
+    valuePanel,
+    hatchingPanel,
 ];
+
 

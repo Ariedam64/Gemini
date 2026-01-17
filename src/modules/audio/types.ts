@@ -46,10 +46,11 @@ export interface CustomAudioPlayOptions {
 }
 
 export interface CustomAudioHandle {
-  element: HTMLAudioElement;
-  isPlaying: boolean;
-  duration: number;
-  currentTime: number;
+  audio: HTMLAudioElement;
+  url: string;
+  stop: () => void;
+  setVolume: (volume: number) => void;
+  isPlaying: () => boolean;
 }
 
 export interface ListOptions {

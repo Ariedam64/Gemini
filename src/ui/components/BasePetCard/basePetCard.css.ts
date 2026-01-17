@@ -44,6 +44,77 @@ export const basePetCardCss = `
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   GROUPED PET CARD - Bundled sprites for 2-3 matching pets
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.base-pet-card--grouped,
+.base-pet-card--grouped-2 {
+    /* Grouped state inherits base card styles */
+}
+
+.base-pet-card--grouped .base-pet-card__left,
+.base-pet-card--grouped-2 .base-pet-card__left {
+    min-width: 110px;
+}
+
+/* Grouped sprite container with overlapping triad/duo formation */
+.grouped-sprite-container {
+    position: relative;
+    width: 100px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* No background - just sprites */
+    overflow: visible;
+}
+
+.grouped-sprite-container canvas {
+    position: absolute;
+    /* Natural sizing - don't stretch */
+    width: auto !important;
+    height: auto !important;
+    max-width: 56px;
+    max-height: 56px;
+    image-rendering: pixelated;
+}
+
+/* 3-pet triad formation - less vertical overlap, more horizontal spread */
+.grouped-sprite-container canvas:nth-child(1) { z-index: 3; left: 24px; top: 4px; }
+.grouped-sprite-container canvas:nth-child(2) { z-index: 2; left: -4px; top: 12px; }
+.grouped-sprite-container canvas:nth-child(3) { z-index: 1; left: 52px; top: 12px; }
+
+/* 2-pet duo formation - more horizontal spread */
+.grouped-sprite-container--duo canvas:nth-child(1) { left: 6px; top: 4px; z-index: 2; }
+.grouped-sprite-container--duo canvas:nth-child(2) { left: 46px; top: 4px; z-index: 1; }
+
+/* Stacked badges in horizontal row matching sprite layout */
+.grouped-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.grouped-badges .badge {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    background: var(--pill-to);
+    color: var(--pill-from);
+    text-shadow: 
+        -1px -1px 0 rgba(0, 0, 0, 0.8),
+        1px -1px 0 rgba(0, 0, 0, 0.8),
+        -1px 1px 0 rgba(0, 0, 0, 0.8),
+        1px 1px 0 rgba(0, 0, 0, 0.8) !important;
+    border: none;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
    LEFT SECTION - Sprite & Identity
    ═══════════════════════════════════════════════════════════════════════════ */
 

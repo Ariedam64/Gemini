@@ -117,7 +117,7 @@ export class TeamCardDragHandler {
 
         const touchActionPrev = itemEl.style.touchAction;
         itemEl.style.touchAction = "none";
-        const releaseScrollLock = acquireScrollLock(itemEl);
+        const releaseScrollLock = acquireScrollLock();
 
         this.dragState = {
             itemEl,

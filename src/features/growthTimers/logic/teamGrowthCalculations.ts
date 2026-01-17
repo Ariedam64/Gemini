@@ -14,7 +14,7 @@ import type {
     TeamGrowthData,
     GrowthStats,
     TeamPetGrowthData,
-} from '../../../ui/sections/Trackers/parts/GrowthTracker';
+} from '../types';
 import { MGPetTeam } from '../../petTeam';
 import {
     calculateEggBoosts,
