@@ -80,7 +80,7 @@ export const xpPanel: FeaturePanelDefinition = {
         const teamBonus = teamData?.teamSummary.bonusXpPerHour || 0;
 
         // Find longest time to max for supporting feeds calc
-        const petsInTeam = teamData?.pets || [];
+        const petsInTeam: import('../TeamXpPanel').TeamPetXpData[] = teamData?.pets || [];
         const longestHoursToMax = Math.max(0, ...petsInTeam.map(p => p.hoursToMaxStrength || 0));
 
         const xpData = calculatePetXpData(pet, currentWeather, teamBonus, longestHoursToMax);

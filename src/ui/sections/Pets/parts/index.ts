@@ -12,4 +12,4 @@ export type { TeamXpPanelOptions, TeamXpData, TeamPetXpData, TeamXpSummary } fro
 
 // Ability parts
 export { AbilityLogsCardPart } from "./ability/AbilityLogsCard";
-export type { AbilityLogsCardPartOptions } from "./ability/AbilityLogsCard";
+

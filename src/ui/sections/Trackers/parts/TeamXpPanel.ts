@@ -9,8 +9,8 @@
  * @module TeamXpPanel
  */
 
-import { MGSprite } from '../../../../../modules/sprite';
-import type { XpBoostStats } from '../../../../../features/xpTracker';
+import { MGSprite } from '../../../../modules/sprite';
+import type { XpBoostStats } from '../../../../features/xpTracker';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -165,7 +165,7 @@ export class TeamXpPanel {
 
         // Render pet sprite (using Journal pattern)
         try {
-            const mutations = pet.mutations as import('../../../../../modules/sprite').MutationName[];
+            const mutations = pet.mutations as import('../../../../modules/sprite').MutationName[];
 
             // Check if sprite exists before rendering
             if (MGSprite.has('pet', pet.species)) {

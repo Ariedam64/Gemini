@@ -7,6 +7,7 @@ import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
+import { TrackersSection } from "./Trackers";
 import { ShopNotifierSection } from "./ShopNotifier";
 import { DevSection } from "./Dev";
 
@@ -38,6 +39,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new JournalCheckerSection(),
     getShopNotifierSection(),
     new PetsSection(deps),
+    new TrackersSection(deps),
   ];
 
   // Only include developer tools in non-production builds

@@ -98,12 +98,14 @@ export function getXpBoostTier(abilityId: string): 'I' | 'II' | 'III' | 'Snowy' 
  * @param abilityId - The XP Boost ability ID
  * @param petStrength - Current pet strength (used for scaling)
  * @param currentWeather - Current weather type (e.g., 'Frost', 'Rain')
+ * @param petMaxStrength - Pet's maximum strength (ranges 80-100)
  * @returns XP Boost stats or null if not a valid XP Boost ability
  */
 export function calculateXpBoostStats(
     abilityId: string,
     petStrength: number,
-    currentWeather: string | null
+    currentWeather: string | null,
+    petMaxStrength: number = 100  // Default to 100 for backward compatibility
 ): XpBoostStats | null {
     const abilityData = getXpBoostAbilityData(abilityId);
     if (!abilityData) return null;
@@ -114,8 +116,9 @@ export function calculateXpBoostStats(
     const requiredWeather = abilityData.requiredWeather;
     const isActive = requiredWeather === null || currentWeather === requiredWeather;
 
-    // Strength scaling factor (strength / 100)
-    const strengthFactor = petStrength / MAX_TARGET_STRENGTH;
+    // Strength scaling factor - use actual maxStrength for accurate scaling
+    // Wiki: "Max Strength ranges from 80 to 100"
+    const strengthFactor = petStrength / petMaxStrength;
 
     // XP Boost II+ scales by STR^2 (Double Scaling) per Wiki/MGData research
     // We'll apply this to all tiers for consistency if they are high STR
@@ -155,7 +158,7 @@ export function calculateXpBoostStats(
 /**
  * Calculate combined XP Boost stats for all active boosters
  *
- * @param boosters - Array of { petId, petName, abilities, strength }
+ * @param boosters - Array of { petId, petName, abilities, strength, maxStrength }
  * @param currentWeather - Current weather type
  * @returns Combined stats for all XP Boost pets
  */
@@ -165,6 +168,7 @@ export function calculateCombinedXpBoostStats(
         petName: string;
         abilities: string[];
         strength: number;
+        maxStrength?: number;  // Optional for backward compatibility
     }>,
     currentWeather: string | null
 ): CombinedXpBoostStats {
@@ -179,7 +183,12 @@ export function calculateCombinedXpBoostStats(
         const xpBoostAbilities = getXpBoostAbilities(booster.abilities);
 
         for (const abilityId of xpBoostAbilities) {
-            const stats = calculateXpBoostStats(abilityId, booster.strength, currentWeather);
+            const stats = calculateXpBoostStats(
+                abilityId,
+                booster.strength,
+                currentWeather,
+                booster.maxStrength || 100
+            );
             if (!stats) continue;
 
             result.boosters.push({
@@ -205,10 +214,11 @@ export function calculateCombinedXpBoostStats(
 export function getPrimaryXpBoostStats(
     abilities: string[],
     petStrength: number,
-    currentWeather: string | null
+    currentWeather: string | null,
+    petMaxStrength: number = 100
 ): XpBoostStats | null {
     const xpBoostAbilities = getXpBoostAbilities(abilities);
     if (xpBoostAbilities.length === 0) return null;
 
-    return calculateXpBoostStats(xpBoostAbilities[0], petStrength, currentWeather);
+    return calculateXpBoostStats(xpBoostAbilities[0], petStrength, currentWeather, petMaxStrength);
 }
