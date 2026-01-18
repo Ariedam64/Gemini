@@ -9,6 +9,7 @@ import { stop, playTrack } from "./logic/tracks";
 import { list, getCategories, getGroups, hasTrack, hasGroup, getTrackUrl, refreshVolumes } from "./logic/query";
 import { categoryVolume } from "./logic/volume";
 import { playCustomAudio, stopCustomAudio, setCustomAudioVolume, isCustomAudioPlaying, getCustomAudioHandle } from "./logic/custom";
+import { CustomSounds } from "./customSounds";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -109,6 +110,9 @@ export const MGAudio = {
     ensureReady();
     return getCustomAudioHandle();
   },
+
+  // ─── Custom Sounds Library ───
+  CustomSounds,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -116,3 +120,4 @@ export const MGAudio = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type { CustomAudioPlayOptions, CustomAudioHandle };
+export type { CustomSound } from "./customSounds/types";

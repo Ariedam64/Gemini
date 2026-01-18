@@ -8,6 +8,7 @@ import { MGManifest } from "../../manifest";
 import type { SfxAtlas } from "../types";
 import { state } from "../state";
 import { buildSfxGroups } from "./sfx";
+import { CustomSounds } from "../customSounds";
 
 let _initPromise: Promise<boolean> | null = null;
 
@@ -51,6 +52,9 @@ export async function initAudioSystem(): Promise<boolean> {
 
     state.sfx.atlas = await getJSON<SfxAtlas>(state.sfx.atlasUrl);
     buildSfxGroups(state.sfx.atlas);
+
+    // Initialize custom sounds library
+    CustomSounds.init();
 
     state.ready = true;
     return true;

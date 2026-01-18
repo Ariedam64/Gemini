@@ -40,8 +40,8 @@ export const SECTION_KEYS = {
 
 /** Keys for core modules (infrastructure - per .claude/rules/modules.md) */
 export const MODULE_KEYS = {
-    // Core modules typically don't need storage (MGData, MGSprite, etc.)
-    // Add here if needed for caching or configuration
+    /** Audio module custom sounds library */
+    AUDIO_CUSTOM_SOUNDS: 'module:audio:customSounds',
 } as const;
 
 /** Keys for global variables persistent state */
