@@ -3,7 +3,7 @@
 
 import { captureState } from "../state";
 import { WEATHER_IDS, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
-import { fetchMainBundle, extractBalancedObjectLiteral } from "./bundleParser";
+import { fetchMainBundle, extractBalancedBlock } from "./bundleParser";
 
 /**
  * Build weather catalog from extracted data
@@ -38,6 +38,36 @@ function buildWeather(data: any): Record<string, any> | null {
 }
 
 /**
+ * Extract weather object from bundle by finding the Rain:{ pattern
+ * This ensures we get the complete weather catalog object, not just a nested object
+ */
+function extractWeatherObject(text: string, anchorPos: number): string | null {
+  // Search backward for "Rain:{" which should be the start of the weather catalog
+  const searchStart = Math.max(0, anchorPos - 3000);
+  const searchArea = text.substring(searchStart, anchorPos);
+
+  const rainPattern = /Rain:\{/;
+  const match = searchArea.match(rainPattern);
+  if (!match || match.index === undefined) return null;
+
+  const rainStart = searchStart + match.index;
+
+  // Find the opening brace before "Rain" (should be just before Rain:)
+  let objStart = -1;
+  for (let i = rainStart - 1; i >= Math.max(0, rainStart - 200); i--) {
+    if (text[i] === "{") {
+      objStart = i;
+      break;
+    }
+  }
+
+  if (objStart < 0) return null;
+
+  // Extract the balanced block starting from the opening brace
+  return extractBalancedBlock(text, objStart);
+}
+
+/**
  * Load weather data from main bundle
  */
 async function loadWeatherFromBundle(): Promise<boolean> {
@@ -50,11 +80,12 @@ async function loadWeatherFromBundle(): Promise<boolean> {
   if (anchor < 0) anchor = bundleText.indexOf('name:"Amber Moon"');
   if (anchor < 0) return false;
 
-  const literal = extractBalancedObjectLiteral(bundleText, anchor);
+  const literal = extractWeatherObject(bundleText, anchor);
   if (!literal) return false;
 
+  // Fix $t.WeatherType references to be valid JSON strings
   const fixedLiteral = literal.replace(
-    /\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon)\b/g,
+    /\$t\.(Rain|Frost|Dawn|AmberMoon)\b/g,
     '"$1"'
   );
 
