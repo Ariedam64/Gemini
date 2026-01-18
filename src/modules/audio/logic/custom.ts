@@ -16,6 +16,7 @@ export async function playCustomAudio(
   const audio = new Audio(url);
   audio.volume = opts.volume ?? 1;
   audio.loop = opts.loop ?? false;
+  audio.preload = "auto"; // Ensure media is preloaded
 
   const handle: CustomAudioHandle = {
     audio,
@@ -36,6 +37,40 @@ export async function playCustomAudio(
   currentCustomAudio = handle;
 
   try {
+    // Wait for media to be ready before playing
+    // This ensures the audio is decoded and ready to play fully
+    // Prevents audio from cutting off mid-playback (especially important for data URLs)
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Audio load timeout"));
+      }, 5000); // 5 second timeout
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        audio.removeEventListener("canplay", onCanPlay);
+        audio.removeEventListener("error", onError);
+      };
+
+      const onCanPlay = () => {
+        cleanup();
+        resolve();
+      };
+
+      const onError = () => {
+        cleanup();
+        reject(new Error(`Audio load error: ${audio.error?.message}`));
+      };
+
+      // If already ready, resolve immediately
+      if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or better
+        clearTimeout(timeoutId);
+        resolve();
+      } else {
+        audio.addEventListener("canplay", onCanPlay, { once: true });
+        audio.addEventListener("error", onError, { once: true });
+      }
+    });
+
     await audio.play();
   } catch (error) {
     console.error("[MGAudio] Failed to play custom audio:", error);
