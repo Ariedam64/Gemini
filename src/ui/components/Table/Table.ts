@@ -177,13 +177,19 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     headerCheck.indeterminate = count > 0 && count < ids.length;
   }
 
+  let syncPending = false;
   function syncHeaderPaddingNow() {
+    syncPending = false;
     const sw = body.offsetWidth - body.clientWidth;
     head.style.paddingRight = sw > 0 ? `${sw}px` : "0px";
   }
-  function syncHeaderPadding() { requestAnimationFrame(syncHeaderPaddingNow); }
-  const ro = new ResizeObserver(() => syncHeaderPaddingNow());
-  const onWinResize = () => syncHeaderPaddingNow();
+  function syncHeaderPadding() {
+    if (syncPending) return;
+    syncPending = true;
+    requestAnimationFrame(syncHeaderPaddingNow);
+  }
+  const ro = new ResizeObserver(() => syncHeaderPadding());
+  const onWinResize = () => syncHeaderPadding();
 
   function renderHead() {
     head.replaceChildren();

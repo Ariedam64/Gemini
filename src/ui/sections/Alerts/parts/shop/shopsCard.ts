@@ -1,349 +1,261 @@
 /**
- * Shop Card - Displays shop items in a sortable table with toggle switches
+ * Shops Card - Unified card displaying all shop items with filters
+ * Refactored: Splits responsibilities across shopsCardData.ts and shopsCardTable.ts
  */
 
 import { Card } from "../../../../components/Card/Card";
-import { Table, TableHandle, ColDef } from "../../../../components/Table/Table";
-import { Switch } from "../../../../components/Switch/Switch";
-import { Badge } from "../../../../components/Badge/Badge";
+import { Select, SelectHandle } from "../../../../components/Select/Select";
+import { SearchBar, SearchBarHandle } from "../../../../components/SearchBar/SearchBar";
+import { TableHandle } from "../../../../components/Table/Table";
 import { getShops } from "../../../../../globals/variables/shops";
-import { MGData, MGSprite } from "../../../../../modules";
-import { MGShopNotifier } from "../../../../../features/shopNotifier";
 import { element } from "../../../../styles/helpers";
-import type { ShopType, Shop, ShopItem, ShopsData } from "../../../../../globals/core/types";
+import type { ShopType, ShopsData } from "../../../../../globals/core/types";
+import {
+  buildAllRows,
+  SHOP_TYPE_LABELS,
+  type ShopItemRow,
+} from "./shopsCardData";
+import { createItemsTable } from "./shopsCardTable";
 
-export interface ShopCardPart {
+/**
+ * Public handle for the shops card part
+ */
+export interface ShopsCardPart {
   root: HTMLElement;
-  refresh?: () => void;
-  destroy?: () => void;
-}
-
-export interface ShopCardOptions {
-  shopType: ShopType;
-}
-
-const SHOP_LABELS: Record<ShopType, string> = {
-  seed: "Seeds",
-  tool: "Tools",
-  egg: "Eggs",
-  decor: "Decor",
-};
-
-const ITEM_EMOJI: Record<ShopType, string> = {
-  seed: "🌱",
-  tool: "🔧",
-  egg: "🥚",
-  decor: "🎨",
-};
-
-// MGData category mapping per shop type
-const DATA_CATEGORY: Record<ShopType, string> = {
-  seed: "plants",
-  tool: "items",
-  egg: "eggs",
-  decor: "decor",
-};
-
-// Sub-key for seed sprite (seeds are stored under plants.seed)
-const DATA_SUBKEY: Record<ShopType, string | null> = {
-  seed: "seed",
-  tool: null,
-  egg: null,
-  decor: null,
-};
-
-// Rarity order for sorting (from lowest to highest)
-const RARITY_ORDER: Record<string, number> = {
-  common: 0,
-  uncommon: 1,
-  rare: 2,
-  legendary: 3,
-  mythical: 4,
-  divine: 5,
-  celestial: 6,
-};
-
-// Extended type for table rows with rarity
-interface ShopItemRow extends ShopItem {
-  rarity: string | null;
-  spriteId: string | null;
-  itemName: string;
-  isTracked: boolean;
+  refresh(): void;
+  destroy(): void;
 }
 
 /**
- * Get spriteId from MGData for a shop item
+ * Internal state for filters
  */
-function getSpriteId(itemId: string, shopType: ShopType): string | null {
-  try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return null;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return null;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    return target?.spriteId ?? null;
-  } catch (error) {
-    console.warn(`[ShopNotifier] Failed to get spriteId for ${itemId}:`, error);
-    return null;
-  }
+interface FilterState {
+  selectedShopType: ShopType | "all";
+  searchQuery: string;
 }
 
 /**
- * Get rarity from MGData for a shop item
- * Returns null if rarity is not found (Badge component will handle the fallback)
+ * Internal references to components
  */
-function getRarity(itemId: string, shopType: ShopType): string | null {
-  try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return null;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return null;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    const rarity = target?.rarity;
-    return rarity ? String(rarity).toLowerCase() : null;
-  } catch (error) {
-    return null;
-  }
+interface ComponentRefs {
+  shopTypeSelect: SelectHandle | null;
+  searchInput: SearchBarHandle | null;
+  tableHandle: TableHandle<ShopItemRow> | null;
 }
 
 /**
- * Get item name from MGData for a shop item
+ * Create the shops card part
  */
-function getItemName(itemId: string, shopType: ShopType): string {
-  try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return itemId;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return itemId;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    return target?.name ?? itemId;
-  } catch (error) {
-    console.warn(`[ShopNotifier] Failed to get name for ${itemId}:`, error);
-    return itemId;
-  }
-}
-
-function getTrackedIdSet(shopType: ShopType): Set<string> {
-  const tracked = MGShopNotifier.getTrackedItems();
-  const ids = tracked.filter((item) => item.shopType === shopType).map((item) => item.itemId);
-  return new Set(ids);
-}
-
-function buildRows(shop: Shop, shopType: ShopType): ShopItemRow[] {
-  const trackedIds = getTrackedIdSet(shopType);
-
-  return shop.items.map((item) => ({
-    ...item,
-    rarity: getRarity(item.id, shopType),
-    spriteId: getSpriteId(item.id, shopType),
-    itemName: getItemName(item.id, shopType),
-    isTracked: trackedIds.has(item.id),
-  }));
-}
-
-function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemRow> {
-  // Convert ShopItem[] to ShopItemRow[] (add rarity, spriteId, and itemName fields)
-  const rows = buildRows(shop, shopType);
-
-  // Define columns separately (like in AutoFavorite section)
-  const columns: ColDef<ShopItemRow>[] = [
-    {
-      key: "icon",
-      header: "",
-      width: "40px",
-      align: "center",
-      sortable: false,
-      render: (row) => {
-        const container = element("div", { className: "shop-item-icon" });
-
-        if (row.spriteId) {
-          // Use MGSprite to render the sprite
-          const canvas = MGSprite.toCanvas(row.spriteId);
-          if (canvas) {
-            canvas.style.maxWidth = "32px";
-            canvas.style.maxHeight = "32px";
-            canvas.style.width = "auto";
-            canvas.style.height = "auto";
-            canvas.style.imageRendering = "auto";
-            canvas.style.display = "block";
-            container.appendChild(canvas);
-          } else {
-            // Fallback to emoji if sprite fails
-            container.textContent = ITEM_EMOJI[shopType];
-          }
-        } else {
-          // Fallback to emoji if no spriteId
-          container.textContent = ITEM_EMOJI[shopType];
-        }
-
-        return container;
-      },
-    },
-    {
-      key: "itemName",
-      header: "Item",
-      width: "1fr",
-      align: "left",
-      sortable: true,
-      sortFn: (a, b) => a.itemName.localeCompare(b.itemName, undefined, { numeric: true, sensitivity: "base" }),
-    },
-    {
-      key: "rarity",
-      header: "Rarity",
-      width: "120px",
-      align: "left",
-      sortable: true,
-      sortFn: (a, b) => {
-        // Null/undefined rarities go to the end (value 999)
-        const aOrder = a.rarity ? (RARITY_ORDER[a.rarity.toLowerCase()] ?? 999) : 999;
-        const bOrder = b.rarity ? (RARITY_ORDER[b.rarity.toLowerCase()] ?? 999) : 999;
-        return aOrder - bOrder;
-      },
-      render: (row) => {
-        const container = element("div", { className: "shop-item-rarity" });
-        const badge = Badge({
-          variant: "rarity",
-          rarity: row.rarity,
-        });
-        container.appendChild(badge.root);
-        return container;
-      },
-    },
-    {
-      key: "toggle",
-      header: "Track",
-      width: "60px",
-      align: "center",
-      sortable: false,
-      render: (row) => {
-        const container = element("div", { className: "shop-item-toggle" });
-        const switchHandle = Switch({
-          checked: row.isTracked,
-          size: "sm",
-          onChange: (checked) => {
-            row.isTracked = checked;
-            if (checked) {
-              MGShopNotifier.addTrackedItem(shopType, row.id);
-            } else {
-              MGShopNotifier.removeTrackedItem(shopType, row.id);
-            }
-          },
-        });
-        container.appendChild(switchHandle.root);
-        return container;
-      },
-    },
-  ];
-
-  const table = Table<ShopItemRow>({
-    columns,
-    data: rows,
-    maxHeight: 360, // Height for ~6 visible rows with scroll
-    stickyHeader: true,
-    zebra: true,
-    compact: true,
-    getRowId: (row) => row.id,
-  });
-
-  return table;
-}
-
-export function createShopCard(options: ShopCardOptions): ShopCardPart {
-  const { shopType } = options;
+export function createShopsCard(): ShopsCardPart {
   const shops = getShops();
-  const currentShop = shops.getShop(shopType);
+  const shopsData = shops.get();
 
   let root: HTMLElement | null = null;
-  let table: TableHandle<ShopItemRow> | null = null;
-  let unsubscribe: (() => void) | null = null;
+  let allRows: ShopItemRow[] = [];
+  let filteredRows: ShopItemRow[] = [];
 
+  // Filter state
+  const filterState: FilterState = {
+    selectedShopType: "all",
+    searchQuery: "",
+  };
+
+  // Component references
+  const components: ComponentRefs = {
+    shopTypeSelect: null,
+    searchInput: null,
+    tableHandle: null,
+  };
+
+  // Change detection state
+  let lastRowCount = 0;
+  let lastShopTypes = new Set<ShopType>();
+
+  /**
+   * Compare two sets for equality
+   */
+  function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
+    if (a.size !== b.size) return false;
+    for (const item of a) {
+      if (!b.has(item)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Apply filter state to all rows and update table
+   */
+  function applyFilters(): void {
+    if (!components.tableHandle) {
+      return;
+    }
+
+    const nextRows = allRows.filter((row) => {
+      // Shop type filter
+      if (
+        filterState.selectedShopType !== "all" &&
+        row.shopType !== filterState.selectedShopType
+      ) {
+        return false;
+      }
+
+      // Search filter
+      if (
+        filterState.searchQuery &&
+        !row.itemName
+          .toLowerCase()
+          .includes(filterState.searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    filteredRows = nextRows;
+    components.tableHandle.setData(nextRows);
+  }
+
+  /**
+   * Create filter components (shop type select + search bar)
+   */
+  function createFilters(): HTMLElement {
+    const container = element("div", { className: "shops-card-filters" });
+
+    // Shop type select
+    const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor"];
+    const selectOptions = [
+      { value: "all", label: "All Shops" },
+      ...shopTypes.map((type) => ({
+        value: type,
+        label: SHOP_TYPE_LABELS[type],
+      })),
+    ];
+
+    components.shopTypeSelect = Select({
+      value: "all",
+      options: selectOptions,
+      size: "sm",
+      onChange: (value) => {
+        filterState.selectedShopType = value as ShopType | "all";
+        applyFilters();
+      },
+    });
+
+    // Search input
+    components.searchInput = SearchBar({
+      placeholder: "Search items...",
+      size: "sm",
+      debounceMs: 150,
+      autoSearch: true,
+      withClear: true,
+      blockGameKeys: true,
+      focusKey: "",
+      onSearch: (value: string) => {
+        filterState.searchQuery = value.trim();
+        applyFilters();
+      },
+    });
+
+    container.appendChild(components.shopTypeSelect.root);
+    container.appendChild(components.searchInput.root);
+
+    return container;
+  }
+
+  /**
+   * Build the card with table and filters
+   */
   function buildCard(): HTMLElement {
-    table = createItemsTable(currentShop, shopType);
+    // Build initial rows
+    allRows = buildAllRows(shopsData);
+    filteredRows = [...allRows];
 
+    // Initialize change detection state
+    lastRowCount = allRows.length;
+    lastShopTypes = new Set(allRows.map((r) => r.shopType));
+
+    // Create card body container
+    const body = element("div");
+
+    // IMPORTANT: Create table FIRST so it exists before filter callbacks are registered
+    components.tableHandle = createItemsTable({ rows: filteredRows });
+
+    // Create filters (callbacks will reference the already-created tableHandle)
+    const filters = createFilters();
+
+    // Add to DOM (filters first for visual order)
+    body.appendChild(filters);
+    body.appendChild(components.tableHandle.root);
+
+    // Create card
     root = Card(
       {
-        id: `shop-card-${shopType}`,
-        title: SHOP_LABELS[shopType],
+        id: "shops-card",
+        title: "Shops",
         expandable: true,
         defaultExpanded: true,
-        stateKey: `shop-${shopType}`,
+        stateKey: "shops",
         variant: "soft",
         padding: "none",
         divider: false,
       },
-      table.root
+      body
     );
-
-    root.classList.add(`shop-card--${shopType}`);
 
     return root;
   }
 
+  /**
+   * Refresh when shop data changes
+   */
   function refresh(): void {
-    if (!table) return;
+    const updatedShopsData = shops.get();
+    const newRows = buildAllRows(updatedShopsData);
 
-    const updatedShop = shops.getShop(shopType);
-    const rows = buildRows(updatedShop, shopType);
+    // Efficient change detection using simpler properties
+    const currentRowCount = newRows.length;
+    const currentShopTypes = new Set(newRows.map((r) => r.shopType));
 
-    table.setData(rows);
+    const hasChanged =
+      currentRowCount !== lastRowCount ||
+      !setsEqual(currentShopTypes, lastShopTypes);
+
+    if (hasChanged) {
+      lastRowCount = currentRowCount;
+      lastShopTypes = currentShopTypes;
+      allRows = newRows;
+      applyFilters();
+    }
   }
 
+  /**
+   * Clean up all resources
+   */
   function destroy(): void {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
+
+    // Destroy table
+    if (components.tableHandle) {
+      components.tableHandle.destroy();
+      components.tableHandle = null;
     }
 
-    if (table) {
-      table.destroy();
-      table = null;
+    // Destroy shop type select
+    if (components.shopTypeSelect) {
+      components.shopTypeSelect.destroy();
+      components.shopTypeSelect = null;
     }
 
+    // Destroy search input (use internal cleanup)
+    if (components.searchInput) {
+      const cleanup = (components.searchInput.root as any).__cleanup;
+      if (cleanup) cleanup();
+      components.searchInput = null;
+    }
+
+    // Null out references
     root = null;
   }
-
-  // Subscribe to shop changes
-  unsubscribe = shops.subscribeStable((shopsData: ShopsData) => {
-    const newShop = shopsData.byType[shopType];
-    if (newShop) {
-      // Check if data actually changed before refreshing
-      const hasChanged = JSON.stringify(currentShop.items) !== JSON.stringify(newShop.items);
-      if (hasChanged) {
-        Object.assign(currentShop, newShop);
-        refresh();
-      }
-    }
-  });
 
   return {
     root: buildCard(),

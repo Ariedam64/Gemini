@@ -1,24 +1,21 @@
 /**
- * Shop Notifier Section - Main UI
+ * Alerts Section - Main UI
  *
- * Displays tracked items per shop type with configuration options
+ * Displays notification settings for shops and other alerts
  */
 
 import { BaseSection } from "../core/Section";
 import { injectStyleOnce } from "../../styles/inject";
-import { shopNotifierCss } from "./styles.css";
+import { alertsCss } from "./styles.css";
 import { initSectionState } from "./state";
-import { createShopCard } from "./parts";
-import type { ShopType } from "../../../globals/core/types";
+import { createShopsCard } from "./parts";
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor"];
-
-export class ShopNotifierSection extends BaseSection {
+export class AlertsSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
-  private shopCards: Map<ShopType, ReturnType<typeof createShopCard>> = new Map();
+  private shopsCard: ReturnType<typeof createShopsCard> | null = null;
 
   constructor() {
-    super({ id: "tab-shop-notifier", label: "Shop Alerts" });
+    super({ id: "tab-alerts", label: "Alerts" });
   }
 
   protected async build(container: HTMLElement): Promise<void> {
@@ -27,11 +24,11 @@ export class ShopNotifierSection extends BaseSection {
 
     // Inject stylesheet
     const shadow = container.getRootNode() as ShadowRoot;
-    injectStyleOnce(shadow, shopNotifierCss, "shop-notifier-styles");
+    injectStyleOnce(shadow, alertsCss, "alerts-styles");
 
     // Create main section grid
     const section = this.createGrid("12px");
-    section.id = "shop-notifier-section";
+    section.id = "alerts-section";
     this.sectionElement = section;
 
     // Wait for MGData categories needed for shop items
@@ -50,27 +47,33 @@ export class ShopNotifierSection extends BaseSection {
   }
 
   render(container: HTMLElement): void {
+    // IMPORTANT: Clear shopsCard reference BEFORE super.render()
+    // super.render() calls unmount() which calls destroy()
+    // We need to prevent destroy() from destroying preloaded content
+    const preloadedShopsCard = this.shopsCard;
+    this.shopsCard = null; // Clear reference so destroy() doesn't destroy it
+
     // Call parent render to show preloaded content
     super.render(container);
+
+    // Restore the reference after rendering (content is now in the real container)
+    this.shopsCard = preloadedShopsCard;
   }
 
   private buildParts(): void {
     if (!this.sectionElement) return;
 
-    // Shop cards for each shop type
-    for (const shopType of SHOP_TYPES) {
-      const shopCard = createShopCard({ shopType });
-      this.shopCards.set(shopType, shopCard);
-      this.sectionElement.appendChild(shopCard.root);
-    }
+    // Single unified shops card with filters
+    this.shopsCard = createShopsCard();
+    this.sectionElement.appendChild(this.shopsCard.root);
   }
 
   protected async destroy(): Promise<void> {
-    // Cleanup shop cards
-    for (const shopCard of this.shopCards.values()) {
-      shopCard.destroy?.();
+    // Cleanup shops card
+    if (this.shopsCard) {
+      this.shopsCard.destroy();
+      this.shopsCard = null;
     }
-    this.shopCards.clear();
 
     // Cleanup
     this.sectionElement = null;

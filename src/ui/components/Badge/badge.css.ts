@@ -61,7 +61,7 @@ export const badgeCss = `
   font-weight:700;
   line-height:1.1;
   white-space:nowrap;
-  box-shadow:0 0 0 1px #0006 inset;
+  border:none;
   background:transparent;
   color:inherit;
 }
@@ -95,7 +95,6 @@ export const badgeCss = `
 .badge.badge--rarity.badge--rarity-unknown{
   background:#000;
   color:#fff;
-  box-shadow:0 0 0 1px #000 inset; /* background already black; inner border invisible but kept for structure */
 }
 
 /* ===================== ABILITY ===================== */
