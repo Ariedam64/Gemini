@@ -9,7 +9,7 @@ import type { CustomSound } from './types';
 /**
  * Default notification sound URL (external, reliable source)
  */
-const DEFAULT_SOUND_URL = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_1c0f653ff4.mp3';
+const DEFAULT_SOUND_URL = 'https://cdn.pixabay.com/audio/2025/05/31/audio_b2dfcd42bb.mp3';
 
 /**
  * Default built-in sounds
@@ -19,7 +19,7 @@ export const DEFAULT_SOUNDS: CustomSound[] = [
     id: 'default-notification',
     name: 'Default',
     source: DEFAULT_SOUND_URL,
-    type: 'url',
+    type: 'upload',
     createdAt: 0, // Fixed timestamp for built-in sounds
   },
 ];

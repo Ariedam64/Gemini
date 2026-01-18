@@ -22,10 +22,16 @@ export async function playCustomAudio(
     audio,
     url,
     stop: () => {
-      audio.pause();
-      audio.currentTime = 0;
-      if (currentCustomAudio?.audio === audio) {
-        currentCustomAudio = null;
+      // If looping, just disable loop and let it finish naturally
+      // Otherwise, stop immediately
+      if (audio.loop) {
+        audio.loop = false;
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        if (currentCustomAudio?.audio === audio) {
+          currentCustomAudio = null;
+        }
       }
     },
     setVolume: (volume: number) => {
@@ -73,19 +79,18 @@ export async function playCustomAudio(
 
     await audio.play();
   } catch (error) {
-    console.error("[MGAudio] Failed to play custom audio:", error);
     currentCustomAudio = null;
     throw error;
   }
 
-  // Auto-cleanup when audio ends (if not looping)
-  if (!opts.loop) {
-    audio.addEventListener("ended", () => {
-      if (currentCustomAudio?.audio === audio) {
-        currentCustomAudio = null;
-      }
-    });
-  }
+  // Auto-cleanup when audio ends
+  // For looping sounds: cleanup happens when loop is disabled via stop()
+  // For non-looping sounds: cleanup happens when audio naturally ends
+  audio.addEventListener("ended", () => {
+    if (currentCustomAudio?.audio === audio) {
+      currentCustomAudio = null;
+    }
+  });
 
   return handle;
 }
