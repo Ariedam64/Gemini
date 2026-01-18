@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Romann/Desktop/Codage/.claude/rules/ui/**)",
+      "Bash(git mv:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(node test_fixed_extraction.cjs:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)"
+    ]
+  }
+}
