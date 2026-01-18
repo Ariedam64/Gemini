@@ -64,14 +64,14 @@ export const valuePanel: FeaturePanelDefinition = {
         };
     },
 
-    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement) => {
+    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: 'egg' | 'plant', selectedTileIndices?: Set<string>) => {
         const pets = [pet];
         if (valuePanel.renderGroupedSlot) {
-            valuePanel.renderGroupedSlot(pets, team, container);
+            valuePanel.renderGroupedSlot(pets, team, container, viewType, selectedTileIndices);
         }
     },
 
-    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement) => {
+    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement, viewType?: 'egg' | 'plant', selectedTileIndices?: Set<string>) => {
         const weatherData = Globals.weather.get();
         const currentWeather = weatherData.isActive ? weatherData.type : null;
 
@@ -90,7 +90,7 @@ export const valuePanel: FeaturePanelDefinition = {
         }
 
         if (hasSizeBoost) {
-            const stats = calculateSizeBoostStats(pets, currentWeather);
+            const stats = calculateSizeBoostStats(pets, currentWeather, selectedTileIndices);
             wrapper.appendChild(buildStatRow(
                 'SIZE BOOST',
                 `+${formatCoin(stats.perProc)}/proc`,
@@ -99,7 +99,7 @@ export const valuePanel: FeaturePanelDefinition = {
         }
 
         if (hasMutationBoost) {
-            const stats = calculateMutationBoostStats(pets, currentWeather);
+            const stats = calculateMutationBoostStats(pets, currentWeather, selectedTileIndices);
             wrapper.appendChild(buildStatRow(
                 'MUTATION BOOST',
                 `+${formatCoin(stats.perProc)}/proc`,
@@ -108,7 +108,7 @@ export const valuePanel: FeaturePanelDefinition = {
         }
 
         if (hasGranters) {
-            const stats = calculateGranterStats(pets, currentWeather);
+            const stats = calculateGranterStats(pets, currentWeather, selectedTileIndices);
             wrapper.appendChild(buildStatRow(
                 'GRANTERS',
                 `+${formatCoin(stats.perProc)}/proc`,
@@ -117,7 +117,7 @@ export const valuePanel: FeaturePanelDefinition = {
         }
 
         if (hasHarvest) {
-            const stats = calculateHarvestStats(pets, currentWeather);
+            const stats = calculateHarvestStats(pets, currentWeather, selectedTileIndices);
             wrapper.appendChild(buildHarvestRow(
                 'EXTRA HARVEST',
                 `+${stats.expectedCrops.toFixed(1)} crops`,
@@ -126,7 +126,7 @@ export const valuePanel: FeaturePanelDefinition = {
         }
 
         if (hasRefund) {
-            const stats = calculateRefundStats(pets, currentWeather);
+            const stats = calculateRefundStats(pets, currentWeather, selectedTileIndices);
             wrapper.appendChild(buildHarvestRow(
                 'CROP REFUND',
                 `+${stats.expectedCrops.toFixed(1)} crops`,

@@ -33,8 +33,9 @@ import type { PetTeam } from '../../../../features/petTeam';
 // section is simplified to team-management only.
 // Local vendored expansion handler
 import { TrackerExpansionHandler } from './TrackerExpansion';
+import { TileGridOverlay } from './TileGridOverlay';
 
-import { getTrackersState, toggleTeamExpanded, setTrackerMode } from '../state';
+import { getTrackersState, toggleTeamExpanded, setCalculationScope, setTileSelection } from '../state';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -51,11 +52,12 @@ export interface TrackerCardPartOptions {
 
 export class TrackerCardPart {
     private card: HTMLDivElement | null = null;
-    private modeControl: SegmentedControlHandle | null = null;
-    private modeContainer: HTMLDivElement | null = null;
+    private scopeControl: SegmentedControlHandle | null = null;
+    private scopeContainer: HTMLDivElement | null = null;
     private content: HTMLDivElement | null = null;
     private listContainer: HTMLElement | null = null;
     private options: TrackerCardPartOptions;
+    private tileGridOverlay: TileGridOverlay | null = null;
 
     /**
      * Expansion handler for inline tracker panels.
@@ -81,13 +83,18 @@ export class TrackerCardPart {
     destroy(): void {
         this.expansionHandler.destroy();
 
-        if (this.modeControl) {
-            this.modeControl.destroy();
-            this.modeControl = null;
+        if (this.scopeControl) {
+            this.scopeControl.destroy();
+            this.scopeControl = null;
+        }
+
+        if (this.tileGridOverlay) {
+            this.tileGridOverlay.destroy?.();
+            this.tileGridOverlay = null;
         }
 
         this.card = null;
-        this.modeContainer = null;
+        this.scopeContainer = null;
         this.content = null;
         this.listContainer = null;
     }
@@ -102,11 +109,11 @@ export class TrackerCardPart {
             return;
         }
 
-        if (this.modeContainer) {
-            this.modeContainer.style.display = 'flex';
+        if (this.scopeContainer) {
+            this.scopeContainer.style.display = 'flex';
         }
 
-        this.ensureModeControl();
+        this.ensureScopeControl();
         this.renderTeamList();
     }
 
@@ -124,11 +131,11 @@ export class TrackerCardPart {
             className: 'tracker-card-wrapper',
         });
 
-        // Mode container (Simple / Detailed toggle)
-        this.modeContainer = element('div', {
-            className: 'tracker-card__mode-container',
+        // Scope container (All Tiles / Selected Tiles toggle) - replaces mode container
+        this.scopeContainer = element('div', {
+            className: 'tracker-card__scope-container',
         });
-        cardWrapper.appendChild(this.modeContainer);
+        cardWrapper.appendChild(this.scopeContainer);
 
         // Content container
         this.content = element('div', {
@@ -150,32 +157,57 @@ export class TrackerCardPart {
         return card;
     }
 
-    private ensureModeControl(): void {
-        if (!this.modeContainer) return;
+    private ensureScopeControl(): void {
+        if (!this.scopeContainer) return;
 
         const state = getTrackersState().get();
 
-        if (!this.modeControl) {
-            this.modeControl = SegmentedControl({
+        if (!this.scopeControl) {
+            this.scopeControl = SegmentedControl({
                 segments: [
-                    { id: 'simple', label: 'Simple' },
-                    { id: 'detailed', label: 'Detailed' },
+                    { id: 'all', label: 'All Tiles' },
+                    { id: 'selected', label: 'Selected Tiles' },
                 ],
-                selected: state.mode,
+                selected: state.calculationScope,
                 onChange: (id) => {
-                    setTrackerMode(id as 'simple' | 'detailed');
+                    const scope = id as 'all' | 'selected';
+                    setCalculationScope(scope);
+
+                    // Show grid overlay if switching to 'selected', hide if 'all'
+                    if (scope === 'selected') {
+                        this.showTileGridOverlay();
+                    } else {
+                        this.tileGridOverlay?.hide();
+                    }
+
                     this.renderTeamList();
                 },
             });
 
-            this.modeContainer.appendChild(this.modeControl);
+            this.scopeContainer.appendChild(this.scopeControl);
             return;
         }
 
         // Sync control with state
-        if (this.modeControl.getSelected() !== state.mode) {
-            this.modeControl.select(state.mode);
+        if (this.scopeControl.getSelected() !== state.calculationScope) {
+            this.scopeControl.select(state.calculationScope);
         }
+    }
+
+    private showTileGridOverlay(): void {
+        if (!this.tileGridOverlay) {
+            // Append overlay to scope container for proper positioning
+            this.tileGridOverlay = new TileGridOverlay({
+                onChange: () => {
+                    // Re-render team list when selections change
+                    this.renderTeamList();
+                },
+                container: this.scopeContainer || undefined,
+            });
+            this.tileGridOverlay.build();
+        }
+
+        this.tileGridOverlay.show();
     }
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -188,8 +220,8 @@ export class TrackerCardPart {
         this.expansionHandler.cleanupAll();
         this.listContainer = null;
 
-        if (this.modeContainer) {
-            this.modeContainer.style.display = 'none';
+        if (this.scopeContainer) {
+            this.scopeContainer.style.display = 'none';
         }
 
         const disabledState = element('div', {
@@ -215,6 +247,13 @@ export class TrackerCardPart {
         const teams = MGPetTeam.getAllTeams();
         const activeTeamId = MGPetTeam.getActiveTeamId();
         const state = getTrackersState().get();
+
+        // Pass tile filter to expansion handler
+        const selectedFilter = state.calculationScope === 'selected'
+            ? new Set(state.selectedTileIndices)
+            : undefined;
+
+        this.expansionHandler.setTileFilter(selectedFilter);
 
         if (teams.length === 0) {
             this.renderEmptyState();

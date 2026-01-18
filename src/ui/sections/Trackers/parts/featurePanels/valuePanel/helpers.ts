@@ -195,9 +195,14 @@ export function buildHarvestRow(label: string, crops: string, coins: string): HT
 // Stats Calculations
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function calculateSizeBoostStats(pets: UnifiedPet[], currentWeather: string | null) {
+export function calculateSizeBoostStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const crops = garden.crops.all;
+    const allCrops = garden.crops.all;
+
+    // Filter crops if filter is provided
+    const crops = tileFilter
+        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : allCrops;
 
     if (crops.length === 0) {
         return { perProc: 0, perHour: 0 };
@@ -243,11 +248,16 @@ export function calculateSizeBoostStats(pets: UnifiedPet[], currentWeather: stri
     return { perProc: avgPerProc, perHour };
 }
 
-export function calculateMutationBoostStats(pets: UnifiedPet[], currentWeather: string | null) {
+export function calculateMutationBoostStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const crops = garden.crops.all;
+    const allCrops = garden.crops.all;
     const weatherData = Globals.weather.get();
     const weatherInfo = MGData.get('weather');
+
+    // Filter crops if filter is provided
+    const crops = tileFilter
+        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : allCrops;
 
     if (crops.length === 0 || !weatherData.isActive || !weatherInfo) {
         return { perProc: 0, perHour: 0 };
@@ -301,9 +311,14 @@ export function calculateMutationBoostStats(pets: UnifiedPet[], currentWeather: 
     return { perProc: avgDelta, perHour: additionalProcsPerHour * avgDelta };
 }
 
-export function calculateGranterStats(pets: UnifiedPet[], currentWeather: string | null) {
+export function calculateGranterStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const crops = garden.crops.all;
+    const allCrops = garden.crops.all;
+
+    // Filter crops if filter is provided
+    const crops = tileFilter
+        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : allCrops;
 
     if (crops.length === 0) {
         return { perProc: 0, perHour: 0 };
@@ -353,9 +368,17 @@ export function calculateGranterStats(pets: UnifiedPet[], currentWeather: string
     return { perProc: avgPerProc, perHour };
 }
 
-export function calculateHarvestStats(pets: UnifiedPet[], currentWeather: string | null) {
+export function calculateHarvestStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const harvestable = garden.crops.mature.length > 0 ? garden.crops.mature : garden.crops.all;
+    const allCrops = garden.crops.all;
+    const allMature = garden.crops.mature;
+
+    // Filter items if filter is provided
+    // Logic: Filter all and mature separately, then use mature if any are in selection
+    const filteredAll = tileFilter ? allCrops.filter(c => tileFilter.has(String(c.tileIndex))) : allCrops;
+    const filteredMature = tileFilter ? allMature.filter(c => tileFilter.has(String(c.tileIndex))) : allMature;
+
+    const harvestable = filteredMature.length > 0 ? filteredMature : filteredAll;
 
     if (harvestable.length === 0) {
         return { expectedCrops: 0, expectedCoins: 0 };
@@ -389,9 +412,17 @@ export function calculateHarvestStats(pets: UnifiedPet[], currentWeather: string
     return { expectedCrops, expectedCoins };
 }
 
-export function calculateRefundStats(pets: UnifiedPet[], currentWeather: string | null) {
+export function calculateRefundStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const harvestable = garden.crops.mature.length > 0 ? garden.crops.mature : garden.crops.all;
+    const allCrops = garden.crops.all;
+    const allMature = garden.crops.mature;
+
+    // Filter items if filter is provided
+    // Logic: Filter all and mature separately, then use mature if any are in selection
+    const filteredAll = tileFilter ? allCrops.filter(c => tileFilter.has(String(c.tileIndex))) : allCrops;
+    const filteredMature = tileFilter ? allMature.filter(c => tileFilter.has(String(c.tileIndex))) : allMature;
+
+    const harvestable = filteredMature.length > 0 ? filteredMature : filteredAll;
 
     if (harvestable.length === 0) {
         return { expectedCrops: 0, expectedCoins: 0 };

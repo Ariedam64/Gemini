@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Magic Garden Decor Customiser</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar">
+        <header class="brand">
+          <div class="brand-title">Magic Garden</div>
+          <div class="brand-sub">Decor Customiser</div>
+        </header>
+
+        <section class="controls">
+          <label class="field">
+            <span>Search decor</span>
+            <input id="decor-search" type="search" placeholder="Bench, lamp, bridge..." />
+          </label>
+
+          <div class="control-group">
+            <div class="control-title">Rotation</div>
+            <div class="rotation">
+              <button id="rot-left" class="btn ghost" type="button">-90</button>
+              <div id="rotation-label" class="rotation-label">0°</div>
+              <button id="rot-right" class="btn ghost" type="button">+90</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-title">Overlays</div>
+            <label class="toggle">
+              <input id="toggle-grid" type="checkbox" checked />
+              <span>Grid</span>
+            </label>
+            <label class="toggle">
+              <input id="toggle-dirt" type="checkbox" />
+              <span>Dirt tiles</span>
+            </label>
+            <label class="toggle">
+              <input id="toggle-boardwalk" type="checkbox" />
+              <span>Boardwalk tiles</span>
+            </label>
+          </div>
+
+          <div class="control-group">
+            <div class="control-title">Layout</div>
+            <button id="copy-layout" class="btn" type="button">Copy layout JSON</button>
+            <button id="clear-layout" class="btn danger" type="button">Clear placed decor</button>
+          </div>
+        </section>
+
+        <section class="list">
+          <div class="list-title">Decor</div>
+          <div id="decor-list" class="decor-list"></div>
+        </section>
+
+        <footer class="hint">
+          <div>Pan: hold Space + drag</div>
+          <div>Zoom: mouse wheel / trackpad</div>
+          <div>Place: click tile</div>
+          <div>Rotate: [-90/+90]</div>
+        </footer>
+      </aside>
+
+      <main class="canvas-wrap">
+        <div id="canvas-host" class="canvas-host"></div>
+        <div id="status" class="status"></div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.0/dist/pixi.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

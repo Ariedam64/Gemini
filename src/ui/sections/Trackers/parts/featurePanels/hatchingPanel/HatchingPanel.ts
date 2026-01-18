@@ -59,7 +59,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
         };
     },
 
-    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement) => {
+    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: 'egg' | 'plant', selectedTileIndices?: Set<string>) => {
         container.innerHTML = '';
 
         const wrapper = el('div', 'hatching-stats-compact');
@@ -77,7 +77,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // DOUBLE HATCH row
         if (hasDoubleHatch) {
-            const stats = calculateDoubleHatchStats(singlePetArray);
+            const stats = calculateDoubleHatchStats(singlePetArray, selectedTileIndices);
             if (stats.length > 0) {
                 wrapper.appendChild(buildSpriteRow('DOUBLE HATCH', stats));
             }
@@ -85,7 +85,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // PET REFUND row
         if (hasPetRefund) {
-            const stats = calculatePetRefundStats(singlePetArray);
+            const stats = calculatePetRefundStats(singlePetArray, selectedTileIndices);
             if (stats.length > 0) {
                 wrapper.appendChild(buildSpriteRow('PET REFUND', stats));
             }
@@ -93,7 +93,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // MUTATION BOOST row
         if (hasMutationBoost) {
-            const stats = calculatePetMutationStats(singlePetArray);
+            const stats = calculatePetMutationStats(singlePetArray, selectedTileIndices);
 
             // Format percentages with proper decimal places
             const rainbowChance = stats.rainbowChance.toFixed(4);
@@ -116,7 +116,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
         container.appendChild(wrapper);
     },
 
-    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement) => {
+    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement, viewType?: 'egg' | 'plant', selectedTileIndices?: Set<string>) => {
         container.innerHTML = '';
 
         const wrapper = el('div', 'hatching-stats-compact');
@@ -131,7 +131,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // DOUBLE HATCH row
         if (hasDoubleHatch) {
-            const stats = calculateDoubleHatchStats(pets);
+            const stats = calculateDoubleHatchStats(pets, selectedTileIndices);
             if (stats.length > 0) {
                 wrapper.appendChild(buildSpriteRow('DOUBLE HATCH', stats));
             }
@@ -139,7 +139,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // PET REFUND row
         if (hasPetRefund) {
-            const stats = calculatePetRefundStats(pets);
+            const stats = calculatePetRefundStats(pets, selectedTileIndices);
             if (stats.length > 0) {
                 wrapper.appendChild(buildSpriteRow('PET REFUND', stats));
             }
@@ -147,7 +147,7 @@ export const hatchingPanel: FeaturePanelDefinition = {
 
         // MUTATION BOOST row
         if (hasMutationBoost) {
-            const stats = calculatePetMutationStats(pets);
+            const stats = calculatePetMutationStats(pets, selectedTileIndices);
 
             // Format percentages with proper decimal places
             const rainbowChance = stats.rainbowChance.toFixed(4);

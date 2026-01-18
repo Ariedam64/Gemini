@@ -206,8 +206,29 @@ export function getEggInventory() {
     return eggMap;
 }
 
-export function calculateDoubleHatchStats(pets: UnifiedPet[]) {
-    const eggInventory = getEggInventory();
+/**
+ * Get counts of eggs currently planted in the garden, optionally filtered by tiles.
+ */
+export function getGardenEggCounts(tileFilter?: Set<string>) {
+    const garden = Globals.myGarden.get();
+    const eggMap = new Map<string, number>();
+
+    // Filter eggs by tile if filter is provided
+    const eggs = tileFilter
+        ? garden.eggs.all.filter(e => tileFilter.has(String(e.tileIndex)))
+        : garden.eggs.all;
+
+    for (const egg of eggs) {
+        const current = eggMap.get(egg.eggId) || 0;
+        eggMap.set(egg.eggId, current + 1);
+    }
+
+    return eggMap;
+}
+
+export function calculateDoubleHatchStats(pets: UnifiedPet[], tileFilter?: Set<string>) {
+    // Use garden eggs if filtering, otherwise inventory
+    const eggCounts = tileFilter ? getGardenEggCounts(tileFilter) : getEggInventory();
     const results: { eggId: string; value: number }[] = [];
 
     let totalProbability = 0;
@@ -228,7 +249,7 @@ export function calculateDoubleHatchStats(pets: UnifiedPet[]) {
         }
     }
 
-    for (const [eggId, quantity] of eggInventory) {
+    for (const [eggId, quantity] of eggCounts) {
         const expectedExtras = quantity * totalProbability;
         results.push({ eggId, value: expectedExtras });
     }
@@ -236,8 +257,9 @@ export function calculateDoubleHatchStats(pets: UnifiedPet[]) {
     return results;
 }
 
-export function calculatePetRefundStats(pets: UnifiedPet[]) {
-    const eggInventory = getEggInventory();
+export function calculatePetRefundStats(pets: UnifiedPet[], tileFilter?: Set<string>) {
+    // Use garden eggs if filtering, otherwise inventory
+    const eggCounts = tileFilter ? getGardenEggCounts(tileFilter) : getEggInventory();
     const results: { eggId: string; value: number }[] = [];
 
     let totalProbability = 0;
@@ -258,7 +280,7 @@ export function calculatePetRefundStats(pets: UnifiedPet[]) {
         }
     }
 
-    for (const [eggId, quantity] of eggInventory) {
+    for (const [eggId, quantity] of eggCounts) {
         const expectedRefunds = quantity * totalProbability;
         results.push({ eggId, value: expectedRefunds });
     }
@@ -266,9 +288,9 @@ export function calculatePetRefundStats(pets: UnifiedPet[]) {
     return results;
 }
 
-export function calculatePetMutationStats(pets: UnifiedPet[]) {
-    const eggInventory = getEggInventory();
-    const totalEggs = Array.from(eggInventory.values()).reduce((sum, qty) => sum + qty, 0);
+export function calculatePetMutationStats(pets: UnifiedPet[], tileFilter?: Set<string>) {
+    const eggCounts = tileFilter ? getGardenEggCounts(tileFilter) : getEggInventory();
+    const totalEggs = Array.from(eggCounts.values()).reduce((sum, qty) => sum + qty, 0);
 
     let totalRainbowIncrease = 0;
     let totalGoldIncrease = 0;
