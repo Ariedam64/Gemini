@@ -4,5 +4,5 @@
  * Shop display and tracking components
  */
 
-export { createShopCard } from './shopCard';
-export type { ShopCardPart } from './shopCard';
+export { createShopsCard } from './shopsCard';
+export type { ShopsCardPart } from './shopsCard';

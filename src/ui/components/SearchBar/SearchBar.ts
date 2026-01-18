@@ -169,7 +169,7 @@ function makeSpinner(): SVGSVGElement {
 export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
   const {
     id,
-    placeholder = "Rechercher…",
+    placeholder = "Search...",
     value = "",
     size = "md",
     disabled = false,
@@ -182,7 +182,7 @@ export function SearchBar(opts: SearchBarOptions = {}): SearchBarHandle {
     iconLeft,
     iconRight,
     withClear = true,
-    clearTitle = "Effacer",
+    clearTitle = "Clear",
     ariaLabel,
     submitLabel,
     loading = false,

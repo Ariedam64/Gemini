@@ -1,7 +1,7 @@
 /**
- * Shop Notifier Section - Public Exports
+ * Alerts Section - Public Exports
  *
- * @module ShopNotifierSection
+ * @module AlertsSection
  */
 
-export { ShopNotifierSection } from './section';
+export { AlertsSection } from './section';
