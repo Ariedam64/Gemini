@@ -115,6 +115,12 @@ export function addTrackedItem(shopType: ShopType, itemId: string): void {
 
   list.push(itemId);
   saveConfig({ ...config, trackedItems });
+
+  // Emit change event
+  const event = new CustomEvent("gemini:tracked-items-changed", {
+    detail: { shopType, itemId, action: "add" },
+  });
+  window.dispatchEvent(event);
 }
 
 /**
@@ -130,6 +136,12 @@ export function removeTrackedItem(shopType: ShopType, itemId: string): void {
 
   trackedItems[shopType] = next;
   saveConfig({ ...config, trackedItems });
+
+  // Emit change event
+  const event = new CustomEvent("gemini:tracked-items-changed", {
+    detail: { shopType, itemId, action: "remove" },
+  });
+  window.dispatchEvent(event);
 }
 
 /**

@@ -3,10 +3,13 @@
  */
 
 import { Table, TableHandle, ColDef } from "../../../../components/Table/Table";
-import { Switch } from "../../../../components/Switch/Switch";
+import { Switch, SwitchHandle } from "../../../../components/Switch/Switch";
 import { Badge } from "../../../../components/Badge/Badge";
 import { MGSprite } from "../../../../../modules";
 import { MGShopNotifier } from "../../../../../features/shopNotifier";
+import { isItemAtMaxQuantity } from "../../../../../features/shopNotifier/logic/limitedItems";
+import { getMyInventory } from "../../../../../globals/variables/myInventory";
+import { getMyGarden } from "../../../../../globals/variables/myGarden";
 import { element } from "../../../../styles/helpers";
 import type { ShopItemRow } from "./shopsCardData";
 import { ITEM_EMOJI, RARITY_ORDER } from "./shopsCardData";
@@ -22,6 +25,9 @@ export function createItemsTable(
   options: CreateTableOptions
 ): TableHandle<ShopItemRow> {
   const { rows } = options;
+
+  // Track switch handles for updating disabled state
+  const switchHandles = new Map<string, SwitchHandle>();
 
   const columns: ColDef<ShopItemRow>[] = [
     {
@@ -95,8 +101,13 @@ export function createItemsTable(
       sortable: false,
       render: (row) => {
         const container = element("div", { className: "shop-item-notify" });
+
+        // Check if item is at max quantity
+        const isAtMax = isItemAtMaxQuantity(row.id, row.shopType);
+
         const switchHandle = Switch({
           checked: row.isTracked,
+          disabled: isAtMax,
           size: "sm",
           onChange: (checked) => {
             row.isTracked = checked;
@@ -107,6 +118,11 @@ export function createItemsTable(
             }
           },
         });
+
+        // Store switch handle for later updates
+        const rowKey = `${row.shopType}:${row.id}`;
+        switchHandles.set(rowKey, switchHandle);
+
         container.appendChild(switchHandle.root);
         return container;
       },
@@ -122,6 +138,40 @@ export function createItemsTable(
     compact: true,
     getRowId: (row) => `${row.shopType}:${row.id}`,
   });
+
+  const updateDisabledStates = (filterShopType?: ShopItemRow["shopType"]) => {
+    for (const [rowKey, switchHandle] of switchHandles.entries()) {
+      const [shopType, itemId] = rowKey.split(":") as [ShopItemRow["shopType"], string];
+      if (filterShopType && shopType !== filterShopType) continue;
+      const isAtMax = isItemAtMaxQuantity(itemId, shopType);
+      switchHandle.setDisabled(isAtMax);
+    }
+  };
+
+  // Subscribe to inventory changes to update disabled state
+  const inventory = getMyInventory();
+  const inventoryUnsub = inventory.subscribeStable(() => {
+    updateDisabledStates();
+  });
+
+  // Subscribe to garden decor changes to update disabled state
+  const garden = getMyGarden();
+  const decorPlacedUnsub = garden.subscribeDecorPlaced(() => {
+    updateDisabledStates("decor");
+  });
+  const decorRemovedUnsub = garden.subscribeDecorRemoved(() => {
+    updateDisabledStates("decor");
+  });
+
+  // Extend table handle with cleanup for subscriptions
+  const originalDestroy = tableHandle.destroy.bind(tableHandle);
+  tableHandle.destroy = () => {
+    inventoryUnsub();
+    decorPlacedUnsub();
+    decorRemovedUnsub();
+    switchHandles.clear();
+    originalDestroy();
+  };
 
   return tableHandle;
 }

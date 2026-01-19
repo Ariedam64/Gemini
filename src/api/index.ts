@@ -15,6 +15,7 @@ import {
   MGAudio,
   MGCosmetic,
   MGCalculators,
+  MGShopActions,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
@@ -51,6 +52,7 @@ export const GeminiAPI = {
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
     Calculators: MGCalculators,
+    ShopActions: MGShopActions,
   },
 
   Features: {

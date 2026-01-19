@@ -11,14 +11,26 @@ export const alertsCss = `
     align-items: center;
     gap: 12px;
     padding: 12px;
+    flex-wrap: nowrap;
   }
 
   .shops-card-filters .select {
-    min-width: 140px;
+    flex: 0 0 auto;
+    min-width: 0;
+    width: auto;
   }
 
   .shops-card-filters .search {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .shops-card-filters .search-input {
+    padding-right: 40px;
+  }
+
+  .shops-card-filters .search-ico--right {
+    right: 12px;
   }
 
   /* Item cell with icon + name */

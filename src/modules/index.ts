@@ -26,6 +26,9 @@ export { MGCosmetic } from "./cosmetic";
 // Utility modules
 export { MGCalculators } from "./calculators";
 
+// Action modules
+export { MGShopActions } from "./shopActions";
+
 // Re-import for initialization
 import { MGData } from "./data";
 import { MGCustomModal } from "./customModal";
@@ -34,6 +37,7 @@ import { MGTile } from "./tile";
 import { MGPixi } from "./pixi";
 import { MGAudio } from "./audio";
 import { MGCosmetic } from "./cosmetic";
+import { MGShopActions } from "./shopActions";
 
 export type ModuleInitProgress = {
   name: string;
@@ -52,6 +56,7 @@ export async function initAllModules(
     { name: "Pixi", init: () => MGPixi.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
+    { name: "ShopActions", init: () => MGShopActions.init() },
   ];
 
   await Promise.all(

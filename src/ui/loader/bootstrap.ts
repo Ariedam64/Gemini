@@ -22,6 +22,7 @@ import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
 import { MGShopNotifier } from "../../features/shopNotifier";
 import { getRegistry } from "../inject/core/registry";
+import { startAlertInjector } from "../inject/alert";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -296,4 +297,4 @@ export function initFeatures(loader: LoaderController): void {
   }
 }
 
-export { startInjectGamePanelButton };
+export { startInjectGamePanelButton, startAlertInjector };

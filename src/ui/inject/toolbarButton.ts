@@ -169,50 +169,56 @@ export function startInjectGamePanelButton(opts: Options) {
     }
   }
 
-  // Observe mutations to re-mount if the game re-renders the toolbar
+  // Mutation observer to re-mount if game re-renders toolbar
+  // AGGRESSIVE MODE: Retry injection on every DOM change until success
   const host = document.getElementById("App") || document.body;
   let obsTimer: number | null = null;
-  const observer = new MutationObserver((records) => {
-    // Filter out mutations that only involve our own nodes
-    const onlyOurs = records.every(r => {
-      const added = Array.from(r.addedNodes || []);
-      const removed = Array.from(r.removedNodes || []);
-      const all = added.concat(removed);
-      if (all.length === 0) {
-        const t = r.target as Node;
-        return (mountedWrap && (t === mountedWrap || mountedWrap.contains(t))) || (mountedBtn && (t === mountedBtn || mountedBtn.contains(t)));
-      }
-      return all.every(n => {
-        if (!(n instanceof HTMLElement)) return true;
-        if (mountedWrap && (n === mountedWrap || mountedWrap.contains(n))) return true;
-        if (mountedBtn && (n === mountedBtn || mountedBtn.contains(n))) return true;
-        return false;
-      });
-    });
-    const removedOurNodes = records.some(r => Array.from(r.removedNodes || []).some(n => {
-      if (!(n instanceof HTMLElement)) return false;
-      if (mountedWrap && (n === mountedWrap || mountedWrap.contains(n))) return true;
-      if (mountedBtn && (n === mountedBtn || mountedBtn.contains(n))) return true;
-      return false;
-    }));
-    if (onlyOurs && !removedOurNodes) return;
+  let mountedSuccessfully = false;
 
-    if (obsTimer !== null) return; // debounce
+  const observer = new MutationObserver(() => {
+    // Skip if already mounted successfully
+    if (mountedSuccessfully && mountedBtn && document.contains(mountedBtn)) {
+      return;
+    }
+
+    // If button was removed from DOM, reset mounted flag
+    if (mountedBtn && !document.contains(mountedBtn)) {
+      console.warn("[ToolbarButton] Button was removed from DOM, will retry");
+      mountedSuccessfully = false;
+      mountedBtn = null;
+      mountedWrap = null;
+    }
+
+    // Debounced retry
+    if (obsTimer !== null) return;
     obsTimer = window.setTimeout(() => {
       obsTimer = null;
-      const ok = mountOnce();
-      if (ok && mountedWrap) {
-        // Keep our button as last child if nodes were re-ordered
-        const pr = mountedWrap.parentElement;
-        if (pr && pr.lastElementChild !== mountedWrap) {
-          pr.appendChild(mountedWrap);
+
+      const success = mountOnce();
+
+      if (success && mountedBtn && document.contains(mountedBtn)) {
+        mountedSuccessfully = true;
+        console.log("[ToolbarButton] Successfully mounted (via observer)");
+
+        // Ensure button is last in toolbar
+        if (mountedWrap) {
+          const parent = mountedWrap.parentElement;
+          if (parent && parent.lastElementChild !== mountedWrap) {
+            parent.appendChild(mountedWrap);
+          }
         }
       }
-    }, 150);
+    }, 100); // Reduced debounce from 150ms to 100ms for faster response
   });
 
-  // Initial mount (in case toolbar already there)
-  mountOnce();
+  // Initial mount (with retry)
+  const initialSuccess = mountOnce();
+  if (initialSuccess && mountedBtn && document.contains(mountedBtn)) {
+    mountedSuccessfully = true;
+    console.log("[ToolbarButton] Successfully mounted (initial)");
+  } else {
+    console.log("[ToolbarButton] Initial mount failed, will retry via observer");
+  }
 
   // Attach to #App initially (with subtree) to catch toolbar insertions anywhere in the tree
   observer.observe(host, { childList: true, subtree: true });
