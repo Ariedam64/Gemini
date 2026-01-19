@@ -27,6 +27,7 @@ import { MGXPTracker } from "../features/xpTracker";
 import { MGCropValueIndicator } from "../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
 import { MGShopNotifier } from "../features/shopNotifier";
+import { MGWeatherNotifier } from "../features/weatherNotifier";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -68,6 +69,7 @@ export const GeminiAPI = {
     CropValueIndicator: MGCropValueIndicator,
     CropSizeIndicator: MGCropSizeIndicator,
     ShopNotifier: MGShopNotifier,
+    WeatherNotifier: MGWeatherNotifier,
   },
 
   WebSocket: {

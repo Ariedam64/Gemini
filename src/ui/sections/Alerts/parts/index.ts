@@ -7,3 +7,7 @@
 // Shop parts
 export { createShopsCard } from "./shop/shopsCard";
 export type { ShopsCardPart } from "./shop/shopsCard";
+
+// Weather parts
+export { createWeatherCard } from "./weather/weatherCard";
+export type { WeatherCardPart } from "./weather/weatherCard";

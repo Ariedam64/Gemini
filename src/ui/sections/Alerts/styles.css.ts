@@ -85,4 +85,57 @@ export const alertsCss = `
   #shops-card .lg-tr-head .lg-th {
     justify-content: center;
   }
+
+  /* Weather card items */
+  .weather-item-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .weather-item-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .weather-item-sprite {
+    max-width: 32px;
+    max-height: 32px;
+    width: auto;
+    height: auto;
+    image-rendering: auto;
+    display: block;
+  }
+
+  .weather-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .weather-item-effects {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .weather-item-notify {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Center headers for weather card columns */
+  #weather-card .lg-tr-head .lg-th {
+    justify-content: center;
+  }
 `;

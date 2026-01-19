@@ -16,6 +16,8 @@ export { MGCropValueIndicator } from "./cropValueIndicator";
 export { MGCropSizeIndicator } from "./cropSizeIndicator";
 export { MGShopNotifier } from "./shopNotifier";
 export type { TrackedItem, ShopNotifierConfig } from "./shopNotifier";
+export { MGWeatherNotifier } from "./weatherNotifier";
+export type { WeatherNotifierConfig } from "./weatherNotifier/types";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";
