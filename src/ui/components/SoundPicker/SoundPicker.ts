@@ -223,6 +223,14 @@ export function SoundPicker(options: SoundPickerOptions = {}): SoundPickerHandle
   function getPreviewUrl(item: SoundPickerItem): string {
     const existing = previewUrls.get(item.id);
     if (existing) return existing;
+
+    // Check if file has a source URL (e.g., HTTP URLs for default sounds)
+    const sourceUrl = (item.file as any).__sourceUrl;
+    if (sourceUrl) {
+      previewUrls.set(item.id, sourceUrl);
+      return sourceUrl;
+    }
+
     const url = URL.createObjectURL(item.file);
     previewUrls.set(item.id, url);
     return url;
@@ -231,7 +239,10 @@ export function SoundPicker(options: SoundPickerOptions = {}): SoundPickerHandle
   function revokePreviewUrl(id: string): void {
     const url = previewUrls.get(id);
     if (!url) return;
-    URL.revokeObjectURL(url);
+    // Only revoke blob URLs, not HTTP/HTTPS URLs
+    if (url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
     previewUrls.delete(id);
   }
 

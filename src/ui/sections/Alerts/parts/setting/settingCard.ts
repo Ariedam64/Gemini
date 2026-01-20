@@ -24,28 +24,37 @@ export function createSettingCard(): SettingCardPart {
   let soundPicker: SoundPickerHandle | null = null;
 
   /**
-   * Convert a data URL back to a File object
+   * Convert a data URL or HTTP URL back to a File object
    * This is needed to restore audio playback for sounds loaded from storage
    */
-  function dataUrlToFile(dataUrl: string, filename: string): File {
-    try {
-      // Parse the data URL
-      const arr = dataUrl.split(",");
-      const mime = arr[0].match(/:(.*?);/)?.[1] || "audio/mpeg";
-      const bstr = atob(arr[1]);
-      const n = bstr.length;
-      const u8arr = new Uint8Array(n);
+  function sourceToFile(source: string, filename: string): File {
+    // Check if it's a data URL
+    if (source.startsWith("data:")) {
+      try {
+        // Parse the data URL
+        const arr = source.split(",");
+        const mime = arr[0].match(/:(.*?);/)?.[1] || "audio/mpeg";
+        const bstr = atob(arr[1]);
+        const n = bstr.length;
+        const u8arr = new Uint8Array(n);
 
-      for (let i = 0; i < n; i++) {
-        u8arr[i] = bstr.charCodeAt(i);
+        for (let i = 0; i < n; i++) {
+          u8arr[i] = bstr.charCodeAt(i);
+        }
+
+        return new File([u8arr], filename, { type: mime });
+      } catch (error) {
+        console.error(`[SettingCard] Failed to convert data URL to File:`, error);
+        // Fallback: return empty file
+        return new File([], filename, { type: "audio/mpeg" });
       }
-
-      return new File([u8arr], filename, { type: mime });
-    } catch (error) {
-      console.error(`[SettingCard] Failed to convert data URL to File:`, error);
-      // Fallback: return empty file
-      return new File([], filename, { type: "audio/mpeg" });
     }
+
+    // For HTTP/HTTPS URLs, return a placeholder file that references the URL
+    // The soundPicker will create a blob URL from this file on demand
+    // But since we can't fetch synchronously, we'll return an empty file as fallback
+    // and let the soundPicker handle the URL directly
+    return new File([], filename, { type: "audio/mpeg" });
   }
 
   function buildCard(): HTMLElement {
@@ -55,13 +64,19 @@ export function createSettingCard(): SettingCardPart {
     CustomSounds.init();
 
     // Convert CustomSound to SoundPickerItem format
-    const existingSounds = CustomSounds.getAll().map((sound) => ({
-      id: sound.id,
-      file: dataUrlToFile(sound.source, sound.name), // Restore File from data URL
-      name: sound.name,
-      size: 0,
-      type: sound.type,
-    }));
+    const existingSounds = CustomSounds.getAll().map((sound) => {
+      const file = sourceToFile(sound.source, sound.name);
+      // Store the source URL on the file object so we can use it directly for playback
+      // This is especially important for HTTP URLs (like default sounds)
+      (file as any).__sourceUrl = sound.source;
+      return {
+        id: sound.id,
+        file,
+        name: sound.name,
+        size: 0,
+        type: sound.type,
+      };
+    });
 
     soundPicker = SoundPicker({
       label: "Notification sounds",
