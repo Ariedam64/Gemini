@@ -8,10 +8,11 @@ import { BaseSection } from "../core/Section";
 import { injectStyleOnce } from "../../styles/inject";
 import { alertsCss } from "./styles.css";
 import { initSectionState } from "./state";
-import { createShopsCard, createWeatherCard, createPetCard } from "./parts";
+import { createShopsCard, createWeatherCard, createPetCard, createSettingCard } from "./parts";
 
 export class AlertsSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
+  private settingCard: ReturnType<typeof createSettingCard> | null = null;
   private shopsCard: ReturnType<typeof createShopsCard> | null = null;
   private weatherCard: ReturnType<typeof createWeatherCard> | null = null;
   private petCard: ReturnType<typeof createPetCard> | null = null;
@@ -57,6 +58,8 @@ export class AlertsSection extends BaseSection {
     const preloadedShopsCard = this.shopsCard;
     const preloadedWeatherCard = this.weatherCard;
     const preloadedPetCard = this.petCard;
+    const preloadedSettingCard = this.settingCard;
+    this.settingCard = null;
     this.shopsCard = null; // Clear reference so destroy() doesn't destroy it
     this.weatherCard = null;
     this.petCard = null;
@@ -68,10 +71,15 @@ export class AlertsSection extends BaseSection {
     this.shopsCard = preloadedShopsCard;
     this.weatherCard = preloadedWeatherCard;
     this.petCard = preloadedPetCard;
+    this.settingCard = preloadedSettingCard;
   }
 
   private buildParts(): void {
     if (!this.sectionElement) return;
+
+    // Settings card
+    this.settingCard = createSettingCard();
+    this.sectionElement.appendChild(this.settingCard.root);
 
     // Single unified shops card with filters
     this.shopsCard = createShopsCard();
@@ -87,6 +95,12 @@ export class AlertsSection extends BaseSection {
   }
 
   protected async destroy(): Promise<void> {
+    // Cleanup settings card
+    if (this.settingCard) {
+      this.settingCard.destroy();
+      this.settingCard = null;
+    }
+
     // Cleanup shops card
     if (this.shopsCard) {
       this.shopsCard.destroy();

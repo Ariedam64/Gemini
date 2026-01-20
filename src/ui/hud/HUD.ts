@@ -72,6 +72,7 @@ import { reorderableListCss } from "../components/ReorderableList/reorderableLis
 import { colorPickerCss } from "../components/ColorPicker/colorPicker.css";
 import { logCss } from "../components/Log/log.css";
 import { segmentedControlCss } from "../components/SegmentedControl/segmentedControl.css";
+import { soundPickerCss } from "../components/SoundPicker/soundPicker.css";
 
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
@@ -142,6 +143,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [colorPickerCss, "colorPicker"],
     [logCss, "log"],
     [segmentedControlCss, "segmentedControl"],
+    [soundPickerCss, "soundPicker"],
     [settingsCss, "settings"],
     [teamCardCss, "teamCard"],
     [autoFavoriteSettingsCss, "autoFavoriteSettings"],

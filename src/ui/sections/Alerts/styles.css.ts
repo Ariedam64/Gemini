@@ -152,4 +152,11 @@ export const alertsCss = `
     align-items: center;
     gap: 16px;
   }
+
+  /* Settings card styles */
+  .alerts-settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 `;
