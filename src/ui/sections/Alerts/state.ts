@@ -1,51 +1,49 @@
 /**
  * Alerts Section State
  *
- * Manages persistence of section UI state (card expansion, etc.)
+ * Manages persistent state for Alerts section (card expansion, etc.)
  */
 
-import { storageGet, storageSet, SECTION_KEYS } from "../../../utils/storage";
+import { createSectionStore } from "../core/State";
 
 /** Card expansion state */
-export interface AlertsSectionState {
+export interface AlertsState {
   /** Card ID -> expanded status */
   cardExpanded: Record<string, boolean>;
 }
 
 /** Default state */
-const DEFAULT_STATE: AlertsSectionState = {
+const DEFAULT_ALERTS_STATE: AlertsState = {
   cardExpanded: {},
 };
 
-/**
- * Load section state from storage
- */
-export function loadSectionState(): AlertsSectionState {
-  return storageGet<AlertsSectionState>(SECTION_KEYS.ALERTS, DEFAULT_STATE);
-}
+// Singleton store instance
+let stateController: Awaited<ReturnType<typeof createSectionStore<AlertsState>>> | null = null;
 
 /**
- * Save section state to storage
+ * Get or create the state controller
  */
-export function saveSectionState(state: AlertsSectionState): void {
-  storageSet(SECTION_KEYS.ALERTS, state);
-}
-
-/**
- * Get the expanded state for a specific card
- */
-export function getCardExpandedState(cardId: string): boolean | undefined {
-  const state = loadSectionState();
-  return state.cardExpanded[cardId];
+async function getStateController() {
+  if (!stateController) {
+    stateController = await createSectionStore<AlertsState>("tab-alerts", {
+      version: 1,
+      defaults: DEFAULT_ALERTS_STATE,
+      sanitize: (s) => ({
+        cardExpanded: s.cardExpanded && typeof s.cardExpanded === "object" ? s.cardExpanded : {},
+      }),
+    });
+  }
+  return stateController;
 }
 
 /**
  * Set the expanded state for a specific card
  */
-export function setCardExpandedState(cardId: string, expanded: boolean): void {
-  const state = loadSectionState();
-  state.cardExpanded[cardId] = expanded;
-  saveSectionState(state);
+export async function setCardExpandedState(cardId: string, expanded: boolean): Promise<void> {
+  const controller = await getStateController();
+  await controller.update((state) => {
+    state.cardExpanded[cardId] = expanded;
+  });
 }
 
 /**
@@ -53,8 +51,9 @@ export function setCardExpandedState(cardId: string, expanded: boolean): void {
  * Must be called BEFORE cards are created
  */
 export async function initSectionState(): Promise<void> {
-  // Load state from storage
-  const state = loadSectionState();
+  // Initialize the store
+  const controller = await getStateController();
+  const state = controller.get();
 
   // Import Card component to pre-populate the expanded states
   const { initializeExpandedStates } = await import("../../components/Card/Card");

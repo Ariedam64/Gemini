@@ -59,8 +59,10 @@ export function createPetCard(): PetCardPart {
         padding: 'sm',
         divider: false,
         onExpandChange: (expanded) => {
-          // Persist the card expansion state
-          setCardExpandedState('pet-hunger-card', expanded);
+          // Persist the card expansion state (async, safe to not await)
+          setCardExpandedState('pet-hunger-card', expanded).catch((error) => {
+            console.error(`[PetCard] Failed to save expansion state:`, error);
+          });
         },
       },
       body

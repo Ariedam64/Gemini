@@ -71,8 +71,10 @@ export function createWeatherCard(): WeatherCardPart {
         padding: "none",
         divider: false,
         onExpandChange: (expanded) => {
-          // Persist the card expansion state
-          setCardExpandedState("weather-card", expanded);
+          // Persist the card expansion state (async, safe to not await)
+          setCardExpandedState("weather-card", expanded).catch((error) => {
+            console.error(`[WeatherCard] Failed to save expansion state:`, error);
+          });
         },
       },
       body

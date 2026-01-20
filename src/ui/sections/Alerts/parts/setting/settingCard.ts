@@ -112,8 +112,10 @@ export function createSettingCard(): SettingCardPart {
         padding: "sm",
         divider: false,
         onExpandChange: (expanded) => {
-          // Persist the card expansion state
-          setCardExpandedState("alerts-settings-card", expanded);
+          // Persist the card expansion state (async, safe to not await)
+          setCardExpandedState("alerts-settings-card", expanded).catch((error) => {
+            console.error(`[SettingCard] Failed to save expansion state:`, error);
+          });
         },
       },
       body
