@@ -141,6 +141,7 @@ export const soundPickerCss = `
   display:flex;
   flex-direction:column;
   align-items:stretch;
+  justify-content:center;
   gap:6px;
   padding:6px 10px;
   border-radius:12px;
