@@ -23,6 +23,31 @@ export function createSettingCard(): SettingCardPart {
   let root: HTMLElement | null = null;
   let soundPicker: SoundPickerHandle | null = null;
 
+  /**
+   * Convert a data URL back to a File object
+   * This is needed to restore audio playback for sounds loaded from storage
+   */
+  function dataUrlToFile(dataUrl: string, filename: string): File {
+    try {
+      // Parse the data URL
+      const arr = dataUrl.split(",");
+      const mime = arr[0].match(/:(.*?);/)?.[1] || "audio/mpeg";
+      const bstr = atob(arr[1]);
+      const n = bstr.length;
+      const u8arr = new Uint8Array(n);
+
+      for (let i = 0; i < n; i++) {
+        u8arr[i] = bstr.charCodeAt(i);
+      }
+
+      return new File([u8arr], filename, { type: mime });
+    } catch (error) {
+      console.error(`[SettingCard] Failed to convert data URL to File:`, error);
+      // Fallback: return empty file
+      return new File([], filename, { type: "audio/mpeg" });
+    }
+  }
+
   function buildCard(): HTMLElement {
     const body = element("div", { className: "alerts-settings-body" });
 
@@ -32,7 +57,7 @@ export function createSettingCard(): SettingCardPart {
     // Convert CustomSound to SoundPickerItem format
     const existingSounds = CustomSounds.getAll().map((sound) => ({
       id: sound.id,
-      file: new File([], sound.name, { type: "audio/mpeg" }), // Placeholder file for UI
+      file: dataUrlToFile(sound.source, sound.name), // Restore File from data URL
       name: sound.name,
       size: 0,
       type: sound.type,
