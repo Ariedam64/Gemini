@@ -62,6 +62,7 @@ export function createWeatherCard(): WeatherCardPart {
       {
         id: "weather-card",
         title: "Weather",
+        subtitle: "Get notified when specific weather appears",
         expandable: true,
         defaultExpanded: true,
         stateKey: "weather",

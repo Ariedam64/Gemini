@@ -80,6 +80,8 @@ export const FEATURE_KEYS = {
     SHOP_NOTIFIER: 'feature:shopNotifier:config',
     /** Weather notifier feature config */
     WEATHER_NOTIFIER: 'feature:weatherNotifier:config',
+    /** Pet hunger notifier feature config */
+    PET_HUNGER_NOTIFIER: 'feature:petHungerNotifier:config',
 } as const;
 
 /** Keys for development/debug purposes */

@@ -8,12 +8,13 @@ import { BaseSection } from "../core/Section";
 import { injectStyleOnce } from "../../styles/inject";
 import { alertsCss } from "./styles.css";
 import { initSectionState } from "./state";
-import { createShopsCard, createWeatherCard } from "./parts";
+import { createShopsCard, createWeatherCard, createPetCard } from "./parts";
 
 export class AlertsSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
   private shopsCard: ReturnType<typeof createShopsCard> | null = null;
   private weatherCard: ReturnType<typeof createWeatherCard> | null = null;
+  private petCard: ReturnType<typeof createPetCard> | null = null;
 
   constructor() {
     super({ id: "tab-alerts", label: "Alerts" });
@@ -55,8 +56,10 @@ export class AlertsSection extends BaseSection {
     // We need to prevent destroy() from destroying preloaded content
     const preloadedShopsCard = this.shopsCard;
     const preloadedWeatherCard = this.weatherCard;
+    const preloadedPetCard = this.petCard;
     this.shopsCard = null; // Clear reference so destroy() doesn't destroy it
     this.weatherCard = null;
+    this.petCard = null;
 
     // Call parent render to show preloaded content
     super.render(container);
@@ -64,6 +67,7 @@ export class AlertsSection extends BaseSection {
     // Restore the references after rendering (content is now in the real container)
     this.shopsCard = preloadedShopsCard;
     this.weatherCard = preloadedWeatherCard;
+    this.petCard = preloadedPetCard;
   }
 
   private buildParts(): void {
@@ -72,6 +76,10 @@ export class AlertsSection extends BaseSection {
     // Single unified shops card with filters
     this.shopsCard = createShopsCard();
     this.sectionElement.appendChild(this.shopsCard.root);
+
+    // Pet card
+    this.petCard = createPetCard();
+    this.sectionElement.appendChild(this.petCard.root);
 
     // Weather card
     this.weatherCard = createWeatherCard();
@@ -83,6 +91,12 @@ export class AlertsSection extends BaseSection {
     if (this.shopsCard) {
       this.shopsCard.destroy();
       this.shopsCard = null;
+    }
+
+    // Cleanup pet card
+    if (this.petCard) {
+      this.petCard.destroy();
+      this.petCard = null;
     }
 
     // Cleanup weather card

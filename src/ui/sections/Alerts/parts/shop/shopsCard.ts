@@ -278,6 +278,7 @@ export function createShopsCard(): ShopsCardPart {
       {
         id: "shops-card",
         title: "Shops",
+        subtitle: "Get notified when tracked items restock",
         expandable: true,
         defaultExpanded: true,
         stateKey: "shops",

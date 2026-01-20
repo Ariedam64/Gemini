@@ -138,4 +138,18 @@ export const alertsCss = `
   #weather-card .lg-tr-head .lg-th {
     justify-content: center;
   }
+
+  /* Pet card styles */
+  .pet-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pet-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
 `;

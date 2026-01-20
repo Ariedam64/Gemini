@@ -11,3 +11,7 @@ export type { ShopsCardPart } from "./shop/shopsCard";
 // Weather parts
 export { createWeatherCard } from "./weather/weatherCard";
 export type { WeatherCardPart } from "./weather/weatherCard";
+
+// Pet parts
+export { createPetCard } from "./pet/petCard";
+export type { PetCardPart } from "./pet/petCard";

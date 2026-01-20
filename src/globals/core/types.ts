@@ -103,6 +103,7 @@ export type UnifiedPet = {
   name: string | null;
   xp: number;
   hunger: number;
+  hungerPercent: number;
   mutations: string[];
   targetScale: number;
   abilities: string[];
