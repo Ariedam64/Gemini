@@ -7,8 +7,6 @@ import { SoundPicker, SoundPickerHandle, SoundPickerItem } from "../../../../com
 import { element } from "../../../../styles/helpers";
 import { LIMITS } from "../../../../../modules/audio/customSounds/types";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
-import { setCardExpandedState } from "../../state";
-
 /**
  * Public handle for the settings card part
  */
@@ -18,9 +16,17 @@ export interface SettingCardPart {
 }
 
 /**
+ * Options for the settings card
+ */
+export interface SettingCardOptions {
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
+}
+
+/**
  * Create the settings card part
  */
-export function createSettingCard(): SettingCardPart {
+export function createSettingCard(options?: SettingCardOptions): SettingCardPart {
   let root: HTMLElement | null = null;
   let soundPicker: SoundPickerHandle | null = null;
 
@@ -106,17 +112,12 @@ export function createSettingCard(): SettingCardPart {
         title: "Settings",
         subtitle: "Manage notification sounds",
         expandable: true,
-        defaultExpanded: true,
+        defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: "settings",
         variant: "soft",
         padding: "sm",
         divider: false,
-        onExpandChange: (expanded) => {
-          // Persist the card expansion state (async, safe to not await)
-          setCardExpandedState("alerts-settings-card", expanded).catch((error) => {
-            console.error(`[SettingCard] Failed to save expansion state:`, error);
-          });
-        },
+        onExpandChange: options?.onExpandChange,
       },
       body
     );

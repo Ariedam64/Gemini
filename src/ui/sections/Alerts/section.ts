@@ -7,11 +7,12 @@
 import { BaseSection } from "../core/Section";
 import { injectStyleOnce } from "../../styles/inject";
 import { alertsCss } from "./styles.css";
-import { initSectionState } from "./state";
+import { initSectionState, AlertsStateController } from "./state";
 import { createShopsCard, createWeatherCard, createPetCard, createSettingCard } from "./parts";
 
 export class AlertsSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
+  private state: AlertsStateController | null = null;
   private settingCard: ReturnType<typeof createSettingCard> | null = null;
   private shopsCard: ReturnType<typeof createShopsCard> | null = null;
   private weatherCard: ReturnType<typeof createWeatherCard> | null = null;
@@ -22,8 +23,8 @@ export class AlertsSection extends BaseSection {
   }
 
   protected async build(container: HTMLElement): Promise<void> {
-    // Initialize section state
-    await initSectionState();
+    // Initialize section state (returns state controller)
+    this.state = await initSectionState();
 
     // Inject stylesheet
     const shadow = container.getRootNode() as ShadowRoot;
@@ -75,22 +76,37 @@ export class AlertsSection extends BaseSection {
   }
 
   private buildParts(): void {
-    if (!this.sectionElement) return;
+    if (!this.sectionElement || !this.state) return;
+
+    // Get current state for default values
+    const currentState = this.state.get();
 
     // Single unified shops card with filters
-    this.shopsCard = createShopsCard();
+    this.shopsCard = createShopsCard({
+      defaultExpanded: currentState.ui.expandedCards.shops,
+      onExpandChange: (v) => this.state!.setCardExpanded('shops', v),
+    });
     this.sectionElement.appendChild(this.shopsCard.root);
 
     // Pet card
-    this.petCard = createPetCard();
+    this.petCard = createPetCard({
+      defaultExpanded: currentState.ui.expandedCards.pet,
+      onExpandChange: (v) => this.state!.setCardExpanded('pet', v),
+    });
     this.sectionElement.appendChild(this.petCard.root);
 
     // Weather card
-    this.weatherCard = createWeatherCard();
+    this.weatherCard = createWeatherCard({
+      defaultExpanded: currentState.ui.expandedCards.weather,
+      onExpandChange: (v) => this.state!.setCardExpanded('weather', v),
+    });
     this.sectionElement.appendChild(this.weatherCard.root);
 
     // Settings card (at the bottom)
-    this.settingCard = createSettingCard();
+    this.settingCard = createSettingCard({
+      defaultExpanded: currentState.ui.expandedCards.settings,
+      onExpandChange: (v) => this.state!.setCardExpanded('settings', v),
+    });
     this.sectionElement.appendChild(this.settingCard.root);
   }
 

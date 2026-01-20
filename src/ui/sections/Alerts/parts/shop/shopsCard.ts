@@ -16,8 +16,6 @@ import {
   type ShopItemRow,
 } from "./shopsCardData";
 import { createItemsTable } from "./shopsCardTable";
-import { setCardExpandedState } from "../../state";
-
 /**
  * Public handle for the shops card part
  */
@@ -25,6 +23,14 @@ export interface ShopsCardPart {
   root: HTMLElement;
   refresh(): void;
   destroy(): void;
+}
+
+/**
+ * Options for the shops card
+ */
+export interface ShopsCardOptions {
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
 /**
@@ -127,7 +133,7 @@ function applySelectWidth(selectRoot: HTMLElement, labels: string[]): void {
 /**
  * Create the shops card part
  */
-export function createShopsCard(): ShopsCardPart {
+export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
   const shops = getShops();
   const shopsData = shops.get();
 
@@ -281,17 +287,12 @@ export function createShopsCard(): ShopsCardPart {
         title: "Shops",
         subtitle: "Get notified when tracked items restock",
         expandable: true,
-        defaultExpanded: true,
+        defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: "shops",
         variant: "soft",
         padding: "none",
         divider: false,
-        onExpandChange: (expanded) => {
-          // Persist the card expansion state (async, safe to not await)
-          setCardExpandedState("shops-card", expanded).catch((error) => {
-            console.error(`[ShopsCard] Failed to save expansion state:`, error);
-          });
-        },
+        onExpandChange: options?.onExpandChange,
       },
       body
     );

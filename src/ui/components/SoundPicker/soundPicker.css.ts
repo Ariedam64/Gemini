@@ -146,7 +146,7 @@ export const soundPickerCss = `
   border-radius:12px;
   border:1px solid color-mix(in oklab, var(--border) 75%, transparent);
   background: color-mix(in oklab, var(--soft) 72%, transparent);
-  min-height:0;
+  min-height: var(--sp-row-h);
   min-width:0;
 }
 

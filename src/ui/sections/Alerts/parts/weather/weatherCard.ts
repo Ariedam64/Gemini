@@ -8,8 +8,6 @@ import { element } from "../../../../styles/helpers";
 import type { WeatherRow } from "./weatherCardData";
 import { buildAllRows } from "./weatherCardData";
 import { createWeatherTable } from "./weatherCardTable";
-import { setCardExpandedState } from "../../state";
-
 /**
  * Public handle for the weather card part
  */
@@ -17,6 +15,14 @@ export interface WeatherCardPart {
   root: HTMLElement;
   refresh(): void;
   destroy(): void;
+}
+
+/**
+ * Options for the weather card
+ */
+export interface WeatherCardOptions {
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
 /**
@@ -29,7 +35,7 @@ interface ComponentRefs {
 /**
  * Create the weather card part
  */
-export function createWeatherCard(): WeatherCardPart {
+export function createWeatherCard(options?: WeatherCardOptions): WeatherCardPart {
   let root: HTMLElement | null = null;
   let allRows: WeatherRow[] = [];
 
@@ -65,17 +71,12 @@ export function createWeatherCard(): WeatherCardPart {
         title: "Weather",
         subtitle: "Get notified when specific weather appears",
         expandable: true,
-        defaultExpanded: true,
+        defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: "weather",
         variant: "soft",
         padding: "none",
         divider: false,
-        onExpandChange: (expanded) => {
-          // Persist the card expansion state (async, safe to not await)
-          setCardExpandedState("weather-card", expanded).catch((error) => {
-            console.error(`[WeatherCard] Failed to save expansion state:`, error);
-          });
-        },
+        onExpandChange: options?.onExpandChange,
       },
       body
     );

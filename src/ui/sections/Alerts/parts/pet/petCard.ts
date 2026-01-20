@@ -7,8 +7,6 @@ import { Label } from '../../../../components/Label/Label';
 import { Switch } from '../../../../components/Switch/Switch';
 import { element } from '../../../../styles/helpers';
 import { MGPetHungerNotifier } from '../../../../../features/petHungerNotifier';
-import { setCardExpandedState } from '../../state';
-
 /**
  * Public handle for the pet card part
  */
@@ -18,9 +16,17 @@ export interface PetCardPart {
 }
 
 /**
+ * Options for the pet card
+ */
+export interface PetCardOptions {
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
+}
+
+/**
  * Create the pet card part
  */
-export function createPetCard(): PetCardPart {
+export function createPetCard(options?: PetCardOptions): PetCardPart {
   let root: HTMLElement | null = null;
   let switchHandle: ReturnType<typeof Switch> | null = null;
 
@@ -53,17 +59,12 @@ export function createPetCard(): PetCardPart {
         title: 'Pet',
         subtitle: 'Get notified about pet-related events',
         expandable: true,
-        defaultExpanded: true,
+        defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: 'pet',
         variant: 'soft',
         padding: 'sm',
         divider: false,
-        onExpandChange: (expanded) => {
-          // Persist the card expansion state (async, safe to not await)
-          setCardExpandedState('pet-hunger-card', expanded).catch((error) => {
-            console.error(`[PetCard] Failed to save expansion state:`, error);
-          });
-        },
+        onExpandChange: options?.onExpandChange,
       },
       body
     );
