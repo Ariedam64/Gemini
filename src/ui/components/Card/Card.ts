@@ -4,6 +4,16 @@ import { element } from "../../styles/helpers";
 let cardCollapseSeq = 0;
 const expandedStateById = new Map<string, boolean>();
 
+/**
+ * Initialize expanded states from a record
+ * Used to restore expansion state from storage
+ */
+export function initializeExpandedStates(states: Record<string, boolean>): void {
+  for (const [id, expanded] of Object.entries(states)) {
+    expandedStateById.set(id, expanded);
+  }
+}
+
 export type CardVariant = "default" | "soft" | "glass" | "outline";
 export type CardPadding = "none" | "sm" | "md" | "lg";
 

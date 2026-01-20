@@ -49,15 +49,17 @@ export function setCardExpandedState(cardId: string, expanded: boolean): void {
 }
 
 /**
- * Initialize section state if needed
+ * Initialize section state
+ * Must be called BEFORE cards are created
  */
 export async function initSectionState(): Promise<void> {
-  // Load state from storage to initialize Card component's in-memory state
+  // Load state from storage
   const state = loadSectionState();
 
-  // Import Card component to inject stored state
-  const { Card } = await import("../../components/Card/Card");
+  // Import Card component to pre-populate the expanded states
+  const { initializeExpandedStates } = await import("../../components/Card/Card");
 
-  // The Card component will read this state on initialization
-  // via the stateKey parameter
+  // Pre-populate the Card component's expansion state map
+  // This must be done before cards are created so they read the correct state
+  initializeExpandedStates(state.cardExpanded);
 }
