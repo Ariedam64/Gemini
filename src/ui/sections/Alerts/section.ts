@@ -77,10 +77,6 @@ export class AlertsSection extends BaseSection {
   private buildParts(): void {
     if (!this.sectionElement) return;
 
-    // Settings card
-    this.settingCard = createSettingCard();
-    this.sectionElement.appendChild(this.settingCard.root);
-
     // Single unified shops card with filters
     this.shopsCard = createShopsCard();
     this.sectionElement.appendChild(this.shopsCard.root);
@@ -92,6 +88,10 @@ export class AlertsSection extends BaseSection {
     // Weather card
     this.weatherCard = createWeatherCard();
     this.sectionElement.appendChild(this.weatherCard.root);
+
+    // Settings card (at the bottom)
+    this.settingCard = createSettingCard();
+    this.sectionElement.appendChild(this.settingCard.root);
   }
 
   protected async destroy(): Promise<void> {
