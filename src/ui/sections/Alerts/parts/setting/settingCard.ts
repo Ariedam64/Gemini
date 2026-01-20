@@ -7,6 +7,7 @@ import { SoundPicker, SoundPickerHandle, SoundPickerItem } from "../../../../com
 import { element } from "../../../../styles/helpers";
 import { LIMITS } from "../../../../../modules/audio/customSounds/types";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
+import { setCardExpandedState } from "../../state";
 
 /**
  * Public handle for the settings card part
@@ -110,6 +111,10 @@ export function createSettingCard(): SettingCardPart {
         variant: "soft",
         padding: "sm",
         divider: false,
+        onExpandChange: (expanded) => {
+          // Persist the card expansion state
+          setCardExpandedState("alerts-settings-card", expanded);
+        },
       },
       body
     );

@@ -8,6 +8,7 @@ import { element } from "../../../../styles/helpers";
 import type { WeatherRow } from "./weatherCardData";
 import { buildAllRows } from "./weatherCardData";
 import { createWeatherTable } from "./weatherCardTable";
+import { setCardExpandedState } from "../../state";
 
 /**
  * Public handle for the weather card part
@@ -69,6 +70,10 @@ export function createWeatherCard(): WeatherCardPart {
         variant: "soft",
         padding: "none",
         divider: false,
+        onExpandChange: (expanded) => {
+          // Persist the card expansion state
+          setCardExpandedState("weather-card", expanded);
+        },
       },
       body
     );

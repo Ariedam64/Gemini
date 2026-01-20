@@ -36,6 +36,8 @@ export const SECTION_KEYS = {
     SETTINGS: 'sections:settings',
     /** Test section state */
     TEST: 'sections:test',
+    /** Alerts section state (card expansion, etc.) */
+    ALERTS: 'sections:alerts',
 } as const;
 
 /** Keys for core modules (infrastructure - per .claude/rules/modules.md) */

@@ -16,6 +16,7 @@ import {
   type ShopItemRow,
 } from "./shopsCardData";
 import { createItemsTable } from "./shopsCardTable";
+import { setCardExpandedState } from "../../state";
 
 /**
  * Public handle for the shops card part
@@ -285,6 +286,10 @@ export function createShopsCard(): ShopsCardPart {
         variant: "soft",
         padding: "none",
         divider: false,
+        onExpandChange: (expanded) => {
+          // Persist the card expansion state
+          setCardExpandedState("shops-card", expanded);
+        },
       },
       body
     );

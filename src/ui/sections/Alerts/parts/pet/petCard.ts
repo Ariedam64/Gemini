@@ -7,6 +7,7 @@ import { Label } from '../../../../components/Label/Label';
 import { Switch } from '../../../../components/Switch/Switch';
 import { element } from '../../../../styles/helpers';
 import { MGPetHungerNotifier } from '../../../../../features/petHungerNotifier';
+import { setCardExpandedState } from '../../state';
 
 /**
  * Public handle for the pet card part
@@ -32,7 +33,7 @@ export function createPetCard(): PetCardPart {
     const label = Label({
       text: 'Hunger alert',
       hint: 'Notifies when active pets drop below 5% hunger',
-      variant: 'default',
+      variant: 'text',
     });
 
     switchHandle = Switch({
@@ -57,6 +58,10 @@ export function createPetCard(): PetCardPart {
         variant: 'soft',
         padding: 'sm',
         divider: false,
+        onExpandChange: (expanded) => {
+          // Persist the card expansion state
+          setCardExpandedState('pet-hunger-card', expanded);
+        },
       },
       body
     );
