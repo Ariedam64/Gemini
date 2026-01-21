@@ -5,7 +5,7 @@
  */
 
 import { storageGet, storageSet, KEYS } from '../../../utils/storage';
-import type { CustomSound, CustomSoundsLibrary, NotificationSettings } from './types';
+import type { CustomSound, CustomSoundsLibrary, NotificationSettings, ItemCustomSound } from './types';
 import { DEFAULT_LIBRARY, DEFAULT_NOTIFICATION_SETTINGS } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,10 +13,30 @@ import { DEFAULT_LIBRARY, DEFAULT_NOTIFICATION_SETTINGS } from './types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Migrate old library format to include itemCustomSounds field
+ */
+function migrateLibrary(library: any): CustomSoundsLibrary {
+  // Ensure itemCustomSounds field exists
+  const migrated: CustomSoundsLibrary = {
+    sounds: library.sounds ?? [],
+    itemCustomSounds: library.itemCustomSounds ?? [],
+    version: library.version ?? 1,
+  };
+
+  // If migration was needed, save the updated library
+  if (!library.itemCustomSounds) {
+    saveLibrary(migrated);
+  }
+
+  return migrated;
+}
+
+/**
  * Load the custom sounds library from storage
  */
 export function loadLibrary(): CustomSoundsLibrary {
-  return storageGet(KEYS.MODULE.AUDIO_CUSTOM_SOUNDS, DEFAULT_LIBRARY);
+  const library = storageGet<any>(KEYS.MODULE.AUDIO_CUSTOM_SOUNDS, DEFAULT_LIBRARY);
+  return migrateLibrary(library);
 }
 
 /**
@@ -35,13 +55,32 @@ export function loadSounds(): CustomSound[] {
 }
 
 /**
- * Save all custom sounds
+ * Save all custom sounds (preserves itemCustomSounds)
  */
 export function saveSounds(sounds: CustomSound[]): void {
-  const library: CustomSoundsLibrary = {
-    sounds,
-    version: 1,
-  };
+  const library = loadLibrary();
+  library.sounds = sounds;
+  saveLibrary(library);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Item Custom Sounds Storage
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Load all item custom sounds
+ */
+export function loadItemCustomSounds(): ItemCustomSound[] {
+  const library = loadLibrary();
+  return library.itemCustomSounds;
+}
+
+/**
+ * Save all item custom sounds (preserves sounds)
+ */
+export function saveItemCustomSounds(itemCustomSounds: ItemCustomSound[]): void {
+  const library = loadLibrary();
+  library.itemCustomSounds = itemCustomSounds;
   saveLibrary(library);
 }
 

@@ -118,6 +118,8 @@ export const EVENTS = {
     HUD_OPEN_CHANGE: 'gemini:hud-open-change',
     /** Layout resize request */
     LAYOUT_RESIZE: 'gemini:layout-resize',
+    /** Custom sound configuration changed */
+    CUSTOM_SOUND_CHANGE: 'gemini:custom-sound-change',
     /** Manual HMR toggle */
     TOGGLE_MANUAL_HMR: 'gemini:toggle-manual-hmr',
     /** Update pending notification */

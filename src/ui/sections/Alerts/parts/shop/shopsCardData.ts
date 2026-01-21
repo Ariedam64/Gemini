@@ -6,6 +6,7 @@ import { MGData } from "../../../../../modules";
 import type { ShopType, ShopItem, ShopsData } from "../../../../../globals/core/types";
 import type { DataKey } from "../../../../../modules/data/types";
 import { MGShopNotifier } from "../../../../../features/shopNotifier";
+import { CustomSounds } from "../../../../../modules/audio/customSounds";
 
 /**
  * Labels for shop types
@@ -69,6 +70,7 @@ export interface ShopItemRow extends ShopItem {
   spriteId: string | null;
   itemName: string;
   isTracked: boolean;
+  hasCustomSound: boolean;
 }
 
 /**
@@ -161,6 +163,7 @@ export function buildAllRows(shopsData: ShopsData): ShopItemRow[] {
         spriteId: getSpriteId(item.id, shopType),
         itemName: getItemName(item.id, shopType),
         isTracked: trackedIds.has(uniqueId),
+        hasCustomSound: CustomSounds.hasItemCustomSound('shop', item.id, shopType),
       });
     }
   }

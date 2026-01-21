@@ -86,6 +86,24 @@ export const alertsCss = `
     justify-content: center;
   }
 
+  /* Clickable rows with custom sound indicator */
+  #shops-card .lg-tr-body {
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  #shops-card .lg-tr-body:hover {
+    background: color-mix(in oklab, var(--soft) 95%, transparent);
+  }
+
+  #shops-card .lg-tr-body.has-custom-sound .lg-td:first-child {
+    border-left: 3px solid color-mix(in oklab, var(--accent) 70%, transparent);
+  }
+
+  #shops-card .lg-tr-body.has-custom-sound:hover .lg-td:first-child {
+    border-left-color: var(--accent);
+  }
+
   /* Weather card items */
   .weather-item-cell {
     display: flex;
@@ -244,15 +262,18 @@ export const alertsCss = `
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: nowrap;
   }
 
   .notification-mode-row .select {
     flex: 0 0 auto;
-    min-width: 100px;
+    min-width: 0;
+    width: auto;
   }
 
   .notification-mode-description {
     flex: 1 1 auto;
+    min-width: 0;
     font-size: 12px;
     color: color-mix(in oklab, var(--fg) 65%, transparent);
     font-style: italic;

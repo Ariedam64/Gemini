@@ -15,11 +15,16 @@ import { getAvailableTrackedItems, subscribeToAvailability, type AvailableItem }
 import { getShops } from "../../../globals/variables/shops";
 import { MGShopActions, MGAudio } from "../../../modules";
 import type { NotificationConfig } from "../../../modules/audio/customSounds/types";
-import type { Unsubscribe } from "../../../globals/core/types";
+import type { Unsubscribe, ShopType } from "../../../globals/core/types";
+import { CustomSounds } from "../../../modules/audio/customSounds";
+import { EVENTS } from "../../../utils/storage";
 
 export interface AlertInjectorHandle {
   destroy(): void;
 }
+
+type ShopItemKey = Pick<AvailableItem, "itemId" | "shopType">;
+type ShopSoundEntry = { soundId: string; volume: number };
 
 /**
  * Start alert injector system
@@ -30,8 +35,15 @@ export function startAlertInjector(): AlertInjectorHandle {
   let availabilityUnsub: Unsubscribe | null = null;
   let isOverlayOpen = false;
   let currentItems: AvailableItem[] = [];
+  let shopLoopQueue: ShopSoundEntry[] = [];
+  let shopLoopQueueKey = "";
+  let shopLoopIndex = 0;
+  let shopLoopToken = 0;
   let isShopLooping = false;
   let shopLoopSource: string | null = null;
+  let shopOneShotQueue: ShopSoundEntry[] = [];
+  let shopOneShotToken = 0;
+  let isShopOneShotPlaying = false;
 
   const getShopConfig = (): NotificationConfig | null => {
     try {
@@ -41,28 +53,174 @@ export function startAlertInjector(): AlertInjectorHandle {
     }
   };
 
-  const startShopLoop = (config: NotificationConfig): void => {
-    if (isShopLooping) return;
-
-    const sound = MGAudio.CustomSounds.getById(config.soundId);
-    if (!sound) return;
-
-    shopLoopSource = sound.source;
-    isShopLooping = true;
-
+  const getCustomItemConfig = (
+    itemId: string,
+    shopType: ShopType
+  ): NotificationConfig | null => {
     try {
-      MGAudio.CustomSounds.play(config.soundId, {
-        volume: config.volume / 100,
-        loop: true,
-      });
+      const customSound = CustomSounds.getItemCustomSound("shop", itemId, shopType);
+      if (!customSound) return null;
+
+      return {
+        soundId: customSound.soundId,
+        volume: customSound.volume,
+        mode: customSound.mode,
+      };
     } catch {
-      isShopLooping = false;
-      shopLoopSource = null;
+      return null;
     }
   };
 
-  const stopShopLoop = (): void => {
+  const buildEntryKey = (entry: ShopSoundEntry): string =>
+    `${entry.soundId}:${entry.volume}`;
+
+  const pushUniqueEntry = (
+    entries: ShopSoundEntry[],
+    seen: Set<string>,
+    soundId: string,
+    volume: number
+  ): void => {
+    if (seen.has(soundId)) return;
+    entries.push({ soundId, volume });
+    seen.add(soundId);
+  };
+
+  const buildOneShotQueue = (
+    items: ShopItemKey[],
+    defaultConfig: NotificationConfig | null
+  ): ShopSoundEntry[] => {
+    const entries: ShopSoundEntry[] = [];
+    const seen = new Set<string>();
+    let includeDefault = false;
+    const customEntries: ShopSoundEntry[] = [];
+
+    for (const item of items) {
+      const customConfig = getCustomItemConfig(item.itemId, item.shopType);
+      if (customConfig) {
+        if (customConfig.mode === "one-shot") {
+          customEntries.push({
+            soundId: customConfig.soundId,
+            volume: customConfig.volume,
+          });
+        }
+      } else if (defaultConfig?.mode === "one-shot") {
+        includeDefault = true;
+      }
+    }
+
+    if (includeDefault && defaultConfig) {
+      pushUniqueEntry(entries, seen, defaultConfig.soundId, defaultConfig.volume);
+    }
+
+    for (const entry of customEntries) {
+      pushUniqueEntry(entries, seen, entry.soundId, entry.volume);
+    }
+
+    return entries;
+  };
+
+  const buildLoopQueue = (
+    items: ShopItemKey[],
+    defaultConfig: NotificationConfig | null
+  ): ShopSoundEntry[] => {
+    const entries: ShopSoundEntry[] = [];
+    const seen = new Set<string>();
+    let includeDefault = false;
+    const customEntries: ShopSoundEntry[] = [];
+
+    for (const item of items) {
+      const customConfig = getCustomItemConfig(item.itemId, item.shopType);
+      if (customConfig) {
+        if (customConfig.mode === "loop") {
+          customEntries.push({
+            soundId: customConfig.soundId,
+            volume: customConfig.volume,
+          });
+        }
+      } else if (defaultConfig?.mode === "loop") {
+        includeDefault = true;
+      }
+    }
+
+    if (includeDefault && defaultConfig) {
+      pushUniqueEntry(entries, seen, defaultConfig.soundId, defaultConfig.volume);
+    }
+
+    for (const entry of customEntries) {
+      pushUniqueEntry(entries, seen, entry.soundId, entry.volume);
+    }
+
+    return entries;
+  };
+
+  const playSoundEntryOnce = (
+    entry: ShopSoundEntry,
+    onEnd: () => void,
+    isActive: () => boolean,
+    trackLoopSource = false
+  ): void => {
+    if (!isActive()) return;
+
+    const sound = CustomSounds.getById(entry.soundId);
+    if (!sound) {
+      onEnd();
+      return;
+    }
+
+    if (trackLoopSource) {
+      shopLoopSource = sound.source;
+    }
+
+    MGAudio.playCustom(sound.source, { volume: entry.volume / 100 })
+      .then((handle) => {
+        if (!isActive()) return;
+        const audio = handle.audio;
+        const handleEnd = () => {
+          if (!isActive()) return;
+          onEnd();
+        };
+        audio.addEventListener("ended", handleEnd, { once: true });
+      })
+      .catch(() => {
+        if (!isActive()) return;
+        onEnd();
+      });
+  };
+
+  const playNextShopLoop = (): void => {
+    if (!isShopLooping || shopLoopQueue.length === 0) return;
+
+    const entry = shopLoopQueue[shopLoopIndex];
+    shopLoopIndex = (shopLoopIndex + 1) % shopLoopQueue.length;
+
+    const token = shopLoopToken;
+    const isActive = () => isShopLooping && shopLoopToken === token;
+
+    playSoundEntryOnce(
+      entry,
+      () => {
+        if (!isActive()) return;
+        playNextShopLoop();
+      },
+      isActive,
+      true
+    );
+  };
+
+  const startShopLoopSequence = (): void => {
+    if (isShopLooping || shopLoopQueue.length === 0) return;
+    isShopLooping = true;
+    if (shopLoopIndex >= shopLoopQueue.length) {
+      shopLoopIndex = 0;
+    }
+    playNextShopLoop();
+  };
+
+  const pauseShopLoopSequence = (): void => {
     if (!isShopLooping) return;
+
+    shopLoopToken += 1;
+    isShopLooping = false;
 
     try {
       const handle = MGAudio.getCustomHandle();
@@ -73,39 +231,90 @@ export function startAlertInjector(): AlertInjectorHandle {
       // Ignore if audio isn't ready
     }
 
-    isShopLooping = false;
     shopLoopSource = null;
   };
 
-  const syncShopLoop = (items: AvailableItem[], config?: NotificationConfig | null): void => {
-    const effectiveConfig = config ?? getShopConfig();
-    if (!effectiveConfig) return;
+  const stopShopLoopSequence = (): void => {
+    pauseShopLoopSequence();
+    shopLoopQueue = [];
+    shopLoopQueueKey = "";
+    shopLoopIndex = 0;
+    shopLoopSource = null;
+  };
 
-    if (effectiveConfig.mode !== "loop") {
-      if (isShopLooping) {
-        stopShopLoop();
-      }
+  const playNextShopOneShot = (): void => {
+    if (shopOneShotQueue.length === 0) {
+      isShopOneShotPlaying = false;
+      startShopLoopSequence();
       return;
     }
 
-    const shouldLoop = items.length > 0;
+    isShopOneShotPlaying = true;
+    const entry = shopOneShotQueue.shift()!;
+    const token = shopOneShotToken;
+    const isActive = () => isShopOneShotPlaying && shopOneShotToken === token;
 
-    if (shouldLoop) {
-      if (!isShopLooping) {
-        startShopLoop(effectiveConfig);
-      }
-    } else if (isShopLooping) {
-      stopShopLoop();
+    playSoundEntryOnce(
+      entry,
+      () => {
+        if (!isActive()) return;
+        playNextShopOneShot();
+      },
+      isActive
+    );
+  };
+
+  const enqueueShopOneShots = (
+    items: ShopItemKey[],
+    config?: NotificationConfig | null
+  ): void => {
+    const effectiveConfig = config ?? getShopConfig();
+    const entries = buildOneShotQueue(items, effectiveConfig);
+    if (entries.length === 0) return;
+
+    const seen = new Set(shopOneShotQueue.map((entry) => entry.soundId));
+    for (const entry of entries) {
+      if (seen.has(entry.soundId)) continue;
+      shopOneShotQueue.push(entry);
+      seen.add(entry.soundId);
+    }
+
+    if (!isShopOneShotPlaying) {
+      shopOneShotToken += 1;
+      pauseShopLoopSequence();
+      playNextShopOneShot();
     }
   };
 
-  const playShopOneShot = (config: NotificationConfig): void => {
-    try {
-      MGAudio.CustomSounds.play(config.soundId, {
-        volume: config.volume / 100,
-      });
-    } catch {
-      // Silently fail if audio not ready
+  const syncShopLoop = (
+    items: ShopItemKey[],
+    config?: NotificationConfig | null
+  ): void => {
+    const effectiveConfig = config ?? getShopConfig();
+    const nextQueue = buildLoopQueue(items, effectiveConfig);
+
+    if (nextQueue.length === 0) {
+      stopShopLoopSequence();
+      return;
+    }
+
+    const nextKey = nextQueue.map(buildEntryKey).join("|");
+    const queueChanged = nextKey !== shopLoopQueueKey;
+
+    shopLoopQueue = nextQueue;
+    shopLoopQueueKey = nextKey;
+
+    if (queueChanged) {
+      shopLoopIndex = 0;
+      if (isShopLooping) {
+        pauseShopLoopSequence();
+      }
+    }
+
+    if (isShopOneShotPlaying) return;
+
+    if (!isShopLooping) {
+      startShopLoopSequence();
     }
   };
 
@@ -233,9 +442,8 @@ export function startAlertInjector(): AlertInjectorHandle {
 
     // Check if new items appeared (e.g., user tracked an item that's already available)
     const previousItemIds = new Set(currentItems.map(item => `${item.shopType}:${item.itemId}`));
-    const newItemIds = new Set(items.map(item => `${item.shopType}:${item.itemId}`));
-
-    const hasNewItems = items.some(item => !previousItemIds.has(`${item.shopType}:${item.itemId}`));
+    const newItems = items.filter(item => !previousItemIds.has(`${item.shopType}:${item.itemId}`));
+    const hasNewItems = newItems.length > 0;
 
     updateBadge(items);
 
@@ -245,13 +453,10 @@ export function startAlertInjector(): AlertInjectorHandle {
     }
 
     const config = getShopConfig();
-    if (config) {
-      syncShopLoop(items, config);
-    }
+    syncShopLoop(items, config);
 
-    // Play notification sound if new items appeared
-    if (config && config.mode === "one-shot" && hasNewItems && items.length > 0) {
-      playShopOneShot(config);
+    if (hasNewItems) {
+      enqueueShopOneShots(newItems, config);
     }
   };
 
@@ -268,12 +473,36 @@ export function startAlertInjector(): AlertInjectorHandle {
   window.addEventListener("gemini:tracked-items-changed", handleTrackedItemsChange);
 
   // Listen for shop restock events (when tracked items become available after restock)
-  const handleShopRestock = () => {
-    const config = getShopConfig();
-    if (!config || config.mode !== "one-shot") return;
-    playShopOneShot(config);
+  const handleShopRestock = (event: Event) => {
+    const customEvent = event as CustomEvent<{
+      shopType: ShopType;
+      items: Array<{ itemId: string; remaining: number }>;
+    }>;
+
+    const { shopType, items } = customEvent.detail;
+    if (!items || items.length === 0) return;
+
+    const restockItems: ShopItemKey[] = items.map((item) => ({
+      itemId: item.itemId,
+      shopType,
+    }));
+    enqueueShopOneShots(restockItems, getShopConfig());
   };
   window.addEventListener("gemini:shop-restock-tracked", handleShopRestock);
+
+  const handleCustomSoundChange = (event: Event) => {
+    const customEvent = event as CustomEvent<{
+      action: "set" | "remove";
+      entityType: string;
+      entityId: string;
+      shopType?: ShopType;
+    }>;
+
+    if (customEvent.detail?.entityType !== "shop") return;
+    const items = getAvailableTrackedItems();
+    syncShopLoop(items, getShopConfig());
+  };
+  window.addEventListener(EVENTS.CUSTOM_SOUND_CHANGE, handleCustomSoundChange);
 
   // Initial badge update (with retry if shop data not ready yet)
   const tryUpdateInitialBadge = (attempt = 1, maxAttempts = 10) => {
@@ -287,13 +516,9 @@ export function startAlertInjector(): AlertInjectorHandle {
       updateBadge(initialItems);
 
       const config = getShopConfig();
-      if (config) {
-        syncShopLoop(initialItems, config);
-
-        // Play notification sound if items are available at startup
-        if (config.mode === "one-shot" && initialItems.length > 0) {
-          playShopOneShot(config);
-        }
+      syncShopLoop(initialItems, config);
+      if (initialItems.length > 0) {
+        enqueueShopOneShots(initialItems, config);
       }
     } else {
       // Retry after 500ms if shop data not ready yet
@@ -318,12 +543,16 @@ export function startAlertInjector(): AlertInjectorHandle {
 
       // Remove shop restock listener
       window.removeEventListener("gemini:shop-restock-tracked", handleShopRestock);
+      window.removeEventListener(EVENTS.CUSTOM_SOUND_CHANGE, handleCustomSoundChange);
 
       // Destroy button
       buttonHandle?.destroy();
       buttonHandle = null;
 
-      stopShopLoop();
+      shopOneShotQueue = [];
+      shopOneShotToken += 1;
+      isShopOneShotPlaying = false;
+      stopShopLoopSequence();
     },
   };
 }

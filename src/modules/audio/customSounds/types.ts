@@ -29,10 +29,35 @@ export interface CustomSound {
 }
 
 /**
+ * Entity types that can have custom sounds
+ */
+export type EntityType = 'shop' | 'weather' | 'pet';
+
+/**
+ * Custom sound configuration for a specific entity (item, weather, pet event)
+ */
+export interface ItemCustomSound {
+  /** Type of entity (shop item, weather, pet event) */
+  entityType: EntityType;
+
+  /** Unique identifier for the entity */
+  entityId: string;
+
+  /** Optional shop type (only for shop items) */
+  shopType?: string;
+
+  /** Sound configuration */
+  soundId: string;
+  volume: number;
+  mode: NotificationMode;
+}
+
+/**
  * Storage structure for the custom sounds library
  */
 export interface CustomSoundsLibrary {
   sounds: CustomSound[];
+  itemCustomSounds: ItemCustomSound[];
   version: number;
 }
 
@@ -92,6 +117,7 @@ export const LIMITS = {
  */
 export const DEFAULT_LIBRARY: CustomSoundsLibrary = {
   sounds: [],
+  itemCustomSounds: [],
   version: 1,
 };
 

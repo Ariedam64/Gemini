@@ -28,6 +28,86 @@ const MODE_DESCRIPTIONS: Record<NotificationType, Record<NotificationMode, strin
     'loop': 'Loop sound while weather is active',
   },
 };
+
+function getLongestLabel(labels: string[]): string {
+  let longest = "";
+  for (const label of labels) {
+    if (label.length > longest.length) longest = label;
+  }
+  return longest;
+}
+
+function measureSelectWidth(selectRoot: HTMLElement, label: string): number {
+  const rootNode = selectRoot.getRootNode();
+  const container =
+    rootNode instanceof ShadowRoot
+      ? rootNode
+      : document.body || document.documentElement;
+
+  if (!container) return 0;
+
+  const measureRoot = element("div", { className: "select" }) as HTMLDivElement;
+  for (const className of Array.from(selectRoot.classList)) {
+    if (className.startsWith("select--")) {
+      measureRoot.classList.add(className);
+    }
+  }
+
+  measureRoot.style.position = "absolute";
+  measureRoot.style.visibility = "hidden";
+  measureRoot.style.pointerEvents = "none";
+  measureRoot.style.left = "-9999px";
+  measureRoot.style.top = "-9999px";
+  measureRoot.style.minWidth = "0";
+
+  const trigger = element("button", {
+    className: "select-trigger",
+    type: "button",
+  }) as HTMLButtonElement;
+  trigger.style.width = "auto";
+  trigger.style.minWidth = "0";
+  trigger.style.whiteSpace = "nowrap";
+
+  const caretText =
+    selectRoot.querySelector(".select-caret")?.textContent || "v";
+
+  const value = element("span", { className: "select-value" }, label) as HTMLSpanElement;
+  const caret = element("span", { className: "select-caret" }, caretText) as HTMLSpanElement;
+  trigger.append(value, caret);
+  measureRoot.appendChild(trigger);
+
+  container.appendChild(measureRoot);
+  const width = Math.ceil(trigger.getBoundingClientRect().width);
+  measureRoot.remove();
+
+  return width;
+}
+
+function applySelectWidth(selectRoot: HTMLElement, labels: string[]): void {
+  const longest = getLongestLabel(labels);
+  if (!longest) return;
+
+  let attempts = 0;
+  const maxAttempts = 6;
+
+  const apply = () => {
+    attempts += 1;
+    if (!selectRoot.isConnected) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(apply);
+      }
+      return;
+    }
+
+    const width = measureSelectWidth(selectRoot, longest);
+    if (width > 0) {
+      selectRoot.style.width = `${width}px`;
+      selectRoot.style.minWidth = `${width}px`;
+    }
+  };
+
+  requestAnimationFrame(apply);
+}
 /**
  * Public handle for the settings card part
  */
@@ -271,12 +351,14 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
     // Mode selector row with description
     const modeRow = element("div", { className: "notification-mode-row" });
 
+    const modeOptions = [
+      { value: 'one-shot', label: 'One-shot' },
+      { value: 'loop', label: 'Loop' },
+    ];
+
     const modeSelect = Select({
       value: config.mode,
-      options: [
-        { value: 'one-shot', label: 'One-shot' },
-        { value: 'loop', label: 'Loop' },
-      ],
+      options: modeOptions,
       size: "sm",
       onChange: (mode) => {
         // Get current config to preserve soundId and volume
@@ -287,6 +369,8 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
       },
     });
     notificationModeSelects.set(type, modeSelect);
+    modeSelect.root.classList.add("shrink");
+    applySelectWidth(modeSelect.root, modeOptions.map((opt) => opt.label));
 
     modeRow.appendChild(modeSelect.root);
 
