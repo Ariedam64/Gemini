@@ -166,7 +166,12 @@ export const customSoundModalCss = `
   }
 
   /* Footer */
+  .custom-sound-modal .modal-footer {
+    justify-content: flex-start;
+  }
+
   .custom-sound-modal-footer {
+    width: 100%;
     display: flex;
     gap: 8px;
     align-items: center;

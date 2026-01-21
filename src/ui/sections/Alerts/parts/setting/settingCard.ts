@@ -279,7 +279,11 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
   /**
    * Create a notification row (label + sound select + play button + volume slider + mode select)
    */
-  function createNotificationRow(type: NotificationType, label: string): HTMLElement {
+  function createNotificationRow(
+    type: NotificationType,
+    label: string,
+    description: string
+  ): HTMLElement {
     const container = element("div", {
       className: "notification-item",
       "data-type": type,
@@ -288,6 +292,12 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
     // Label
     const labelEl = element("div", { className: "notification-item-label" }, label);
     container.appendChild(labelEl);
+    const sectionDescriptionEl = element(
+      "div",
+      { className: "notification-item-description" },
+      description
+    );
+    container.appendChild(sectionDescriptionEl);
 
     // Top controls row (select + play button)
     const controlsRow = element("div", { className: "notification-item-controls" });
@@ -375,8 +385,12 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
     modeRow.appendChild(modeSelect.root);
 
     // Mode description
-    const description = element("div", { className: "notification-mode-description" }, MODE_DESCRIPTIONS[type][config.mode]);
-    modeRow.appendChild(description);
+    const modeDescription = element(
+      "div",
+      { className: "notification-mode-description" },
+      MODE_DESCRIPTIONS[type][config.mode]
+    );
+    modeRow.appendChild(modeDescription);
 
     container.appendChild(modeRow);
 
@@ -408,9 +422,27 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
     notificationSectionElement = element("div", { className: "notification-settings" });
 
     // Add notification rows
-    notificationSectionElement.appendChild(createNotificationRow("shop", "Shop Items"));
-    notificationSectionElement.appendChild(createNotificationRow("pet", "Pet Events"));
-    notificationSectionElement.appendChild(createNotificationRow("weather", "Weather Events"));
+    notificationSectionElement.appendChild(
+      createNotificationRow(
+        "shop",
+        "Shops restock",
+        "Default sound for shop restock alerts."
+      )
+    );
+    notificationSectionElement.appendChild(
+      createNotificationRow(
+        "pet",
+        "Pet events",
+        "Default sound for pet event alerts."
+      )
+    );
+    notificationSectionElement.appendChild(
+      createNotificationRow(
+        "weather",
+        "Weather events",
+        "Default sound for weather event alerts."
+      )
+    );
 
     body.appendChild(notificationSectionElement);
 

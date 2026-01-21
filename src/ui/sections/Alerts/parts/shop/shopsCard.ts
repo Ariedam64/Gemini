@@ -275,16 +275,29 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
 
     // Create filters (callbacks will reference the already-created tableHandle)
     const filters = createFilters();
-
     // Add to DOM (filters first for visual order)
     body.appendChild(filters);
     body.appendChild(components.tableHandle.root);
+
+    const hint = element("div", { className: "shops-card-hint" });
+    const desktopHint = element(
+      "span",
+      { className: "shops-card-hint-desktop" },
+      "Click an item to set a custom sound alert. Right-click to reset"
+    );
+    const mobileHint = element(
+      "span",
+      { className: "shops-card-hint-mobile" },
+      "Tap an item to set a custom sound alert. Long-press to reset"
+    );
+    hint.append(desktopHint, mobileHint);
+    body.appendChild(hint);
 
     // Create card
     root = Card(
       {
         id: "shops-card",
-        title: "Shops",
+        title: "Shops restock",
         subtitle: "Get notified when tracked items restock",
         expandable: true,
         defaultExpanded: options?.defaultExpanded ?? true,

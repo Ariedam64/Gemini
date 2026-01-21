@@ -64,11 +64,25 @@ export function createWeatherCard(options?: WeatherCardOptions): WeatherCardPart
     // Add to DOM
     body.appendChild(components.tableHandle.root);
 
+    const hint = element("div", { className: "weather-card-hint" });
+    const desktopHint = element(
+      "span",
+      { className: "weather-card-hint-desktop" },
+      "Click a weather to set a custom sound alert. Right-click to reset"
+    );
+    const mobileHint = element(
+      "span",
+      { className: "weather-card-hint-mobile" },
+      "Tap a weather to set a custom sound alert. Long-press to reset"
+    );
+    hint.append(desktopHint, mobileHint);
+    body.appendChild(hint);
+
     // Create card
     root = Card(
       {
         id: "weather-card",
-        title: "Weather",
+        title: "Weather events",
         subtitle: "Get notified when specific weather appears",
         expandable: true,
         defaultExpanded: options?.defaultExpanded ?? true,

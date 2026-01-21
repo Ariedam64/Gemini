@@ -4,6 +4,7 @@
 
 import { MGData } from "../../../../../modules";
 import { MGWeatherNotifier } from "../../../../../features/weatherNotifier";
+import { CustomSounds } from "../../../../../modules/audio/customSounds";
 
 /**
  * Row type for weather table
@@ -14,6 +15,7 @@ export interface WeatherRow {
   spriteId: string | null;
   effects: string;
   isTracked: boolean;
+  hasCustomSound: boolean;
 }
 
 /**
@@ -127,6 +129,7 @@ export function buildAllRows(): WeatherRow[] {
       spriteId: getSpriteId(weatherId),
       effects: getEffects(weatherId),
       isTracked: trackedSet.has(weatherId),
+      hasCustomSound: CustomSounds.hasItemCustomSound("weather", weatherId),
     };
 
     rows.push(row);

@@ -33,6 +33,40 @@ export const alertsCss = `
     right: 12px;
   }
 
+  .shops-card-hint {
+    padding: 8px 12px 12px;
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 60%, transparent);
+    font-style: italic;
+  }
+
+  .shops-card-hint-mobile {
+    display: none;
+  }
+
+  .weather-card-hint {
+    padding: 8px 12px 12px;
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 60%, transparent);
+    font-style: italic;
+  }
+
+  .weather-card-hint-mobile {
+    display: none;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .shops-card-hint-desktop,
+    .weather-card-hint-desktop {
+      display: none;
+    }
+
+    .shops-card-hint-mobile,
+    .weather-card-hint-mobile {
+      display: inline;
+    }
+  }
+
   /* Item cell with icon + name */
   .shop-item-cell {
     display: flex;
@@ -157,6 +191,24 @@ export const alertsCss = `
     justify-content: center;
   }
 
+  /* Clickable rows with custom sound indicator */
+  #weather-card .lg-tr-body {
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  #weather-card .lg-tr-body:hover {
+    background: color-mix(in oklab, var(--soft) 95%, transparent);
+  }
+
+  #weather-card .lg-tr-body.has-custom-sound .lg-td:first-child {
+    border-left: 3px solid color-mix(in oklab, var(--accent) 70%, transparent);
+  }
+
+  #weather-card .lg-tr-body.has-custom-sound:hover .lg-td:first-child {
+    border-left-color: var(--accent);
+  }
+
   /* Pet card styles */
   .pet-card-body {
     display: flex;
@@ -180,7 +232,7 @@ export const alertsCss = `
   .alerts-settings-divider {
     height: 1px;
     background: var(--border);
-    margin: 8px 0;
+    margin: 16px 0;
   }
 
   .notification-settings {
@@ -216,6 +268,11 @@ export const alertsCss = `
     font-size: 13px;
     font-weight: 500;
     color: var(--fg);
+  }
+
+  .notification-item-description {
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 60%, transparent);
   }
 
   .notification-item-controls {

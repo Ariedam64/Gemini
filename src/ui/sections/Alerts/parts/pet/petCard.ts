@@ -56,7 +56,7 @@ export function createPetCard(options?: PetCardOptions): PetCardPart {
     root = Card(
       {
         id: 'pet-hunger-card',
-        title: 'Pet',
+        title: 'Pet events',
         subtitle: 'Get notified about pet-related events',
         expandable: true,
         defaultExpanded: options?.defaultExpanded ?? true,
