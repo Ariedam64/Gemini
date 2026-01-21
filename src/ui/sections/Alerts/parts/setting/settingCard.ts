@@ -426,21 +426,21 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
       createNotificationRow(
         "shop",
         "Shops restock",
-        "Default sound for shop restock alerts."
+        "Default sound for shop restock alerts"
       )
     );
     notificationSectionElement.appendChild(
       createNotificationRow(
         "pet",
         "Pet events",
-        "Default sound for pet event alerts."
+        "Default sound for pet event alerts"
       )
     );
     notificationSectionElement.appendChild(
       createNotificationRow(
         "weather",
         "Weather events",
-        "Default sound for weather event alerts."
+        "Default sound for weather event alerts"
       )
     );
 
