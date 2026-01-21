@@ -574,7 +574,13 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
         reader.onload = (e) => {
           const dataUrl = e.target?.result as string;
           try {
-            CustomSounds.add(item.name, dataUrl, "upload");
+            const sound = CustomSounds.add(item.name, dataUrl, "upload");
+            if (soundPicker && sound.id !== item.id) {
+              const nextItems = soundPicker.getItems().map((entry) =>
+                entry.id === item.id ? { ...entry, id: sound.id } : entry
+              );
+              soundPicker.setItems(nextItems);
+            }
           } catch (error) {
             console.error(`[SettingCard] Failed to add sound ${item.name}:`, error);
           }
