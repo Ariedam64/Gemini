@@ -36,6 +36,39 @@ export interface CustomSoundsLibrary {
   version: number;
 }
 
+/**
+ * Notification type identifiers
+ */
+export type NotificationType = 'shop' | 'pet' | 'weather';
+
+/**
+ * Notification play mode
+ */
+export type NotificationMode = 'one-shot' | 'loop';
+
+/**
+ * Configuration for a single notification type
+ */
+export interface NotificationConfig {
+  /** Sound ID to play (references CustomSound.id) */
+  soundId: string;
+
+  /** Volume level (0-100) */
+  volume: number;
+
+  /** Play mode: one-shot (play once) or loop (play repeatedly) */
+  mode: NotificationMode;
+}
+
+/**
+ * All notification settings
+ */
+export interface NotificationSettings {
+  shop: NotificationConfig;
+  pet: NotificationConfig;
+  weather: NotificationConfig;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & Limits
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,6 +93,27 @@ export const LIMITS = {
 export const DEFAULT_LIBRARY: CustomSoundsLibrary = {
   sounds: [],
   version: 1,
+};
+
+/**
+ * Default notification settings
+ */
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  shop: {
+    soundId: 'default-notification', // References the default sound
+    volume: 80,
+    mode: 'one-shot',
+  },
+  pet: {
+    soundId: 'default-notification',
+    volume: 80,
+    mode: 'one-shot',
+  },
+  weather: {
+    soundId: 'default-notification',
+    volume: 80,
+    mode: 'one-shot',
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

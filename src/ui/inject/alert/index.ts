@@ -14,6 +14,7 @@ import { createAlertOverlay, type AlertOverlayHandle } from "./AlertOverlay";
 import { getAvailableTrackedItems, subscribeToAvailability, type AvailableItem } from "./alertData";
 import { getShops } from "../../../globals/variables/shops";
 import { MGShopActions, MGAudio } from "../../../modules";
+import type { NotificationConfig } from "../../../modules/audio/customSounds/types";
 import type { Unsubscribe } from "../../../globals/core/types";
 
 export interface AlertInjectorHandle {
@@ -29,6 +30,84 @@ export function startAlertInjector(): AlertInjectorHandle {
   let availabilityUnsub: Unsubscribe | null = null;
   let isOverlayOpen = false;
   let currentItems: AvailableItem[] = [];
+  let isShopLooping = false;
+  let shopLoopSource: string | null = null;
+
+  const getShopConfig = (): NotificationConfig | null => {
+    try {
+      return MGAudio.CustomSounds.getNotificationConfig("shop");
+    } catch {
+      return null;
+    }
+  };
+
+  const startShopLoop = (config: NotificationConfig): void => {
+    if (isShopLooping) return;
+
+    const sound = MGAudio.CustomSounds.getById(config.soundId);
+    if (!sound) return;
+
+    shopLoopSource = sound.source;
+    isShopLooping = true;
+
+    try {
+      MGAudio.CustomSounds.play(config.soundId, {
+        volume: config.volume / 100,
+        loop: true,
+      });
+    } catch {
+      isShopLooping = false;
+      shopLoopSource = null;
+    }
+  };
+
+  const stopShopLoop = (): void => {
+    if (!isShopLooping) return;
+
+    try {
+      const handle = MGAudio.getCustomHandle();
+      if (!shopLoopSource || (handle && handle.url === shopLoopSource)) {
+        MGAudio.CustomSounds.stop();
+      }
+    } catch {
+      // Ignore if audio isn't ready
+    }
+
+    isShopLooping = false;
+    shopLoopSource = null;
+  };
+
+  const syncShopLoop = (items: AvailableItem[], config?: NotificationConfig | null): void => {
+    const effectiveConfig = config ?? getShopConfig();
+    if (!effectiveConfig) return;
+
+    if (effectiveConfig.mode !== "loop") {
+      if (isShopLooping) {
+        stopShopLoop();
+      }
+      return;
+    }
+
+    const shouldLoop = items.length > 0;
+
+    if (shouldLoop) {
+      if (!isShopLooping) {
+        startShopLoop(effectiveConfig);
+      }
+    } else if (isShopLooping) {
+      stopShopLoop();
+    }
+  };
+
+  const playShopOneShot = (config: NotificationConfig): void => {
+    try {
+      MGAudio.CustomSounds.play(config.soundId, {
+        volume: config.volume / 100,
+      });
+    } catch {
+      // Silently fail if audio not ready
+    }
+  };
 
   /**
    * Update badge count based on available items
@@ -135,6 +214,8 @@ export function startAlertInjector(): AlertInjectorHandle {
       overlayHandle.updateItems(items);
     }
 
+    syncShopLoop(items);
+
     // Emit custom event for other features to listen to
     if (items.length > 0) {
       const event = new CustomEvent("gemini:alert-available", {
@@ -163,13 +244,14 @@ export function startAlertInjector(): AlertInjectorHandle {
       overlayHandle.updateItems(items);
     }
 
+    const config = getShopConfig();
+    if (config) {
+      syncShopLoop(items, config);
+    }
+
     // Play notification sound if new items appeared
-    if (hasNewItems && items.length > 0) {
-      try {
-        MGAudio.CustomSounds.play("default-notification");
-      } catch (e) {
-        // Silently fail if audio not ready
-      }
+    if (config && config.mode === "one-shot" && hasNewItems && items.length > 0) {
+      playShopOneShot(config);
     }
   };
 
@@ -187,11 +269,9 @@ export function startAlertInjector(): AlertInjectorHandle {
 
   // Listen for shop restock events (when tracked items become available after restock)
   const handleShopRestock = () => {
-    try {
-      MGAudio.CustomSounds.play("default-notification");
-    } catch (e) {
-      // Silently fail if audio not ready
-    }
+    const config = getShopConfig();
+    if (!config || config.mode !== "one-shot") return;
+    playShopOneShot(config);
   };
   window.addEventListener("gemini:shop-restock-tracked", handleShopRestock);
 
@@ -206,12 +286,13 @@ export function startAlertInjector(): AlertInjectorHandle {
       const initialItems = getAvailableTrackedItems();
       updateBadge(initialItems);
 
-      // Play notification sound if items are available at startup
-      if (initialItems.length > 0) {
-        try {
-          MGAudio.CustomSounds.play("default-notification");
-        } catch (e) {
-          // Silently fail if audio not ready
+      const config = getShopConfig();
+      if (config) {
+        syncShopLoop(initialItems, config);
+
+        // Play notification sound if items are available at startup
+        if (config.mode === "one-shot" && initialItems.length > 0) {
+          playShopOneShot(config);
         }
       }
     } else {
@@ -241,6 +322,8 @@ export function startAlertInjector(): AlertInjectorHandle {
       // Destroy button
       buttonHandle?.destroy();
       buttonHandle = null;
+
+      stopShopLoop();
     },
   };
 }

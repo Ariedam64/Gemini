@@ -6,11 +6,70 @@
 
 import { getWeather } from "../../../globals/variables/weather";
 import { MGAudio } from "../../../modules";
+import type { NotificationConfig } from "../../../modules/audio/customSounds/types";
 import { getTrackedWeathers } from "../state";
 import type { Unsubscribe } from "../../../globals/core/types";
 
 let unsubscribe: Unsubscribe | null = null;
 let lastWeatherId: string = "Sunny";
+let isLooping = false;
+let loopSoundSource: string | null = null;
+
+function startLoop(config: NotificationConfig): void {
+  if (isLooping) return;
+
+  const sound = MGAudio.CustomSounds.getById(config.soundId);
+  if (!sound) return;
+
+  loopSoundSource = sound.source;
+  isLooping = true;
+
+  try {
+    MGAudio.CustomSounds.play(config.soundId, {
+      volume: config.volume / 100,
+      loop: true,
+    });
+  } catch {
+    isLooping = false;
+    loopSoundSource = null;
+  }
+}
+
+function stopLoop(): void {
+  if (!isLooping) return;
+
+  try {
+    const handle = MGAudio.getCustomHandle();
+    if (!loopSoundSource || (handle && handle.url === loopSoundSource)) {
+      MGAudio.CustomSounds.stop();
+    }
+  } catch {
+    // Ignore if audio isn't ready
+  }
+
+  isLooping = false;
+  loopSoundSource = null;
+}
+
+function syncLoop(currentWeatherId: string, config: NotificationConfig): void {
+  if (config.mode !== "loop") {
+    if (isLooping) {
+      stopLoop();
+    }
+    return;
+  }
+
+  const trackedWeathers = getTrackedWeathers();
+  const shouldLoop = trackedWeathers.includes(currentWeatherId);
+
+  if (shouldLoop) {
+    if (!isLooping) {
+      startLoop(config);
+    }
+  } else if (isLooping) {
+    stopLoop();
+  }
+}
 
 /**
  * Handle manual tracking check (when user adds a weather to track)
@@ -22,13 +81,18 @@ function handleManualTrackCheck(event: CustomEvent): void {
   const weather = getWeather();
   const currentWeather = weather.get();
   const currentWeatherId = currentWeather.id;
+  const config = MGAudio.CustomSounds.getNotificationConfig("weather");
 
   // Check if the manually tracked weather is currently active
   if (currentWeatherId === weatherId) {
     console.log("[WeatherNotifier] Manually tracked weather is currently active:", weatherId);
 
     // Play notification sound immediately
-    playNotificationSound();
+    if (config.mode === "one-shot") {
+      playNotificationSound(config);
+    }
+
+    syncLoop(currentWeatherId, config);
 
     // Emit custom event for UI updates
     const notificationEvent = new CustomEvent("gemini:weather-appeared", {
@@ -36,6 +100,16 @@ function handleManualTrackCheck(event: CustomEvent): void {
     });
     window.dispatchEvent(notificationEvent);
   }
+}
+
+/**
+ * Handle tracked weathers list changes (stop/start loop if needed)
+ */
+function handleTrackedWeathersChange(): void {
+  const weather = getWeather();
+  const currentWeatherId = weather.get().id;
+  const config = MGAudio.CustomSounds.getNotificationConfig("weather");
+  syncLoop(currentWeatherId, config);
 }
 
 /**
@@ -57,16 +131,23 @@ export function initTracking(): void {
 
   // Listen to manual tracking checks
   window.addEventListener("gemini:weather-tracked-check", handleManualTrackCheck as EventListener);
+  window.addEventListener("gemini:tracked-weathers-changed", handleTrackedWeathersChange as EventListener);
+
+  const config = MGAudio.CustomSounds.getNotificationConfig("weather");
+  syncLoop(currentWeather.id, config);
 
   // Subscribe to weather changes (subscribeStable only triggers on significant changes)
   unsubscribe = weather.subscribeStable((event) => {
     const newWeatherId = event.current.id;
     const prevWeatherId = event.previous.id;
+    const notificationConfig = MGAudio.CustomSounds.getNotificationConfig("weather");
 
     console.log("[WeatherNotifier] Weather changed:", {
       previous: prevWeatherId,
       current: newWeatherId,
     });
+
+    syncLoop(newWeatherId, notificationConfig);
 
     // Check if the new weather is tracked
     if (newWeatherId !== prevWeatherId) {
@@ -76,7 +157,9 @@ export function initTracking(): void {
         console.log("[WeatherNotifier] Tracked weather detected:", newWeatherId);
 
         // Play notification sound
-        playNotificationSound();
+        if (notificationConfig.mode === "one-shot") {
+          playNotificationSound(notificationConfig);
+        }
 
         // Emit custom event for UI updates
         const notificationEvent = new CustomEvent("gemini:weather-appeared", {
@@ -98,11 +181,13 @@ export function initTracking(): void {
 export function stopTracking(): void {
   // Remove manual tracking check listener
   window.removeEventListener("gemini:weather-tracked-check", handleManualTrackCheck as EventListener);
+  window.removeEventListener("gemini:tracked-weathers-changed", handleTrackedWeathersChange as EventListener);
 
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;
     lastWeatherId = "Sunny";
+    stopLoop();
     console.log("[WeatherNotifier] Tracking stopped");
   }
 }
@@ -110,9 +195,9 @@ export function stopTracking(): void {
 /**
  * Play notification sound
  */
-function playNotificationSound(): void {
+function playNotificationSound(config: NotificationConfig): void {
   try {
-    MGAudio.CustomSounds.play("default-notification");
+    MGAudio.CustomSounds.play(config.soundId, { volume: config.volume / 100 });
   } catch (error) {
     console.warn("[WeatherNotifier] Failed to play notification sound:", error);
   }

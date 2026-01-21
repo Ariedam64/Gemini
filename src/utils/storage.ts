@@ -42,6 +42,8 @@ export const SECTION_KEYS = {
 export const MODULE_KEYS = {
     /** Audio module custom sounds library */
     AUDIO_CUSTOM_SOUNDS: 'module:audio:customSounds',
+    /** Audio module notification settings */
+    AUDIO_NOTIFICATION_SETTINGS: 'module:audio:notificationSettings',
 } as const;
 
 /** Keys for global variables persistent state */

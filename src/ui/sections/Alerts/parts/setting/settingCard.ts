@@ -4,9 +4,30 @@
 
 import { Card } from "../../../../components/Card/Card";
 import { SoundPicker, SoundPickerHandle, SoundPickerItem } from "../../../../components/SoundPicker/SoundPicker";
+import { Select, SelectHandle } from "../../../../components/Select/Select";
+import { Slider, SliderHandle } from "../../../../components/Slider/Slider";
 import { element } from "../../../../styles/helpers";
 import { LIMITS } from "../../../../../modules/audio/customSounds/types";
+import type { NotificationType, NotificationMode } from "../../../../../modules/audio/customSounds/types";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
+
+/**
+ * Mode descriptions for each notification type
+ */
+const MODE_DESCRIPTIONS: Record<NotificationType, Record<NotificationMode, string>> = {
+  shop: {
+    'one-shot': 'Play sound once when item appears',
+    'loop': 'Loop sound while item is available in shop',
+  },
+  pet: {
+    'one-shot': 'Play sound once when pet event occurs',
+    'loop': 'Loop sound while pet event is active',
+  },
+  weather: {
+    'one-shot': 'Play sound once when weather occurs',
+    'loop': 'Loop sound while weather is active',
+  },
+};
 /**
  * Public handle for the settings card part
  */
@@ -29,6 +50,100 @@ export interface SettingCardOptions {
 export function createSettingCard(options?: SettingCardOptions): SettingCardPart {
   let root: HTMLElement | null = null;
   let soundPicker: SoundPickerHandle | null = null;
+  let notificationSectionElement: HTMLElement | null = null;
+
+  // Notification settings UI handles
+  const notificationSelects: Map<NotificationType, SelectHandle> = new Map();
+  const notificationModeSelects: Map<NotificationType, SelectHandle> = new Map();
+  const notificationSliders: Map<NotificationType, SliderHandle> = new Map();
+
+  // Audio playback state
+  let currentAudio: HTMLAudioElement | null = null;
+  let playingNotificationType: NotificationType | null = null;
+  let audioCleanup: (() => void) | null = null;
+
+  /**
+   * Stop preview audio
+   */
+  function stopPreview(): void {
+    audioCleanup?.();
+    audioCleanup = null;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    currentAudio = null;
+    playingNotificationType = null;
+  }
+
+  /**
+   * Update all play buttons to show Play or Stop
+   */
+  function updatePlayButtons(): void {
+    if (!notificationSectionElement) return;
+    const items = notificationSectionElement.querySelectorAll<HTMLDivElement>(".notification-item");
+    items.forEach((item) => {
+      const type = item.dataset.type as NotificationType | undefined;
+      const playBtn = item.querySelector<HTMLButtonElement>(".notification-item-play");
+      if (!type || !playBtn) return;
+      const isActive = !!currentAudio && playingNotificationType === type && !currentAudio.paused;
+      playBtn.textContent = isActive ? "Stop" : "Play";
+      item.classList.toggle("is-playing", isActive);
+    });
+  }
+
+  /**
+   * Toggle preview audio for a notification type
+   */
+  async function togglePreview(type: NotificationType): Promise<void> {
+    if (playingNotificationType === type) {
+      stopPreview();
+      updatePlayButtons();
+      return;
+    }
+
+    stopPreview();
+
+    const config = CustomSounds.getNotificationConfig(type);
+    const sound = CustomSounds.getById(config.soundId);
+    if (!sound) {
+      console.error(`[SettingCard] Sound not found: ${config.soundId}`);
+      return;
+    }
+
+    const audio = new Audio(sound.source);
+    audio.volume = config.volume / 100;
+    currentAudio = audio;
+    playingNotificationType = type;
+
+    const onEnd = () => {
+      if (playingNotificationType !== type) return;
+      stopPreview();
+      updatePlayButtons();
+    };
+    const onError = () => {
+      if (playingNotificationType !== type) return;
+      stopPreview();
+      updatePlayButtons();
+      console.error(`[SettingCard] Failed to play sound: ${sound.name}`);
+    };
+
+    audio.addEventListener("ended", onEnd);
+    audio.addEventListener("error", onError);
+    audioCleanup = () => {
+      audio.removeEventListener("ended", onEnd);
+      audio.removeEventListener("error", onError);
+    };
+
+    try {
+      await audio.play();
+      updatePlayButtons();
+    } catch (error) {
+      stopPreview();
+      updatePlayButtons();
+      console.error(`[SettingCard] Failed to play sound:`, error);
+    }
+  }
 
   /**
    * Convert a data URL or HTTP URL back to a File object
@@ -64,11 +179,160 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
     return new File([], filename, { type: "audio/mpeg" });
   }
 
+  /**
+   * Update select options when sounds change
+   */
+  function updateSelectOptions(): void {
+    const allSounds = CustomSounds.getAll();
+    const soundOptions = allSounds.map((sound) => ({
+      value: sound.id,
+      label: sound.name,
+    }));
+
+    for (const [type, select] of notificationSelects) {
+      const currentConfig = CustomSounds.getNotificationConfig(type);
+      select.setOptions(soundOptions);
+      select.setValue(currentConfig.soundId);
+    }
+  }
+
+  /**
+   * Create a notification row (label + sound select + play button + volume slider + mode select)
+   */
+  function createNotificationRow(type: NotificationType, label: string): HTMLElement {
+    const container = element("div", {
+      className: "notification-item",
+      "data-type": type,
+    });
+
+    // Label
+    const labelEl = element("div", { className: "notification-item-label" }, label);
+    container.appendChild(labelEl);
+
+    // Top controls row (select + play button)
+    const controlsRow = element("div", { className: "notification-item-controls" });
+
+    // Get current config
+    const config = CustomSounds.getNotificationConfig(type);
+
+    // Get all sounds for the select dropdown
+    const allSounds = CustomSounds.getAll();
+    const soundOptions = allSounds.map((sound) => ({
+      value: sound.id,
+      label: sound.name,
+    }));
+
+    // Sound select
+    const soundSelect = Select({
+      value: config.soundId,
+      options: soundOptions,
+      size: "sm",
+      onChange: (soundId) => {
+        // Get current config to preserve volume and mode
+        const currentConfig = CustomSounds.getNotificationConfig(type);
+        CustomSounds.setNotificationConfig(type, { soundId, volume: currentConfig.volume, mode: currentConfig.mode });
+      },
+    });
+    notificationSelects.set(type, soundSelect);
+
+    // Play/Stop button (like SoundPicker)
+    const playBtn = element("button", {
+      className: "notification-item-play",
+      type: "button",
+      title: "Test sound",
+    }, "Play") as HTMLButtonElement;
+
+    playBtn.addEventListener("click", () => {
+      togglePreview(type);
+    });
+
+    controlsRow.appendChild(soundSelect.root);
+    controlsRow.appendChild(playBtn);
+
+    container.appendChild(controlsRow);
+
+    // Volume slider (on its own row below)
+    const volumeSlider = Slider({
+      min: 0,
+      max: 100,
+      step: 1,
+      value: config.volume,
+      showValue: true,
+      onChange: (volume) => {
+        // Get current config to preserve soundId and mode
+        const currentConfig = CustomSounds.getNotificationConfig(type);
+        CustomSounds.setNotificationConfig(type, { soundId: currentConfig.soundId, volume, mode: currentConfig.mode });
+      },
+    });
+    notificationSliders.set(type, volumeSlider);
+
+    container.appendChild(volumeSlider.root);
+
+    // Mode selector row with description
+    const modeRow = element("div", { className: "notification-mode-row" });
+
+    const modeSelect = Select({
+      value: config.mode,
+      options: [
+        { value: 'one-shot', label: 'One-shot' },
+        { value: 'loop', label: 'Loop' },
+      ],
+      size: "sm",
+      onChange: (mode) => {
+        // Get current config to preserve soundId and volume
+        const currentConfig = CustomSounds.getNotificationConfig(type);
+        CustomSounds.setNotificationConfig(type, { soundId: currentConfig.soundId, volume: currentConfig.volume, mode: mode as NotificationMode });
+        // Update description
+        updateModeDescription(type);
+      },
+    });
+    notificationModeSelects.set(type, modeSelect);
+
+    modeRow.appendChild(modeSelect.root);
+
+    // Mode description
+    const description = element("div", { className: "notification-mode-description" }, MODE_DESCRIPTIONS[type][config.mode]);
+    modeRow.appendChild(description);
+
+    container.appendChild(modeRow);
+
+    return container;
+  }
+
+  /**
+   * Update the mode description when mode changes
+   */
+  function updateModeDescription(type: NotificationType): void {
+    if (!notificationSectionElement) return;
+    const item = notificationSectionElement.querySelector<HTMLDivElement>(`[data-type="${type}"]`);
+    if (!item) return;
+
+    const config = CustomSounds.getNotificationConfig(type);
+    const description = item.querySelector<HTMLDivElement>(".notification-mode-description");
+    if (description) {
+      description.textContent = MODE_DESCRIPTIONS[type][config.mode];
+    }
+  }
+
   function buildCard(): HTMLElement {
     const body = element("div", { className: "alerts-settings-body" });
 
     // Initialize CustomSounds module
     CustomSounds.init();
+
+    // Notification settings section (FIRST)
+    notificationSectionElement = element("div", { className: "notification-settings" });
+
+    // Add notification rows
+    notificationSectionElement.appendChild(createNotificationRow("shop", "Shop Items"));
+    notificationSectionElement.appendChild(createNotificationRow("pet", "Pet Events"));
+    notificationSectionElement.appendChild(createNotificationRow("weather", "Weather Events"));
+
+    body.appendChild(notificationSectionElement);
+
+    // Add divider
+    const divider = element("div", { className: "alerts-settings-divider" });
+    body.appendChild(divider);
 
     // Convert CustomSound to SoundPickerItem format
     const existingSounds = CustomSounds.getAll().map((sound) => {
@@ -94,10 +358,16 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
       onItemsChange: (items) => {
         // Sync with CustomSounds when items change
         syncWithCustomSounds(items);
+        // Update select options in notification settings
+        updateSelectOptions();
       },
       onFilesAdded: (items) => {
         // Handle new files added
         addFilesToCustomSounds(items);
+        // Update select options after adding files (slight delay to ensure storage is updated)
+        setTimeout(() => {
+          updateSelectOptions();
+        }, 100);
       },
     });
 
@@ -115,7 +385,7 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
         defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: "settings",
         variant: "soft",
-        padding: "sm",
+        padding: "none",
         divider: false,
         onExpandChange: options?.onExpandChange,
       },
@@ -128,14 +398,39 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
   function syncWithCustomSounds(items: SoundPickerItem[]): void {
     // Get current sounds from CustomSounds
     const currentSounds = new Set(CustomSounds.getAll().map((s) => s.id));
+    const itemIds = new Set(items.map((item) => item.id));
 
     // Find items to remove
+    const removedSoundIds: string[] = [];
     for (const soundId of currentSounds) {
-      if (!items.some((item) => item.id === soundId)) {
+      if (!itemIds.has(soundId)) {
+        removedSoundIds.push(soundId);
         try {
           CustomSounds.remove(soundId);
         } catch (error) {
           console.error(`[SettingCard] Failed to remove sound ${soundId}:`, error);
+        }
+      }
+    }
+
+    // Check if removed sounds were used in notifications and reset them
+    if (removedSoundIds.length > 0) {
+      const notificationTypes: NotificationType[] = ['shop', 'pet', 'weather'];
+      for (const type of notificationTypes) {
+        const config = CustomSounds.getNotificationConfig(type);
+        if (removedSoundIds.includes(config.soundId)) {
+          // Reset to default sound
+          CustomSounds.setNotificationConfig(type, {
+            soundId: 'default-notification',
+            volume: config.volume, // Keep the volume
+            mode: config.mode, // Keep the mode
+          });
+
+          // Update the slider value
+          const slider = notificationSliders.get(type);
+          if (slider) {
+            slider.setValue(config.volume);
+          }
         }
       }
     }
@@ -177,10 +472,29 @@ export function createSettingCard(options?: SettingCardOptions): SettingCardPart
   }
 
   function destroy(): void {
+    // Stop any playing audio
+    stopPreview();
+
     if (soundPicker) {
       soundPicker.destroy();
       soundPicker = null;
     }
+
+    // Cleanup notification selects
+    for (const select of notificationSelects.values()) {
+      select.destroy();
+    }
+    notificationSelects.clear();
+
+    // Cleanup notification mode selects
+    for (const select of notificationModeSelects.values()) {
+      select.destroy();
+    }
+    notificationModeSelects.clear();
+
+    // Cleanup notification sliders (no destroy method, just clear references)
+    notificationSliders.clear();
+
     root = null;
   }
 

@@ -16,9 +16,9 @@
  *   MGAudio.CustomSounds.stop();
  */
 
-import type { CustomSound } from './types';
-import { SoundNotFoundError } from './types';
-import { loadSounds, saveSounds } from './storage';
+import type { CustomSound, NotificationSettings, NotificationType, NotificationConfig } from './types';
+import { SoundNotFoundError, DEFAULT_NOTIFICATION_SETTINGS } from './types';
+import { loadSounds, saveSounds, loadNotificationSettings, saveNotificationSettings } from './storage';
 import { ensureDefaultSounds, isDefaultSound } from './defaults';
 import { validateName, validateSource, checkSoundLimit } from './validation';
 
@@ -260,6 +260,44 @@ export function stop(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Notification Settings
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Get all notification settings
+ */
+export function getNotificationSettings(): NotificationSettings {
+  return loadNotificationSettings();
+}
+
+/**
+ * Get notification config for a specific type
+ */
+export function getNotificationConfig(type: NotificationType): NotificationConfig {
+  const settings = loadNotificationSettings();
+  return settings[type];
+}
+
+/**
+ * Update notification settings for a specific type
+ */
+export function setNotificationConfig(type: NotificationType, config: NotificationConfig): void {
+  const settings = loadNotificationSettings();
+  settings[type] = config;
+  saveNotificationSettings(settings);
+
+  console.log(`[CustomSounds] Updated notification config for ${type}:`, config);
+}
+
+/**
+ * Update all notification settings
+ */
+export function setNotificationSettings(settings: NotificationSettings): void {
+  saveNotificationSettings(settings);
+  console.log('[CustomSounds] Updated all notification settings');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -277,4 +315,10 @@ export const CustomSounds = {
   // Playback
   play,
   stop,
+
+  // Notification Settings
+  getNotificationSettings,
+  getNotificationConfig,
+  setNotificationConfig,
+  setNotificationSettings,
 };

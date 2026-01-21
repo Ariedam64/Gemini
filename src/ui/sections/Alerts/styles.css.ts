@@ -157,6 +157,104 @@ export const alertsCss = `
   .alerts-settings-body {
     display: flex;
     flex-direction: column;
+  }
+
+  .alerts-settings-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  .notification-settings {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
+  }
+
+  .notification-settings-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 4px;
+  }
+
+  .notification-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: color-mix(in oklab, var(--soft) 85%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .notification-item.is-playing {
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+    box-shadow: 0 10px 22px color-mix(in oklab, var(--shadow) 18%, transparent);
+  }
+
+  .notification-item-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  .notification-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .notification-item-controls .select {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  .notification-item-play {
+    appearance: none;
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    background: color-mix(in oklab, var(--soft) 78%, transparent);
+    color: var(--fg);
+    border-radius: 10px;
+    min-height: 32px;
+    min-width: 52px;
+    padding: 0 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.05s ease;
+  }
+
+  .notification-item-play:hover {
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  }
+
+  .notification-item-play:active {
+    transform: translateY(1px);
+  }
+
+  .notification-item .slider {
+    width: 100%;
+  }
+
+  .notification-mode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .notification-mode-row .select {
+    flex: 0 0 auto;
+    min-width: 100px;
+  }
+
+  .notification-mode-description {
+    flex: 1 1 auto;
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 65%, transparent);
+    font-style: italic;
   }
 `;
