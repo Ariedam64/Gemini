@@ -1,175 +1,31 @@
 /**
- * Value Panel Helpers
+ * Stats Calculations
  *
- * Shared helper functions for value/coin panel rendering.
- * Extracted from valuePanel.ts for maintainability.
+ * Stats aggregation and UI builder functions for value panel.
  *
- * @module valuePanel/helpers
+ * @module valuePanel/helpers/statsCalculations
  */
 
-import type { UnifiedPet } from '../../../../../../globals/core/types';
-import { Globals } from '../../../../../../globals';
-import { MGData } from '../../../../../../modules/data';
-import { calculateCropSellPrice, getCropData } from '../../../../../../modules/calculators/logic/crop';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const MAX_TARGET_STRENGTH = 100;
-
-export const SIZE_BOOST_ABILITIES = [
-    'ProduceScaleBoost',
-    'ProduceScaleBoostII',
-    'ProduceScaleBoostIII',
-    'SnowyCropSizeBoost',
-] as const;
-
-export const MUTATION_BOOST_ABILITIES = [
-    'ProduceMutationBoost',
-    'ProduceMutationBoostII',
-    'ProduceMutationBoostIII',
-    'SnowyCropMutationBoost',
-] as const;
-
-export const GRANTER_ABILITIES = [
-    'RainDance',
-    'SnowGranter',
-    'FrostGranter',
-    'GoldGranter',
-    'RainbowGranter',
-] as const;
-
-export const HARVEST_ABILITIES = ['DoubleHarvest'] as const;
-export const REFUND_ABILITIES = ['ProduceRefund'] as const;
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DOM Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function el(tag: string, className?: string, text?: string): HTMLElement {
-    const elem = document.createElement(tag);
-    if (className) elem.className = className;
-    if (text) elem.textContent = text;
-    return elem;
-}
-
-export function formatCoin(value: number): string {
-    if (value >= 1_000_000_000_000) {
-        // Trillions: 43.67T
-        return `${(value / 1_000_000_000_000).toFixed(2)}T`;
-    } else if (value >= 1_000_000_000) {
-        // Billions: 452.12B
-        return `${(value / 1_000_000_000).toFixed(2)}B`;
-    } else if (value >= 1_000_000) {
-        // Millions: 245.54M
-        return `${(value / 1_000_000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-        // Thousands: 34.6k or 456k
-        const thousands = value / 1000;
-        return thousands >= 100 ? `${Math.round(thousands)}k` : `${thousands.toFixed(1)}k`;
-    }
-    return String(Math.round(value));
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Ability Utilities
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function getAbilityData(abilityId: string) {
-    const abilities = MGData.get('abilities');
-    if (!abilities) return null;
-
-    const ability = abilities[abilityId] as {
-        name?: string;
-        baseProbability?: number;
-        baseParameters?: {
-            scaleIncreasePercentage?: number;
-            mutationChanceIncreasePercentage?: number;
-            grantedMutations?: string[];
-            requiredWeather?: string;
-        };
-    } | undefined;
-
-    if (!ability) return null;
-
-    return {
-        id: abilityId,
-        name: ability.name ?? abilityId,
-        baseProbability: ability.baseProbability ?? 0,
-        scaleIncreasePercentage: ability.baseParameters?.scaleIncreasePercentage ?? 0,
-        mutationChanceIncreasePercentage: ability.baseParameters?.mutationChanceIncreasePercentage ?? 0,
-        grantedMutations: ability.baseParameters?.grantedMutations ?? [],
-        requiredWeather: ability.baseParameters?.requiredWeather ?? null,
-    };
-}
-
-export function hasAbility(pet: UnifiedPet, abilities: readonly string[]): boolean {
-    return pet.abilities.some(a => (abilities as readonly string[]).includes(a));
-}
-
-export function isAbilityActive(
-    pet: UnifiedPet,
-    abilityId: string,
-    currentWeather: string | null
-): boolean {
-    if (pet.hunger <= 0) return false;
-
-    const abilityData = getAbilityData(abilityId);
-    if (!abilityData) return false;
-
-    if (abilityData.requiredWeather && currentWeather !== abilityData.requiredWeather) {
-        return false;
-    }
-
-    return true;
-}
-
-export function getStrengthFactor(pet: UnifiedPet): number {
-    // Use pet's actual maxStrength for accurate scaling
-    // Wiki: "Max Strength ranges from 80 to 100"
-    // A pet at max STR should have 100% effectiveness regardless of their max value
-    return pet.currentStrength / pet.maxStrength;
-}
-
-export function getScaledProbability(baseProbability: number, strengthFactor: number): number {
-    return Math.min(100, baseProbability * strengthFactor);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Coin Calculations
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function calculateSizeBoostDelta(
-    species: string,
-    targetScale: number,
-    mutations: string[],
-    scaleIncreasePct: number
-): number {
-    const cropData = getCropData(species);
-    if (!cropData) return 0;
-
-    const currentValue = calculateCropSellPrice(species, targetScale, mutations);
-    const newScale = Math.min(targetScale * (1 + scaleIncreasePct / 100), cropData.maxScale);
-    const newValue = calculateCropSellPrice(species, newScale, mutations);
-
-    return Math.max(0, newValue - currentValue);
-}
-
-export function calculateGranterDelta(
-    species: string,
-    targetScale: number,
-    mutations: string[],
-    grantedMutation: string
-): number {
-    if (mutations.includes(grantedMutation)) return 0;
-
-    const currentValue = calculateCropSellPrice(species, targetScale, mutations);
-    const newMutations = [...mutations, grantedMutation];
-    const newValue = calculateCropSellPrice(species, targetScale, newMutations);
-
-    return Math.max(0, newValue - currentValue);
-}
+import type { UnifiedPet } from '../../../../../../../globals/core/types';
+import { Globals } from '../../../../../../../globals';
+import { MGData } from '../../../../../../../modules/data';
+import { calculateCropSellPrice } from '../../../../../../../modules/calculators/logic/crop';
+import {
+    SIZE_BOOST_ABILITIES,
+    MUTATION_BOOST_ABILITIES,
+    GRANTER_ABILITIES,
+    HARVEST_ABILITIES,
+    REFUND_ABILITIES,
+    FRIEND_BONUS_MULTIPLIER
+} from './constants';
+import {
+    el,
+    getAbilityData,
+    isAbilityActive,
+    getStrengthFactor,
+    getScaledProbability
+} from './abilityUtils';
+import { calculateSizeBoostDelta, calculateGranterDelta } from './coinCalculations';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UI Builders
@@ -197,19 +53,21 @@ export function buildHarvestRow(label: string, crops: string, coins: string): HT
 
 export function calculateSizeBoostStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const allCrops = garden.crops.all;
+    const matureCrops = garden.crops.mature;
 
     // Filter crops if filter is provided
+    // CRITICAL: Only use mature crops - abilities can't affect growing crops
     const crops = tileFilter
-        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
-        : allCrops;
+        ? matureCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : matureCrops;
 
     if (crops.length === 0) {
         return { perProc: 0, perHour: 0 };
     }
 
+    // Use weighted average approach (matches QPM for accuracy)
+    let totalEffectPerHour = 0;
     let totalProcsPerHour = 0;
-    let totalDeltaPerProc = 0;
 
     for (const pet of pets) {
         const strengthFactor = getStrengthFactor(pet);
@@ -225,39 +83,49 @@ export function calculateSizeBoostStats(pets: UnifiedPet[], currentWeather: stri
             const scaledIncrease = abilityData.scaleIncreasePercentage * strengthFactor;
             const procsPerHour = (scaledProb / 100) * 60;
 
-            let totalDelta = 0;
+            // Calculate weighted delta by fruit count (matches QPM)
+            let weightedDelta = 0;
+            let totalWeight = 0;
+
             for (const crop of crops) {
+                const weight = Math.max(1, Math.floor(crop.fruitCount));
+
                 const delta = calculateSizeBoostDelta(
                     crop.species,
                     crop.targetScale,
                     crop.mutations,
                     scaledIncrease
                 );
-                totalDelta += delta;
-            }
-            const avgDelta = totalDelta / crops.length;
 
+                weightedDelta += delta * weight;
+                totalWeight += weight;
+            }
+
+            const avgDeltaPerProc = totalWeight > 0 ? weightedDelta / totalWeight : 0;
+
+            // Accumulate weighted by proc rate
+            totalEffectPerHour += avgDeltaPerProc * procsPerHour;
             totalProcsPerHour += procsPerHour;
-            totalDeltaPerProc += avgDelta;
         }
     }
 
-    const avgPerProc = pets.length > 0 ? totalDeltaPerProc / pets.length : 0;
-    const perHour = totalProcsPerHour * avgPerProc;
+    // Weighted average: total effect per hour / total procs per hour
+    const avgPerProc = totalProcsPerHour > 0 ? totalEffectPerHour / totalProcsPerHour : 0;
 
-    return { perProc: avgPerProc, perHour };
+    return { perProc: avgPerProc, perHour: totalEffectPerHour };
 }
 
 export function calculateMutationBoostStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const allCrops = garden.crops.all;
+    const matureCrops = garden.crops.mature;
     const weatherData = Globals.weather.get();
     const weatherInfo = MGData.get('weather');
 
     // Filter crops if filter is provided
+    // CRITICAL: Only use mature crops - abilities can't affect growing crops
     const crops = tileFilter
-        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
-        : allCrops;
+        ? matureCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : matureCrops;
 
     if (crops.length === 0 || !weatherData.isActive || !weatherInfo) {
         return { perProc: 0, perHour: 0 };
@@ -313,19 +181,21 @@ export function calculateMutationBoostStats(pets: UnifiedPet[], currentWeather: 
 
 export function calculateGranterStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
     const garden = Globals.myGarden.get();
-    const allCrops = garden.crops.all;
+    const matureCrops = garden.crops.mature;
 
     // Filter crops if filter is provided
+    // CRITICAL: Only use mature crops - abilities can't affect growing crops
     const crops = tileFilter
-        ? allCrops.filter(c => tileFilter.has(String(c.tileIndex)))
-        : allCrops;
+        ? matureCrops.filter(c => tileFilter.has(String(c.tileIndex)))
+        : matureCrops;
 
     if (crops.length === 0) {
         return { perProc: 0, perHour: 0 };
     }
 
+    // Use weighted average approach (matches QPM for accuracy)
+    let totalEffectPerHour = 0;
     let totalProcsPerHour = 0;
-    let totalDeltaPerProc = 0;
 
     for (const pet of pets) {
         const strengthFactor = getStrengthFactor(pet);
@@ -345,27 +215,56 @@ export function calculateGranterStats(pets: UnifiedPet[], currentWeather: string
 
             const grantedMutation = grantedMutations[0];
 
-            let totalDelta = 0;
+            // Calculate weighted delta by fruit count (matches QPM)
+            let weightedDelta = 0;
+            let totalWeight = 0;
+
             for (const crop of crops) {
+                // Filter crops based on mutation type
+                // Color mutations (Gold/Rainbow) are mutually exclusive - skip if crop has ANY color mutation
+                // Weather mutations stack - only skip if crop already has the specific weather mutation
+                const isColorMutation = grantedMutation === 'Gold' || grantedMutation === 'Rainbow';
+
+                if (isColorMutation) {
+                    // For color mutations: exclude crops with Gold OR Rainbow (matches QPM logic)
+                    const hasGold = crop.mutations.includes('Gold');
+                    const hasRainbow = crop.mutations.includes('Rainbow');
+                    if (hasGold || hasRainbow) {
+                        continue;
+                    }
+                } else {
+                    // For weather mutations: only exclude if crop already has this specific mutation
+                    if (crop.mutations.includes(grantedMutation)) {
+                        continue;
+                    }
+                }
+
+                const weight = Math.max(1, Math.floor(crop.fruitCount));
+
                 const delta = calculateGranterDelta(
                     crop.species,
                     crop.targetScale,
                     crop.mutations,
                     grantedMutation
                 );
-                totalDelta += delta;
-            }
-            const avgDelta = totalDelta / crops.length;
 
+                weightedDelta += delta * weight;
+                totalWeight += weight;
+            }
+
+            const avgDeltaPerProc = totalWeight > 0 ? weightedDelta / totalWeight : 0;
+            const effectPerHour = avgDeltaPerProc * procsPerHour;
+
+            // Accumulate weighted by proc rate
+            totalEffectPerHour += effectPerHour;
             totalProcsPerHour += procsPerHour;
-            totalDeltaPerProc += avgDelta;
         }
     }
 
-    const avgPerProc = pets.length > 0 ? totalDeltaPerProc / pets.length : 0;
-    const perHour = totalProcsPerHour * avgPerProc;
+    // Weighted average: total effect per hour / total procs per hour
+    const avgPerProc = totalProcsPerHour > 0 ? totalEffectPerHour / totalProcsPerHour : 0;
 
-    return { perProc: avgPerProc, perHour };
+    return { perProc: avgPerProc, perHour: totalEffectPerHour };
 }
 
 export function calculateHarvestStats(pets: UnifiedPet[], currentWeather: string | null, tileFilter?: Set<string>) {
@@ -405,7 +304,7 @@ export function calculateHarvestStats(pets: UnifiedPet[], currentWeather: string
 
     let expectedCoins = 0;
     for (const crop of harvestable) {
-        const value = calculateCropSellPrice(crop.species, crop.targetScale, crop.mutations);
+        const value = calculateCropSellPrice(crop.species, crop.targetScale, crop.mutations) * FRIEND_BONUS_MULTIPLIER;
         expectedCoins += value * totalProbability;
     }
 
@@ -449,7 +348,7 @@ export function calculateRefundStats(pets: UnifiedPet[], currentWeather: string 
 
     let expectedCoins = 0;
     for (const crop of harvestable) {
-        const value = calculateCropSellPrice(crop.species, crop.targetScale, crop.mutations);
+        const value = calculateCropSellPrice(crop.species, crop.targetScale, crop.mutations) * FRIEND_BONUS_MULTIPLIER;
         expectedCoins += value * totalProbability;
     }
 

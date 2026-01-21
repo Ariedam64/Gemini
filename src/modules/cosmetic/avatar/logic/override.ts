@@ -4,8 +4,8 @@
  * Uses MutationObserver + 100ms polling to persistently override avatar cosmetics
  */
 
-import type { AvatarOutfit } from "./types";
-import { pageWindow } from "../../../utils/windowContext";
+import type { AvatarOutfit } from "../types";
+import { pageWindow } from "../../../../utils/windowContext";
 import { list } from "./query";
 
 const AVATAR_INDICES = {
@@ -68,7 +68,7 @@ function outfitToArray(outfit: AvatarOutfit, current?: string[]): string[] {
  */
 export async function render(outfit: AvatarOutfit): Promise<boolean> {
     try {
-        const { Store } = await import("../../../atoms/store");
+        const { Store } = await import("../../../../atoms/store");
         const myData = await Store.select("myDataAtom") as any;
         const currentAvatar = myData?.cosmetic?.avatar || [];
         const newAvatar = outfitToArray(outfit, currentAvatar);
@@ -225,22 +225,26 @@ function startMonitor(avatar: string[]) {
     // Initial pass
     process();
 
-    // Fast polling (100ms) to catch React re-renders immediately
-    monitorInterval = setInterval(process, 100);
+    // Reasonable polling (500ms) - MutationObserver catches instant changes
+    monitorInterval = setInterval(process, 500);
 
     // MutationObserver for instant response to DOM changes
     mutationObserver = new MutationObserver(() => {
         setTimeout(process, 10); // Slight delay to let React finish
     });
 
-    mutationObserver.observe(doc.body, {
+    // Scope to game viewport if possible (reduces unnecessary callbacks)
+    const targetElement = doc.querySelector('.game-root')
+                          || doc.querySelector('#root')
+                          || doc.body;
+
+    mutationObserver.observe(targetElement, {
         childList: true,
         subtree: true,
-        attributes: true,
-        attributeFilter: ['src'] // Watch for src attribute changes
+        attributeFilter: ['src'] // Only watch src changes
     });
 
-    console.log('[Avatar] Aggressive monitor started (100ms + MutationObserver)');
+    console.log('[Avatar] Aggressive monitor started (500ms + MutationObserver)');
 }
 
 /**

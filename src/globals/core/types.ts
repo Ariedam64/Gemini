@@ -576,6 +576,7 @@ export type CropInfo = {
   targetScale: number;
   mutations: string[];
   isMature: boolean;
+  fruitCount: number; // Multi-harvest fruit count (1 for single-fruit plants)
 };
 
 export type EggWithTile = {

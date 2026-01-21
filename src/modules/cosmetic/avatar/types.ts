@@ -19,10 +19,10 @@ export interface CosmeticInfo extends CosmeticItem {
  * Avatar outfit specification (partial - only specify what you want to change)
  */
 export interface AvatarOutfit {
-    top?: string;
-    mid?: string;
-    bottom?: string;
-    expression?: string;
+    top?: string | null;
+    mid?: string | null;
+    bottom?: string | null;
+    expression?: string | null;
     color?: string;
 }
 
@@ -30,12 +30,12 @@ export interface AvatarOutfit {
  * Current avatar configuration (all slots populated)
  */
 export interface CurrentAvatar {
-    top: string;
-    mid: string;
-    bottom: string;
-    expression: string;
+    top: string | null;
+    mid: string | null;
+    bottom: string | null;
+    expression: string | null;
     color: string;
-    array: string[]; // 4-element array format
+    array: (string | null)[]; // 4-element array format
 }
 
 /**
@@ -45,6 +45,7 @@ export interface ListOptions {
     type?: string | string[];
     availability?: string | string[];
     search?: string;
+    includeUnowned?: boolean;
 }
 
 /**
@@ -52,13 +53,13 @@ export interface ListOptions {
  */
 export interface AvatarDebugInfo {
     current: {
-        avatar: string[];
+        avatar: (string | null)[];
         color: string;
         parsed: {
-            top: string;
-            mid: string;
-            bottom: string;
-            expression: string;
+            top: string | null;
+            mid: string | null;
+            bottom: string | null;
+            expression: string | null;
         };
     };
     counts: Record<string, number>;
@@ -74,3 +75,20 @@ export interface ToCanvasOptions {
     height?: number;
     scale?: number;
 }
+
+/**
+ * Fallback asset path for special rendering cases.
+ * @internal
+ */
+export const ALT_ASSET_PATH = "Expression_Stressed.png";
+
+/**
+ * Type-specific blank asset paths for "None" options.
+ * @internal
+ */
+export const BLANK_PATHS: Record<string, string> = {
+    Top: "Top_Blank.png",
+    Mid: "Mid_Blank.png",
+    Bottom: "Bottom_Blank.png",
+    Expression: "Expression_Blank.png",
+};

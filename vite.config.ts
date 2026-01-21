@@ -27,7 +27,11 @@ function geminiHmrPlugin(): Plugin {
     };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+    define: {
+        // Inject build mode as compile-time constant
+        '__BUILD_MODE__': JSON.stringify(mode === 'development' ? 'dev' : 'prod'),
+    },
     plugins: [
         geminiHmrPlugin(),
         monkey({
@@ -75,4 +79,4 @@ export default defineConfig({
         minify: true,
         target: 'es2020'
     }
-});
+}));

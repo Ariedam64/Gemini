@@ -4,20 +4,43 @@
  * Follows MGSprite pattern - uses Canvas, not DOM
  */
 
-import type { AvatarOutfit, ToCanvasOptions } from "./types";
+import type { AvatarOutfit, ToCanvasOptions } from "../types";
 import { list } from "./query";
 
+// Image cache for repeated renders
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+
 /**
- * Load an image and return a promise
+ * Load an image and return a promise (with caching)
  */
 function loadImage(url: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
+    // Check cache first
+    if (imageCache.has(url)) {
+        return imageCache.get(url)!;
+    }
+
+    // Create promise and cache it immediately
+    const promise = new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+        img.onerror = () => {
+            // Remove from cache on error so retry is possible
+            imageCache.delete(url);
+            reject(new Error(`Failed to load image: ${url}`));
+        };
         img.src = url;
     });
+
+    imageCache.set(url, promise);
+    return promise;
+}
+
+/**
+ * Clear image cache (useful for testing or memory management)
+ */
+export function clearImageCache(): void {
+    imageCache.clear();
 }
 
 /**

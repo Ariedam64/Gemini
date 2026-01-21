@@ -1,11 +1,18 @@
 // src/modules/calculators/mutation.ts
 // Mutation calculation utilities - verified from game source
 
+import { MGData } from '../../data';
+
 /**
- * Mutation values from game wiki
- * Source: https://wiki.magiccircle.gg/
+ * Fallback mutation values (used if MGData is unavailable)
+ * Source: Game source files - mutationsDex.ts
+ *
+ * NOTE: Internal IDs differ from display names:
+ * - Ambershine (internal) → Amberlit (display) = 5
+ * - Ambercharged (internal) → Amberbound (display) = 6
+ * - Dawncharged (internal) → Dawnbound (display) = 3
  */
-const MUTATION_VALUES = {
+const FALLBACK_MUTATION_VALUES = {
   // Growth mutations (exclusive)
   Gold: 25,
   Rainbow: 50,
@@ -16,11 +23,43 @@ const MUTATION_VALUES = {
   Frozen: 10,
 
   // Time-based conditions (stack additively with weather)
+  // Using display names (which match game source coinMultiplier values)
   Dawnlit: 2,
   Dawnbound: 3,
   Amberlit: 5,
   Amberbound: 6,
 } as const;
+
+/**
+ * Get mutation value from MGData (preferred) or fallback to hardcoded values
+ */
+function getMutationValueFromData(mutation: string): number | null {
+  const mutations = MGData.get('mutations');
+  if (!mutations) return FALLBACK_MUTATION_VALUES[mutation as keyof typeof FALLBACK_MUTATION_VALUES] ?? null;
+
+  const mutationData = mutations[mutation] as { coinMultiplier?: number } | undefined;
+  if (!mutationData || typeof mutationData.coinMultiplier !== 'number') {
+    return FALLBACK_MUTATION_VALUES[mutation as keyof typeof FALLBACK_MUTATION_VALUES] ?? null;
+  }
+
+  return mutationData.coinMultiplier;
+}
+
+// Cache for mutation values to avoid repeated MGData lookups
+const mutationValueCache = new Map<string, number>();
+
+/**
+ * Get mutation multiplier value (with caching)
+ */
+function getMutationValueCached(mutation: string): number {
+  if (mutationValueCache.has(mutation)) {
+    return mutationValueCache.get(mutation)!;
+  }
+
+  const value = getMutationValueFromData(mutation) ?? 1;
+  mutationValueCache.set(mutation, value);
+  return value;
+}
 
 /**
  * Growth mutations (exclusive - only one applies)
@@ -66,14 +105,17 @@ export function calculateMutationMultiplier(mutations: string[]): number {
     if (mut === 'Gold' || mut === 'Rainbow') {
       // Growth mutations are exclusive (Rainbow takes precedence)
       if (mut === 'Rainbow') {
-        growthMutation = MUTATION_VALUES.Rainbow;
+        growthMutation = getMutationValueCached('Rainbow');
       } else if (growthMutation === 1) {
-        growthMutation = MUTATION_VALUES.Gold;
+        growthMutation = getMutationValueCached('Gold');
       }
-    } else if (mut in MUTATION_VALUES) {
+    } else {
       // Conditions (weather + time) stack additively
-      conditionSum += MUTATION_VALUES[mut as keyof typeof MUTATION_VALUES];
-      conditionCount++;
+      const value = getMutationValueCached(mut);
+      if (value > 1) { // Only count valid condition mutations
+        conditionSum += value;
+        conditionCount++;
+      }
     }
   }
 
@@ -88,7 +130,7 @@ export function calculateMutationMultiplier(mutations: string[]): number {
  * @returns Mutation value or null if unknown
  */
 export function getMutationValue(mutation: string): number | null {
-  return MUTATION_VALUES[mutation as keyof typeof MUTATION_VALUES] ?? null;
+  return getMutationValueFromData(mutation);
 }
 
 /**
@@ -124,7 +166,11 @@ export function isEnvironmentalMutation(mutation: string): boolean {
  * @returns Array of mutation names
  */
 export function getAllMutationNames(): string[] {
-  return Object.keys(MUTATION_VALUES);
+  const mutations = MGData.get('mutations');
+  if (!mutations) {
+    return Object.keys(FALLBACK_MUTATION_VALUES);
+  }
+  return Object.keys(mutations);
 }
 
 /**

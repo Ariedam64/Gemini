@@ -36,6 +36,8 @@ export const SECTION_KEYS = {
     SETTINGS: 'sections:settings',
     /** Test section state */
     TEST: 'sections:test',
+    /** Avatar section loadouts */
+    AVATAR_LOADOUTS: 'sections:avatar:loadouts',
 } as const;
 
 /** Keys for core modules (infrastructure - per .claude/rules/modules.md) */
@@ -80,7 +82,7 @@ export const FEATURE_KEYS = {
     SHOP_NOTIFIER: 'feature:shopNotifier:config',
 } as const;
 
-/** Keys for development/debug purposes */
+/** Keys for debug purposes */
 export const DEV_KEYS = {
     /** Auto-reload toggle for HMR */
     AUTO_RELOAD: 'dev:auto-reload',

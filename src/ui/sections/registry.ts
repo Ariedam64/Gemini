@@ -10,8 +10,10 @@ import { PetsSection } from "./Pets";
 import { TrackersSection } from "./Trackers";
 import { ShopNotifierSection } from "./ShopNotifier";
 import { DevSection } from "./Dev";
+import { AvatarSection } from "./Avatar";
 
 let testSectionInstance: TestSection | null = null;
+
 let shopNotifierSectionInstance: ShopNotifierSection | null = null;
 
 function getTestSection(): TestSection {
@@ -40,7 +42,9 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     getShopNotifierSection(),
     new PetsSection(deps),
     new TrackersSection(deps),
+    new AvatarSection(),
   ];
+
 
   // Only include developer tools in non-production builds
   // This allows them to be completely stripped out during 'npm run release'

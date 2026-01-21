@@ -6,7 +6,7 @@
  */
 
 // Types
-import type { PetTeam, TeamId, PetTeamConfig } from './types';
+import type { PetTeam, TeamId, PetTeamConfig, AriesTeam, ImportResult } from './types';
 import { DEFAULT_CONFIG, STORAGE_KEY, MAX_PETS_PER_TEAM, MAX_TEAMS, EMPTY_SLOT } from './types';
 
 // State
@@ -15,6 +15,7 @@ import * as State from './state';
 // Logic
 import * as TeamLogic from './logic/team';
 import * as ActiveLogic from './logic/active';
+import * as ImportLogic from './logic/import';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module State
@@ -77,10 +78,13 @@ export const MGPetTeam = {
     setActiveTeamId: ActiveLogic.setActiveTeamId,
     isActiveTeam: ActiveLogic.isActiveTeam,
     activateTeam: ActiveLogic.activateTeam,
+
+    // ─── Import ───
+    importFromAries: ImportLogic.importFromAries,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Type Exports
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type { PetTeam, TeamId, PetTeamConfig };
+export type { PetTeam, TeamId, PetTeamConfig, AriesTeam, ImportResult };
