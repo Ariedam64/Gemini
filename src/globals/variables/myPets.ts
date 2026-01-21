@@ -2,7 +2,7 @@ import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
 import { getMyGarden } from "./myGarden";
 import { storageGet, storageSet, KEYS } from "../../utils/storage";
-import { filterPetAbilityLogs, type ActivityLogEntry } from "../../modules/data";
+import { filterPetAbilityLogs, type ActivityLogEntry, MGData } from "../../modules/data";
 import type {
   MyPetsGlobal,
   MyPetsData,
@@ -53,12 +53,19 @@ function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutc
   const currentStrength = calculateCurrentStrength(item.petSpecies, item.xp, maxStrength);
   const isMature = isPetMature(item.petSpecies, growthStage);
 
+  // Calculate hunger percentage
+  const pets = MGData.get("pets") as Record<string, any> | null;
+  const petData = pets?.[item.petSpecies];
+  const coinsToFullyReplenishHunger = petData?.coinsToFullyReplenishHunger ?? 1;
+  const hungerPercent = (item.hunger / coinsToFullyReplenishHunger) * 100;
+
   return {
     id: item.id,
     petSpecies: item.petSpecies,
     name: item.name,
     xp: item.xp,
     hunger: item.hunger,
+    hungerPercent,
     mutations: [...item.mutations],
     targetScale: item.targetScale,
     abilities: [...item.abilities],
@@ -81,12 +88,19 @@ function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): Uni
   const currentStrength = calculateCurrentStrength(info.slot.petSpecies, info.slot.xp, maxStrength);
   const isMature = isPetMature(info.slot.petSpecies, growthStage);
 
+  // Calculate hunger percentage
+  const pets = MGData.get("pets") as Record<string, any> | null;
+  const petData = pets?.[info.slot.petSpecies];
+  const coinsToFullyReplenishHunger = petData?.coinsToFullyReplenishHunger ?? 1;
+  const hungerPercent = (info.slot.hunger / coinsToFullyReplenishHunger) * 100;
+
   return {
     id: info.slot.id,
     petSpecies: info.slot.petSpecies,
     name: info.slot.name,
     xp: info.slot.xp,
     hunger: info.slot.hunger,
+    hungerPercent,
     mutations: [...info.slot.mutations],
     targetScale: info.slot.targetScale,
     abilities: [...info.slot.abilities],

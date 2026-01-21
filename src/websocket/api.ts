@@ -172,8 +172,8 @@ export function purchaseTool(toolId: string, win: any = pageWindow): SendResult 
   return send(T.PurchaseTool, { scope: "Quinoa", toolId }, win);
 }
 
-export function purchaseSeed(seedId: string, win: any = pageWindow): SendResult {
-  return send(T.PurchaseSeed, { scope: "Quinoa", seedId }, win);
+export function purchaseSeed(species: string, win: any = pageWindow): SendResult {
+  return send(T.PurchaseSeed, { scope: "Quinoa", species }, win);
 }
 
 export function plantEgg(eggId: string, x: number, y: number, win: any = pageWindow): SendResult {

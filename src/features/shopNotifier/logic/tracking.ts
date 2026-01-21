@@ -28,6 +28,15 @@ function handleRestock(shopType: ShopType, event: ShopRestockEvent): void {
     shopType,
     items: available,
   });
+
+  // Dispatch custom event for notification
+  const customEvent = new CustomEvent("gemini:shop-restock-tracked", {
+    detail: {
+      shopType,
+      items: available,
+    },
+  });
+  window.dispatchEvent(customEvent);
 }
 
 /**

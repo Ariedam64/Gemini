@@ -29,11 +29,69 @@ export interface CustomSound {
 }
 
 /**
+ * Entity types that can have custom sounds
+ */
+export type EntityType = 'shop' | 'weather' | 'pet';
+
+/**
+ * Custom sound configuration for a specific entity (item, weather, pet event)
+ */
+export interface ItemCustomSound {
+  /** Type of entity (shop item, weather, pet event) */
+  entityType: EntityType;
+
+  /** Unique identifier for the entity */
+  entityId: string;
+
+  /** Optional shop type (only for shop items) */
+  shopType?: string;
+
+  /** Sound configuration */
+  soundId: string;
+  volume: number;
+  mode: NotificationMode;
+}
+
+/**
  * Storage structure for the custom sounds library
  */
 export interface CustomSoundsLibrary {
   sounds: CustomSound[];
+  itemCustomSounds: ItemCustomSound[];
   version: number;
+}
+
+/**
+ * Notification type identifiers
+ */
+export type NotificationType = 'shop' | 'pet' | 'weather';
+
+/**
+ * Notification play mode
+ */
+export type NotificationMode = 'one-shot' | 'loop';
+
+/**
+ * Configuration for a single notification type
+ */
+export interface NotificationConfig {
+  /** Sound ID to play (references CustomSound.id) */
+  soundId: string;
+
+  /** Volume level (0-100) */
+  volume: number;
+
+  /** Play mode: one-shot (play once) or loop (play repeatedly) */
+  mode: NotificationMode;
+}
+
+/**
+ * All notification settings
+ */
+export interface NotificationSettings {
+  shop: NotificationConfig;
+  pet: NotificationConfig;
+  weather: NotificationConfig;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,7 +117,29 @@ export const LIMITS = {
  */
 export const DEFAULT_LIBRARY: CustomSoundsLibrary = {
   sounds: [],
+  itemCustomSounds: [],
   version: 1,
+};
+
+/**
+ * Default notification settings
+ */
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  shop: {
+    soundId: 'default-notification', // References the default sound
+    volume: 80,
+    mode: 'one-shot',
+  },
+  pet: {
+    soundId: 'default-notification',
+    volume: 80,
+    mode: 'one-shot',
+  },
+  weather: {
+    soundId: 'default-notification',
+    volume: 80,
+    mode: 'one-shot',
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

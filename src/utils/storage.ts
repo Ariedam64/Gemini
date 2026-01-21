@@ -42,6 +42,8 @@ export const SECTION_KEYS = {
 export const MODULE_KEYS = {
     /** Audio module custom sounds library */
     AUDIO_CUSTOM_SOUNDS: 'module:audio:customSounds',
+    /** Audio module notification settings */
+    AUDIO_NOTIFICATION_SETTINGS: 'module:audio:notificationSettings',
 } as const;
 
 /** Keys for global variables persistent state */
@@ -78,6 +80,10 @@ export const FEATURE_KEYS = {
     CROP_SIZE_INDICATOR: 'feature:cropSizeIndicator:config',
     /** Shop notifier feature config */
     SHOP_NOTIFIER: 'feature:shopNotifier:config',
+    /** Weather notifier feature config */
+    WEATHER_NOTIFIER: 'feature:weatherNotifier:config',
+    /** Pet hunger notifier feature config */
+    PET_HUNGER_NOTIFIER: 'feature:petHungerNotifier:config',
 } as const;
 
 /** Keys for development/debug purposes */
@@ -112,6 +118,8 @@ export const EVENTS = {
     HUD_OPEN_CHANGE: 'gemini:hud-open-change',
     /** Layout resize request */
     LAYOUT_RESIZE: 'gemini:layout-resize',
+    /** Custom sound configuration changed */
+    CUSTOM_SOUND_CHANGE: 'gemini:custom-sound-change',
     /** Manual HMR toggle */
     TOGGLE_MANUAL_HMR: 'gemini:toggle-manual-hmr',
     /** Update pending notification */

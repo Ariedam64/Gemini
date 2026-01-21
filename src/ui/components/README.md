@@ -48,6 +48,7 @@ Always use CSS variables from `src/ui/styles/variables.css.ts`.
 | **NavTabs** | Tab navigation. | — |
 | **Range** | Percentage or value sliders. | `setValue`, `getValue`, `setDisabled` |
 | **ReorderableList** | Drag-to-reorder lists. | — |
+| **SoundPicker** | Drag/drop audio upload with rename list. | getItems, setItems, addFiles |
 | **SearchBar** | Search input with icon. | — |
 | **SegmentedControl** | Segmented option selection. | `select`, `getSelected`, `setDisabled` |
 | **Select** | Dropdown selection. | — |

@@ -103,6 +103,7 @@ export type UnifiedPet = {
   name: string | null;
   xp: number;
   hunger: number;
+  hungerPercent: number;
   mutations: string[];
   targetScale: number;
   abilities: string[];
@@ -470,11 +471,9 @@ export type ShopsGlobal = {
 // WEATHER GLOBAL
 // =============================================================================
 
-export type WeatherType = "Sunny" | "Rain" | "Frost" | "Dawn" | "AmberMoon";
-
 export type WeatherData = {
-  type: WeatherType;
-  isActive: boolean;
+  id: string;
+  name: string;
   startTime: number | null;
   endTime: number | null;
   remainingSeconds: number;
@@ -488,7 +487,7 @@ export type WeatherChangeEvent = {
 export type WeatherGlobal = {
   get(): WeatherData;
   subscribe(callback: (value: WeatherData, prev: WeatherData) => void, options?: SubscribeOptions): Unsubscribe;
-  subscribeChange(callback: (event: WeatherChangeEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeStable(callback: (event: WeatherChangeEvent) => void, options?: SubscribeOptions): Unsubscribe;
   destroy(): void;
 };
 

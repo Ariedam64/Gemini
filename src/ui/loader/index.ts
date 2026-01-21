@@ -10,4 +10,5 @@ export {
   initSectionsPreload,
   initFeatures,
   startInjectGamePanelButton,
+  startAlertInjector,
 } from "./bootstrap";

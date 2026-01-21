@@ -5,6 +5,7 @@
 import type { ShopNotifierConfig, TrackedItem } from "./types";
 import * as State from "./state";
 import * as Tracking from "./logic/tracking";
+import * as LimitedItems from "./logic/limitedItems";
 
 let initialized = false;
 
@@ -24,6 +25,7 @@ export function init(): void {
 
   initialized = true;
   Tracking.startTracking();
+  LimitedItems.startLimitedItemsMonitoring();
   console.log("[ShopNotifier] Initialized");
 }
 
@@ -34,6 +36,7 @@ export function destroy(): void {
   if (!initialized) return;
 
   Tracking.stopTracking();
+  LimitedItems.stopLimitedItemsMonitoring();
   initialized = false;
   console.log("[ShopNotifier] Destroyed");
 }

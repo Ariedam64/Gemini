@@ -16,7 +16,6 @@ import {
   type ShopItemRow,
 } from "./shopsCardData";
 import { createItemsTable } from "./shopsCardTable";
-
 /**
  * Public handle for the shops card part
  */
@@ -24,6 +23,14 @@ export interface ShopsCardPart {
   root: HTMLElement;
   refresh(): void;
   destroy(): void;
+}
+
+/**
+ * Options for the shops card
+ */
+export interface ShopsCardOptions {
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
 /**
@@ -43,10 +50,90 @@ interface ComponentRefs {
   tableHandle: TableHandle<ShopItemRow> | null;
 }
 
+function getLongestLabel(labels: string[]): string {
+  let longest = "";
+  for (const label of labels) {
+    if (label.length > longest.length) longest = label;
+  }
+  return longest;
+}
+
+function measureSelectWidth(selectRoot: HTMLElement, label: string): number {
+  const rootNode = selectRoot.getRootNode();
+  const container =
+    rootNode instanceof ShadowRoot
+      ? rootNode
+      : document.body || document.documentElement;
+
+  if (!container) return 0;
+
+  const measureRoot = element("div", { className: "select" }) as HTMLDivElement;
+  for (const className of Array.from(selectRoot.classList)) {
+    if (className.startsWith("select--")) {
+      measureRoot.classList.add(className);
+    }
+  }
+
+  measureRoot.style.position = "absolute";
+  measureRoot.style.visibility = "hidden";
+  measureRoot.style.pointerEvents = "none";
+  measureRoot.style.left = "-9999px";
+  measureRoot.style.top = "-9999px";
+  measureRoot.style.minWidth = "0";
+
+  const trigger = element("button", {
+    className: "select-trigger",
+    type: "button",
+  }) as HTMLButtonElement;
+  trigger.style.width = "auto";
+  trigger.style.minWidth = "0";
+  trigger.style.whiteSpace = "nowrap";
+
+  const caretText =
+    selectRoot.querySelector(".select-caret")?.textContent || "v";
+
+  const value = element("span", { className: "select-value" }, label) as HTMLSpanElement;
+  const caret = element("span", { className: "select-caret" }, caretText) as HTMLSpanElement;
+  trigger.append(value, caret);
+  measureRoot.appendChild(trigger);
+
+  container.appendChild(measureRoot);
+  const width = Math.ceil(trigger.getBoundingClientRect().width);
+  measureRoot.remove();
+
+  return width;
+}
+
+function applySelectWidth(selectRoot: HTMLElement, labels: string[]): void {
+  const longest = getLongestLabel(labels);
+  if (!longest) return;
+
+  let attempts = 0;
+  const maxAttempts = 6;
+
+  const apply = () => {
+    attempts += 1;
+    if (!selectRoot.isConnected) {
+      if (attempts < maxAttempts) {
+        requestAnimationFrame(apply);
+      }
+      return;
+    }
+
+    const width = measureSelectWidth(selectRoot, longest);
+    if (width > 0) {
+      selectRoot.style.width = `${width}px`;
+      selectRoot.style.minWidth = `${width}px`;
+    }
+  };
+
+  requestAnimationFrame(apply);
+}
+
 /**
  * Create the shops card part
  */
-export function createShopsCard(): ShopsCardPart {
+export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
   const shops = getShops();
   const shopsData = shops.get();
 
@@ -142,6 +229,11 @@ export function createShopsCard(): ShopsCardPart {
       },
     });
 
+    const selectRoot = components.shopTypeSelect.root;
+    selectRoot.style.minWidth = "0";
+    selectRoot.style.width = "auto";
+    applySelectWidth(selectRoot, selectOptions.map((opt) => opt.label));
+
     // Search input
     components.searchInput = SearchBar({
       placeholder: "Search items...",
@@ -183,22 +275,37 @@ export function createShopsCard(): ShopsCardPart {
 
     // Create filters (callbacks will reference the already-created tableHandle)
     const filters = createFilters();
-
     // Add to DOM (filters first for visual order)
     body.appendChild(filters);
     body.appendChild(components.tableHandle.root);
+
+    const hint = element("div", { className: "shops-card-hint" });
+    const desktopHint = element(
+      "span",
+      { className: "shops-card-hint-desktop" },
+      "Click an item to set a custom sound alert. Right-click to reset"
+    );
+    const mobileHint = element(
+      "span",
+      { className: "shops-card-hint-mobile" },
+      "Tap an item to set a custom sound alert. Long-press to reset"
+    );
+    hint.append(desktopHint, mobileHint);
+    body.appendChild(hint);
 
     // Create card
     root = Card(
       {
         id: "shops-card",
-        title: "Shops",
+        title: "Shops restock",
+        subtitle: "Get notified when tracked items restock",
         expandable: true,
-        defaultExpanded: true,
+        defaultExpanded: options?.defaultExpanded ?? true,
         stateKey: "shops",
         variant: "soft",
         padding: "none",
         divider: false,
+        onExpandChange: options?.onExpandChange,
       },
       body
     );

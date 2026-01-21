@@ -21,7 +21,10 @@ import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
 import { MGShopNotifier } from "../../features/shopNotifier";
+import { MGWeatherNotifier } from "../../features/weatherNotifier";
+import { MGPetHungerNotifier } from "../../features/petHungerNotifier";
 import { getRegistry } from "../inject/core/registry";
+import { startAlertInjector } from "../inject/alert";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -234,6 +237,8 @@ export function initFeatures(loader: LoaderController): void {
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
     { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
+    { name: "WeatherNotifier", init: MGWeatherNotifier.init.bind(MGWeatherNotifier) },
+    { name: "PetHungerNotifier", init: MGPetHungerNotifier.init.bind(MGPetHungerNotifier) },
   ];
 
   let initializedCount = 0;
@@ -296,4 +301,4 @@ export function initFeatures(loader: LoaderController): void {
   }
 }
 
-export { startInjectGamePanelButton };
+export { startInjectGamePanelButton, startAlertInjector };

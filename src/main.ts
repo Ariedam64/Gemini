@@ -10,6 +10,7 @@ import {
   initSectionsPreload,
   initFeatures,
   startInjectGamePanelButton,
+  startAlertInjector,
 } from "./ui/loader";
 import { migrateStorageKeys } from "./utils/storage";
 
@@ -61,4 +62,7 @@ installReactDevToolsHook();
 
   const hud = await initHUD(loader);
   startInjectGamePanelButton({ onClick: () => hud.setOpen(true) });
+
+  // Initialize alert injector (notification button)
+  void startAlertInjector();
 })();

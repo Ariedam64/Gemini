@@ -16,11 +16,12 @@
  *   MGAudio.CustomSounds.stop();
  */
 
-import type { CustomSound } from './types';
-import { SoundNotFoundError } from './types';
-import { loadSounds, saveSounds } from './storage';
+import type { CustomSound, NotificationSettings, NotificationType, NotificationConfig, ItemCustomSound, EntityType } from './types';
+import { SoundNotFoundError, DEFAULT_NOTIFICATION_SETTINGS } from './types';
+import { loadSounds, saveSounds, loadNotificationSettings, saveNotificationSettings, loadItemCustomSounds, saveItemCustomSounds } from './storage';
 import { ensureDefaultSounds, isDefaultSound } from './defaults';
 import { validateName, validateSource, checkSoundLimit } from './validation';
+import { EVENTS } from '../../../utils/storage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -260,6 +261,206 @@ export function stop(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Notification Settings
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Get all notification settings
+ */
+export function getNotificationSettings(): NotificationSettings {
+  return loadNotificationSettings();
+}
+
+/**
+ * Get notification config for a specific type
+ */
+export function getNotificationConfig(type: NotificationType): NotificationConfig {
+  const settings = loadNotificationSettings();
+  return settings[type];
+}
+
+/**
+ * Update notification settings for a specific type
+ */
+export function setNotificationConfig(type: NotificationType, config: NotificationConfig): void {
+  const settings = loadNotificationSettings();
+  settings[type] = config;
+  saveNotificationSettings(settings);
+
+  console.log(`[CustomSounds] Updated notification config for ${type}:`, config);
+}
+
+/**
+ * Update all notification settings
+ */
+export function setNotificationSettings(settings: NotificationSettings): void {
+  saveNotificationSettings(settings);
+  console.log('[CustomSounds] Updated all notification settings');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Item Custom Sounds Management
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build a unique key for entity identification
+ */
+function buildEntityKey(entityType: EntityType, entityId: string, shopType?: string): string {
+  if (entityType === 'shop' && shopType) {
+    return `${entityType}:${shopType}:${entityId}`;
+  }
+  return `${entityType}:${entityId}`;
+}
+
+/**
+ * Get custom sound config for a specific entity
+ *
+ * @param entityType - Type of entity (shop, weather, pet)
+ * @param entityId - Unique identifier for the entity
+ * @param shopType - Optional shop type (only for shop items)
+ * @returns Custom sound config or null if not found
+ */
+export function getItemCustomSound(
+  entityType: EntityType,
+  entityId: string,
+  shopType?: string
+): ItemCustomSound | null {
+  ensureInitialized();
+  const itemCustomSounds = loadItemCustomSounds();
+  const key = buildEntityKey(entityType, entityId, shopType);
+
+  return itemCustomSounds.find((item) => {
+    const itemKey = buildEntityKey(item.entityType, item.entityId, item.shopType);
+    return itemKey === key;
+  }) ?? null;
+}
+
+/**
+ * Set custom sound config for a specific entity
+ *
+ * @param entityType - Type of entity (shop, weather, pet)
+ * @param entityId - Unique identifier for the entity
+ * @param config - Sound configuration (soundId, volume, mode)
+ * @param shopType - Optional shop type (only for shop items)
+ */
+export function setItemCustomSound(
+  entityType: EntityType,
+  entityId: string,
+  config: { soundId: string; volume: number; mode: 'one-shot' | 'loop' },
+  shopType?: string
+): void {
+  ensureInitialized();
+  const itemCustomSounds = loadItemCustomSounds();
+  const key = buildEntityKey(entityType, entityId, shopType);
+
+  // Find existing custom sound
+  const existingIndex = itemCustomSounds.findIndex((item) => {
+    const itemKey = buildEntityKey(item.entityType, item.entityId, item.shopType);
+    return itemKey === key;
+  });
+
+  const newCustomSound: ItemCustomSound = {
+    entityType,
+    entityId,
+    shopType,
+    soundId: config.soundId,
+    volume: config.volume,
+    mode: config.mode,
+  };
+
+  if (existingIndex !== -1) {
+    // Update existing
+    itemCustomSounds[existingIndex] = newCustomSound;
+  } else {
+    // Add new
+    itemCustomSounds.push(newCustomSound);
+  }
+
+  saveItemCustomSounds(itemCustomSounds);
+  console.log(`[CustomSounds] Set custom sound for ${entityType}:${entityId}`, config);
+
+  window.dispatchEvent(new CustomEvent(EVENTS.CUSTOM_SOUND_CHANGE, {
+    detail: {
+      action: 'set',
+      entityType,
+      entityId,
+      shopType,
+      config,
+    },
+  }));
+}
+
+/**
+ * Remove custom sound config for a specific entity
+ *
+ * @param entityType - Type of entity (shop, weather, pet)
+ * @param entityId - Unique identifier for the entity
+ * @param shopType - Optional shop type (only for shop items)
+ * @returns true if custom sound was removed, false if not found
+ */
+export function removeItemCustomSound(
+  entityType: EntityType,
+  entityId: string,
+  shopType?: string
+): boolean {
+  ensureInitialized();
+  const itemCustomSounds = loadItemCustomSounds();
+  const key = buildEntityKey(entityType, entityId, shopType);
+
+  const index = itemCustomSounds.findIndex((item) => {
+    const itemKey = buildEntityKey(item.entityType, item.entityId, item.shopType);
+    return itemKey === key;
+  });
+
+  if (index === -1) {
+    return false;
+  }
+
+  itemCustomSounds.splice(index, 1);
+  saveItemCustomSounds(itemCustomSounds);
+  console.log(`[CustomSounds] Removed custom sound for ${entityType}:${entityId}`);
+
+  window.dispatchEvent(new CustomEvent(EVENTS.CUSTOM_SOUND_CHANGE, {
+    detail: {
+      action: 'remove',
+      entityType,
+      entityId,
+      shopType,
+    },
+  }));
+
+  return true;
+}
+
+/**
+ * Check if entity has custom sound
+ *
+ * @param entityType - Type of entity (shop, weather, pet)
+ * @param entityId - Unique identifier for the entity
+ * @param shopType - Optional shop type (only for shop items)
+ * @returns true if entity has custom sound
+ */
+export function hasItemCustomSound(
+  entityType: EntityType,
+  entityId: string,
+  shopType?: string
+): boolean {
+  return getItemCustomSound(entityType, entityId, shopType) !== null;
+}
+
+/**
+ * Get all custom sounds for an entity type
+ *
+ * @param entityType - Type of entity (shop, weather, pet)
+ * @returns Array of custom sounds for that entity type
+ */
+export function getItemCustomSoundsByType(entityType: EntityType): ItemCustomSound[] {
+  ensureInitialized();
+  const itemCustomSounds = loadItemCustomSounds();
+  return itemCustomSounds.filter((item) => item.entityType === entityType);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -277,4 +478,17 @@ export const CustomSounds = {
   // Playback
   play,
   stop,
+
+  // Notification Settings
+  getNotificationSettings,
+  getNotificationConfig,
+  setNotificationConfig,
+  setNotificationSettings,
+
+  // Item Custom Sounds
+  getItemCustomSound,
+  setItemCustomSound,
+  removeItemCustomSound,
+  hasItemCustomSound,
+  getItemCustomSoundsByType,
 };

@@ -15,6 +15,7 @@ import {
   MGAudio,
   MGCosmetic,
   MGCalculators,
+  MGShopActions,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
@@ -26,6 +27,8 @@ import { MGXPTracker } from "../features/xpTracker";
 import { MGCropValueIndicator } from "../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
 import { MGShopNotifier } from "../features/shopNotifier";
+import { MGWeatherNotifier } from "../features/weatherNotifier";
+import { MGPetHungerNotifier } from "../features/petHungerNotifier";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -51,6 +54,7 @@ export const GeminiAPI = {
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
     Calculators: MGCalculators,
+    ShopActions: MGShopActions,
   },
 
   Features: {
@@ -66,6 +70,8 @@ export const GeminiAPI = {
     CropValueIndicator: MGCropValueIndicator,
     CropSizeIndicator: MGCropSizeIndicator,
     ShopNotifier: MGShopNotifier,
+    WeatherNotifier: MGWeatherNotifier,
+    PetHungerNotifier: MGPetHungerNotifier,
   },
 
   WebSocket: {
