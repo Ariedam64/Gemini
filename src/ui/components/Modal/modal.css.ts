@@ -13,13 +13,10 @@ export const modalCss = `
     height: 100%;
     z-index: 99999;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease;
   }
 
   .modal-container.is-open {
     pointer-events: auto;
-    opacity: 1;
   }
 
   /* Backdrop */
@@ -30,11 +27,18 @@ export const modalCss = `
     width: 100%;
     height: 100%;
     background: color-mix(in oklab, var(--shadow) 85%, transparent);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(0px);
+    opacity: 0;
+    transition: opacity 0.2s ease, backdrop-filter 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
+  }
+
+  .modal-container.is-open .modal-backdrop {
+    opacity: 1;
+    backdrop-filter: blur(4px);
   }
 
   /* Dialog */
@@ -47,11 +51,13 @@ export const modalCss = `
     flex-direction: column;
     max-height: 90vh;
     width: 100%;
+    opacity: 0;
     transform: scale(0.95);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
   .modal-container.is-open .modal-dialog {
+    opacity: 1;
     transform: scale(1);
   }
 

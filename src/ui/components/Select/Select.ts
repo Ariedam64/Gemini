@@ -62,6 +62,29 @@ function __detachGlobalKeys() {
   document.removeEventListener("keypress", __keyHandler, true);
   document.removeEventListener("keyup", __keyHandler, true);
 }
+
+let __suppressClickTimer: number | null = null;
+const __suppressClickOnce = (e: MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+  if (__suppressClickTimer !== null) {
+    window.clearTimeout(__suppressClickTimer);
+    __suppressClickTimer = null;
+  }
+  document.removeEventListener("click", __suppressClickOnce, true);
+};
+
+function __suppressNextClick() {
+  document.addEventListener("click", __suppressClickOnce, true);
+  if (__suppressClickTimer !== null) {
+    window.clearTimeout(__suppressClickTimer);
+  }
+  __suppressClickTimer = window.setTimeout(() => {
+    document.removeEventListener("click", __suppressClickOnce, true);
+    __suppressClickTimer = null;
+  }, 500);
+}
 /* ------------------------------------------------------------------ */
 
 export function Select(cfg: SelectOptions): SelectHandle {
@@ -126,6 +149,9 @@ export function Select(cfg: SelectOptions): SelectHandle {
         item.addEventListener("pointerdown", (e) => {
           e.preventDefault();    // avoid blur before setValue
           e.stopPropagation();   // avoid close/reopen from the document
+          if (e.pointerType && e.pointerType !== "mouse") {
+            __suppressNextClick();
+          }
           setValue(opt.value, { notify: true });
           closeMenu();
         }, { capture: true });

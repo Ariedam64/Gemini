@@ -37,14 +37,17 @@ export class AlertsSection extends BaseSection {
 
     // Wait for MGData categories needed for shop items and weather
     const { MGData } = await import("../../../modules");
-    await Promise.all([
-      MGData.waitFor("plants"),
-      MGData.waitFor("items"),
-      MGData.waitFor("eggs"),
-      MGData.waitFor("decor"),
-      MGData.waitFor("weather"),
-      MGData.waitFor("mutations"),
-    ]);
+    const dataKeys = ["plants", "items", "eggs", "decor", "weather", "mutations"] as const;
+    const results = await Promise.allSettled(
+      dataKeys.map((key) => MGData.waitFor(key))
+    );
+    const missing = dataKeys.filter((_, index) => results[index]?.status === "rejected");
+    if (missing.length > 0) {
+      console.warn(
+        "[AlertsSection] MGData incomplete, building with empty tables:",
+        missing.join(", ")
+      );
+    }
 
     // Build parts
     this.buildParts();

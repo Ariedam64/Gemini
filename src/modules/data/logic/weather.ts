@@ -3,7 +3,7 @@
 
 import { captureState } from "../state";
 import { WEATHER_IDS, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
-import { fetchMainBundle, extractBalancedBlock } from "./bundleParser";
+import { fetchMainBundle, extractBalancedBlock, extractBalancedObjectLiteral } from "./bundleParser";
 
 /**
  * Build weather catalog from extracted data
@@ -67,6 +67,12 @@ function extractWeatherObject(text: string, anchorPos: number): string | null {
   return extractBalancedBlock(text, objStart);
 }
 
+function normalizeWeatherLiteral(literal: string): string {
+  return literal
+    .replace(/\$t\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"')
+    .replace(/\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"');
+}
+
 /**
  * Load weather data from main bundle
  */
@@ -80,14 +86,13 @@ async function loadWeatherFromBundle(): Promise<boolean> {
   if (anchor < 0) anchor = bundleText.indexOf('name:"Amber Moon"');
   if (anchor < 0) return false;
 
-  const literal = extractWeatherObject(bundleText, anchor);
+  const literal =
+    extractBalancedObjectLiteral(bundleText, anchor) ??
+    extractWeatherObject(bundleText, anchor);
   if (!literal) return false;
 
-  // Fix $t.WeatherType references to be valid JSON strings
-  const fixedLiteral = literal.replace(
-    /\$t\.(Rain|Frost|Dawn|AmberMoon)\b/g,
-    '"$1"'
-  );
+  // Normalize weather enum references to string literals
+  const fixedLiteral = normalizeWeatherLiteral(literal);
 
   let weatherDex: any;
   try {

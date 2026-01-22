@@ -4,7 +4,7 @@
 import type { DataKey, DataBag } from "../types";
 import { captureState } from "../state";
 
-const DEFAULT_WAIT_TIMEOUT_MS = 10000;
+const DEFAULT_WAIT_TIMEOUT_MS = 5000;
 const WAIT_POLL_INTERVAL_MS = 50;
 
 /**

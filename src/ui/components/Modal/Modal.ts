@@ -70,6 +70,7 @@ export function Modal(options: ModalOptions): ModalHandle {
   let backdrop: HTMLElement | null = null;
   let dialog: HTMLElement | null = null;
   let focusTrapCleanup: (() => void) | null = null;
+  let viewportCleanup: (() => void) | null = null;
 
   // ───────────────────────────────────────────────────────────────────────────
   // Handlers
@@ -205,6 +206,30 @@ export function Modal(options: ModalOptions): ModalHandle {
     return root;
   }
 
+  function syncViewportBounds(): void {
+    if (!root) return;
+    const rect = root.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const needsOffset =
+      Math.abs(rect.left) > 1 ||
+      Math.abs(rect.top) > 1 ||
+      Math.abs(rect.width - vw) > 1 ||
+      Math.abs(rect.height - vh) > 1;
+
+    if (needsOffset) {
+      root.style.left = `${-rect.left}px`;
+      root.style.top = `${-rect.top}px`;
+      root.style.width = `${vw}px`;
+      root.style.height = `${vh}px`;
+    } else {
+      root.style.left = "0px";
+      root.style.top = "0px";
+      root.style.width = "100%";
+      root.style.height = "100%";
+    }
+  }
+
   // ───────────────────────────────────────────────────────────────────────────
   // Public API
   // ───────────────────────────────────────────────────────────────────────────
@@ -224,6 +249,8 @@ export function Modal(options: ModalOptions): ModalHandle {
 
     // Remove escape key listener
     document.removeEventListener('keydown', handleEscapeKey);
+    viewportCleanup?.();
+    viewportCleanup = null;
 
     // Remove from DOM after animation
     setTimeout(() => {
@@ -246,6 +273,8 @@ export function Modal(options: ModalOptions): ModalHandle {
     }
 
     document.removeEventListener('keydown', handleEscapeKey);
+    viewportCleanup?.();
+    viewportCleanup = null;
 
     // Remove from DOM
     root?.remove();
@@ -268,6 +297,12 @@ export function Modal(options: ModalOptions): ModalHandle {
   const container = shadowRoot || document.body || document.documentElement;
 
   container.appendChild(modalRoot);
+  requestAnimationFrame(syncViewportBounds);
+  const handleViewportResize = () => syncViewportBounds();
+  window.addEventListener("resize", handleViewportResize);
+  viewportCleanup = () => {
+    window.removeEventListener("resize", handleViewportResize);
+  };
 
   // Wait for next frame before adding open class (for animation)
   requestAnimationFrame(() => {

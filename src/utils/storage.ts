@@ -84,6 +84,8 @@ export const FEATURE_KEYS = {
     WEATHER_NOTIFIER: 'feature:weatherNotifier:config',
     /** Pet hunger notifier feature config */
     PET_HUNGER_NOTIFIER: 'feature:petHungerNotifier:config',
+    /** Aries API feature config */
+    ARIES_API: 'feature:ariesAPI:config',
 } as const;
 
 /** Keys for development/debug purposes */

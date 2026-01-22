@@ -20,6 +20,21 @@ export { MGWeatherNotifier } from "./weatherNotifier";
 export type { WeatherNotifierConfig } from "./weatherNotifier/types";
 export { MGPetHungerNotifier } from "./petHungerNotifier";
 export type { PetHungerNotifier } from "./petHungerNotifier";
+export { MGAriesAPI } from "./ariesAPI";
+export type {
+    AriesAPIConfig,
+    Room,
+    RoomUserSlot,
+    RoomSearchResult,
+    PlayerView,
+    PlayerViewState,
+    PlayerRoomResult,
+    PlayerViewSection,
+    FriendAction,
+    FriendRequestIncoming,
+    FriendRequestOutgoing,
+    FriendRequestsResult,
+} from "./ariesAPI";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";
