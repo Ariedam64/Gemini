@@ -91,8 +91,6 @@ function ensureStyles(): void {
 
   tracker.add(() => style.remove());
   stylesInjected = true;
-
-  console.log('[CropValueIndicator.render] Styles injected');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -275,8 +273,6 @@ function updateTooltipPrice(infoContainer: HTMLElement): void {
 
     // Update the price element text
     priceTextEl.textContent = price > 0 ? price.toLocaleString() : '';
-
-    console.log(`[CropValueIndicator.render] 🔄 Updated price for ${species}:`, { targetScale, mutations, price });
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to update price:', err);
   }
@@ -315,14 +311,6 @@ function doRender(price: number, currentSlot: any): void {
       priceTextEl.textContent = price > 0 ? price.toLocaleString() : '';
     }
   }
-
-  console.log(`[CropValueIndicator.render] 🔄 Updated all prices:`, {
-    species: currentSlot.species,
-    scale: currentSlot.targetScale,
-    mutations: currentSlot.mutations || [],
-    price,
-    count: allPriceElements.length,
-  });
 }
 
 function scheduleRender(): void {
@@ -364,13 +352,11 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     // Find the crop info container (McFlex that contains the name)
     const nameEl = tooltip.element.querySelector('p.chakra-text');
     if (!nameEl) {
-      console.log('[CropValueIndicator.render] No name element found in tooltip');
       return;
     }
 
     const infoContainer = nameEl.closest('.McFlex') as HTMLElement | null;
     if (!infoContainer) {
-      console.log('[CropValueIndicator.render] No McFlex container found');
       return;
     }
 
@@ -405,8 +391,6 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     infoContainer.appendChild(priceEl);
 
     tracker.add(() => priceEl.remove());
-
-    console.log(`[CropValueIndicator.render] ✅ Injected price:`, { price });
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);
   }
@@ -491,8 +475,6 @@ function startObservingTooltips(): void {
   });
 
   addObserverWithCleanup(tracker, observer);
-
-  console.log('[CropValueIndicator.render] Started observing crops');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -506,7 +488,6 @@ export const render = {
    */
   init(): void {
     if (initialized) {
-      console.log('[CropValueIndicator.render] Already initialized');
       return;
     }
 
@@ -514,8 +495,6 @@ export const render = {
 
     ensureStyles();
     startObservingTooltips();
-
-    console.log('✅ [CropValueIndicator.render] Initialized');
   },
 
   /**
@@ -546,8 +525,6 @@ export const render = {
     tracker = createCleanupTracker();
     stylesInjected = false;
     lastRenderedPrice = null;
-
-    console.log('🛑 [CropValueIndicator.render] Destroyed');
   },
 
   /**

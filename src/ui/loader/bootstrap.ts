@@ -24,6 +24,7 @@ import { MGShopNotifier } from "../../features/shopNotifier";
 import { MGWeatherNotifier } from "../../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../../features/petHungerNotifier";
 import { MGAriesAPI } from "../../features/ariesAPI";
+import { MGHarvestLocker } from "../../features/harvestLocker";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
 
@@ -241,6 +242,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "WeatherNotifier", init: MGWeatherNotifier.init.bind(MGWeatherNotifier) },
     { name: "PetHungerNotifier", init: MGPetHungerNotifier.init.bind(MGPetHungerNotifier) },
     { name: "AriesAPI", init: MGAriesAPI.init.bind(MGAriesAPI) },
+    { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
   ];
 
   let initializedCount = 0;

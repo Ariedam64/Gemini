@@ -35,6 +35,8 @@ export type {
     FriendRequestOutgoing,
     FriendRequestsResult,
 } from "./ariesAPI";
+export { MGHarvestLocker } from "./harvestLocker";
+export type { HarvestLockerConfig, ScaleLockCriteria } from "./harvestLocker";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

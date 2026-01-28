@@ -41,52 +41,14 @@ function updateCropValue(): void {
     currentSlot.targetScale,
     currentSlot.mutations || []
   );
-
-  console.log(`[CropValueIndicator] Updated crop value: ${currentCropValue} coins`);
 }
 
 /**
  * Handle plant info change event
  */
 function handlePlantInfoChange(event: PlantInfoChange): void {
-  const { current } = event;
-
   // Update the current crop value
   updateCropValue();
-
-  if (!current) {
-    console.log('[CropValueIndicator] No plant on current tile');
-    return;
-  }
-
-  const currentSlot = current.currentSlotIndex !== null ? current.slots[current.currentSlotIndex] : null;
-
-  // Log crop value with detailed slot information
-  if (currentSlot) {
-    console.log(`[CropValueIndicator] 💰 Crop Price: ${currentCropValue} coins`, {
-      species: current.species,
-      slot: {
-        index: current.currentSlotIndex,
-        scale: currentSlot.targetScale,
-        mutations: currentSlot.mutations || [],
-      },
-      plantInfo: {
-        totalSlots: current.slots.length,
-        sortedSlotIndices: current.sortedSlotIndices,
-        nextHarvestSlotIndex: current.nextHarvestSlotIndex,
-      },
-    });
-  } else {
-    console.log('[CropValueIndicator] Plant Info:', {
-      species: current.species,
-      currentSlotIndex: current.currentSlotIndex,
-      sortedSlotIndices: current.sortedSlotIndices,
-      nextHarvestSlotIndex: current.nextHarvestSlotIndex,
-      totalSlots: current.slots.length,
-      currentSlot,
-      cropValue: currentCropValue > 0 ? `${currentCropValue} coins` : 'N/A',
-    });
-  }
 }
 
 /**
@@ -94,19 +56,14 @@ function handlePlantInfoChange(event: PlantInfoChange): void {
  */
 export function startMonitoring(): void {
   if (unsubscribe) {
-    console.warn('[CropValueIndicator] Already monitoring, cleaning up previous subscription');
     stopMonitoring();
   }
-
-  console.log('[CropValueIndicator] Starting plant info monitoring...');
 
   // Initialize with current value
   updateCropValue();
 
   const currentTile = getCurrentTile();
   unsubscribe = currentTile.subscribePlantInfo(handlePlantInfoChange, { immediate: true });
-
-  console.log('[CropValueIndicator] Monitoring started');
 }
 
 /**
@@ -115,13 +72,9 @@ export function startMonitoring(): void {
 export function stopMonitoring(): void {
   if (!unsubscribe) return;
 
-  console.log('[CropValueIndicator] Stopping monitoring...');
-
   unsubscribe();
   unsubscribe = null;
   currentCropValue = 0;
-
-  console.log('[CropValueIndicator] Monitoring stopped');
 }
 
 /**

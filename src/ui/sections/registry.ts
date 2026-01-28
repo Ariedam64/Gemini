@@ -10,6 +10,7 @@ import { PetsSection } from "./Pets";
 import { TrackersSection } from "./Trackers";
 import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
+import { RoomSection } from "./Room";
 
 let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
@@ -40,6 +41,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     getAlertsSection(),
     new PetsSection(deps),
     new TrackersSection(deps),
+    new RoomSection(deps),
   ];
 
   // Only include developer tools in non-production builds

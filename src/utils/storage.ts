@@ -86,6 +86,8 @@ export const FEATURE_KEYS = {
     PET_HUNGER_NOTIFIER: 'feature:petHungerNotifier:config',
     /** Aries API feature config */
     ARIES_API: 'feature:ariesAPI:config',
+    /** Harvest locker feature config */
+    HARVEST_LOCKER: 'feature:harvestLocker:config',
 } as const;
 
 /** Keys for development/debug purposes */

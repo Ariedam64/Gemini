@@ -15,23 +15,18 @@ let initialized = false;
  */
 export function init(): void {
   if (initialized) {
-    console.log('[CropValueIndicator] Already initialized');
     return;
   }
 
   const config = loadConfig();
   if (!config.enabled) {
-    console.log('[CropValueIndicator] Disabled');
     return;
   }
 
   initialized = true;
-  console.log('[CropValueIndicator] Initializing...');
 
   // Start monitoring plant info changes (console logging)
   Core.startMonitoring();
-
-  console.log('[CropValueIndicator] Initialized successfully');
 }
 
 /**
@@ -40,13 +35,10 @@ export function init(): void {
 export function destroy(): void {
   if (!initialized) return;
 
-  console.log('[CropValueIndicator] Destroying...');
-
   // Stop monitoring
   Core.stopMonitoring();
 
   initialized = false;
-  console.log('[CropValueIndicator] Destroyed');
 }
 
 /**
@@ -72,7 +64,6 @@ export function setEnabled(enabled: boolean): void {
   const config = loadConfig();
 
   if (config.enabled === enabled) {
-    console.log(`[CropValueIndicator] Already ${enabled ? 'enabled' : 'disabled'}`);
     return;
   }
 
@@ -86,8 +77,6 @@ export function setEnabled(enabled: boolean): void {
   } else {
     destroy();
   }
-
-  console.log(`[CropValueIndicator] ${enabled ? 'Enabled' : 'Disabled'}`);
 }
 
 /**
