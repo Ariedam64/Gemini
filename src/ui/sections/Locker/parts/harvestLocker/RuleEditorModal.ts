@@ -1013,8 +1013,8 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
 
                 if (spriteId) {
                     const canvas = MGSprite.toCanvas(spriteId, {
-                        mutations: mutations.length > 0 ? mutations : undefined,
-                        boundsMode: "padded",
+                        mutations: mutations.length > 0 ? (mutations as any) : undefined,
+                        boundsMode: "padded" as any,
                     });
                     if (canvas) {
                         canvas.style.maxWidth = "40px";
