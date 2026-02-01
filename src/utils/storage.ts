@@ -36,6 +36,8 @@ export const SECTION_KEYS = {
     SETTINGS: 'sections:settings',
     /** Test section state */
     TEST: 'sections:test',
+    /** Avatar section loadouts */
+    AVATAR_LOADOUTS: 'sections:avatar:loadouts',
 } as const;
 
 /** Keys for core modules (infrastructure - per .claude/rules/modules.md) */
@@ -90,7 +92,7 @@ export const FEATURE_KEYS = {
     HARVEST_LOCKER: 'feature:harvestLocker:config',
 } as const;
 
-/** Keys for development/debug purposes */
+/** Keys for debug purposes */
 export const DEV_KEYS = {
     /** Auto-reload toggle for HMR */
     AUTO_RELOAD: 'dev:auto-reload',

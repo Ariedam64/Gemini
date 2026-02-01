@@ -19,8 +19,11 @@ import { createSectionStore, type SectionStateController } from '../core/State';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface TrackersState {
-    /** Display mode: 'simple' shows summary only, 'detailed' shows full panels */
-    mode: 'simple' | 'detailed';
+    /** Calculation scope: 'all' calculates from all tiles, 'selected' from selected subset */
+    calculationScope: 'all' | 'selected';
+
+    /** Selected tile indices for filtered calculations (stored as array for JSON serialization) */
+    selectedTileIndices: string[];
 
     /** Team IDs currently expanded to show tracker panels */
     expandedTeamIds: string[];
@@ -31,7 +34,8 @@ export interface TrackersState {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_STATE: TrackersState = {
-    mode: 'simple',
+    calculationScope: 'all',
+    selectedTileIndices: [],
     expandedTeamIds: [],
 };
 
@@ -51,7 +55,7 @@ export async function initTrackersState(): Promise<SectionStateController<Tracke
 
     if (!initPromise) {
         initPromise = createSectionStore<TrackersState>('tab-trackers', {
-            version: 2, // New schema - replaces old selectedTeamIds approach
+            version: 3, // Schema change - replaced mode with calculationScope, added selectedTileIndices
             defaults: DEFAULT_STATE,
         });
     }
@@ -97,7 +101,34 @@ export function toggleTeamExpanded(teamId: string): void {
     }
 }
 
-export function setTrackerMode(mode: 'simple' | 'detailed'): void {
+export function setCalculationScope(scope: 'all' | 'selected'): void {
     if (!stateController) return;
-    stateController.update({ mode });
+    stateController.update({ calculationScope: scope });
+}
+
+export function toggleTileSelection(tileIndex: string): void {
+    if (!stateController) return;
+
+    const current = stateController.get();
+    const isSelected = current.selectedTileIndices.includes(tileIndex);
+
+    if (isSelected) {
+        stateController.update({
+            selectedTileIndices: current.selectedTileIndices.filter((id: string) => id !== tileIndex),
+        });
+    } else {
+        stateController.update({
+            selectedTileIndices: [...current.selectedTileIndices, tileIndex],
+        });
+    }
+}
+
+export function clearTileSelection(): void {
+    if (!stateController) return;
+    stateController.update({ selectedTileIndices: [] });
+}
+
+export function setTileSelection(indices: string[]): void {
+    if (!stateController) return;
+    stateController.update({ selectedTileIndices: indices });
 }

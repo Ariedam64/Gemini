@@ -21,12 +21,22 @@ export const trackerCardCss = `
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
-/* Mode Container (Simple / Detailed toggle)                                    */
+/* Scope Container (All Tiles / Selected Tiles toggle)                         */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
+.tracker-card__scope-container {
+  position: relative; /* For tile grid overlay positioning */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+}
+
+/* Legacy mode-container class (deprecated, use scope-container) */
 .tracker-card__mode-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: var(--spacing-sm) 0;
 }
 

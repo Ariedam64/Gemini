@@ -8,12 +8,15 @@ import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
 import { TrackersSection } from "./Trackers";
+import { ShopNotifierSection } from "./ShopNotifier";
 import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
+import { AvatarSection } from "./Avatar";
 import { RoomSection } from "./Room";
 
 let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
+let shopNotifierSectionInstance: ShopNotifierSection | null = null;
 
 function getTestSection(): TestSection {
   if (!testSectionInstance) {
@@ -29,6 +32,13 @@ function getAlertsSection(): AlertsSection {
   return alertsSectionInstance;
 }
 
+function getShopNotifierSection(): ShopNotifierSection {
+  if (!shopNotifierSectionInstance) {
+    shopNotifierSectionInstance = new ShopNotifierSection();
+  }
+  return shopNotifierSectionInstance;
+}
+
 /**
  * Build all available sections
  * Add new sections here to register them in the HUD
@@ -39,10 +49,13 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new AutoFavoriteSettingsSection(),
     new JournalCheckerSection(),
     getAlertsSection(),
+    getShopNotifierSection(),
     new PetsSection(deps),
     new TrackersSection(deps),
+    new AvatarSection(),
     new RoomSection(deps),
   ];
+
 
   // Only include developer tools in non-production builds
   // This allows them to be completely stripped out during 'npm run release'
@@ -59,11 +72,13 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
  */
 export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
+  const shopNotifierSection = getShopNotifierSection();
   const testSection = getTestSection();
 
   // Preload in parallel
   await Promise.all([
     alertsSection.preload(),
+    shopNotifierSection.preload(),
     testSection.preload(),
   ]);
 }

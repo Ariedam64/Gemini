@@ -312,6 +312,14 @@ export class TeamCardPart {
             },
         });
 
+        const importButton = Button({
+            label: "Import from Aries",
+            variant: "default",
+            onClick: () => {
+                this.handleImportFromAries();
+            },
+        });
+
         const deleteTeamButton = Button({
             label: "Delete Team",
             variant: "danger",
@@ -323,6 +331,7 @@ export class TeamCardPart {
         deleteTeamButton.setAttribute("data-action", "delete-team");
 
         actionsContainer.appendChild(newTeamButton);
+        actionsContainer.appendChild(importButton);
         actionsContainer.appendChild(deleteTeamButton);
         this.teamContent.appendChild(actionsContainer);
     }
@@ -365,6 +374,22 @@ export class TeamCardPart {
 
         this.render();
         this.options.onTeamsUpdated?.();
+    }
+
+    private handleImportFromAries(): void {
+        try {
+            const result = MGPetTeam.importFromAries();
+
+            if (result.success) {
+                console.log(`[PetTeam] Successfully imported ${result.imported} team${result.imported === 1 ? '' : 's'} from Aries mod`);
+                this.render();
+                this.options.onTeamsUpdated?.();
+            } else {
+                console.error('[PetTeam] Import failed:', result.errors.join(', '));
+            }
+        } catch (error) {
+            console.error('[PetTeam] Import error:', error);
+        }
     }
 
     private handleRenameTeam(teamId: string, newName: string): void {

@@ -137,9 +137,27 @@ export class TrackerExpansionHandler {
     private expandedTeams: Map<string, ExpandedTeamState> = new Map();
     private featureUpdateInterval: ReturnType<typeof setInterval> | null = null;
     private options: ExpansionHandlerOptions;
+    private tileFilter?: Set<string>;
 
     constructor(options: ExpansionHandlerOptions) {
         this.options = options;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Tile Filtering
+    // ─────────────────────────────────────────────────────────────────────────
+
+    setTileFilter(filter?: Set<string>): void {
+        this.tileFilter = filter;
+        // Re-render all expanded panels with new filter
+        this.refreshAllPanels();
+    }
+
+    private refreshAllPanels(): void {
+        // Update all currently expanded teams with the new filter
+        for (const [teamId, state] of this.expandedTeams) {
+            this.updateSpecificTeam(teamId, state);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -440,7 +458,13 @@ export class TrackerExpansionHandler {
 
         // Use crops.growing for plants (individual crop slots), eggs.growing for eggs
         // CropInfo has startTime/endTime, EggWithTile has plantedAt/maturedAt
-        const items = viewType === 'egg' ? garden.eggs.growing : garden.crops.growing;
+        const allItems = viewType === 'egg' ? garden.eggs.growing : garden.crops.growing;
+
+        // Filter by selected tiles if a filter is active
+        const items = this.tileFilter
+            ? allItems.filter(item => this.tileFilter!.has(item.tileIndex))
+            : allItems;
+
         const totalItemsCount = items.length;
 
         const eggBoosts = calculateEggBoosts(pets);
@@ -712,7 +736,7 @@ export class TrackerExpansionHandler {
                 if (card.featureData.renderPetSlot) {
                     try {
                         const slot = card.shell.getContentSlot();
-                        card.featureData.renderPetSlot(pet, team, slot, state.growthViewType);
+                        card.featureData.renderPetSlot(pet, team, slot, state.growthViewType, this.tileFilter);
 
                         const isMax = pet.currentStrength >= pet.maxStrength;
                         const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
@@ -749,7 +773,7 @@ export class TrackerExpansionHandler {
                     // Note: We need to preserve the original grouped pets, not all team pets
                     // For now, get all pets and let renderGroupedSlot handle the filtering
                     const allPets = MGPetTeam.getPetsForTeam(team);
-                    (card.featureData as any).renderGroupedSlot(allPets, team, slot, state.growthViewType);
+                    (card.featureData as any).renderGroupedSlot(allPets, team, slot, state.growthViewType, this.tileFilter);
 
                     // Prevent centering when stats exist
                     const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
@@ -963,7 +987,7 @@ export class TrackerExpansionHandler {
                 slot.innerHTML = '';
                 if (newFeature.renderPetSlot) {
                     const state = this.expandedTeams.get(teamId);
-                    newFeature.renderPetSlot(pet, team, slot, state?.growthViewType);
+                    newFeature.renderPetSlot(pet, team, slot, state?.growthViewType, this.tileFilter);
                 }
 
                 const isMax = pet.currentStrength >= pet.maxStrength;
@@ -1007,7 +1031,7 @@ export class TrackerExpansionHandler {
             rowContent = shell.build();
             if (selectedFeature.renderPetSlot) {
                 const slot = shell.getContentSlot();
-                selectedFeature.renderPetSlot(pet, team, slot, viewType);
+                selectedFeature.renderPetSlot(pet, team, slot, viewType, this.tileFilter);
 
                 const isMax = pet.currentStrength >= pet.maxStrength;
                 const hasStats = slot.children.length > 0 || slot.textContent.trim().length > 0;
@@ -1174,10 +1198,10 @@ export class TrackerExpansionHandler {
 
             if ((newFeature as any).renderGroupedSlot) {
                 const state = this.expandedTeams.get(teamId);
-                (newFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, state?.growthViewType);
+                (newFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, state?.growthViewType, this.tileFilter);
             } else if (newFeature.renderPetSlot) {
                 const state = this.expandedTeams.get(teamId);
-                newFeature.renderPetSlot(matchingPets[0], team, contentSlot, state?.growthViewType);
+                newFeature.renderPetSlot(matchingPets[0], team, contentSlot, state?.growthViewType, this.tileFilter);
             }
 
             // Prevent centering when stats are present
@@ -1214,9 +1238,9 @@ export class TrackerExpansionHandler {
 
         // Render initial feature content
         if ((selectedFeature as any).renderGroupedSlot) {
-            (selectedFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, viewType);
+            (selectedFeature as any).renderGroupedSlot(matchingPets, team, contentSlot, viewType, this.tileFilter);
         } else if (selectedFeature.renderPetSlot) {
-            selectedFeature.renderPetSlot(matchingPets[0], team, contentSlot, viewType);
+            selectedFeature.renderPetSlot(matchingPets[0], team, contentSlot, viewType, this.tileFilter);
         }
 
         petRow.appendChild(rowHeader);
@@ -1548,9 +1572,9 @@ export class TrackerExpansionHandler {
             // Render panel content
             const panelContent = element('div', { className: 'combined-section__content' });
             if (panel.renderGroupedSlot) {
-                panel.renderGroupedSlot(matchingPets, team, panelContent, viewType);
+                panel.renderGroupedSlot(matchingPets, team, panelContent, viewType, this.tileFilter);
             } else if (panel.renderPetSlot) {
-                panel.renderPetSlot(matchingPets[0], team, panelContent, viewType);
+                panel.renderPetSlot(matchingPets[0], team, panelContent, viewType, this.tileFilter);
             }
 
             // Only add section if it has content
