@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Storage Value Indicator - QOL Styles
  *
  * Scoped styles for the storage value indicator in storage modals.
@@ -24,7 +24,7 @@ export const storageValueIndicatorCss = `
 
   .gemini-qol-storageValue-text {
     font-size: 14px;
-    color: #FFD84D;
+    color: var(--accent);
     font-weight: 700;
     white-space: nowrap;
   }

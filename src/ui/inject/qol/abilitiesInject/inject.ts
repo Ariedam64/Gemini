@@ -106,7 +106,7 @@ function getSpeciesId(speciesName: string): string | null {
 
   // Try exact match first
   for (const [id, data] of Object.entries(pets)) {
-    const petData = data as Record<string, any>;
+    const petData = data as Record<string, unknown>;
     if (
       petData.name === speciesName ||
       petData.displayName === speciesName ||
@@ -119,7 +119,7 @@ function getSpeciesId(speciesName: string): string | null {
   // Try case-insensitive match
   const lowerName = speciesName.toLowerCase();
   for (const [id, data] of Object.entries(pets)) {
-    const petData = data as Record<string, any>;
+    const petData = data as Record<string, unknown>;
     if (
       petData.name?.toLowerCase() === lowerName ||
       petData.displayName?.toLowerCase() === lowerName ||

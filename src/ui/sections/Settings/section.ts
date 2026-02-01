@@ -19,7 +19,7 @@ import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } fr
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
 import { getRegistry } from "../../inject/core/registry";
 
-/* ───────────────────────── Utilities ───────────────────────── */
+/* ------------------------- Utilities ------------------------- */
 
 function humanizeName(v: string): string {
   return v.replace(/[_-]+/g, " ").replace(/^\w/, (c) => c.toUpperCase());
@@ -66,7 +66,7 @@ function toCssValue(value: ColorPickerValue): string {
   return value.alpha < 1 ? value.rgba : value.hex;
 }
 
-/* ───────────────────────── Feature Configurations ───────────────────────── */
+/* ------------------------- Feature Configurations ------------------------- */
 
 interface FeatureConfig {
   // HUD Sections (tabs visibility)
@@ -91,7 +91,16 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   cropValueIndicator: { enabled: true }, // Enabled for testing
 };
 
-/* ───────────────────────── Settings Section ───────────────────────── */
+/* ------------------------- Settings Section ------------------------- */
+
+type EnvInfo = {
+  surface?: string;
+  platform?: string;
+  browser?: string | null;
+  os?: string | null;
+  host?: string;
+  isInIframe?: boolean;
+};
 
 export class SettingsSection extends BaseSection {
   private featureConfig: FeatureConfig = DEFAULT_FEATURE_CONFIG;
@@ -517,7 +526,8 @@ export class SettingsSection extends BaseSection {
     const osVal = element("span", {}, "—") as HTMLElement;
 
     const renderEnv = () => {
-      const env = MGEnvironment.detect() as any;
+      const env = MGEnvironment.detect() as EnvInfo;
+
       surfaceVal.textContent = env.surface;
       platformVal.textContent = env.platform;
       browserVal.textContent = env.browser ?? "Unknown";
@@ -533,7 +543,8 @@ export class SettingsSection extends BaseSection {
     });
 
     attachCopyHandler(copyJsonBtn, () => {
-      const env = MGEnvironment.detect() as any;
+      const env = MGEnvironment.detect() as EnvInfo;
+
       return JSON.stringify(env, null, 2);
     });
 

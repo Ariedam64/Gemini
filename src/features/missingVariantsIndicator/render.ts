@@ -1,3 +1,5 @@
+﻿# Update file: src/features/missingVariantsIndicator/render.ts
+$content = @'
 /**
  * Missing Variants Indicator - DOM Injection (QOL Rendering)
  *
@@ -12,21 +14,21 @@ import { createCleanupTracker, addObserverWithCleanup, withMutationGuard } from 
 import { getCurrentTile } from '../../globals/variables/currentTile';
 import { MGData } from '../../modules';
 import { MGJournal } from '../../features/journal';
-import { createVariantLetter } from './letterStyles';
+import { getVariantLetterStyle } from './letterStyles';
 import type { Unsubscribe } from '../../globals/core/types';
 import { resolveSpeciesId } from '../../ui/inject/qol/_shared/names';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Selectors (same as crop value indicator uses)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 const CROP_CONTAINER_CLASS_MATURE = 'css-qnqsp4';
 const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
 const MISSING_VARIANTS_CLASS = 'gemini-qol-missingVariants';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // State
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 let tracker = createCleanupTracker();
 let stylesInjected = false;
@@ -37,9 +39,9 @@ let plantInfoUnsubscribe: Unsubscribe | null = null;
 let lastRenderedSpecies: string | null = null;
 let rafHandle: number | null = null;
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Styles
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 const MISSING_VARIANTS_STYLES = `
   .${MISSING_VARIANTS_CLASS} {
@@ -53,9 +55,9 @@ const MISSING_VARIANTS_STYLES = `
   }
 `;
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Style Injection
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function ensureStyles(): void {
     if (stylesInjected) return;
@@ -69,9 +71,9 @@ function ensureStyles(): void {
     stylesInjected = true;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Journal Data Access
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /**
  * Get all crop variant types from game data
@@ -157,7 +159,12 @@ function updateExistingLetters(speciesId: string): void {
 
         // Re-create letters for new species
         for (const variantId of missingVariants) {
-            row.appendChild(createVariantLetter(variantId));
+            const variantStyle = getVariantLetterStyle(variantId);
+            const letter = document.createElement('span');
+            letter.textContent = variantStyle.text;
+            letter.title = variantId;
+            letter.style.cssText = variantStyle.css;
+            row.appendChild(letter);
         }
     }
 }
@@ -186,9 +193,9 @@ function scheduleRender(): void {
     });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // DOM Rendering
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /**
  * Create the missing variants row element
@@ -208,16 +215,20 @@ function createMissingVariantsRow(speciesId: string): HTMLElement | null {
 
     // Create colored letter for each missing variant
     for (const variantId of missingVariants) {
-        const letter = createVariantLetter(variantId);
+        const variantStyle = getVariantLetterStyle(variantId);
+        const letter = document.createElement('span');
+        letter.textContent = variantStyle.text;
+        letter.title = variantId;
+        letter.style.cssText = variantStyle.css;
         row.appendChild(letter);
     }
 
     return row;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Tooltip Detection & Injection
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 interface CropTooltip {
     element: HTMLElement;
@@ -315,9 +326,9 @@ function injectMissingVariantsToTooltip(tooltip: CropTooltip): void {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Tooltip Mutation Observation
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 function startObservingTooltips(): void {
     // Inject for existing crops
@@ -394,9 +405,9 @@ function startObservingTooltips(): void {
     addObserverWithCleanup(tracker, observer);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Journal Data Retry Logic
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 async function waitForJournalData(): Promise<boolean> {
     const maxAttempts = 5;
@@ -426,9 +437,9 @@ async function waitForJournalData(): Promise<boolean> {
     return false;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Public API
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 export const render = {
     init(): void {

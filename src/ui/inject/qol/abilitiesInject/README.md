@@ -37,7 +37,7 @@ Game's Journal Modal (enhanced with abilities)
 
 Matches game's journal aesthetic:
 
-- **Colors**: Brown tones (#4F6981 headers, #8B7355 text, #D4B5A0 dividers)
+- **Colors**: Brown tones (theme tokens (header/body/divider))
 - **Typography**: Shrikhand font for headers, responsive sizes
 - **Layout**: Grid with auto-fit columns, stamps with borders/gradients
 - **Stamps**:

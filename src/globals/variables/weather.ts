@@ -1,4 +1,4 @@
-import { Store } from "../../atoms/store";
+﻿import { Store } from "../../atoms/store";
 import type {
   WeatherGlobal,
   WeatherData,
@@ -16,7 +16,8 @@ function buildData(weatherId: string | null): WeatherData {
   const id = weatherId || "Sunny";
 
   // Fetch weather data from MGData
-  const weathers = MGData.get("weather") as Record<string, any> | null;
+  type WeatherEntry = { name?: string }
+  const weathers = MGData.get("weather") as Record<string, WeatherEntry> | null;
   const weatherData = weathers?.[id];
 
   const name = weatherData?.name || id;
@@ -141,3 +142,4 @@ export function getWeather(): WeatherGlobal {
   }
   return instance;
 }
+

@@ -59,7 +59,7 @@ function filterStorageItems(storages: ItemStorageLike[], decorId: string): Inven
 
 export function calculateSeedStorageValue(seeds: SeedInventoryItem[]): number {
   if (!seeds.length) return 0;
-  const plantsData = MGData.get('plants') as Record<string, any> | null;
+  const plantsData = MGData.get('plants') as Record<string, { seed?: { coinPrice?: number } }> | null;
   if (!plantsData) return 0;
 
   return seeds.reduce((total, seed) => {
@@ -71,7 +71,7 @@ export function calculateSeedStorageValue(seeds: SeedInventoryItem[]): number {
 
 export function calculateDecorStorageValue(decors: DecorInventoryItem[]): number {
   if (!decors.length) return 0;
-  const decorData = MGData.get('decor') as Record<string, any> | null;
+  const decorData = MGData.get('decor') as Record<string, { coinPrice?: number }> | null;
   if (!decorData) return 0;
 
   return decors.reduce((total, decor) => {
@@ -82,7 +82,7 @@ export function calculateDecorStorageValue(decors: DecorInventoryItem[]): number
 }
 
 function calculatePetSellPrice(pet: PetInventoryItem): number {
-  const petsData = MGData.get('pets') as Record<string, any> | null;
+  const petsData = MGData.get('pets') as Record<string, { sellPrice?: number; maturitySellPrice?: number }> | null;
   if (!petsData) return 0;
 
   const speciesData = petsData[pet.petSpecies];

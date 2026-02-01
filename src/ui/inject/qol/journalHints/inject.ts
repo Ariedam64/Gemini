@@ -1,4 +1,4 @@
-/**
+-/**
  * Journal Hints - Core Injection Logic
  * 
  * Watches for "???" badges in journal species pages and adds
@@ -8,24 +8,23 @@
  */
 
 import { createCleanupTracker, addObserverWithCleanup } from '../../core/lifecycle';
-import { getCropHint, getPetVariantHint, getAbilityHint } from './hints';
+import { createHintLookup, getCropVariants, getPetVariants } from './hints';
 import { showHintTooltip, hideHintTooltip } from './render';
-import { CROP_VARIANT_IDS, PET_VARIANT_IDS } from '../_shared/constants';
 import { resolveSpeciesId } from '../_shared/names';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // State
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 let tracker = createCleanupTracker();
 let initialized = false;
 const HINT_ATTACHED_CLASS = 'gemini-hint-attached';
 
-// ─────────────────────────────────────────────────────────────────────────────
+const hintLookup = createHintLookup();
+
+// -----------------------------------------------------------------------------
 // Detection Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-
+// -----------------------------------------------------------------------------
 
 /**
  * Get species name and internal ID from the journal species page header
@@ -89,9 +88,9 @@ function getActiveTab(): 'crops' | 'pets' | null {
     return null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Badge Detection and Attachment
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /**
  * Find all "???" text elements on the current page that haven't been processed
@@ -99,9 +98,9 @@ function getActiveTab(): 'crops' | 'pets' | null {
  * 
  * STRUCTURE (from SpeciesPageEntry.tsx):
  * McGrid (templateRows="1fr auto")
- *   ├─ JournalStamp (has Stamp.webp background)
- *   └─ McFlex
- *       └─ Text "???" ← WE TARGET THIS
+ *    JournalStamp (has Stamp.webp background)
+ *    McFlex
+ *        Text "???"  WE TARGET THIS
  * 
  * DETECTION: Walk up from "???" text to find a container whose children
  * include an element with Stamp.webp in its backgroundImage
@@ -168,19 +167,12 @@ function findUnknownBadges(): HTMLElement[] {
     return badges;
 }
 
-/**
- * Get variant internal IDs in order (matching game layout)
- * IMPORTANT: Use internal IDs, not display names
- * - Ambershine (not "Amberlit")
- * - Dawncharged (not "Dawnbound")
- * - Ambercharged (not "Amberbound")
- */
 function getCropVariantNames(): string[] {
-    return [...CROP_VARIANT_IDS];
+    return getCropVariants();
 }
 
 function getPetVariantNames(): string[] {
-    return [...PET_VARIANT_IDS];
+    return getPetVariants();
 }
 
 /**
@@ -267,105 +259,95 @@ function findBadgeStampIndex(badge: HTMLElement, stamps: HTMLElement[]): number 
 }
 
 /**
- * Validate variant ID exists in hints system
+ * Determine if a stamp represents a crop variant or a pet ability
  */
-function validateVariantId(variantId: string, speciesType: 'crops' | 'pets'): boolean {
-    const validList: readonly string[] = speciesType === 'crops' ? CROP_VARIANT_IDS : PET_VARIANT_IDS;
-    return validList.includes(variantId);
+function getStampType(index: number, totalStamps: number): 'variant' | 'ability' {
+    // For pets, abilities appear after variants
+    if (totalStamps > getPetVariantNames().length) {
+        return index >= getPetVariantNames().length ? 'ability' : 'variant';
+    }
+
+    return 'variant';
 }
 
 /**
- * Attach hint listeners to a badge element
+ * Attach hint tooltip to a badge container
  */
 function attachHintToBadge(badge: HTMLElement): void {
-    if (badge.classList.contains(HINT_ATTACHED_CLASS)) return;
-    badge.classList.add(HINT_ATTACHED_CLASS);
-
     const species = getSpeciesNameFromPage();
     if (!species) return;
 
-    const speciesType = species.type === 'crop' ? 'crops' : 'pets';
-    const speciesId = species.id;  // Internal ID
-    const speciesDisplayName = species.displayName;  // Display name
+    const activeTab = getActiveTab();
+    if (!activeTab) return;
 
-    // Find all stamps
-    const allStamps = findStampContainers(badge);
-    if (allStamps.length === 0) return;
+    // Find all stamps in the species page
+    const stamps = findStampContainers(badge);
+    if (stamps.length === 0) return;
 
-    // Find index of this badge's stamp
-    const stampIndex = findBadgeStampIndex(badge, allStamps);
-    if (stampIndex < 0) return;
+    // Find this badge's index in the stamps array
+    const index = findBadgeStampIndex(badge, stamps);
+    if (index === -1) return;
 
-    const variantName = getVariantForIndex(stampIndex, speciesType);
-    if (!variantName) return;
+    let hintText = '';
 
-    if (!validateVariantId(variantName, speciesType)) {
-        return;
-    }
+    if (activeTab === 'crops') {
+        const variantId = getVariantForIndex(index, 'crops');
+        if (!variantId) return;
+        hintText = hintLookup.getCropHint(variantId, { speciesId: species.id, speciesName: species.displayName });
+    } else if (activeTab === 'pets') {
+        const stampType = getStampType(index, stamps.length);
 
-    // Create hint text using INTERNAL ID (so abilities can match correctly)
-    let hintText: string;
-    if (speciesType === 'crops') {
-        hintText = getCropHint(variantName, speciesDisplayName);
-    } else {
-        // Check if this is a variant or ability (abilities come after first 4 pet variants)
-        if (stampIndex < 4) {
-            hintText = getPetVariantHint(variantName, speciesDisplayName);
+        if (stampType === 'variant') {
+            const variantId = getVariantForIndex(index, 'pets');
+            if (!variantId) return;
+            hintText = hintLookup.getPetVariantHint(variantId, { speciesId: species.id, speciesName: species.displayName });
         } else {
-            // Pass internal ID for ability hints (so egg type matching works)
-            hintText = getAbilityHint(speciesId);
+            hintText = hintLookup.getAbilityHint(species.id);
         }
     }
 
-    // Attach hover listeners (desktop) - show immediately on enter
+    // Mark this badge as processed
+    badge.classList.add(HINT_ATTACHED_CLASS);
+
+    // Attach event listeners for tooltip
     const handleMouseEnter = () => showHintTooltip(badge, hintText);
     const handleMouseLeave = () => hideHintTooltip();
+    const handleClick = (e: Event) => {
+        e.stopPropagation();
+        showHintTooltip(badge, hintText);
+        setTimeout(() => hideHintTooltip(), 3000);
+    };
 
     badge.addEventListener('mouseenter', handleMouseEnter);
     badge.addEventListener('mouseleave', handleMouseLeave);
+    badge.addEventListener('click', handleClick);
 
-    // Attach touch listener (mobile)
-    const handleTouch = (e: TouchEvent) => {
-        e.preventDefault();
-        showHintTooltip(badge, hintText);
-        // Hide after 3 seconds on mobile
-        setTimeout(hideHintTooltip, 3000);
-    };
-
-    badge.addEventListener('touchstart', handleTouch, { passive: false });
-
-    // Track cleanup
     tracker.add(() => {
         badge.removeEventListener('mouseenter', handleMouseEnter);
         badge.removeEventListener('mouseleave', handleMouseLeave);
-        badge.removeEventListener('touchstart', handleTouch);
-        badge.classList.remove(HINT_ATTACHED_CLASS);
+        badge.removeEventListener('click', handleClick);
     });
-
-    // Add cursor style to indicate interactivity
-    badge.style.cursor = 'help';
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Observation
-// ─────────────────────────────────────────────────────────────────────────────
-
-function processPage(): void {
+/**
+ * Process all unknown badges on the current page
+ */
+function processBadges(): void {
     const badges = findUnknownBadges();
+    if (badges.length === 0) return;
+
     for (const badge of badges) {
         attachHintToBadge(badge);
     }
 }
 
-function startObserving(): void {
-    // Initial scan with delays for React renders
-    setTimeout(processPage, 100);
-    setTimeout(processPage, 300);
-    setTimeout(processPage, 700);
-
-    // Watch for new badges
+/**
+ * Setup mutation observer to watch for new species pages
+ */
+function setupObserver(): void {
     const observer = new MutationObserver(() => {
-        setTimeout(processPage, 50);
+        if (!initialized) return;
+        processBadges();
     });
 
     observer.observe(document.body, {
@@ -376,29 +358,28 @@ function startObserving(): void {
     addObserverWithCleanup(tracker, observer);
 }
 
-function stopObserving(): void {
-    hideHintTooltip();
-    tracker.run();
-    tracker.clear();
-    tracker = createCleanupTracker();
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Public API
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 export function init(): void {
     if (initialized) return;
     initialized = true;
-    startObserving();
-    console.log('[JournalHints] Initialized');
+
+    processBadges();
+    setupObserver();
 }
 
 export function destroy(): void {
     if (!initialized) return;
     initialized = false;
-    stopObserving();
-    console.log('[JournalHints] Destroyed');
+
+    tracker.run();
+    tracker.clear();
+    tracker = createCleanupTracker();
+
+    // Cleanup any active tooltip
+    hideHintTooltip();
 }
 
 export function isEnabled(): boolean {

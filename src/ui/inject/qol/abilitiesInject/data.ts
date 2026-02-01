@@ -86,7 +86,7 @@ export function getAllAbilities(speciesId: string): string[] {
       return [];
     }
 
-    const petData = allData.pets[speciesId] as Record<string, any> | undefined;
+    const petData = allData.pets[speciesId] as Record<string, unknown> | undefined;
     if (!petData) {
       return [];
     }
@@ -122,7 +122,7 @@ export function getAbilityName(abilityId: string): string {
 
     if (!allData?.abilities) return abilityId;
 
-    const abilityData = allData.abilities[abilityId] as Record<string, any> | undefined;
+    const abilityData = allData.abilities[abilityId] as Record<string, unknown> | undefined;
     if (!abilityData) return abilityId;
 
     // Try name field first, fallback to ID
