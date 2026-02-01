@@ -12,6 +12,7 @@ import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
 import { AvatarSection } from "./Avatar";
 import { RoomSection } from "./Room";
+import { LockerSection } from "./Locker";
 
 let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
@@ -52,6 +53,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new TrackersSection(deps),
     new AvatarSection(),
     new RoomSection(deps),
+    new LockerSection(),
   ];
 
 

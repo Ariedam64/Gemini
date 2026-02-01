@@ -1,10 +1,11 @@
 /**
  * HarvestLocker core logic
+ * Rule-based harvest prevention system
  */
 
 import { getMyGarden } from '../../../globals/variables/myGarden';
 import { MGData } from '../../../modules/data';
-import type { HarvestLockerConfig, LockCriteria } from '../types';
+import type { HarvestLockerConfig, HarvestRule } from '../types';
 
 /**
  * Set of currently locked slot IDs (format: "slot-slotsIndex")
@@ -101,71 +102,135 @@ function evaluateLocks(garden: unknown): void {
         return;
     }
 
-    // Evaluate auto-locks for each plant slot
+    // Evaluate rule-based locks for each plant slot
     garden.plants.all.forEach((plant) => {
         plant.slots.forEach((slot, slotIndex) => {
             const slotId = `${plant.tileIndex}-${slotIndex}`;
 
-            // Get criteria (species override or global)
-            const criteria = getCriteriaForSpecies(slot.species);
+            // Get applicable rules (species rules override overall)
+            const rules = getRulesForSpecies(slot.species);
 
-            // Check scale lock
-            if (criteria.lockByScale?.enabled) {
-                const scalePercent = calculateScalePercentage(slot);
-                if (scalePercent >= criteria.lockByScale.minPercentage) {
-                    lockedSlots.add(slotId);
-                    return;
-                }
-            }
+            // Evaluate rules to determine lock state
+            const shouldLock = evaluateRules(slot, rules);
 
-            // Check mutation lock
-            if (criteria.lockedMutations && criteria.lockedMutations.length > 0) {
-                const hasLockedMutation = slot.mutations.some((mutation) =>
-                    criteria.lockedMutations!.includes(mutation)
-                );
-                if (hasLockedMutation) {
-                    lockedSlots.add(slotId);
-                }
+            if (shouldLock) {
+                lockedSlots.add(slotId);
             }
         });
     });
 }
 
 /**
- * Get lock criteria for a species (override or global)
+ * Get applicable rules for a species (species rules override overall)
  */
-function getCriteriaForSpecies(species: string): LockCriteria {
-    if (!currentConfig) {
-        return {
-            lockByScale: { enabled: false, minPercentage: 50 },
-            lockedMutations: [],
-        };
+function getRulesForSpecies(species: string): HarvestRule[] {
+    if (!currentConfig) return [];
+
+    // Species rules override overall rules
+    if (currentConfig.speciesRules[species]) {
+        return currentConfig.speciesRules[species].filter(r => r.enabled);
     }
 
-    // Check for species override
-    if (currentConfig.speciesOverrides[species]) {
-        return currentConfig.speciesOverrides[species];
+    // Fallback to overall rules
+    return currentConfig.overallRules.filter(r => r.enabled);
+}
+
+/**
+ * Evaluate rules to determine if slot should be locked
+ *
+ * Logic:
+ * - If ANY 'lock' rule matches → LOCK
+ * - If ANY 'allow' rule exists and NO 'allow' rule matches → LOCK
+ * - Otherwise → ALLOW (not locked)
+ */
+function evaluateRules(
+    slot: { species: string; targetScale: number; mutations: string[] },
+    rules: HarvestRule[]
+): boolean {
+    const lockRules = rules.filter(r => r.mode === 'lock');
+    const allowRules = rules.filter(r => r.mode === 'allow');
+
+    // Check lock rules first
+    for (const rule of lockRules) {
+        if (ruleMatches(slot, rule)) {
+            return true; // Lock this slot
+        }
     }
 
-    // Fallback to global criteria
-    return {
-        lockByScale: currentConfig.globalCriteria.lockByScale,
-        lockedMutations: currentConfig.globalCriteria.lockedMutations,
-    };
+    // If there are allow rules, check if any match
+    if (allowRules.length > 0) {
+        const anyAllowMatches = allowRules.some(rule => ruleMatches(slot, rule));
+        if (!anyAllowMatches) {
+            return true; // Lock because no allow rule matched
+        }
+    }
+
+    return false; // Don't lock
+}
+
+/**
+ * Check if a slot matches a rule's conditions
+ */
+function ruleMatches(
+    slot: { species: string; targetScale: number; mutations: string[] },
+    rule: HarvestRule
+): boolean {
+    const conditions: boolean[] = [];
+
+    // Check size condition
+    if (rule.sizeCondition?.enabled) {
+        const scalePercent = calculateScalePercentage(slot);
+        conditions.push(scalePercent >= rule.sizeCondition.minPercentage);
+    }
+
+    // Check mutation condition
+    if (rule.mutationCondition?.enabled && rule.mutationCondition.mutations.length > 0) {
+        const mutationMatch = evaluateMutationCondition(
+            slot.mutations,
+            rule.mutationCondition.mutations,
+            rule.mutationCondition.matchMode
+        );
+        conditions.push(mutationMatch);
+    }
+
+    // All enabled conditions must match
+    return conditions.length > 0 && conditions.every(c => c);
+}
+
+/**
+ * Evaluate mutation condition with 'any' or 'all' logic
+ */
+function evaluateMutationCondition(
+    slotMutations: string[],
+    requiredMutations: string[],
+    matchMode: 'any' | 'all'
+): boolean {
+    if (matchMode === 'any') {
+        // Match if slot has ANY of the required mutations (OR logic)
+        return requiredMutations.some(mutation => slotMutations.includes(mutation));
+    } else {
+        // Match if slot has ALL of the required mutations (AND logic)
+        return requiredMutations.every(mutation => slotMutations.includes(mutation));
+    }
 }
 
 /**
  * Calculate scale percentage (0-100) relative to baseTileScale and maxScale
  */
 function calculateScalePercentage(slot: { species: string; targetScale: number }): number {
-    const plantsData = MGData.get('plants') as Record<string, any> | null;
+    const plantsData = MGData.get('plants') as Record<string, unknown> | null;
     const plantData = plantsData?.[slot.species];
 
-    if (!plantData?.crop) {
+    if (!plantData || typeof plantData !== 'object' || !('crop' in plantData)) {
         return 0;
     }
 
-    const { baseTileScale, maxScale } = plantData.crop as { baseTileScale: number; maxScale: number };
+    const crop = (plantData as { crop: unknown }).crop;
+    if (typeof crop !== 'object' || !crop) {
+        return 0;
+    }
+
+    const { baseTileScale, maxScale } = crop as { baseTileScale: number; maxScale: number };
     const range = maxScale - baseTileScale;
 
     if (range === 0) {
