@@ -90,6 +90,24 @@ export const FEATURE_KEYS = {
     ARIES_API: 'feature:ariesAPI:config',
     /** Harvest locker feature config */
     HARVEST_LOCKER: 'feature:harvestLocker:config',
+    /** Missing variants indicator feature config (colored letters in crop tooltips) */
+    MISSING_VARIANTS_INDICATOR: 'feature:missingVariantsIndicator:config',
+    /** Journal feature config (replaces journalChecker) */
+    JOURNAL: 'feature:journal:config',
+} as const;
+
+/** Keys for UI injections (per ui/inject.md) */
+export const INJECT_KEYS = {
+    /** Abilities inject (journal modal enhancement) */
+    ABILITIES_INJECT: 'inject:abilitiesInject:config',
+    /** Journal hints (tooltips for unknown journal entries) */
+    JOURNAL_HINTS: 'inject:journalHints:config',
+    /** Journal filter/sort controls */
+    JOURNAL_FILTER_SORT: 'inject:journalFilterSort:config',
+    /** Journal All tab (combined view) */
+    JOURNAL_ALL_TAB: 'inject:journalAllTab:config',
+    /** Storage value indicator (seed silo, pet hutch, decor shed) */
+    STORAGE_VALUE_INDICATOR: 'inject:storageValueIndicator:config',
 } as const;
 
 /** Keys for debug purposes */
@@ -107,6 +125,7 @@ export const KEYS = {
     MODULE: MODULE_KEYS,
     GLOBAL: GLOBAL_KEYS,
     FEATURE: FEATURE_KEYS,
+    INJECT: INJECT_KEYS,
     DEV: DEV_KEYS,
 } as const;
 

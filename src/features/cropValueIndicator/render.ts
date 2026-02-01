@@ -365,9 +365,12 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     const plant = tile.plant;
 
     let price = 0;
+    let speciesId: string | null = null;
+
     if (plant && plant.currentSlotIndex !== null) {
       const currentSlot = plant.slots[plant.currentSlotIndex];
       if (currentSlot) {
+        speciesId = currentSlot.species;
         price = calculateCropSellPrice(
           currentSlot.species,
           currentSlot.targetScale,
@@ -380,6 +383,7 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     if (price === 0) {
       const species = nameEl.textContent?.trim();
       if (species) {
+        speciesId = species;
         const targetScale = extractTargetScale(infoContainer);
         const mutations = extractMutations(infoContainer);
         price = calculateCropSellPrice(species, targetScale, mutations);
@@ -389,8 +393,9 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     // Inject price element at the end of the info container
     const priceEl = createPriceElement(price);
     infoContainer.appendChild(priceEl);
-
     tracker.add(() => priceEl.remove());
+
+    // Note: Missing variants are now handled by the separate MGMissingVariantsIndicator feature
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);
   }
@@ -477,6 +482,7 @@ function startObservingTooltips(): void {
   addObserverWithCleanup(tracker, observer);
 }
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────────────────────────────────────
@@ -495,6 +501,7 @@ export const render = {
 
     ensureStyles();
     startObservingTooltips();
+    // Note: Missing variants are now handled by the separate MGMissingVariantsIndicator feature
   },
 
   /**

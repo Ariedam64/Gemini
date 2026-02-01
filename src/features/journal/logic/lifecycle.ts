@@ -1,10 +1,10 @@
 /**
- * JournalChecker Feature - Lifecycle & Events
- * 
+ * Journal Feature - Lifecycle & Events
+ *
  * Level 2: Auto-refresh and event dispatching
  */
 
-import { loadConfig, saveConfig } from '../state';
+import { loadConfig } from '../state';
 import { aggregateProgress } from './progress';
 import type { JournalProgress } from '../types';
 
@@ -13,23 +13,25 @@ import type { JournalProgress } from '../types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
+let started = false;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Lifecycle
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function start(): void {
-    const config = loadConfig();
-    if (!config.enabled) return;
+    if (started) return;
+    started = true;
 
-    if (config.autoRefresh && !refreshInterval) {
+    // Auto-refresh with a 30s interval
+    if (!refreshInterval) {
         refreshInterval = setInterval(async () => {
             const progress = await aggregateProgress();
             dispatchUpdate(progress);
-        }, config.refreshIntervalMs);
+        }, 30000);
     }
 
-    console.log('✅ [JournalChecker] Started');
+    console.log('[Journal] Started');
 }
 
 export function stop(): void {
@@ -37,13 +39,11 @@ export function stop(): void {
         clearInterval(refreshInterval);
         refreshInterval = null;
     }
+    started = false;
 }
 
-export function setEnabled(enabled: boolean): void {
-    const config = loadConfig();
-    config.enabled = enabled;
-    saveConfig(config);
-    enabled ? start() : stop();
+export function isStarted(): boolean {
+    return started;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

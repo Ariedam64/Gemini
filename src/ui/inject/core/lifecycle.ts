@@ -81,3 +81,34 @@ export function addObserverWithCleanup(
 ): void {
   tracker.add(() => observer.disconnect());
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mutation Guard
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Shared flag to prevent cascading DOM mutations
+ * When any inject feature is processing, other observers should skip
+ */
+let _mutationGuardActive = false;
+
+/**
+ * Check if mutation guard is currently active
+ */
+export function isMutationGuarded(): boolean {
+  return _mutationGuardActive;
+}
+
+/**
+ * Execute a function with mutation guard protection
+ * Prevents other observers from triggering during DOM modifications
+ */
+export function withMutationGuard(fn: () => void): void {
+  if (_mutationGuardActive) return;
+  _mutationGuardActive = true;
+  try {
+    fn();
+  } finally {
+    _mutationGuardActive = false;
+  }
+}

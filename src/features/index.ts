@@ -2,7 +2,8 @@
 // Entry point for all optional features
 
 export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
-export { MGJournalChecker, JournalChecker } from "./journalChecker";
+export { MGJournal } from "./journal";
+export type { SpeciesProgress, CategoryProgress, JournalProgress, RawJournal } from "./journal";
 export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
 export { MGAchievements } from "./achievements";
 export { MGAntiAfk } from "./antiAfk";
@@ -14,6 +15,8 @@ export { MGGrowthTimers } from "./growthTimers";
 export type { GrowthTimer, BoostInfo, GrowthTimersConfig } from "./growthTimers";
 export { MGCropValueIndicator } from "./cropValueIndicator";
 export { MGCropSizeIndicator } from "./cropSizeIndicator";
+export { MGMissingVariantsIndicator } from "./missingVariantsIndicator";
+export type { MissingVariantsIndicatorConfig } from "./missingVariantsIndicator";
 export { MGShopNotifier } from "./shopNotifier";
 export type { TrackedItem, ShopNotifierConfig } from "./shopNotifier";
 export { MGWeatherNotifier } from "./weatherNotifier";
@@ -22,18 +25,18 @@ export { MGPetHungerNotifier } from "./petHungerNotifier";
 export type { PetHungerNotifier } from "./petHungerNotifier";
 export { MGAriesAPI } from "./ariesAPI";
 export type {
-    AriesAPIConfig,
-    Room,
-    RoomUserSlot,
-    RoomSearchResult,
-    PlayerView,
-    PlayerViewState,
-    PlayerRoomResult,
-    PlayerViewSection,
-    FriendAction,
-    FriendRequestIncoming,
-    FriendRequestOutgoing,
-    FriendRequestsResult,
+  AriesAPIConfig,
+  Room,
+  RoomUserSlot,
+  RoomSearchResult,
+  PlayerView,
+  PlayerViewState,
+  PlayerRoomResult,
+  PlayerViewSection,
+  FriendAction,
+  FriendRequestIncoming,
+  FriendRequestOutgoing,
+  FriendRequestsResult,
 } from "./ariesAPI";
 export { MGHarvestLocker } from "./harvestLocker";
 export type { HarvestLockerConfig, ScaleLockCriteria } from "./harvestLocker";

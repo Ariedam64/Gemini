@@ -1,6 +1,6 @@
 /**
- * JournalChecker Feature - Type Definitions
- * 
+ * Journal Feature - Type Definitions
+ *
  * Level 0: No imports from this feature
  */
 
@@ -72,19 +72,27 @@ export interface JournalProgress {
 // Config Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface JournalCheckerConfig {
-    enabled: boolean;
-    autoRefresh: boolean;
-    refreshIntervalMs: number;
+export interface JournalInjectionToggles {
+    abilitiesInject: boolean;
+    journalHints: boolean;
+    journalFilterSort: boolean;
+    journalAllTab: boolean;
+}
+
+export interface JournalConfig {
+    injections: JournalInjectionToggles;
 }
 
 // Import storage key from centralized registry (per .claude/rules/core.md #4)
 import { FEATURE_KEYS } from '../../utils/storage';
 
-export const STORAGE_KEY = FEATURE_KEYS.JOURNAL_CHECKER;
+export const STORAGE_KEY = FEATURE_KEYS.JOURNAL;
 
-export const DEFAULT_CONFIG: JournalCheckerConfig = {
-    enabled: false,
-    autoRefresh: true,
-    refreshIntervalMs: 30000,
+export const DEFAULT_CONFIG: JournalConfig = {
+    injections: {
+        abilitiesInject: true,
+        journalHints: true,
+        journalFilterSort: true,
+        journalAllTab: true,
+    },
 };

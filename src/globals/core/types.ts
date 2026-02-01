@@ -407,6 +407,7 @@ export type ShopItem = {
   purchased: number;
   remaining: number;
   isAvailable: boolean;
+  price: number;
 };
 
 export type Shop = {
@@ -474,6 +475,8 @@ export type ShopsGlobal = {
 export type WeatherData = {
   id: string;
   name: string;
+  isActive: boolean;
+  type: string;
   startTime: number | null;
   endTime: number | null;
   remainingSeconds: number;

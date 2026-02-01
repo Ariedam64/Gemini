@@ -24,6 +24,8 @@ function buildData(weatherId: string | null): WeatherData {
   return {
     id,
     name,
+    isActive: id !== "Sunny",
+    type: id,
     startTime: null,
     endTime: null,
     remainingSeconds: 0,

@@ -19,7 +19,7 @@ import {
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
-import { MGJournalChecker } from "../features/journalChecker";
+import { MGJournal } from "../features/journal";
 import { MGBulkFavorite } from "../features/bulkFavorite";
 import { MGAchievements } from "../features/achievements";
 import { MGPetTeam } from "../features/petTeam";
@@ -61,7 +61,7 @@ export const GeminiAPI = {
 
   Features: {
     AutoFavorite: MGAutoFavorite,
-    JournalChecker: MGJournalChecker,
+    Journal: MGJournal,
     BulkFavorite: MGBulkFavorite,
     Achievements: MGAchievements,
     Tracker: MGTracker,

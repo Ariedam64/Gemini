@@ -28,3 +28,7 @@ GameSourceFiles/
 GameFilesExample/
 
 dist/
+
+# Tools
+.qodo/
+.agent/

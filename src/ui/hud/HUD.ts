@@ -253,14 +253,13 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   // ===== 6b. Tab Visibility (inline - controlled by feature toggles) =====
   const TAB_FEATURE_MAP: Record<string, string> = {
     'tab-auto-favorite': 'autoFavorite',
-    'tab-journal-checker': 'journalChecker',
     'tab-pets': 'pets',
   };
 
   function applyTabVisibility(): void {
     const config = storageGet<Record<string, { enabled: boolean }>>(
       FEATURE_KEYS.CONFIG,
-      { autoFavorite: { enabled: true }, journalChecker: { enabled: true }, pets: { enabled: true } }
+      { autoFavorite: { enabled: true }, pets: { enabled: true } }
     );
 
     for (const [tabId, featureKey] of Object.entries(TAB_FEATURE_MAP)) {

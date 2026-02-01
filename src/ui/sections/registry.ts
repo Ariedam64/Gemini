@@ -5,7 +5,6 @@ import type { SectionsDeps } from "./core/Types";
 import { SettingsSection } from "./Settings";
 import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
-import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
 import { TrackersSection } from "./Trackers";
 import { ShopNotifierSection } from "./ShopNotifier";
@@ -47,7 +46,6 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
   const sections: BaseSection[] = [
     new SettingsSection(deps),
     new AutoFavoriteSettingsSection(),
-    new JournalCheckerSection(),
     getAlertsSection(),
     getShopNotifierSection(),
     new PetsSection(deps),

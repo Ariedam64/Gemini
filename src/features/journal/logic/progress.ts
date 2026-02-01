@@ -1,6 +1,6 @@
 /**
- * JournalChecker Feature - Progress Calculation
- * 
+ * Journal Feature - Progress Calculation
+ *
  * Level 2: Core logic for calculating journal progress
  * Uses MGData for game data, G_Players for journal access
  * Optimization: Caches results until journal data changes
@@ -37,7 +37,6 @@ export function getMyJournal(): RawJournal | null {
 
 function getJournalHash(journal: RawJournal | null): string {
     if (!journal) return 'null';
-    // Simple hash based on string length and first/last entries to avoid full JSON stringify
     return `pro:${Object.keys(journal.produce).length}-pet:${Object.keys(journal.pets).length}`;
 }
 
@@ -52,12 +51,7 @@ export function getCropVariants(): string[] {
 }
 
 export function getPetVariants(): string[] {
-    const mutations = MGData.get('mutations') ?? {};
-    const petMutations = Object.entries(mutations)
-        .filter(([_, data]) => !('tileRef' in (data as Record<string, unknown>)))
-        .map(([name]) => name);
-
-    return ['Normal', ...petMutations, 'Max Weight'];
+    return ['Normal', 'Gold', 'Rainbow', 'Max Weight'];
 }
 
 export function getAllMutations(): string[] {
@@ -66,20 +60,16 @@ export function getAllMutations(): string[] {
 
 export function getPetAbilities(petSpecies: string): string[] {
     const pets = MGData.get('pets') ?? {};
-    const petData = pets[petSpecies] as Record<string, any> | undefined;
-    if (!petData) return [];
+    const petData = pets[petSpecies] as Record<string, unknown> | undefined;
 
-    const abilities = new Set<string>();
-    if (Array.isArray(petData.abilities)) petData.abilities.forEach((a: string) => abilities.add(a));
-    if (Array.isArray(petData.possibleAbilities)) petData.possibleAbilities.forEach((a: string) => abilities.add(a));
-
-    if (petData.abilityTiers) {
-        Object.values(petData.abilityTiers).forEach((tier: any) => {
-            if (Array.isArray(tier)) tier.forEach((a: string) => abilities.add(a));
-        });
+    if (!petData?.innateAbilityWeights || typeof petData.innateAbilityWeights !== 'object') {
+        return [];
     }
 
-    return [...abilities];
+    const abilities = petData.innateAbilityWeights as Record<string, number>;
+    const EXCLUDED_ABILITIES = ['RainbowGranter', 'GoldGranter'];
+
+    return Object.keys(abilities).filter(abilityId => !EXCLUDED_ABILITIES.includes(abilityId));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,10 +131,12 @@ export function calculatePetProgress(journal: RawJournal | null): CategoryProgre
     for (const petId of allPetIds) {
         const entry = petsJournal[petId];
         const loggedV = entry?.variantsLogged?.map(v => v.variant) ?? [];
-        const loggedA = entry?.abilitiesLogged?.map(a => a.ability) ?? [];
+        const rawLoggedA = entry?.abilitiesLogged?.map(a => a.ability) ?? [];
 
         const missingV = allVariants.filter(v => !loggedV.includes(v));
         const possibleA = getPetAbilities(petId);
+        // Filter logged abilities to only include those that are in possibleA
+        const loggedA = rawLoggedA.filter(a => possibleA.includes(a));
         const missingA = possibleA.filter(a => !loggedA.includes(a));
 
         variantsTotal += allVariants.length;
