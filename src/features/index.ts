@@ -36,7 +36,14 @@ export type {
     FriendRequestsResult,
 } from "./ariesAPI";
 export { MGHarvestLocker } from "./harvestLocker";
-export type { HarvestLockerConfig, ScaleLockCriteria } from "./harvestLocker";
+export type {
+    HarvestLockerConfig,
+    HarvestRule,
+    RuleMode,
+    MutationMatchMode,
+    SizeCondition,
+    MutationCondition,
+} from "./harvestLocker";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

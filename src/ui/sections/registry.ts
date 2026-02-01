@@ -11,6 +11,7 @@ import { TrackersSection } from "./Trackers";
 import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
 import { RoomSection } from "./Room";
+import { LockerSection } from "./Locker";
 
 let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
@@ -42,6 +43,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new PetsSection(deps),
     new TrackersSection(deps),
     new RoomSection(deps),
+    new LockerSection(),
   ];
 
   // Only include developer tools in non-production builds

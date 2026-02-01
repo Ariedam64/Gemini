@@ -183,13 +183,20 @@ export function SegmentedControl(opts: SegmentedControlOptions): SegmentedContro
   // Initial render
   reflect();
 
-  // Use queueMicrotask like NavTabs does - this ensures proper timing
+  // Set initial position without animation to prevent slide effect on first render
   queueMicrotask(() => {
     const activeBtn = buttons.find((b) => b.id === _selected);
     if (activeBtn) {
       const ind = indicator as HTMLDivElement;
+      // Disable transition temporarily for initial positioning
+      ind.style.transition = 'none';
       ind.style.width = `${activeBtn.offsetWidth}px`;
       ind.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+
+      // Re-enable transition after a frame so future changes animate smoothly
+      requestAnimationFrame(() => {
+        ind.style.removeProperty('transition');
+      });
     }
   });
 

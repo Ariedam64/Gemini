@@ -1,11 +1,19 @@
 /**
  * HarvestLocker feature
- * Prevents accidental harvesting of crops based on configurable criteria
+ * Prevents accidental harvesting of crops based on configurable rules
  */
 
-import { loadConfig, saveConfig } from './state';
+import {
+    loadConfig,
+    saveConfig,
+    createRule,
+    addOverallRule,
+    addSpeciesRule,
+    updateRule,
+    deleteRule,
+} from './state';
 import { start, stop, isSlotLocked, getLockedSlots, updateLockConfig } from './logic/core';
-import type { HarvestLockerConfig, ScaleLockCriteria } from './types';
+import type { HarvestLockerConfig, HarvestRule, RuleMode, MutationMatchMode } from './types';
 
 // Import middleware to ensure it's loaded (auto-registers itself)
 import './middleware';
@@ -128,70 +136,91 @@ function clearManualLocks(): void {
 }
 
 /**
- * Set global scale lock criteria
- */
-function setGlobalScaleLock(enabled: boolean, minPercentage: number): void {
-    const config = loadConfig();
-    config.globalCriteria.lockByScale = { enabled, minPercentage };
-    saveConfig(config);
-    updateLockConfig(config);
-}
-
-/**
- * Set global mutation lock criteria
- */
-function setGlobalMutationLock(mutations: string[]): void {
-    const config = loadConfig();
-    config.globalCriteria.lockedMutations = mutations;
-    saveConfig(config);
-    updateLockConfig(config);
-}
-
-/**
- * Set scale lock criteria for a specific species
- */
-function setSpeciesScaleLock(species: string, enabled: boolean, minPercentage: number): void {
-    const config = loadConfig();
-
-    if (!config.speciesOverrides[species]) {
-        config.speciesOverrides[species] = {};
-    }
-
-    config.speciesOverrides[species].lockByScale = { enabled, minPercentage };
-    saveConfig(config);
-    updateLockConfig(config);
-}
-
-/**
- * Set mutation lock criteria for a specific species
- */
-function setSpeciesMutationLock(species: string, mutations: string[]): void {
-    const config = loadConfig();
-
-    if (!config.speciesOverrides[species]) {
-        config.speciesOverrides[species] = {};
-    }
-
-    config.speciesOverrides[species].lockedMutations = mutations;
-    saveConfig(config);
-    updateLockConfig(config);
-}
-
-/**
- * Clear all overrides for a specific species
- */
-function clearSpeciesOverride(species: string): void {
-    const config = loadConfig();
-    delete config.speciesOverrides[species];
-    saveConfig(config);
-    updateLockConfig(config);
-}
-
-/**
  * Get current configuration
  */
 function getConfig(): HarvestLockerConfig {
     return loadConfig();
+}
+
+/* ───────────────────── Rule Management ───────────────────── */
+
+/**
+ * Get all overall rules
+ */
+function getOverallRules(): HarvestRule[] {
+    const config = loadConfig();
+    return config.overallRules;
+}
+
+/**
+ * Get rules for a specific species
+ */
+function getSpeciesRules(species: string): HarvestRule[] {
+    const config = loadConfig();
+    return config.speciesRules[species] || [];
+}
+
+/**
+ * Get all species that have rules
+ */
+function getAllSpeciesWithRules(): string[] {
+    const config = loadConfig();
+    return Object.keys(config.speciesRules);
+}
+
+/**
+ * Create and add a new overall rule
+ */
+function addNewOverallRule(
+    name: string,
+    mode: RuleMode,
+    sizeCondition?: { enabled: boolean; minPercentage: number },
+    mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
+): HarvestRule {
+    const rule = createRule(name, mode, sizeCondition, mutationCondition);
+    addOverallRule(rule);
+    updateLockConfig(loadConfig());
+    return rule;
+}
+
+/**
+ * Create and add a new species-specific rule
+ */
+function addNewSpeciesRule(
+    species: string,
+    name: string,
+    mode: RuleMode,
+    sizeCondition?: { enabled: boolean; minPercentage: number },
+    mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
+): HarvestRule {
+    const rule = createRule(name, mode, sizeCondition, mutationCondition);
+    addSpeciesRule(species, rule);
+    updateLockConfig(loadConfig());
+    return rule;
+}
+
+/**
+ * Update an existing rule
+ */
+function modifyRule(ruleId: string, updates: Partial<HarvestRule>): void {
+    updateRule(ruleId, updates);
+    updateLockConfig(loadConfig());
+}
+
+/**
+ * Delete a rule
+ */
+function removeRule(ruleId: string): void {
+    deleteRule(ruleId);
+    updateLockConfig(loadConfig());
+}
+
+/**
+ * Toggle a rule's enabled state
+ */
+function toggleRule(ruleId: string, enabled: boolean): void {
+    updateRule(ruleId, { enabled });
+    updateLockConfig(loadConfig());
 }
 
 /**
@@ -213,14 +242,15 @@ export const MGHarvestLocker = {
     unlockSlot,
     clearManualLocks,
 
-    // Global criteria
-    setGlobalScaleLock,
-    setGlobalMutationLock,
-
-    // Species-specific criteria
-    setSpeciesScaleLock,
-    setSpeciesMutationLock,
-    clearSpeciesOverride,
+    // Rule management
+    getOverallRules,
+    getSpeciesRules,
+    getAllSpeciesWithRules,
+    addNewOverallRule,
+    addNewSpeciesRule,
+    modifyRule,
+    removeRule,
+    toggleRule,
 
     // Configuration
     getConfig,
@@ -229,4 +259,11 @@ export const MGHarvestLocker = {
 /**
  * Type exports
  */
-export type { HarvestLockerConfig, ScaleLockCriteria } from './types';
+export type {
+    HarvestLockerConfig,
+    HarvestRule,
+    RuleMode,
+    MutationMatchMode,
+    SizeCondition,
+    MutationCondition,
+} from './types';
