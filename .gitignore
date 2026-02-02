@@ -27,7 +27,6 @@ GameData/
 GameSourceFiles/
 GameFilesExample/
 
-dist/
 
 # Tools
 .qodo/
