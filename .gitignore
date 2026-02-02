@@ -31,3 +31,5 @@ GameFilesExample/
 # Tools
 .qodo/
 .agent/
+
+.design-specs
