@@ -1,104 +1,95 @@
 /**
- * Journal Hints - Hint Lookup Builder
- *
- * Builds hint text for crop variants, pet variants, and pet abilities.
- * Uses MGData and MGJournal for dynamic data (no hardcoded game data).
+ * Journal Hints - Hint Data
+ * 
+ * Contains hint text for each variant explaining how to obtain it.
+ * Also contains egg-to-species mapping for ability hints.
  */
 
-import { MGData } from '../../../../modules/data';
-import { MGJournal } from '../../../../features/journal';
+// ?????????????????????????????????????????????????????????????????????????????
+// Crop Variant Hints
+// ?????????????????????????????????????????????????????????????????????????????
 
-export type SpeciesContext = {
-  speciesId: string;
-  speciesName: string;
+export const CROP_HINTS: Record<string, string> = {
+    'Normal': 'Normal: Harvest a {cropName} and log it without any mutations.',
+    'Wet': 'Wet is the most common mutation, gained during the Rain weather event.',
+    'Chilled': 'The Chilled mutation is gained during the Snow weather event.',
+    'Frozen': 'The Frozen mutation is obtained from Wet crops during the Snow weather event, or Chilled crops during Rain.',
+    'Dawnlit': 'The Dawnlit mutation is gained during the Dawn weather event.',
+    'Ambershine': 'The Amberlit mutation is gained during the Amber Moon weather event.',
+    'Gold': 'Gold is a rare mutation that appears in 1% of newly planted crops. Pets with the Gold Granter ability have a small chance to apply the Gold mutation to a random crop.',
+    'Rainbow': 'Rainbow is a very rare mutation that appears in 0.1% of newly planted crops.  Pets with the Rainbow Granter ability have a small chance to apply the Rainbow mutation to a random crop.',
+    'Dawncharged': 'Dawnbound: During the Dawn lunar event, place a {cropName} with the Dawnlit mutation adjacent to a Dawnbinder crop.',
+    'Ambercharged': 'Amberbound: During the Amber Moon lunar event, place a {cropName} with the Amberlit mutation adjacent to a Moonbinder crop.',
+    'Max Weight': 'Max weight applies only to size 100 crops (the largest possible). The size of a crop can be checked by hovering over its weight. Obtaining weight 100 crops can be achieved through Crop Size Boost pets.',
 };
 
-export type HintLookup = {
-  getCropHint: (variantId: string, context: SpeciesContext) => string;
-  getPetVariantHint: (variantId: string, context: SpeciesContext) => string;
-  getAbilityHint: (speciesId: string) => string;
+// ?????????????????????????????????????????????????????????????????????????????
+// Pet Variant Hints
+// ?????????????????????????????????????????????????????????????????????????????
+
+export const PET_VARIANT_HINTS: Record<string, string> = {
+    'Normal': 'Hatch a {petName} without any mutations',
+    'Gold': 'All pets have a 1% base chance to hatch with the gold mutation; increase these chances with the Pet Mutation Boost abilities.',
+    'Rainbow': 'All pets have a 0.1% base chance to hatch with the rainbow mutation; increase these chances with the Pet Mutation Boost abilities.',
+    'Max Weight': 'Hatch a {petName} with a Max STR of 100, using Max Strength Boost ability is recommended while hatching',
+}; 
+
+// ?????????????????????????????????????????????????????????????????????????????
+// Egg to Species Mapping (from game source eggsDex.ts)
+// ?????????????????????????????????????????????????????????????????????????????
+
+const EGG_TO_SPECIES: Record<string, string[]> = {
+    'CommonEgg': ['Worm', 'Snail', 'Bee'],
+    'UncommonEgg': ['Chicken', 'Bunny', 'Dragonfly'],
+    'RareEgg': ['Pig', 'Cow', 'Turkey'],
+    'WinterEgg': ['SnowFox', 'Stoat', 'WhiteCaribou'],
+    'LegendaryEgg': ['Squirrel', 'Turtle', 'Goat'],
+    'MythicalEgg': ['Butterfly', 'Peacock', 'Capybara'],
 };
 
-const FALLBACK_HINT = 'Discover this variant by experimenting in the garden.';
-const PET_VARIANT_HINT = 'Hatch and raise pets to discover this variant.';
-const ABILITY_HINT = 'Hatch pets of this species to discover its abilities.';
+const EGG_DISPLAY_NAMES: Record<string, string> = {
+    'CommonEgg': 'Common Eggs',
+    'UncommonEgg': 'Uncommon Eggs',
+    'RareEgg': 'Rare Eggs',
+    'WinterEgg': 'Winter Eggs',
+    'LegendaryEgg': 'Legendary Eggs',
+    'MythicalEgg': 'Mythical Eggs',
+};
 
-function toTitle(value: string): string {
-  return value
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/^\w/, c => c.toUpperCase());
+/**
+ * Get the egg type display name for a pet species
+ */
+export function getEggTypeForSpecies(speciesId: string): string {
+    for (const [eggId, species] of Object.entries(EGG_TO_SPECIES)) {
+        if (species.includes(speciesId)) {
+            return EGG_DISPLAY_NAMES[eggId] || eggId;
+        }
+    }
+    return 'Eggs';
 }
 
-export function getCropVariants(): string[] {
-  return MGJournal.getCropVariants();
+/**
+ * Get the hint text for a pet ability
+ */
+export function getAbilityHint(speciesId: string): string {
+    const eggType = getEggTypeForSpecies(speciesId);
+    return `Keep hatching ${eggType} to get a pet with this ability`;
 }
 
-export function getPetVariants(): string[] {
-  return MGJournal.getPetVariants();
+/**
+ * Get hint text for a crop variant, with species name substituted
+ */
+export function getCropHint(variantId: string, speciesName: string): string {
+    const template = CROP_HINTS[variantId];
+    if (!template) return `Obtain a ${variantId} ${speciesName}`;
+    return template.replace(/\{cropName\}/g, speciesName);
 }
 
-function getMutationInfo(variantId: string): { hint?: string } {
-  const mutations = MGData.get('mutations') ?? {};
-  const mutation = mutations[variantId] as Record<string, unknown> | undefined;
-  if (!mutation) return {};
-
-  const hint = typeof mutation.hint === 'string' ? mutation.hint : undefined;
-  return { hint };
-}
-
-function getVariantDisplayName(variantId: string): string {
-  const mutations = MGData.get('mutations') ?? {};
-  const mutation = mutations[variantId] as Record<string, unknown> | undefined;
-  const name = typeof mutation?.name === 'string' ? mutation.name : undefined;
-  const display = typeof mutation?.displayName === 'string' ? mutation.displayName : undefined;
-  return display ?? name ?? toTitle(variantId);
-}
-
-function buildCropHint(variantId: string): string {
-  if (variantId === 'Normal') {
-    return 'Grow a standard crop without special conditions.';
-  }
-
-  if (variantId === 'Max Weight') {
-    return 'Harvest a crop at maximum weight.';
-  }
-
-  const mutationInfo = getMutationInfo(variantId);
-  if (mutationInfo.hint) {
-    return mutationInfo.hint;
-  }
-
-  const name = getVariantDisplayName(variantId);
-  return `Discover ${name} by experimenting with crop conditions.`;
-}
-
-function buildPetVariantHint(variantId: string): string {
-  if (variantId === 'Normal') return PET_VARIANT_HINT;
-  if (variantId === 'Max Weight') return 'Raise a pet to its maximum weight.';
-
-  const name = getVariantDisplayName(variantId);
-  return `Hatch pets to discover the ${name} variant.`;
-}
-
-function getPetAbilityNames(speciesId: string): string[] {
-  const pets = MGData.get('pets') ?? {};
-  const pet = pets[speciesId] as Record<string, unknown> | undefined;
-  const weights = pet?.innateAbilityWeights as Record<string, number> | undefined;
-  if (!weights) return [];
-  return Object.keys(weights);
-}
-
-export function createHintLookup(): HintLookup {
-  return {
-    getCropHint: (variantId: string) => buildCropHint(variantId) || FALLBACK_HINT,
-    getPetVariantHint: (variantId: string) => buildPetVariantHint(variantId) || PET_VARIANT_HINT,
-    getAbilityHint: (speciesId: string) => {
-      const abilities = getPetAbilityNames(speciesId);
-      if (abilities.length === 0) return ABILITY_HINT;
-      return ABILITY_HINT;
-    },
-  };
+/**
+ * Get hint text for a pet variant, with species name substituted
+ */
+export function getPetVariantHint(variantId: string, speciesName: string): string {
+    const template = PET_VARIANT_HINTS[variantId];
+    if (!template) return `Obtain a ${variantId} ${speciesName}`;
+    return template.replace(/\{petName\}/g, speciesName);
 }

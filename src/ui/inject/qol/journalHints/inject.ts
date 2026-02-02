@@ -8,7 +8,8 @@
  */
 
 import { createCleanupTracker, addObserverWithCleanup } from '../../core/lifecycle';
-import { createHintLookup, getCropVariants, getPetVariants } from './hints';
+import { MGJournal } from '../../../../features/journal';
+import { getCropHint, getPetVariantHint, getAbilityHint } from './hints';
 import { showHintTooltip, hideHintTooltip } from './render';
 import { resolveSpeciesId } from '../_shared/names';
 
@@ -20,7 +21,6 @@ let tracker = createCleanupTracker();
 let initialized = false;
 const HINT_ATTACHED_CLASS = 'gemini-hint-attached';
 
-const hintLookup = createHintLookup();
 
 // -----------------------------------------------------------------------------
 // Detection Helpers
@@ -168,11 +168,11 @@ function findUnknownBadges(): HTMLElement[] {
 }
 
 function getCropVariantNames(): string[] {
-    return getCropVariants();
+    return MGJournal.getCropVariants();
 }
 
 function getPetVariantNames(): string[] {
-    return getPetVariants();
+    return MGJournal.getPetVariants();
 }
 
 /**
@@ -293,16 +293,16 @@ function attachHintToBadge(badge: HTMLElement): void {
     if (activeTab === 'crops') {
         const variantId = getVariantForIndex(index, 'crops');
         if (!variantId) return;
-        hintText = hintLookup.getCropHint(variantId, { speciesId: species.id, speciesName: species.displayName });
+        hintText = getCropHint(variantId, species.displayName);
     } else if (activeTab === 'pets') {
         const stampType = getStampType(index, stamps.length);
 
         if (stampType === 'variant') {
             const variantId = getVariantForIndex(index, 'pets');
             if (!variantId) return;
-            hintText = hintLookup.getPetVariantHint(variantId, { speciesId: species.id, speciesName: species.displayName });
+            hintText = getPetVariantHint(variantId, species.displayName);
         } else {
-            hintText = hintLookup.getAbilityHint(species.id);
+            hintText = getAbilityHint(species.id);
         }
     }
 
