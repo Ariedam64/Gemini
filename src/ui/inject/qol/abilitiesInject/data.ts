@@ -126,7 +126,11 @@ export function getAbilityName(abilityId: string): string {
     if (!abilityData) return abilityId;
 
     // Try name field first, fallback to ID
-    return abilityData.name ?? abilityData.displayName ?? abilityId;
+    const name = abilityData.name;
+    if (typeof name == 'string') return name;
+    const displayName = abilityData.displayName;
+    if (typeof displayName == 'string') return displayName;
+    return abilityId;
   } catch (error) {
     console.error('[AbilitiesInject] Failed to get ability name:', error);
     return abilityId;

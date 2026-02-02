@@ -1,4 +1,4 @@
--/**
+/**
  * Journal Hints - Core Injection Logic
  * 
  * Watches for "???" badges in journal species pages and adds
@@ -385,3 +385,5 @@ export function destroy(): void {
 export function isEnabled(): boolean {
     return initialized;
 }
+
+

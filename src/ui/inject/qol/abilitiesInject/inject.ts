@@ -120,9 +120,11 @@ function getSpeciesId(speciesName: string): string | null {
   const lowerName = speciesName.toLowerCase();
   for (const [id, data] of Object.entries(pets)) {
     const petData = data as Record<string, unknown>;
+    const name = typeof petData.name === 'string' ? petData.name : undefined;
+    const displayName = typeof petData.displayName === 'string' ? petData.displayName : undefined;
     if (
-      petData.name?.toLowerCase() === lowerName ||
-      petData.displayName?.toLowerCase() === lowerName ||
+      (name && name.toLowerCase() === lowerName) ||
+      (displayName && displayName.toLowerCase() === lowerName) ||
       id.toLowerCase() === lowerName
     ) {
       return id;

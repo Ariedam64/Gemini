@@ -1,4 +1,4 @@
---/**
+/**
  * Journal All Tab - Injection Logic
  * 
  * Injects an "All" tab button into the journal modal that shows
@@ -14,9 +14,9 @@ import { MGJournal } from '../../../../features/journal';
 import type { SpeciesProgress } from '../../../../features/journal';
 import { getDisplayName } from '../_shared/names';
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // State
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Separate trackers for button (permanent) and content (temporary)
 let buttonTracker = createCleanupTracker(); // Never cleared - button persists
@@ -32,9 +32,9 @@ type SortMode = 'default' | 'az' | 'progress';
 let filterMode: FilterMode = 'all';
 let sortMode: SortMode = 'default';
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // Detection Helpers
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Find the tab container - looks for the parent of Crops/Pets buttons
@@ -134,19 +134,19 @@ function findContentWrapper(): HTMLElement | null {
  * Get progress color based on percentage (matching game's getProgressColor)
  */
 function getProgressColor(percentage: number): string {
-    if (percentage < 15) return 'var(--low, var(--accent))'; // Light Orange
-    if (percentage < 25) return 'var(--medium, var(--accent))'; // Orange.Magic
-    if (percentage < 50) return 'var(--high, var(--accent))'; // Yellow.Magic
-    if (percentage < 75) return 'var(--high, var(--accent))'; // Yellow.Dark
-    if (percentage < 100) return 'var(--complete, var(--accent))'; // Green.Magic
-    return 'var(--complete, var(--accent))'; // Green.Dark (100%)
+    if (percentage < 15) return '#F98B4B'; // Light Orange
+    if (percentage < 25) return '#FC6D30'; // Orange.Magic
+    if (percentage < 50) return '#F3D32B'; // Yellow.Magic
+    if (percentage < 75) return '#E9B52F'; // Yellow.Dark
+    if (percentage < 100) return '#5EAC46'; // Green.Magic
+    return '#0B893F'; // Green.Dark (100%)
 }
 
 
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // UI Creation
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Create the All tab button matching the game's tab button styling
@@ -190,11 +190,11 @@ function createAllTabButton(): HTMLButtonElement {
         height: 20px;
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
-        background: var(--tab-bg, var(--soft));
+        background: #5a7a6a;
         position: relative;
-        border-left: 1px solid var(--border, currentColor);
-        border-right: 1px solid var(--border, currentColor);
-        border-top: 2px solid var(--border, currentColor);
+        border-left: 1px solid #6a9a82;
+        border-right: 1px solid #6a9a82;
+        border-top: 2px solid #7aba9a;
         overflow: hidden;
         transition: height 0.3s ease-in-out;
     `;
@@ -204,7 +204,7 @@ function createAllTabButton(): HTMLButtonElement {
     text.style.cssText = `
         font-size: ${isSmallScreen ? '12px' : '14px'};
         font-weight: bold;
-        color: var(--fg);
+        color: white;
         position: relative;
         z-index: 2;
     `;
@@ -312,21 +312,21 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
                 } else {
                     // Fallback emoji if sprite not found
                     const emoji = document.createElement('span');
-                    emoji.textContent = type === 'crop' ? '----' : '----';
+                    emoji.textContent = type === 'crop' ? '🌱' : '🐾';
                     emoji.style.cssText = 'font-size: 20px;';
                     spriteContainer.appendChild(emoji);
                 }
             } else {
                 // Fallback emoji if MGSprite not ready
                 const emoji = document.createElement('span');
-                emoji.textContent = type === 'crop' ? '----' : '----';
+                emoji.textContent = type === 'crop' ? '🌱' : '🐾';
                 emoji.style.cssText = 'font-size: 20px;';
                 spriteContainer.appendChild(emoji);
             }
         } catch {
             // Fallback emoji on error
             const emoji = document.createElement('span');
-            emoji.textContent = type === 'crop' ? '----' : '----';
+            emoji.textContent = type === 'crop' ? '🌱' : '🐾';
             emoji.style.cssText = 'font-size: 20px;';
             spriteContainer.appendChild(emoji);
         }
@@ -361,7 +361,7 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
     const progressContainer = document.createElement('div');
     progressContainer.style.cssText = `
         position: relative;
-        background: var(--soft, var(--paper));
+        background: #D4C4A8;
         border-radius: 5px;
         padding: 6px 12px;
         overflow: hidden;
@@ -394,11 +394,11 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
 
     const displayName = getDisplayName(species.species, type);
     const nameEl = document.createElement('span');
-    nameEl.style.cssText = 'font-weight: bold; font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+    nameEl.style.cssText = 'font-weight: bold; font-size: 13px; color: #3D3325; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
     nameEl.textContent = isUnknown ? '???' : displayName;
 
     const fractionEl = document.createElement('span');
-    fractionEl.style.cssText = `font-size: 12px; font-weight: bold; color: ${percentage < 100 ? 'var(--muted, var(--fg))' : 'var(--fg)'}; margin-left: 4px; flex-shrink: 0;`;
+    fractionEl.style.cssText = `font-size: 12px; font-weight: bold; color: ${percentage < 100 ? '#8B6914' : '#3D3325'}; margin-left: 4px; flex-shrink: 0;`;
     fractionEl.textContent = `${logged}/${total}`;
 
     textGrid.append(nameEl, fractionEl);
@@ -493,7 +493,7 @@ function createCategorySection(title: string, species: SpeciesProgress[], type: 
 
     // Section header - styled like game journal (text only, no background card)
     const header = document.createElement('div');
-    const color = type === 'crop' ? 'var(--accent-2, var(--accent))' : 'var(--accent-3, var(--accent))';
+    const color = type === 'crop' ? '#7cb342' : '#9575cd';
     header.style.cssText = `
         display: flex;
         align-items: center;
@@ -508,7 +508,7 @@ function createCategorySection(title: string, species: SpeciesProgress[], type: 
 
     const countSpan = document.createElement('span');
     countSpan.textContent = `${sectionLogged}/${sectionTotal}`;
-    countSpan.style.cssText = 'color: var(--muted, var(--fg)); font-size: 12px; font-weight: bold;';
+    countSpan.style.cssText = 'color: #A88A6B; font-size: 12px; font-weight: bold;';
 
     header.append(titleSpan, countSpan);
 
@@ -548,7 +548,7 @@ function createAllTabContent(): HTMLElement {
     headerSection.style.cssText = 'text-align: center; padding-bottom: 8px;';
     const headerTitle = document.createElement('p');
     headerTitle.textContent = 'GARDEN JOURNAL';
-    headerTitle.style.cssText = 'font-size: 20px; font-weight: bold; font-family: shrikhand, serif; color: var(--fg); margin-bottom: 4px;';
+    headerTitle.style.cssText = 'font-size: 20px; font-weight: bold; font-family: shrikhand, serif; color: #4F6981; margin-bottom: 4px;';
 
     // Collective progress for the All tab
     const totalLogged = cropsProgress.variantsLogged + petsProgress.variantsLogged + (petsProgress.abilitiesLogged ?? 0);
@@ -556,18 +556,18 @@ function createAllTabContent(): HTMLElement {
     const percentage = Math.floor((totalLogged / totalTotal) * 100);
 
     const headerCollected = document.createElement('p');
-    headerCollected.style.cssText = 'font-size: 14px; font-weight: bold; color: var(--fg); margin-top: -2px;';
+    headerCollected.style.cssText = 'font-size: 14px; font-weight: bold; color: #4F6981; margin-top: -2px;';
     headerCollected.textContent = `Collected ${percentage}% `;
 
     const countSpan = document.createElement('span');
     countSpan.className = 'chakra-text';
-    countSpan.style.cssText = 'color: var(--muted, var(--fg)); font-size: 12px; font-weight: bold;';
+    countSpan.style.cssText = 'color: #A88A6B; font-size: 12px; font-weight: bold;';
     countSpan.textContent = `(${totalLogged}/${totalTotal})`;
 
     headerCollected.appendChild(countSpan);
 
     const headerDivider = document.createElement('div');
-    headerDivider.style.cssText = 'height: 4px; background: var(--soft, var(--paper)); border-radius: 9999px; opacity: 0.5; margin: 8px 0;';
+    headerDivider.style.cssText = 'height: 4px; background: #D4C4A8; border-radius: 9999px; opacity: 0.5; margin: 8px 0;';
 
     headerSection.append(headerTitle, headerCollected, headerDivider);
 
@@ -586,7 +586,7 @@ function createAllTabContent(): HTMLElement {
     // Filter dropdown
     const filterLabel = document.createElement('span');
     filterLabel.textContent = 'Filter:';
-    filterLabel.style.cssText = 'color: var(--muted, var(--fg)); font-size: 11px; font-weight: bold;';
+    filterLabel.style.cssText = 'color: #A88A6B; font-size: 11px; font-weight: bold;';
 
     const filterSelect = document.createElement('select');
     for (const [value, label] of [['all', 'All'], ['missing', 'Missing'], ['complete', 'Complete']]) {
@@ -597,9 +597,9 @@ function createAllTabContent(): HTMLElement {
     }
     filterSelect.value = filterMode;
     filterSelect.style.cssText = `
-        background: var(--soft, var(--paper));
-        color: var(--fg);
-        border: 1px solid var(--border, currentColor);
+        background: #D4C8B8;
+        color: #3D3325;
+        border: 1px solid #8B7355;
         border-radius: 4px;
         padding: 3px 8px;
         font-size: 10px;
@@ -613,7 +613,7 @@ function createAllTabContent(): HTMLElement {
     // Sort dropdown
     const sortLabel = document.createElement('span');
     sortLabel.textContent = 'Sort:';
-    sortLabel.style.cssText = 'color: var(--muted, var(--fg)); font-size: 11px; font-weight: bold; margin-left: 8px;';
+    sortLabel.style.cssText = 'color: #A88A6B; font-size: 11px; font-weight: bold; margin-left: 8px;';
 
     const sortSelect = document.createElement('select');
     for (const [value, label] of [['default', 'Default'], ['az', 'A-Z'], ['progress', 'By Progress']]) {
@@ -660,7 +660,7 @@ function createAllTabContent(): HTMLElement {
     // Show message if no results
     if (filteredCrops.length === 0 && filteredPets.length === 0) {
         const noResults = document.createElement('div');
-        noResults.style.cssText = 'text-align: center; padding: 40px 20px; color: var(--muted, var(--fg)); font-size: 14px;';
+        noResults.style.cssText = 'text-align: center; padding: 40px 20px; color: #A88A6B; font-size: 14px;';
         noResults.textContent = filterMode === 'missing'
             ? 'All entries are complete!'
             : filterMode === 'complete'
@@ -774,9 +774,9 @@ function refreshAllTabContent(): void {
     overlay.appendChild(createAllTabContent());
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // Tab Activation - Using Overlay Approach
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 function activateAllTab(): void {
     if (allTabActive) return;
@@ -936,9 +936,9 @@ function deactivateAllTab(): void {
     console.log('[JournalAllTab] All tab deactivated');
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // Injection
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 function injectAllTab(): void {
     const tabContainer = findTabContainer();
@@ -981,9 +981,9 @@ function processPage(): void {
     });
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // Observation
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 let debounceTimer: number | null = null;
 
@@ -1038,9 +1038,9 @@ function stopObserving(): void {
     buttonTracker = createCleanupTracker();
 }
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 // Public API
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function init(): void {
     if (initialized) return;
@@ -1059,7 +1059,3 @@ export function destroy(): void {
 export function isEnabled(): boolean {
     return initialized;
 }
-
-
-
-

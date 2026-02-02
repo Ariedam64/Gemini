@@ -528,12 +528,12 @@ export class SettingsSection extends BaseSection {
     const renderEnv = () => {
       const env = MGEnvironment.detect() as EnvInfo;
 
-      surfaceVal.textContent = env.surface;
-      platformVal.textContent = env.platform;
-      browserVal.textContent = env.browser ?? "Unknown";
-      osVal.textContent = env.os ?? "Unknown";
-      hostVal.textContent = env.host;
-      iframeVal.textContent = env.isInIframe ? "Yes" : "No";
+      surfaceVal.textContent = env.surface ?? 'Unknown';
+      platformVal.textContent = env.platform ?? 'Unknown';
+      browserVal.textContent = env.browser ?? 'Unknown';
+      osVal.textContent = env.os ?? 'Unknown';
+      hostVal.textContent = env.host ?? 'Unknown';
+      iframeVal.textContent = env.isInIframe ? 'Yes' : 'No';
     };
 
     const copyJsonBtn = Button({

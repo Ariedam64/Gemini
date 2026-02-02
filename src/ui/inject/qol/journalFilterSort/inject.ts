@@ -1,4 +1,4 @@
---/**
+/**
  * Journal Filter/Sort - Core Logic
  * 
  * Provides filter (All/Missing/Collected) and sort (Default/Alphabetical/Progress)
@@ -93,7 +93,7 @@ function createControlsContainer(): HTMLElement {
     // Filter dropdown
     const filterLabel = document.createElement('span');
     filterLabel.textContent = 'Filter:';
-    filterLabel.style.cssText = 'color: var(--muted, var(--fg)); font-size: 11px;';
+    filterLabel.style.cssText = 'color: #A88A6B; font-size: 11px;';
 
     const filterSelect = document.createElement('select');
     for (const [value, label] of [['all', 'All'], ['missing', 'Missing'], ['collected', 'Complete']]) {
@@ -103,9 +103,9 @@ function createControlsContainer(): HTMLElement {
         filterSelect.appendChild(opt);
     }
     filterSelect.style.cssText = `
-        background: var(--soft, var(--paper));
-        color: var(--fg);
-        border: 1px solid var(--border, currentColor);
+        background: #D4C8B8;
+        color: #3D3325;
+        border: 1px solid #8B7355;
         border-radius: 4px;
         padding: 3px 6px;
         font-size: 10px;
@@ -120,7 +120,7 @@ function createControlsContainer(): HTMLElement {
     // Sort dropdown
     const sortLabel = document.createElement('span');
     sortLabel.textContent = 'Sort:';
-    sortLabel.style.cssText = 'color: var(--muted, var(--fg)); font-size: 11px; margin-left: 8px;';
+    sortLabel.style.cssText = 'color: #A88A6B; font-size: 11px; margin-left: 8px;';
 
     const sortSelect = document.createElement('select');
     for (const [value, label] of [['default', 'Default'], ['alphabetical', 'A-Z'], ['progress', 'By Progress']]) {
@@ -346,4 +346,7 @@ export function destroy(): void {
 export function isEnabled(): boolean {
     return initialized;
 }
+
+
+
 
