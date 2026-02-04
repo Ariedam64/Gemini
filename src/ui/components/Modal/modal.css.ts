@@ -13,6 +13,8 @@ export const modalCss = `
     height: 100%;
     z-index: 99999;
     pointer-events: none;
+    contain: layout;
+    will-change: opacity;
   }
 
   .modal-container.is-open {
@@ -34,6 +36,7 @@ export const modalCss = `
     align-items: center;
     justify-content: center;
     padding: 16px;
+    will-change: opacity, backdrop-filter;
   }
 
   .modal-container.is-open .modal-backdrop {
@@ -43,7 +46,7 @@ export const modalCss = `
 
   /* Dialog */
   .modal-dialog {
-    background: var(--bg);
+    background: var(--paper);
     border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
     border-radius: 12px;
     box-shadow: 0 10px 40px color-mix(in oklab, var(--shadow) 65%, transparent);
@@ -54,6 +57,7 @@ export const modalCss = `
     opacity: 0;
     transform: scale(0.95);
     transition: transform 0.2s ease, opacity 0.2s ease;
+    will-change: transform, opacity;
   }
 
   .modal-container.is-open .modal-dialog {
@@ -83,11 +87,25 @@ export const modalCss = `
     border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
   }
 
+  .modal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
   .modal-title {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
     color: var(--fg);
+    font-family: var(--font-ui, system-ui);
+  }
+
+  .modal-subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 55%, transparent);
     font-family: var(--font-ui, system-ui);
   }
 
@@ -124,6 +142,7 @@ export const modalCss = `
     padding: 20px;
     overflow-y: auto;
     flex: 1;
+    scrollbar-gutter: stable;
   }
 
   /* Custom scrollbar */

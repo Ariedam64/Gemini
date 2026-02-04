@@ -48,7 +48,8 @@ export function Checkbox(opts: CheckboxOptions = {}): CheckboxHandle {
 
   let lblEl: HTMLLabelElement | null = null;
   if (label && labelSide !== "none") {
-    lblEl = element("label", { className: "lg-checkbox-label", htmlFor: id }, label) as HTMLLabelElement;
+    lblEl = element("label", { className: "lg-checkbox-label" }, label) as HTMLLabelElement;
+    lblEl.addEventListener("click", onClick);
   }
 
   // Layout label
@@ -116,8 +117,8 @@ export function Checkbox(opts: CheckboxOptions = {}): CheckboxHandle {
       return;
     }
     if (!lblEl) {
-      lblEl = element("label", { className: "lg-checkbox-label", htmlFor: id }, t) as HTMLLabelElement;
-      // Default on right if added later
+      lblEl = element("label", { className: "lg-checkbox-label" }, t) as HTMLLabelElement;
+      lblEl.addEventListener("click", onClick);
       root.append(lblEl);
     } else {
       lblEl.textContent = t;
@@ -131,6 +132,7 @@ export function Checkbox(opts: CheckboxOptions = {}): CheckboxHandle {
   function destroy() {
     input.removeEventListener("click", onClick);
     input.removeEventListener("keydown", onKey);
+    if (lblEl) lblEl.removeEventListener("click", onClick);
   }
 
   reflect();

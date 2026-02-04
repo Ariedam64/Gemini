@@ -2,232 +2,265 @@
  * HarvestLockerCard Part
  * Rule-based harvest lock management UI
  *
- * Per .claude/rules/ui/sections.md
+ * Refactored to factory pattern per .claude/rules/ui/sections.md
  */
 
 import { Card } from "../../../../components/Card/Card";
 import { element } from "../../../../styles/helpers";
-import { SegmentedControl, SegmentedControlHandle } from "../../../../components/SegmentedControl/SegmentedControl";
-import { Button, ButtonHandle } from "../../../../components/Button/Button";
-import { Select, SelectHandle } from "../../../../components/Select/Select";
-import { Checkbox } from "../../../../components/Checkbox/Checkbox";
+import { SegmentedControl, type SegmentedControlHandle } from "../../../../components/SegmentedControl/SegmentedControl";
+import { Button, type ButtonHandle } from "../../../../components/Button/Button";
+import { PlantSelector, type PlantSelectorHandle } from "../../../../components/PlantSelector/PlantSelector";
 import { MGHarvestLocker } from "../../../../../features/harvestLocker";
 import type { HarvestRule } from "../../../../../features/harvestLocker";
 import { MGData } from "../../../../../modules";
 import { createRuleEditorModal } from "./RuleEditorModal";
+import { createExistingRuleSelector } from "./ExistingRuleSelector";
+import { setHarvestLockerMode, setSelectedSpecies, setSearchQuery } from "../../state";
+import { renderPlantSprite, getRuleSignature } from "./helpers";
+import type { ViewMode } from "./types";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
-type ViewMode = "overall" | "bySpecies";
-
 export interface HarvestLockerCardOptions {
     defaultExpanded?: boolean;
+    defaultMode?: ViewMode;
+    defaultSelectedSpecies?: string | null;
+    defaultSearchQuery?: string;
 }
 
-/* ─────────────────────────── Class ─────────────────────────── */
+export interface HarvestLockerCardHandle {
+    root: HTMLDivElement;
+    render(): void;
+    destroy(): void;
+}
 
-export class HarvestLockerCardPart {
-    private card: HTMLDivElement | null = null;
-    private modeContainer: HTMLDivElement | null = null;
-    private content: HTMLDivElement | null = null;
-    private options: HarvestLockerCardOptions;
-    private cleanups: (() => void)[] = [];
+/* ─────────────────────────── Factory ─────────────────────────── */
+
+export function createHarvestLockerCard(options: HarvestLockerCardOptions = {}): HarvestLockerCardHandle {
+    // State
+    let mode: ViewMode = options.defaultMode ?? "overall";
+    let selectedSpecies: string | null = options.defaultSelectedSpecies ?? null;
+    let rules: HarvestRule[] = [];
+
+    // DOM references
+    let card: HTMLDivElement | null = null;
+    let modeContainer: HTMLDivElement | null = null;
+    let content: HTMLDivElement | null = null;
 
     // Component references
-    private modeControl: SegmentedControlHandle | null = null;
-    private speciesSelect: SelectHandle | null = null;
-    private createButton: ButtonHandle | null = null;
+    let modeControl: SegmentedControlHandle | null = null;
+    let speciesSelector: PlantSelectorHandle | null = null;
+    let createButton: ButtonHandle | null = null;
 
-    // Internal state
-    private mode: ViewMode = "overall";
-    private selectedSpecies: string | null = null;
-    private rules: HarvestRule[] = [];
+    // Cleanups
+    const cleanups: (() => void)[] = [];
 
-    constructor(options: HarvestLockerCardOptions = {}) {
-        this.options = options;
-    }
+    // Build card
+    card = buildCard();
 
-    /* ───────────────────── Public API ───────────────────── */
+    /* ───────────────────── Card Building ───────────────────── */
 
-    build(): HTMLDivElement {
-        if (this.card) return this.card;
-        return this.createCard();
-    }
-
-    destroy(): void {
-        this.cleanups.forEach(fn => fn());
-        this.cleanups.length = 0;
-
-        this.modeControl?.destroy?.();
-        this.modeControl = null;
-
-        this.modeContainer = null;
-        this.speciesSelect?.destroy?.();
-        this.speciesSelect = null;
-
-        this.createButton = null;
-
-        this.card = null;
-        this.content = null;
-    }
-
-    render(): void {
-        if (!this.card) return;
-        this.loadRules();
-        this.ensureModeControl();
-        this.renderContent();
-    }
-
-    /* ───────────────────── Card Setup ───────────────────── */
-
-    private createCard(): HTMLDivElement {
+    function buildCard(): HTMLDivElement {
         const wrapper = element("div", {
             className: "harvest-locker-card-wrapper",
         });
 
-        this.modeContainer = element("div", {
+        modeContainer = element("div", {
             className: "harvest-locker-card__mode-container",
         });
-        wrapper.appendChild(this.modeContainer);
+        wrapper.appendChild(modeContainer);
 
-        this.content = element("div", {
+        content = element("div", {
             className: "harvest-locker-card__content",
         });
-        wrapper.appendChild(this.content);
+        wrapper.appendChild(content);
 
-        this.card = Card(
+        const cardEl = Card(
             {
                 title: "Harvest Rules",
                 subtitle: "Configure harvest locking rules",
                 expandable: true,
-                defaultExpanded: this.options.defaultExpanded ?? true,
+                defaultExpanded: options.defaultExpanded ?? true,
             },
             wrapper
         );
 
-        // Load initial data and render
-        this.loadRules();
-        this.renderContent();
+        // Initial render
+        loadRules();
+        ensureModeControl();
+        renderContent();
 
-        return this.card;
+        return cardEl;
     }
 
     /* ───────────────────── Data Loading ───────────────────── */
 
-    private loadRules(): void {
-        if (this.mode === "overall") {
-            this.rules = MGHarvestLocker.getOverallRules();
+    function loadRules(): void {
+        if (mode === "overall") {
+            rules = MGHarvestLocker.getOverallRules();
         } else {
-            this.rules = this.selectedSpecies
-                ? MGHarvestLocker.getSpeciesRules(this.selectedSpecies)
+            rules = selectedSpecies
+                ? MGHarvestLocker.getSpeciesRules(selectedSpecies)
                 : [];
         }
     }
 
-    private getAvailableSpecies(): Array<{ value: string; label: string }> {
-        const plantsData = MGData.get("plants") as Record<string, unknown> | null;
-        if (!plantsData) return [];
-
-        return Object.keys(plantsData)
-            .filter(key => {
-                const plant = plantsData[key];
-                return plant && typeof plant === "object" && "crop" in plant;
-            })
-            .map(species => ({ value: species, label: species }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-    }
-
     /* ───────────────────── Rendering ───────────────────── */
 
-    private renderContent(): void {
-        if (!this.content) return;
+    function renderContent(): void {
+        if (!content) return;
 
-        this.content.replaceChildren();
+        content.replaceChildren();
 
         // Species selector (if in "By Species" mode)
-        if (this.mode === "bySpecies") {
-            this.renderSpeciesSelector();
+        if (mode === "bySpecies") {
+            renderSpeciesSelector();
+
+            // Show selected species section if one is selected
+            if (selectedSpecies) {
+                renderSelectedSpeciesSection();
+            }
         }
 
         // Rules list
-        this.renderRulesList();
+        renderRulesList();
 
         // Action buttons
-        this.renderActionButtons();
+        renderActionButtons();
     }
 
-    private ensureModeControl(): void {
-        if (!this.modeContainer) return;
+    function ensureModeControl(): void {
+        if (!modeContainer) return;
 
-        if (!this.modeControl) {
-            this.modeControl = SegmentedControl({
+        if (!modeControl) {
+            modeControl = SegmentedControl({
                 segments: [
                     { id: "overall", label: "Overall" },
                     { id: "bySpecies", label: "By Species" },
                 ],
-                selected: this.mode,
+                selected: mode,
                 onChange: (id) => {
-                    this.mode = id as ViewMode;
-                    this.loadRules();
-                    this.renderContent();
+                    mode = id as ViewMode;
+                    setHarvestLockerMode(mode);
+                    loadRules();
+                    renderContent();
                 },
             });
 
-            this.modeContainer.appendChild(this.modeControl);
+            modeContainer.appendChild(modeControl);
             return;
         }
 
-        if (this.modeControl.getSelected() !== this.mode) {
-            this.modeControl.select(this.mode);
+        if (modeControl.getSelected() !== mode) {
+            modeControl.select(mode);
         }
     }
 
-    private renderSpeciesSelector(): void {
-        if (!this.content) return;
+    function renderSpeciesSelector(): void {
+        if (!content) return;
 
-        const species = this.getAvailableSpecies();
-        if (species.length === 0) {
+        const plantsData = MGData.get("plants") as Record<string, unknown> | null;
+        if (!plantsData || Object.keys(plantsData).length === 0) {
             const noSpecies = element("div", {
                 className: "harvest-locker-card__message harvest-locker-card__message--compact",
             }, "No species available");
-            this.content.appendChild(noSpecies);
+            content.appendChild(noSpecies);
             return;
         }
 
-        this.speciesSelect = Select({
-            options: species,
-            placeholder: "Select a species...",
-            value: this.selectedSpecies ?? undefined,
-            onChange: (value) => {
-                this.selectedSpecies = value;
-                this.loadRules();
-                this.renderContent();
+        // Build map of species to rule counts
+        const config = MGHarvestLocker.getConfig();
+        const speciesRuleCount: Record<string, number> = {};
+        Object.entries(config.speciesRules).forEach(([species, speciesRules]) => {
+            speciesRuleCount[species] = speciesRules.length;
+        });
+
+        // Create PlantSelector
+        speciesSelector = PlantSelector({
+            selectedSpecies: selectedSpecies ?? undefined,
+            placeholder: "Search plants...",
+            speciesRuleCount,
+            onChange: (species: string) => {
+                selectedSpecies = species;
+                setSelectedSpecies(species);
+                loadRules();
+                renderContent();
+            },
+            onSearchChange: (query: string) => {
+                setSearchQuery(query);
             },
         });
 
-        const selectWrapper = element("div", {
+        const selectorWrapper = element("div", {
             className: "harvest-locker-card__control",
         });
-        selectWrapper.appendChild(this.speciesSelect.root);
-        this.content.appendChild(selectWrapper);
+        selectorWrapper.appendChild(speciesSelector.root);
+        content.appendChild(selectorWrapper);
     }
 
-    private renderRulesList(): void {
-        if (!this.content) return;
+    function renderSelectedSpeciesSection(): void {
+        if (!content || !selectedSpecies) return;
 
-        if (this.mode === "bySpecies" && !this.selectedSpecies) {
+        // Section header with divider
+        const sectionHeader = element("div", {
+            className: "harvest-locker-card__species-section-header",
+        });
+
+        // Sprite container
+        const spriteContainer = element("div", {
+            className: "harvest-locker-card__species-section-sprite",
+        });
+
+        renderPlantSprite(selectedSpecies, spriteContainer, { size: 36 });
+
+        sectionHeader.appendChild(spriteContainer);
+
+        // Name and label container
+        const textContainer = element("div", {
+            className: "harvest-locker-card__species-section-text",
+        });
+
+        const name = element("div", {
+            className: "harvest-locker-card__species-section-name",
+        }, selectedSpecies);
+        textContainer.appendChild(name);
+
+        const label = element("div", {
+            className: "harvest-locker-card__species-section-label",
+        }, "SELECTED");
+        textContainer.appendChild(label);
+
+        sectionHeader.appendChild(textContainer);
+        content.appendChild(sectionHeader);
+    }
+
+    function renderRulesList(): void {
+        if (!content) return;
+
+        if (mode === "bySpecies" && !selectedSpecies) {
             const placeholder = element("div", {
                 className: "harvest-locker-card__message",
             }, "Select a species to view and manage rules");
-            this.content.appendChild(placeholder);
+            content.appendChild(placeholder);
             return;
         }
 
-        if (this.rules.length === 0) {
+        // Section frame (cadran)
+        const rulesSection = element("div", {
+            className: "harvest-locker-card__rules-section",
+        });
+
+        const sectionLabel = element("div", {
+            className: "harvest-locker-card__rules-section-label",
+        }, "Rules");
+        rulesSection.appendChild(sectionLabel);
+
+        if (rules.length === 0) {
             const empty = element("div", {
                 className: "harvest-locker-card__empty",
-            }, "No rules yet. Click 'Create Rule' to add one.");
-            this.content.appendChild(empty);
+            }, "No rules yet");
+            rulesSection.appendChild(empty);
+            content.appendChild(rulesSection);
             return;
         }
 
@@ -235,15 +268,16 @@ export class HarvestLockerCardPart {
             className: "harvest-locker-card__list",
         });
 
-        this.rules.forEach(rule => {
-            const item = this.createRuleItem(rule);
+        rules.forEach(rule => {
+            const item = createRuleItem(rule);
             list.appendChild(item);
         });
 
-        this.content.appendChild(list);
+        rulesSection.appendChild(list);
+        content.appendChild(rulesSection);
     }
 
-    private createRuleItem(rule: HarvestRule): HTMLElement {
+    function createRuleItem(rule: HarvestRule): HTMLElement {
         const item = element("div", {
             className: "harvest-locker-rule-item",
         });
@@ -263,7 +297,7 @@ export class HarvestLockerCardPart {
         // Right-click to delete (desktop)
         item.addEventListener("contextmenu", (e) => {
             e.preventDefault();
-            this.handleDeleteRule(rule.id);
+            handleDeleteRule(rule.id);
         });
 
         // Long press to delete (mobile) / click to edit
@@ -274,12 +308,11 @@ export class HarvestLockerCardPart {
             longPressTriggered = false;
             longPressTimer = window.setTimeout(() => {
                 longPressTriggered = true;
-                this.handleDeleteRule(rule.id);
-                // Haptic feedback if available
+                handleDeleteRule(rule.id);
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
-            }, 500); // 500ms long press
+            }, 500);
         });
 
         item.addEventListener("touchend", () => {
@@ -287,9 +320,8 @@ export class HarvestLockerCardPart {
                 clearTimeout(longPressTimer);
                 longPressTimer = null;
             }
-            // If long press was not triggered, it's a normal tap - open edit modal
             if (!longPressTriggered) {
-                this.handleEditRule(rule);
+                handleEditRule(rule);
             }
         });
 
@@ -302,54 +334,74 @@ export class HarvestLockerCardPart {
 
         // Mouse click to edit (desktop)
         item.addEventListener("click", () => {
-            this.handleEditRule(rule);
+            handleEditRule(rule);
         });
 
         return item;
     }
 
+    function renderActionButtons(): void {
+        if (!content) return;
 
-    private renderActionButtons(): void {
-        if (!this.content) return;
-
-        if (this.mode === "bySpecies" && !this.selectedSpecies) {
-            return; // Don't show buttons if no species selected
+        if (mode === "bySpecies" && !selectedSpecies) {
+            return;
         }
 
         const buttons = element("div", {
             className: "harvest-locker-card__actions",
         });
 
-        this.createButton = Button({
-            label: "Create Rule",
-            variant: "primary",
-            onClick: () => this.handleCreateRule(),
-        });
-        buttons.appendChild(this.createButton);
+        // In bySpecies mode, show "Add Existing Rule" button
+        if (mode === "bySpecies" && selectedSpecies) {
+            const overallRules = MGHarvestLocker.getOverallRules();
 
-        this.content.appendChild(buttons);
+            if (overallRules.length > 0) {
+                // Check if there are available rules (not already assigned)
+                const speciesRules = MGHarvestLocker.getSpeciesRules(selectedSpecies);
+                const assignedSignatures = new Set(
+                    speciesRules.map(rule => getRuleSignature(rule))
+                );
+                const availableRules = overallRules.filter(
+                    rule => !assignedSignatures.has(getRuleSignature(rule))
+                );
+
+                const addExistingBtn = Button({
+                    label: "Add Existing Rule",
+                    variant: "default",
+                    disabled: availableRules.length === 0,
+                    onClick: () => handleAddExistingRule(),
+                });
+                buttons.appendChild(addExistingBtn);
+            }
+        }
+
+        createButton = Button({
+            label: mode === "bySpecies" ? "Create Override Rule" : "Create Rule",
+            variant: "primary",
+            onClick: () => handleCreateRule(),
+        });
+        buttons.appendChild(createButton);
+
+        content.appendChild(buttons);
     }
 
     /* ───────────────────── Event Handlers ───────────────────── */
 
-    private handleCreateRule(): void {
+    function handleCreateRule(): void {
         createRuleEditorModal({
-            mode: this.mode === "overall" ? "overall" : "species",
-            species: this.selectedSpecies,
-            mountRoot: this.card?.getRootNode() instanceof ShadowRoot
-                ? (this.card.getRootNode() as ShadowRoot)
-                : undefined,
+            mode: mode === "overall" ? "overall" : "species",
+            species: selectedSpecies,
             onSave: (data) => {
-                if (this.mode === "overall") {
+                if (mode === "overall") {
                     MGHarvestLocker.addNewOverallRule(
                         data.name,
                         data.ruleMode,
                         data.sizeCondition,
                         data.mutationCondition
                     );
-                } else if (this.selectedSpecies) {
+                } else if (selectedSpecies) {
                     MGHarvestLocker.addNewSpeciesRule(
-                        this.selectedSpecies,
+                        selectedSpecies,
                         data.name,
                         data.ruleMode,
                         data.sizeCondition,
@@ -357,20 +409,17 @@ export class HarvestLockerCardPart {
                     );
                 }
 
-                this.loadRules();
-                this.renderContent();
+                loadRules();
+                renderContent();
             },
         });
     }
 
-    private handleEditRule(rule: HarvestRule): void {
+    function handleEditRule(rule: HarvestRule): void {
         createRuleEditorModal({
-            mode: this.mode === "overall" ? "overall" : "species",
-            species: this.selectedSpecies,
+            mode: mode === "overall" ? "overall" : "species",
+            species: selectedSpecies,
             ruleId: rule.id,
-            mountRoot: this.card?.getRootNode() instanceof ShadowRoot
-                ? (this.card.getRootNode() as ShadowRoot)
-                : undefined,
             initialData: {
                 name: rule.name,
                 ruleMode: rule.mode,
@@ -378,7 +427,6 @@ export class HarvestLockerCardPart {
                 mutationCondition: rule.mutationCondition,
             },
             onSave: (data) => {
-                // Update the existing rule
                 MGHarvestLocker.modifyRule(rule.id, {
                     name: data.name,
                     mode: data.ruleMode,
@@ -386,18 +434,110 @@ export class HarvestLockerCardPart {
                     mutationCondition: data.mutationCondition,
                 });
 
-                this.loadRules();
-                this.renderContent();
+                loadRules();
+                renderContent();
             },
             onDelete: () => {
-                this.handleDeleteRule(rule.id);
+                handleDeleteRule(rule.id);
             },
         });
     }
 
-    private handleDeleteRule(ruleId: string): void {
+    function handleDeleteRule(ruleId: string): void {
         MGHarvestLocker.removeRule(ruleId);
-        this.loadRules();
-        this.renderContent();
+        loadRules();
+        renderContent();
+    }
+
+    function handleAddExistingRule(): void {
+        if (mode !== "bySpecies" || !selectedSpecies) return;
+
+        const overallRules = MGHarvestLocker.getOverallRules();
+        if (overallRules.length === 0) return;
+
+        // Get rules already assigned to this species
+        const speciesRules = MGHarvestLocker.getSpeciesRules(selectedSpecies);
+
+        // Create a set of signatures for rules already assigned to this species
+        const assignedSignatures = new Set(
+            speciesRules.map(rule => getRuleSignature(rule))
+        );
+
+        // Filter overall rules to exclude those with equivalent conditions
+        const availableRules = overallRules.filter(
+            rule => !assignedSignatures.has(getRuleSignature(rule))
+        );
+
+        if (availableRules.length === 0) {
+            return;
+        }
+
+        createExistingRuleSelector({
+            species: selectedSpecies,
+            existingRules: availableRules,
+            onSelect: () => {
+                loadRules();
+                renderContent();
+            },
+            onCancel: () => {
+                // Nothing to do on cancel
+            },
+        });
+    }
+
+    /* ───────────────────── Public API ───────────────────── */
+
+    function render(): void {
+        loadRules();
+        ensureModeControl();
+        renderContent();
+    }
+
+    function destroy(): void {
+        cleanups.forEach(fn => fn());
+        cleanups.length = 0;
+
+        modeControl?.destroy?.();
+        modeControl = null;
+
+        speciesSelector?.destroy?.();
+        speciesSelector = null;
+
+        createButton = null;
+        modeContainer = null;
+        content = null;
+        card = null;
+    }
+
+    return {
+        root: card,
+        render,
+        destroy,
+    };
+}
+
+// Keep class export for backward compatibility with existing section.ts
+export class HarvestLockerCardPart {
+    private handle: HarvestLockerCardHandle | null = null;
+    private options: HarvestLockerCardOptions;
+
+    constructor(options: HarvestLockerCardOptions = {}) {
+        this.options = options;
+    }
+
+    build(): HTMLDivElement {
+        if (!this.handle) {
+            this.handle = createHarvestLockerCard(this.options);
+        }
+        return this.handle.root;
+    }
+
+    render(): void {
+        this.handle?.render();
+    }
+
+    destroy(): void {
+        this.handle?.destroy();
+        this.handle = null;
     }
 }

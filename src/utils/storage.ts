@@ -130,6 +130,8 @@ export const EVENTS = {
     UPDATE_PENDING: 'gemini:update-pending',
     /** Force reload request */
     FORCE_RELOAD: 'gemini:force-reload',
+    /** HarvestLocker locks state updated (rules or garden changed) */
+    HARVEST_LOCKER_LOCKS_UPDATED: 'gemini:harvestLocker-locks-updated',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────

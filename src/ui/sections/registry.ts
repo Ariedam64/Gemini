@@ -15,6 +15,7 @@ import { LockerSection } from "./Locker";
 
 let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
+let lockerSectionInstance: LockerSection | null = null;
 
 function getTestSection(): TestSection {
   if (!testSectionInstance) {
@@ -30,6 +31,13 @@ function getAlertsSection(): AlertsSection {
   return alertsSectionInstance;
 }
 
+function getLockerSection(): LockerSection {
+  if (!lockerSectionInstance) {
+    lockerSectionInstance = new LockerSection();
+  }
+  return lockerSectionInstance;
+}
+
 /**
  * Build all available sections
  * Add new sections here to register them in the HUD
@@ -43,7 +51,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new PetsSection(deps),
     new TrackersSection(deps),
     new RoomSection(deps),
-    new LockerSection(),
+    getLockerSection(),
   ];
 
   // Only include developer tools in non-production builds
@@ -61,11 +69,13 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
  */
 export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
+  const lockerSection = getLockerSection();
   const testSection = getTestSection();
 
   // Preload in parallel
   await Promise.all([
     alertsSection.preload(),
+    lockerSection.preload(),
     testSection.preload(),
   ]);
 }

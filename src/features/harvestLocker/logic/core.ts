@@ -5,6 +5,7 @@
 
 import { getMyGarden } from '../../../globals/variables/myGarden';
 import { MGData } from '../../../modules/data';
+import { EVENTS } from '../../../utils/storage';
 import type { HarvestLockerConfig, HarvestRule } from '../types';
 
 /**
@@ -99,6 +100,7 @@ function evaluateLocks(garden: unknown): void {
     // Type guard for garden structure
     if (!isValidGarden(garden)) {
         console.warn('[HarvestLocker] Invalid garden structure');
+        window.dispatchEvent(new CustomEvent(EVENTS.HARVEST_LOCKER_LOCKS_UPDATED));
         return;
     }
 
@@ -118,6 +120,8 @@ function evaluateLocks(garden: unknown): void {
             }
         });
     });
+
+    window.dispatchEvent(new CustomEvent(EVENTS.HARVEST_LOCKER_LOCKS_UPDATED));
 }
 
 /**
@@ -199,18 +203,31 @@ function ruleMatches(
 
 /**
  * Evaluate mutation condition with 'any' or 'all' logic
+ *
+ * "none" is a sentinel meaning "no mutations" — it matches when slotMutations is empty.
+ * It is never literally present in a plant's mutation array.
  */
 function evaluateMutationCondition(
     slotMutations: string[],
     requiredMutations: string[],
     matchMode: 'any' | 'all'
 ): boolean {
+    const hasNone = requiredMutations.includes("none");
+    const actualRequired = requiredMutations.filter(m => m !== "none");
+    const noneMatches = hasNone && slotMutations.length === 0;
+
     if (matchMode === 'any') {
-        // Match if slot has ANY of the required mutations (OR logic)
-        return requiredMutations.some(mutation => slotMutations.includes(mutation));
+        // Match if plant has no mutations (and "none" was selected)
+        // OR has any of the specified actual mutations
+        if (noneMatches) return true;
+        return actualRequired.some(mutation => slotMutations.includes(mutation));
     } else {
-        // Match if slot has ALL of the required mutations (AND logic)
-        return requiredMutations.every(mutation => slotMutations.includes(mutation));
+        // "all" mode: plant must have ALL actual mutations
+        // If "none" is also required, plant must additionally have no mutations
+        // (contradictory with actual mutations — gracefully returns false)
+        if (hasNone && slotMutations.length > 0) return false;
+        if (actualRequired.length === 0) return noneMatches;
+        return actualRequired.every(mutation => slotMutations.includes(mutation));
     }
 }
 

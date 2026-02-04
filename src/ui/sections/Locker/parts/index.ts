@@ -3,6 +3,6 @@
  */
 
 // HarvestLocker parts
-export { HarvestLockerCardPart } from "./harvestLocker/HarvestLockerCard";
-export type { HarvestLockerCardOptions } from "./harvestLocker/HarvestLockerCard";
+export { HarvestLockerCardPart } from "./harvestLocker/harvestLockerCard";
+export type { HarvestLockerCardOptions } from "./harvestLocker/harvestLockerCard";
 export { harvestLockerCardCss } from "./harvestLocker/harvestLockerCard.css";
