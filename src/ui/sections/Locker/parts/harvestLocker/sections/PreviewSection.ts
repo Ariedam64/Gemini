@@ -19,8 +19,10 @@ export interface PreviewSectionOptions {
     ruleMode: RuleMode;
     /** Whether size condition is enabled */
     sizeEnabled: boolean;
-    /** Minimum size percentage (shown below each preview plant) */
+    /** Size percentage threshold */
     sizePercentage?: number;
+    /** Size mode ("min" = <=, "max" = >=) */
+    sizeMode?: "min" | "max";
     /** Whether color mutation is enabled */
     colorEnabled: boolean;
     /** Selected color mutations */
@@ -82,7 +84,7 @@ export function createPreviewSection(options: PreviewSectionOptions): PreviewSec
         `,
     });
     if (state.sizeEnabled && state.sizePercentage !== undefined) {
-        sizeBadgeEl.textContent = `size ≥ ${state.sizePercentage}%`;
+        sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}%`;
         sizeBadgeEl.style.display = "";
     }
 
@@ -125,7 +127,7 @@ export function createPreviewSection(options: PreviewSectionOptions): PreviewSec
 
         // Update size badge visibility
         if (state.sizeEnabled && state.sizePercentage !== undefined) {
-            sizeBadgeEl.textContent = `size ≥ ${state.sizePercentage}%`;
+            sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}%`;
             sizeBadgeEl.style.display = "";
         } else {
             sizeBadgeEl.style.display = "none";

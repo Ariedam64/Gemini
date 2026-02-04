@@ -184,7 +184,12 @@ function ruleMatches(
     // Check size condition
     if (rule.sizeCondition?.enabled) {
         const scalePercent = calculateScalePercentage(slot);
-        conditions.push(scalePercent >= rule.sizeCondition.minPercentage);
+        const sizeMode = rule.sizeCondition.sizeMode ?? "max";
+        conditions.push(
+            sizeMode === "max"
+                ? scalePercent >= rule.sizeCondition.minPercentage
+                : scalePercent <= rule.sizeCondition.minPercentage
+        );
     }
 
     // Check mutation condition

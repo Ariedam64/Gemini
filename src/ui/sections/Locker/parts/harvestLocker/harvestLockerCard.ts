@@ -274,6 +274,19 @@ export function createHarvestLockerCard(options: HarvestLockerCardOptions = {}):
         });
 
         rulesSection.appendChild(list);
+
+        // Hint desktop/mobile — détection auto via CSS media query
+        const hint = element("div", {
+            className: "harvest-locker-card__rules-hint",
+        });
+        hint.appendChild(element("span", {
+            className: "harvest-locker-card__rules-hint--desktop",
+        }, "Click to edit · Right-click to delete"));
+        hint.appendChild(element("span", {
+            className: "harvest-locker-card__rules-hint--mobile",
+        }, "Tap to edit · Long-press to delete"));
+        rulesSection.appendChild(hint);
+
         content.appendChild(rulesSection);
     }
 

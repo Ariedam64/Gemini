@@ -79,40 +79,6 @@ function migrateLegacyConfig(legacy: LegacyHarvestLockerConfig): HarvestLockerCo
 }
 
 /**
- * Strip "none" from mutation conditions in "all" mode where other mutations are present.
- *
- * In "all" mode, "none" (= no mutations at all) combined with any actual mutation name
- * is contradictory: evaluateMutationCondition short-circuits to false.
- * This cleans up rules that were corrupted by the "none" leak bug in RuleEditorModal.
- * Runs on every loadConfig() but only writes to storage when something actually changes.
- */
-function migrateStripNoneFromAllMode(config: HarvestLockerConfig): HarvestLockerConfig {
-    let dirty = false;
-
-    const fixRules = (rules: HarvestRule[]): void => {
-        for (const rule of rules) {
-            const mc = rule.mutationCondition;
-            if (mc?.matchMode === 'all' && mc.mutations.includes('none') && mc.mutations.length > 1) {
-                mc.mutations = mc.mutations.filter(m => m !== 'none');
-                dirty = true;
-                console.log(`[HarvestLocker] Migration: stripped "none" from rule "${rule.name}" (all-mode)`);
-            }
-        }
-    };
-
-    fixRules(config.overallRules);
-    for (const rules of Object.values(config.speciesRules)) {
-        fixRules(rules);
-    }
-
-    if (dirty) {
-        saveConfig(config);
-    }
-
-    return config;
-}
-
-/**
  * Check if config is legacy format
  */
 function isLegacyConfig(config: unknown): config is LegacyHarvestLockerConfig {
@@ -142,16 +108,13 @@ export function loadConfig(): HarvestLockerConfig {
     }
 
     // Merge with defaults to handle missing properties
-    const config: HarvestLockerConfig = {
+    return {
         ...DEFAULT_CONFIG,
         ...stored,
         manualLocks: stored.manualLocks || [],
         overallRules: stored.overallRules || [],
         speciesRules: stored.speciesRules || {},
     };
-
-    // Fix rules corrupted by the "none" leak bug (no-op once cleaned)
-    return migrateStripNoneFromAllMode(config);
 }
 
 /**
@@ -177,7 +140,7 @@ export function updateConfig(updates: Partial<HarvestLockerConfig>): HarvestLock
 export function createRule(
     name: string,
     mode: 'allow' | 'lock',
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: 'any' | 'all' }
 ): HarvestRule {
     return {

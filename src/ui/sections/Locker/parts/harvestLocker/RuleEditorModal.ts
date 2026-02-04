@@ -36,6 +36,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
     // Size state
     let sizeEnabled = initialData?.sizeCondition?.enabled ?? false;
     let sizePercentage = initialData?.sizeCondition?.minPercentage ?? 75;
+    let sizeMode: "min" | "max" = initialData?.sizeCondition?.sizeMode ?? "max";
 
     // Parse initial mutations
     const initialMutations = initialData?.mutationCondition?.mutations ?? [];
@@ -123,6 +124,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
         sizeSection = createSizeSection({
             enabled: sizeEnabled,
             percentage: sizePercentage,
+            sizeMode,
             ruleMode,
             onEnabledChange: (enabled) => {
                 sizeEnabled = enabled;
@@ -131,6 +133,10 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
             },
             onPercentageChange: (percentage) => {
                 sizePercentage = percentage;
+                updatePreview();
+            },
+            onSizeModeChange: (mode) => {
+                sizeMode = mode;
                 updatePreview();
             },
         });
@@ -178,6 +184,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
             ruleMode,
             sizeEnabled,
             sizePercentage,
+            sizeMode,
             colorEnabled: colorMutationEnabled,
             colorMutations: selectedColorMutations,
             weatherEnabled: weatherMutationEnabled,
@@ -256,7 +263,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
 
     function buildFooter(): HTMLElement {
         const footer = element("div", {
-            style: "display: flex; gap: 8px; justify-content: space-between;",
+            style: "display: flex; gap: 8px; justify-content: space-between; width: 100%;",
         });
 
         // Left: Delete button (only for existing rules)
@@ -324,6 +331,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
             ruleMode,
             sizeEnabled,
             sizePercentage,
+            sizeMode,
             colorEnabled: colorMutationEnabled,
             colorMutations: selectedColorMutations,
             weatherEnabled: weatherMutationEnabled,
@@ -344,6 +352,7 @@ export function createRuleEditorModal(options: RuleEditorModalOptions): RuleEdit
             data.sizeCondition = {
                 enabled: true,
                 minPercentage: sizePercentage,
+                sizeMode,
             };
         }
 

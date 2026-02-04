@@ -7,6 +7,7 @@ import { element } from "../../../../../styles/helpers";
 import { Card } from "../../../../../components/Card/Card";
 import { Checkbox } from "../../../../../components/Checkbox/Checkbox";
 import { Slider } from "../../../../../components/Slider/Slider";
+import { SegmentedControl } from "../../../../../components/SegmentedControl/SegmentedControl";
 import type { RuleMode } from "../../../../../../features/harvestLocker";
 
 /* ─────────────────────────── Types ─────────────────────────── */
@@ -14,14 +15,18 @@ import type { RuleMode } from "../../../../../../features/harvestLocker";
 export interface SizeSectionOptions {
     /** Whether size condition is enabled */
     enabled: boolean;
-    /** Minimum size percentage (50-100) */
+    /** Size percentage threshold (50-100) */
     percentage: number;
+    /** Size mode: "min" (<=) or "max" (>=) */
+    sizeMode: "min" | "max";
     /** Current rule mode (lock/allow) */
     ruleMode: RuleMode;
     /** Callback when enabled changes */
     onEnabledChange: (enabled: boolean) => void;
     /** Callback when percentage changes */
     onPercentageChange: (percentage: number) => void;
+    /** Callback when size mode changes */
+    onSizeModeChange: (mode: "min" | "max") => void;
     /** Whether section is expanded */
     expanded?: boolean;
     /** Callback when expand state changes */
@@ -41,15 +46,18 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
     const {
         enabled: initialEnabled,
         percentage: initialPercentage,
+        sizeMode: initialSizeMode,
         ruleMode: initialRuleMode,
         onEnabledChange,
         onPercentageChange,
+        onSizeModeChange,
         expanded = false,
         onExpandChange,
     } = options;
 
     let enabled = initialEnabled;
     let percentage = initialPercentage;
+    let sizeMode = initialSizeMode;
     let ruleMode = initialRuleMode;
 
     // References for live updates
@@ -80,7 +88,7 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
     const card = Card(
         {
             title: "Size",
-            subtitle: "Minimum growth percentage",
+            subtitle: "Growth size threshold",
             actions: [enabledBadgeEl],
             variant: "soft",
             padding: "md",
@@ -125,10 +133,29 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
 
         content.appendChild(topRow);
 
-        // Slider row (always rendered, greyed out when disabled)
+        // Controls wrapper (always rendered, greyed out when disabled)
         const controlsWrapper = element("div", {
             style: enabled ? "" : "opacity: 0.4; pointer-events: none; transition: opacity 0.2s ease;",
         });
+
+        // Size mode selector (Minimum / Maximum)
+        const sizeModeRow = element("div", {
+            style: "display: flex; justify-content: center;",
+        });
+        const sizeModeControl = SegmentedControl({
+            segments: [
+                { id: "min", label: "Minimum" },
+                { id: "max", label: "Maximum" },
+            ],
+            selected: sizeMode,
+            onChange: (id) => {
+                sizeMode = id as "min" | "max";
+                onSizeModeChange(sizeMode);
+                render();
+            },
+        });
+        sizeModeRow.appendChild(sizeModeControl);
+        controlsWrapper.appendChild(sizeModeRow);
 
         sliderContainer = element("div", {
             style: "display: flex; flex-direction: column; gap: 4px;",
@@ -141,7 +168,7 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
 
         const labelText = element("div", {
             style: "font-size: 12px; color: var(--fg); font-weight: 500;",
-        }, "Minimum Size");
+        }, "Size Threshold");
 
         valueDisplayEl = element("span", {
             style: "font-size: 12px; font-weight: 600; color: var(--accent);",
@@ -177,9 +204,10 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
     }
 
     function getDescriptionText(): string {
+        const sizeLabel = sizeMode === "min" ? "at most" : "at least";
         return ruleMode === "lock"
-            ? `Lock plants smaller than ${percentage}%`
-            : `Allow harvesting plants smaller than ${percentage}%`;
+            ? `Lock plants ${sizeLabel} ${percentage}% grown`
+            : `Allow plants ${sizeLabel} ${percentage}% grown`;
     }
 
     /* ───────────────────── Public API ───────────────────── */

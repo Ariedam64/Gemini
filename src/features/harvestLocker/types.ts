@@ -21,7 +21,8 @@ export type MutationMatchMode = 'any' | 'all';
  */
 export interface SizeCondition {
     enabled: boolean;
-    minPercentage: number; // 0-100 (e.g., 50 = match if >= 50% of maxScale)
+    minPercentage: number; // 0-100 threshold percentage
+    sizeMode?: "min" | "max"; // "min" = <=, "max" = >= (default: "max")
 }
 
 /**

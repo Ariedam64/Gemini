@@ -14,7 +14,7 @@ export type ViewMode = "overall" | "bySpecies";
 export interface RuleEditorData {
     name: string;
     ruleMode: RuleMode;
-    sizeCondition?: { enabled: boolean; minPercentage: number };
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" };
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode };
 }
 

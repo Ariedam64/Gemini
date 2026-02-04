@@ -182,7 +182,7 @@ function getAllSpeciesWithRules(): string[] {
 function addNewOverallRule(
     name: string,
     mode: RuleMode,
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
 ): HarvestRule {
     const rule = createRule(name, mode, sizeCondition, mutationCondition);
@@ -198,7 +198,7 @@ function addNewSpeciesRule(
     species: string,
     name: string,
     mode: RuleMode,
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
 ): HarvestRule {
     const rule = createRule(name, mode, sizeCondition, mutationCondition);

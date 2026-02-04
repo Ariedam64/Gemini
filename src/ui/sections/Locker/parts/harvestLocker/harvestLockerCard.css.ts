@@ -144,6 +144,31 @@ export const harvestLockerCardCss = `
     background: transparent;
 }
 
+.harvest-locker-card__rules-hint {
+    padding: 6px 8px 4px;
+    text-align: center;
+}
+
+.harvest-locker-card__rules-hint--desktop,
+.harvest-locker-card__rules-hint--mobile {
+    font-size: 11px;
+    color: color-mix(in oklab, var(--fg) 40%, transparent);
+    font-style: italic;
+}
+
+.harvest-locker-card__rules-hint--mobile {
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .harvest-locker-card__rules-hint--desktop {
+        display: none;
+    }
+    .harvest-locker-card__rules-hint--mobile {
+        display: inline;
+    }
+}
+
 .harvest-locker-card__actions {
     display: flex;
     gap: 8px;
