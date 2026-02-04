@@ -71,14 +71,12 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
 export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
   const lockerSection = getLockerSection();
-  const shopNotifierSection = getShopNotifierSection();
   const testSection = getTestSection();
 
   // Preload in parallel
   await Promise.all([
     alertsSection.preload(),
     lockerSection.preload(),
-    shopNotifierSection.preload(),
     testSection.preload(),
   ]);
 }
