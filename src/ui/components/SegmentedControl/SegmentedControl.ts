@@ -87,6 +87,7 @@ export function SegmentedControl(opts: SegmentedControlOptions): SegmentedContro
   // State
   let _selected = selected;
   let _disabled = disabled;
+  let initObserver: ResizeObserver | null = null;
 
   function updateIndicator() {
     const activeBtn = buttons.find((b) => b.id === _selected);
@@ -178,27 +179,32 @@ export function SegmentedControl(opts: SegmentedControlOptions): SegmentedContro
       btn.removeEventListener("click", onButtonClick);
       btn.removeEventListener("keydown", onKeyDown);
     });
+    initObserver?.disconnect();
+    initObserver = null;
   }
 
   // Initial render
   reflect();
 
-  // Set initial position without animation to prevent slide effect on first render
-  queueMicrotask(() => {
+  // Initial indicator positioning — ResizeObserver ensures the indicator is
+  // placed correctly even when the control starts inside a collapsed/hidden container
+  // (offsetLeft/offsetWidth are 0 until the element is visible).
+  initObserver = new ResizeObserver(() => {
     const activeBtn = buttons.find((b) => b.id === _selected);
-    if (activeBtn) {
+    if (activeBtn && activeBtn.offsetWidth > 0) {
       const ind = indicator as HTMLDivElement;
-      // Disable transition temporarily for initial positioning
       ind.style.transition = 'none';
       ind.style.width = `${activeBtn.offsetWidth}px`;
       ind.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
 
-      // Re-enable transition after a frame so future changes animate smoothly
       requestAnimationFrame(() => {
         ind.style.removeProperty('transition');
       });
+      initObserver?.disconnect();
+      initObserver = null;
     }
   });
+  initObserver.observe(container);
 
   // Expose API on root element
   const handle = root as SegmentedControlHandle;
