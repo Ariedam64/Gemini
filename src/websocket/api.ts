@@ -51,8 +51,10 @@ export function kickPlayer(playerId: string, win: any = pageWindow): SendResult 
   return send(T.KickPlayer, { scope: "Room", playerId }, win);
 }
 
-export function setPlayerData(data: Record<string, unknown>, win: any = pageWindow): SendResult {
-  return send(T.SetPlayerData, { scope: "Room", data }, win);
+export function setPlayerData(data: { name?: string; cosmetic?: any }, win: any = pageWindow): SendResult {
+  console.log("[Gemini][WS] setPlayerData:", data);
+  const { name, cosmetic } = data;
+  return send(T.SetPlayerData, { scope: "Room", name, cosmetic }, win);
 }
 
 export function usurpHost(win: any = pageWindow): SendResult {
@@ -124,7 +126,7 @@ export function toggleFavoriteItem(itemId: string, win: any = pageWindow): SendR
   return send(T.ToggleFavoriteItem, { scope: "Quinoa", itemId }, win);
 }
 
-export function putItemInStorage(itemId: string, storageId: string ="PetHutch", win: any = pageWindow): SendResult {
+export function putItemInStorage(itemId: string, storageId: string = "PetHutch", win: any = pageWindow): SendResult {
   return send(T.PutItemInStorage, { scope: "Quinoa", itemId, storageId }, win);
 }
 

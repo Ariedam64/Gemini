@@ -5,11 +5,11 @@ import type { SectionsDeps } from "./core/Types";
 import { SettingsSection } from "./Settings";
 import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
-import { JournalCheckerSection } from "./JournalChecker";
 import { PetsSection } from "./Pets";
 import { TrackersSection } from "./Trackers";
 import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
+import { AvatarSection } from "./Avatar";
 import { RoomSection } from "./Room";
 import { LockerSection } from "./Locker";
 
@@ -46,13 +46,14 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
   const sections: BaseSection[] = [
     new SettingsSection(deps),
     new AutoFavoriteSettingsSection(),
-    new JournalCheckerSection(),
     getAlertsSection(),
     new PetsSection(deps),
     new TrackersSection(deps),
+    new AvatarSection(),
     new RoomSection(deps),
     getLockerSection(),
   ];
+
 
   // Only include developer tools in non-production builds
   // This allows them to be completely stripped out during 'npm run release'
@@ -70,12 +71,14 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
 export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
   const lockerSection = getLockerSection();
+  const shopNotifierSection = getShopNotifierSection();
   const testSection = getTestSection();
 
   // Preload in parallel
   await Promise.all([
     alertsSection.preload(),
     lockerSection.preload(),
+    shopNotifierSection.preload(),
     testSection.preload(),
   ]);
 }

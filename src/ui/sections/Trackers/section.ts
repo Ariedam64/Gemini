@@ -29,6 +29,7 @@ import { initTrackersState } from './state';
 import { Globals } from '../../../globals';
 import { injectStyleOnce } from '../../styles/inject';
 import { trackerCardCss } from './parts/trackerCard.css';
+import { tileGridOverlayCss } from './parts/tileGridOverlay.css';
 
 // Local vendored styles
 import { teamCardCss } from './parts/teamCard.css';
@@ -108,6 +109,7 @@ export class TrackersSection extends BaseSection {
     private injectStyles(shadow: ShadowRoot): void {
         // Tracker-specific styles
         injectStyleOnce(shadow, trackerCardCss, 'tracker-card-styles');
+        injectStyleOnce(shadow, tileGridOverlayCss, 'tile-grid-overlay-styles');
 
         // Shared styles from Pets section (will move here eventually)
         injectStyleOnce(shadow, teamCardCss, 'team-card-styles');

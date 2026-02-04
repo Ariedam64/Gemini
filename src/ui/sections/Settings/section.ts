@@ -17,11 +17,9 @@ import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
 import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
-import { BulkFavoriteInject } from "../../inject/qol/bulkFavorite";
-import { MGCropValueIndicator } from "../../../features/cropValueIndicator";
 import { getRegistry } from "../../inject/core/registry";
 
-/* ───────────────────────── Utilities ───────────────────────── */
+/* ------------------------- Utilities ------------------------- */
 
 function humanizeName(v: string): string {
   return v.replace(/[_-]+/g, " ").replace(/^\w/, (c) => c.toUpperCase());
@@ -68,12 +66,11 @@ function toCssValue(value: ColorPickerValue): string {
   return value.alpha < 1 ? value.rgba : value.hex;
 }
 
-/* ───────────────────────── Feature Configurations ───────────────────────── */
+/* ------------------------- Feature Configurations ------------------------- */
 
 interface FeatureConfig {
   // HUD Sections (tabs visibility)
   pets: { enabled: boolean };
-  journalChecker: { enabled: boolean };
   autoFavorite: { enabled: boolean };
 
   // In-Game Enhancements
@@ -86,7 +83,6 @@ interface FeatureConfig {
 const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   // HUD Sections - default to enabled (show all tabs)
   pets: { enabled: true },
-  journalChecker: { enabled: true },
   autoFavorite: { enabled: true },
   // In-Game Enhancements - default to disabled
   bulkFavorite: { enabled: false },
@@ -95,7 +91,16 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   cropValueIndicator: { enabled: true }, // Enabled for testing
 };
 
-/* ───────────────────────── Settings Section ───────────────────────── */
+/* ------------------------- Settings Section ------------------------- */
+
+type EnvInfo = {
+  surface?: string;
+  platform?: string;
+  browser?: string | null;
+  os?: string | null;
+  host?: string;
+  isInIframe?: boolean;
+};
 
 export class SettingsSection extends BaseSection {
   private featureConfig: FeatureConfig = DEFAULT_FEATURE_CONFIG;
@@ -181,6 +186,12 @@ export class SettingsSection extends BaseSection {
       onExpandChange: (v) => state.setCardExpanded("enhancements", v),
     });
 
+    // Journal card
+    const journalCard = this.createJournalCard({
+      defaultExpanded: !!currentState.ui.expandedCards.journal,
+      onExpandChange: (v) => state.setCardExpanded("journal", v),
+    });
+
     // Environment card
     const envCard = this.createEnvCard({
       defaultExpanded: !!currentState.ui.expandedCards.system,
@@ -190,6 +201,7 @@ export class SettingsSection extends BaseSection {
     section.appendChild(themeCard);
     section.appendChild(hudSectionsCard);
     section.appendChild(enhancementsCard);
+    section.appendChild(journalCard);
     section.appendChild(envCard);
   }
 
@@ -197,7 +209,6 @@ export class SettingsSection extends BaseSection {
   private mergeFeatureConfig(stored: Partial<FeatureConfig>): FeatureConfig {
     return {
       pets: { ...DEFAULT_FEATURE_CONFIG.pets, ...stored.pets },
-      journalChecker: { ...DEFAULT_FEATURE_CONFIG.journalChecker, ...stored.journalChecker },
       autoFavorite: { ...DEFAULT_FEATURE_CONFIG.autoFavorite, ...stored.autoFavorite },
       bulkFavorite: { ...DEFAULT_FEATURE_CONFIG.bulkFavorite, ...stored.bulkFavorite },
       cropSizeIndicator: { ...DEFAULT_FEATURE_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
@@ -283,15 +294,6 @@ export class SettingsSection extends BaseSection {
           true // First item
         ),
         createSectionRow(
-          "Journal Checker",
-          this.featureConfig.journalChecker.enabled,
-          (v: boolean) => {
-            this.featureConfig.journalChecker.enabled = v;
-            this.saveFeatureConfig();
-          },
-          "Track collection completion progress"
-        ),
-        createSectionRow(
           "Pets",
           this.featureConfig.pets.enabled,
           (v: boolean) => {
@@ -362,7 +364,9 @@ export class SettingsSection extends BaseSection {
     onExpandChange?: (v: boolean) => void;
   }): HTMLDivElement {
     const registry = getRegistry();
-    const injections = registry.getAll();
+    const injections = registry
+      .getAll()
+      .filter((config) => !this.isJournalInjection(config.id));
 
     // Sort injections alphabetically
     const sortedInjections = [...injections].sort((a, b) => a.name.localeCompare(b.name));
@@ -398,6 +402,61 @@ export class SettingsSection extends BaseSection {
       },
       element("div", {}, ...rows)
     );
+  }
+
+  /**
+   * Create Journal card (subset of journal injections)
+   */
+  private createJournalCard(params?: {
+    defaultExpanded?: boolean;
+    onExpandChange?: (v: boolean) => void;
+  }): HTMLDivElement {
+    const registry = getRegistry();
+    const injections = registry
+      .getAll()
+      .filter((config) => this.isJournalInjection(config.id))
+      .filter((config) => config.id !== "journalHints" && config.id !== "journalFilterSort");
+
+    // Sort injections alphabetically
+    const sortedInjections = [...injections].sort((a, b) => a.name.localeCompare(b.name));
+
+    const rows = sortedInjections.map((config, index) => {
+      const isFirst = index === 0;
+      const isLast = index === sortedInjections.length - 1;
+      const enabled = registry.isEnabled(config.id);
+
+      return this.createSectionRow(
+        config.name,
+        enabled,
+        (v: boolean) => {
+          registry.setEnabled(config.id, v);
+          this.saveFeatureConfig();
+        },
+        config.description,
+        isFirst,
+        isLast
+      );
+    });
+
+    return Card(
+      {
+        title: "Journal",
+        variant: "soft",
+        padding: "lg",
+        expandable: true,
+        defaultExpanded: params?.defaultExpanded ?? false,
+        onExpandChange: params?.onExpandChange,
+      },
+      element("div", {}, ...rows)
+    );
+  }
+
+  private isJournalInjection(id: string): boolean {
+    return id === "abilitiesInject"
+      || id === "journalHints"
+      || id === "journalFilterSort"
+      || id === "journalAllTab"
+      || id === "missingVariantsIndicator";
   }
 
   /**
@@ -467,13 +526,14 @@ export class SettingsSection extends BaseSection {
     const osVal = element("span", {}, "—") as HTMLElement;
 
     const renderEnv = () => {
-      const env = MGEnvironment.detect() as any;
-      surfaceVal.textContent = env.surface;
-      platformVal.textContent = env.platform;
-      browserVal.textContent = env.browser ?? "Unknown";
-      osVal.textContent = env.os ?? "Unknown";
-      hostVal.textContent = env.host;
-      iframeVal.textContent = env.isInIframe ? "Yes" : "No";
+      const env = MGEnvironment.detect() as EnvInfo;
+
+      surfaceVal.textContent = env.surface ?? 'Unknown';
+      platformVal.textContent = env.platform ?? 'Unknown';
+      browserVal.textContent = env.browser ?? 'Unknown';
+      osVal.textContent = env.os ?? 'Unknown';
+      hostVal.textContent = env.host ?? 'Unknown';
+      iframeVal.textContent = env.isInIframe ? 'Yes' : 'No';
     };
 
     const copyJsonBtn = Button({
@@ -483,7 +543,8 @@ export class SettingsSection extends BaseSection {
     });
 
     attachCopyHandler(copyJsonBtn, () => {
-      const env = MGEnvironment.detect() as any;
+      const env = MGEnvironment.detect() as EnvInfo;
+
       return JSON.stringify(env, null, 2);
     });
 

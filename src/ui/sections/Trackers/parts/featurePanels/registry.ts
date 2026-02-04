@@ -59,7 +59,8 @@ export interface FeaturePanelDefinition {
         pet: UnifiedPet,
         team: PetTeam,
         container: HTMLElement,
-        viewType?: 'egg' | 'plant'
+        viewType?: 'egg' | 'plant',
+        selectedTileIndices?: Set<string>
     ) => void;
 
     /**
@@ -71,7 +72,8 @@ export interface FeaturePanelDefinition {
         pets: UnifiedPet[],
         team: PetTeam,
         container: HTMLElement,
-        viewType?: 'egg' | 'plant'
+        viewType?: 'egg' | 'plant',
+        selectedTileIndices?: Set<string>
     ) => void;
 
     /**

@@ -52,6 +52,7 @@ function buildShopItem(
     purchased,
     remaining,
     isAvailable: remaining > 0,
+    price: rawItem.price,
   };
 }
 

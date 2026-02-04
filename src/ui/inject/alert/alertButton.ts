@@ -50,7 +50,7 @@ function injectBellStyles(): void {
 const KNOWN_ARIA = ["Chat", "Leaderboard", "Stats", "Open Activity Log", "Open MGH"];
 
 export interface AlertButtonHandle {
-  root: HTMLDivElement | null;
+  root: HTMLButtonElement | null;
   updateBadge(count: number): void;
   ring(): void;
   startRinging(): void;

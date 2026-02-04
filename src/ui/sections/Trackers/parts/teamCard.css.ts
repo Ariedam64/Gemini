@@ -331,6 +331,7 @@ export const teamCardCss = `
     overflow: hidden;
     border: 1px solid var(--border);
     flex-shrink: 0;
+    --xp-fill: var(--accent); /* Default fill color */
 }
 
 .team-progress-bar__fill {
@@ -339,15 +340,15 @@ export const teamCardCss = `
     transition: width 0.3s ease;
 }
 
-/* Color coding for team progress bar */
+/* Color coding for team progress bar - using oklab for better mixing */
 .team-progress-bar__fill--low {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 30%, transparent), color-mix(in srgb, var(--xp-fill) 50%, transparent));
+    background: linear-gradient(90deg, color-mix(in oklab, var(--xp-fill) 40%, transparent), color-mix(in oklab, var(--xp-fill) 60%, transparent));
 }
 .team-progress-bar__fill--medium {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 50%, transparent), color-mix(in srgb, var(--xp-fill) 80%, transparent));
+    background: linear-gradient(90deg, color-mix(in oklab, var(--xp-fill) 60%, transparent), color-mix(in oklab, var(--xp-fill) 85%, transparent));
 }
 .team-progress-bar__fill--high {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--xp-fill) 80%, transparent), var(--xp-fill));
+    background: linear-gradient(90deg, color-mix(in oklab, var(--xp-fill) 80%, transparent), var(--xp-fill));
 }
 
 .team-progress-bar__percent {
@@ -355,11 +356,12 @@ export const teamCardCss = `
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     color: var(--fg);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
     pointer-events: none;
+    z-index: 5;
 }
 
 /* BasePetCard provides its own mobile responsiveness. We only need minimal 

@@ -12,11 +12,12 @@ import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
-import { migrateStorageKeys, FEATURE_KEYS } from "../../utils/storage";
+import { migrateStorageKeys, FEATURE_KEYS, INJECT_KEYS } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
 import { MGBulkFavorite } from "../../features/bulkFavorite";
 import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
+import { MGJournal } from "../../features/journal";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
@@ -25,8 +26,10 @@ import { MGWeatherNotifier } from "../../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../../features/petHungerNotifier";
 import { MGAriesAPI } from "../../features/ariesAPI";
 import { MGHarvestLocker } from "../../features/harvestLocker";
+import { MGMissingVariantsIndicator } from "../../features/missingVariantsIndicator";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
+import { StorageValueIndicatorInject } from "../inject/qol/storageValueIndicator";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -209,7 +212,7 @@ export async function initSpriteWarmup(loader: LoaderController): Promise<void> 
 
     const uniqueIds = [...new Set(spriteIds)];
     if (uniqueIds.length > 0) {
-      await MGSprite.warmup(uniqueIds, () => {}, 5);
+      await MGSprite.warmup(uniqueIds, () => { }, 5);
     }
   } catch (err) {
     console.warn("[Bootstrap] Sprite warmup failed", err);
@@ -243,6 +246,8 @@ export function initFeatures(loader: LoaderController): void {
     { name: "PetHungerNotifier", init: MGPetHungerNotifier.init.bind(MGPetHungerNotifier) },
     { name: "AriesAPI", init: MGAriesAPI.init.bind(MGAriesAPI) },
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
+    { name: "MissingVariantsIndicator", init: MGMissingVariantsIndicator.init.bind(MGMissingVariantsIndicator) },
+    { name: "Journal", init: MGJournal.init.bind(MGJournal) },
   ];
 
   let initializedCount = 0;
@@ -294,6 +299,26 @@ export function initFeatures(loader: LoaderController): void {
       storageKey: FEATURE_KEYS.CROP_SIZE_INDICATOR,
       defaultEnabled: false,
     });
+
+    registry.register({
+      id: 'missingVariantsIndicator',
+      name: 'Missing Variants',
+      description: 'Shows colored letters for unlogged crop variants',
+      injection: MGMissingVariantsIndicator.render,
+      storageKey: FEATURE_KEYS.MISSING_VARIANTS_INDICATOR,
+      defaultEnabled: false,
+    });
+
+    registry.register({
+      id: 'storageValueIndicator',
+      name: 'Storage Value',
+      description: 'Shows total coin value for storage modals',
+      injection: StorageValueIndicatorInject,
+      storageKey: INJECT_KEYS.STORAGE_VALUE_INDICATOR,
+      defaultEnabled: true,
+    });
+
+    // Journal injections are registered by MGJournal.init() via features/journal/logic/injections.ts
 
     // Initialize all enabled injections
     registry.initAll();

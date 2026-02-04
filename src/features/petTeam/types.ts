@@ -64,3 +64,26 @@ export const MAX_TEAMS = 50;
 
 /** Empty slot identifier */
 export const EMPTY_SLOT = '';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Import Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Aries mod team format (from localStorage['aries_mod'].pets.teams)
+ */
+export interface AriesTeam {
+    id: string;
+    name: string;
+    slots: (string | null)[];
+}
+
+/**
+ * Result of import operation
+ */
+export interface ImportResult {
+    success: boolean;
+    source: 'aries' | 'none';
+    imported: number;
+    errors: string[];
+}

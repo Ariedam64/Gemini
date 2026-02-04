@@ -109,10 +109,10 @@ function sanitize(value: string, rx: RegExp | null): string {
   return value.replace(rx, "");
 }
 
-function debounce<T extends (...args:any[])=>void>(fn: T, ms=0): T {
+function debounce<T extends (...args: any[]) => void>(fn: T, ms = 0): T {
   if (!ms) return fn as T;
   let t: any;
-  return ((...args:any[]) => {
+  return ((...args: any[]) => {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), ms);
   }) as T;
@@ -168,7 +168,7 @@ export function Input(opts: InputOptions = {}): InputHandle {
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") onEnter?.(input.value); });
 
   // Blocage soft dynamique: actif seulement quand cet input est focus
-  const unregister = blockGameKeys ? __lgRegisterSoftBlock(input) : () => {};
+  const unregister = blockGameKeys ? __lgRegisterSoftBlock(input) : () => { };
 
   function getValue() { return input.value; }
   function setValue(v: string) { input.value = v ?? ""; applyFilter(); emitChange(); }

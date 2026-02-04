@@ -27,4 +27,9 @@ GameData/
 GameSourceFiles/
 GameFilesExample/
 
-dist/
+
+# Tools
+.qodo/
+.agent/
+
+.design-specs

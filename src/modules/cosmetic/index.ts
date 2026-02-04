@@ -7,6 +7,7 @@ import { initCosmeticSystem } from "./logic/init";
 import { categories, list, url } from "./logic/query";
 import { create, show, clear } from "./logic/display";
 import { attach } from "./logic/overlay";
+import { Avatar } from "./avatar";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -63,4 +64,7 @@ export const MGCosmetic = {
     ensureReady();
     return clear();
   },
+
+  // Avatar sub-module
+  Avatar,
 };

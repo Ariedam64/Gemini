@@ -77,7 +77,7 @@ export const growthPanel: FeaturePanelDefinition = {
         };
     },
 
-    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string) => {
+    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string, selectedTileIndices?: Set<string>) => {
         const garden = Globals.myGarden.get();
         const now = Date.now();
 
@@ -90,8 +90,13 @@ export const growthPanel: FeaturePanelDefinition = {
             return;
         }
 
-        const growingEggs = garden.eggs.growing;
-        const growingCrops = garden.crops.growing;
+        // Filter growing items by selected tiles if filter is provided
+        const growingEggs = selectedTileIndices
+            ? garden.eggs.growing.filter(egg => selectedTileIndices.has(egg.tileIndex))
+            : garden.eggs.growing;
+        const growingCrops = selectedTileIndices
+            ? garden.crops.growing.filter(crop => selectedTileIndices.has(crop.tileIndex))
+            : garden.crops.growing;
 
         // Determine effective view type - use intelligent defaults when viewType is undefined
         // If pet has only one boost type, use that type instead of summary view
@@ -214,7 +219,7 @@ export const growthPanel: FeaturePanelDefinition = {
         container.appendChild(wrapper);
     },
 
-    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement, viewType?: string) => {
+    renderGroupedSlot: (pets: UnifiedPet[], team: PetTeam, container: HTMLElement, viewType?: string, selectedTileIndices?: Set<string>) => {
         const garden = Globals.myGarden.get();
         const now = Date.now();
 
@@ -234,8 +239,13 @@ export const growthPanel: FeaturePanelDefinition = {
 
         const wrapper = el('div', 'growth-stats-compact growth-stats-grouped');
 
-        const growingEggs = garden.eggs.growing;
-        const growingCrops = garden.crops.growing;
+        // Filter growing items by selected tiles if filter is provided
+        const growingEggs = selectedTileIndices
+            ? garden.eggs.growing.filter(egg => selectedTileIndices.has(egg.tileIndex))
+            : garden.eggs.growing;
+        const growingCrops = selectedTileIndices
+            ? garden.crops.growing.filter(crop => selectedTileIndices.has(crop.tileIndex))
+            : garden.crops.growing;
 
         const showEgg = viewType === 'egg' && hasEgg;
         const showPlant = viewType === 'plant' && hasPlant;
