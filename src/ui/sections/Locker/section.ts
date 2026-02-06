@@ -4,13 +4,15 @@
  */
 
 import { BaseSection } from '../core/Section';
-import { HarvestLockerCardPart, harvestLockerCardCss } from './parts';
+import { HarvestLockerCardPart, harvestLockerCardCss, EggLockerCardPart, eggLockerCardCss, DecorLockerCardPart } from './parts';
 import { plantSelectorCss } from '../../components/PlantSelector';
 import { injectStyleOnce } from '../../styles/inject';
-import { initLockerState, getLockerState } from './state';
+import { initLockerState, getLockerState, setHarvestLockerExpanded, setEggLockerExpanded, setDecorLockerExpanded } from './state';
 
 export class LockerSection extends BaseSection {
     private harvestLockerCardPart: HarvestLockerCardPart | null = null;
+    private eggLockerCardPart: EggLockerCardPart | null = null;
+    private decorLockerCardPart: DecorLockerCardPart | null = null;
 
     constructor() {
         super({
@@ -34,29 +36,38 @@ export class LockerSection extends BaseSection {
         const shadow = container.getRootNode() as ShadowRoot;
         injectStyleOnce(shadow, harvestLockerCardCss, 'harvest-locker-card-styles');
         injectStyleOnce(shadow, plantSelectorCss, 'plant-selector-styles');
+        injectStyleOnce(shadow, eggLockerCardCss, 'egg-locker-card-styles');
 
         const section = this.createGrid("12px");
         section.id = "locker";
         container.appendChild(section);
 
         this.initializeHarvestLockerCardPart(section);
+        this.initializeEggLockerCardPart(section);
+        this.initializeDecorLockerCardPart(section);
     }
 
     /**
      * Render with preloaded card to avoid rebuild on tab click
      */
     override render(container: HTMLElement): void {
-        // Save the preloaded card part
-        const preloadedCardPart = this.harvestLockerCardPart;
+        // Save preloaded card parts
+        const preloadedHarvestPart = this.harvestLockerCardPart;
+        const preloadedEggPart = this.eggLockerCardPart;
+        const preloadedDecorPart = this.decorLockerCardPart;
 
-        // Clear reference so destroy() doesn't clean it up during parent.render()
+        // Clear references so destroy() doesn't clean them up during parent.render()
         this.harvestLockerCardPart = null;
+        this.eggLockerCardPart = null;
+        this.decorLockerCardPart = null;
 
         // Call parent render (moves preloaded content or builds on-demand)
         super.render(container);
 
-        // Restore the card part reference
-        this.harvestLockerCardPart = preloadedCardPart;
+        // Restore card part references
+        this.harvestLockerCardPart = preloadedHarvestPart;
+        this.eggLockerCardPart = preloadedEggPart;
+        this.decorLockerCardPart = preloadedDecorPart;
     }
 
     /**
@@ -67,6 +78,14 @@ export class LockerSection extends BaseSection {
             this.harvestLockerCardPart.destroy();
             this.harvestLockerCardPart = null;
         }
+        if (this.eggLockerCardPart) {
+            this.eggLockerCardPart.destroy();
+            this.eggLockerCardPart = null;
+        }
+        if (this.decorLockerCardPart) {
+            this.decorLockerCardPart.destroy();
+            this.decorLockerCardPart = null;
+        }
     }
 
     /**
@@ -76,15 +95,50 @@ export class LockerSection extends BaseSection {
         if (!this.harvestLockerCardPart) {
             const state = getLockerState();
             this.harvestLockerCardPart = new HarvestLockerCardPart({
-                defaultExpanded: true,
+                defaultExpanded: state.get().ui.harvestLockerExpanded,
                 defaultMode: state.get().ui.harvestLockerMode,
                 defaultSelectedSpecies: state.get().ui.selectedSpecies,
                 defaultSearchQuery: state.get().ui.searchQuery,
+                onExpandChange: setHarvestLockerExpanded,
             });
         }
 
         const harvestLockerCard = this.harvestLockerCardPart.build();
         section.appendChild(harvestLockerCard);
         this.harvestLockerCardPart.render();
+    }
+
+    /**
+     * Initialize EggLocker card part
+     */
+    private initializeEggLockerCardPart(section: HTMLElement): void {
+        if (!this.eggLockerCardPart) {
+            const state = getLockerState();
+            this.eggLockerCardPart = new EggLockerCardPart({
+                defaultExpanded: state.get().ui.eggLockerExpanded,
+                onExpandChange: setEggLockerExpanded,
+            });
+        }
+
+        const eggLockerCard = this.eggLockerCardPart.build();
+        section.appendChild(eggLockerCard);
+        this.eggLockerCardPart.render();
+    }
+
+    /**
+     * Initialize DecorLocker card part
+     */
+    private initializeDecorLockerCardPart(section: HTMLElement): void {
+        if (!this.decorLockerCardPart) {
+            const state = getLockerState();
+            this.decorLockerCardPart = new DecorLockerCardPart({
+                defaultExpanded: state.get().ui.decorLockerExpanded,
+                onExpandChange: setDecorLockerExpanded,
+            });
+        }
+
+        const decorLockerCard = this.decorLockerCardPart.build();
+        section.appendChild(decorLockerCard);
+        this.decorLockerCardPart.render();
     }
 }

@@ -31,6 +31,8 @@ import { MGWeatherNotifier } from "../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../features/petHungerNotifier";
 import { MGAriesAPI } from "../features/ariesAPI";
 import { MGHarvestLocker } from "../features/harvestLocker";
+import { MGEggLocker } from "../features/eggLocker";
+import { MGDecorLocker } from "../features/decorLocker";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -76,6 +78,8 @@ export const GeminiAPI = {
     PetHungerNotifier: MGPetHungerNotifier,
     AriesAPI: MGAriesAPI,
     HarvestLocker: MGHarvestLocker,
+    EggLocker: MGEggLocker,
+    DecorLocker: MGDecorLocker,
   },
 
   WebSocket: {

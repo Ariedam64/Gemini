@@ -47,6 +47,10 @@ export type {
     SizeCondition,
     MutationCondition,
 } from "./harvestLocker";
+export { MGEggLocker } from "./eggLocker";
+export type { EggLockerConfig } from "./eggLocker";
+export { MGDecorLocker } from "./decorLocker";
+export type { DecorLockerConfig } from "./decorLocker";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

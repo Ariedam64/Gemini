@@ -26,6 +26,7 @@ export interface HarvestLockerCardOptions {
     defaultMode?: ViewMode;
     defaultSelectedSpecies?: string | null;
     defaultSearchQuery?: string;
+    onExpandChange?: (expanded: boolean) => void;
 }
 
 export interface HarvestLockerCardHandle {
@@ -77,10 +78,11 @@ export function createHarvestLockerCard(options: HarvestLockerCardOptions = {}):
 
         const cardEl = Card(
             {
-                title: "Harvest Rules",
-                subtitle: "Configure harvest locking rules",
+                title: "Crop Harvest",
+                subtitle: "Prevent harvesting specific crops",
                 expandable: true,
                 defaultExpanded: options.defaultExpanded ?? true,
+                onExpandChange: options.onExpandChange,
             },
             wrapper
         );

@@ -254,12 +254,25 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   const TAB_FEATURE_MAP: Record<string, string> = {
     'tab-auto-favorite': 'autoFavorite',
     'tab-pets': 'pets',
+    'tab-locker': 'locker',
+    'tab-trackers': 'trackers',
+    'tab-alerts': 'alerts',
+    'tab-avatar': 'avatar',
+    'tab-room': 'room',
   };
 
   function applyTabVisibility(): void {
     const config = storageGet<Record<string, { enabled: boolean }>>(
       FEATURE_KEYS.CONFIG,
-      { autoFavorite: { enabled: true }, pets: { enabled: true } }
+      {
+        autoFavorite: { enabled: true },
+        pets: { enabled: true },
+        locker: { enabled: true },
+        trackers: { enabled: true },
+        alerts: { enabled: true },
+        avatar: { enabled: true },
+        room: { enabled: true },
+      }
     );
 
     for (const [tabId, featureKey] of Object.entries(TAB_FEATURE_MAP)) {

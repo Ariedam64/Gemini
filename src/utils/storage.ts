@@ -90,6 +90,10 @@ export const FEATURE_KEYS = {
     ARIES_API: 'feature:ariesAPI:config',
     /** Harvest locker feature config */
     HARVEST_LOCKER: 'feature:harvestLocker:config',
+    /** Egg locker feature config */
+    EGG_LOCKER: 'feature:eggLocker:config',
+    /** Decor locker feature config */
+    DECOR_LOCKER: 'feature:decorLocker:config',
     /** Missing variants indicator feature config (colored letters in crop tooltips) */
     MISSING_VARIANTS_INDICATOR: 'feature:missingVariantsIndicator:config',
     /** Journal feature config (replaces journalChecker) */
@@ -153,6 +157,10 @@ export const EVENTS = {
     FORCE_RELOAD: 'gemini:force-reload',
     /** HarvestLocker locks state updated (rules or garden changed) */
     HARVEST_LOCKER_LOCKS_UPDATED: 'gemini:harvestLocker-locks-updated',
+    /** EggLocker blocked list updated */
+    EGG_LOCKER_LOCKS_UPDATED: 'gemini:eggLocker-locks-updated',
+    /** DecorLocker blocked list updated */
+    DECOR_LOCKER_LOCKS_UPDATED: 'gemini:decorLocker-locks-updated',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────

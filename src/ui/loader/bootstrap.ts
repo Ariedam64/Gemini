@@ -26,6 +26,8 @@ import { MGWeatherNotifier } from "../../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../../features/petHungerNotifier";
 import { MGAriesAPI } from "../../features/ariesAPI";
 import { MGHarvestLocker } from "../../features/harvestLocker";
+import { MGEggLocker } from "../../features/eggLocker";
+import { MGDecorLocker } from "../../features/decorLocker";
 import { MGMissingVariantsIndicator } from "../../features/missingVariantsIndicator";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
@@ -246,6 +248,8 @@ export function initFeatures(loader: LoaderController): void {
     { name: "PetHungerNotifier", init: MGPetHungerNotifier.init.bind(MGPetHungerNotifier) },
     { name: "AriesAPI", init: MGAriesAPI.init.bind(MGAriesAPI) },
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
+    { name: "EggLocker", init: MGEggLocker.init.bind(MGEggLocker) },
+    { name: "DecorLocker", init: MGDecorLocker.init.bind(MGDecorLocker) },
     { name: "MissingVariantsIndicator", init: MGMissingVariantsIndicator.init.bind(MGMissingVariantsIndicator) },
     { name: "Journal", init: MGJournal.init.bind(MGJournal) },
   ];
@@ -318,6 +322,7 @@ export function initFeatures(loader: LoaderController): void {
       defaultEnabled: true,
     });
 
+    // EggLockerInject and DecorLockerInject are now managed directly by their features
     // Journal injections are registered by MGJournal.init() via features/journal/logic/injections.ts
 
     // Initialize all enabled injections

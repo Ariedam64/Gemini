@@ -15,6 +15,9 @@ export type LockerUI = {
   harvestLockerMode: "overall" | "bySpecies";
   selectedSpecies: string | null;
   searchQuery: string;
+  harvestLockerExpanded: boolean;
+  eggLockerExpanded: boolean;
+  decorLockerExpanded: boolean;
 };
 
 /* ─────────────────────────────────────────── Defaults ─────────────────────────────────────────── */
@@ -24,6 +27,9 @@ const DEFAULT_LOCKER_STATE: LockerState = {
     harvestLockerMode: "overall",
     selectedSpecies: null,
     searchQuery: "",
+    harvestLockerExpanded: true,
+    eggLockerExpanded: true,
+    decorLockerExpanded: true,
   },
 };
 
@@ -44,6 +50,9 @@ export async function initLockerState(): Promise<SectionStateController<LockerSt
           harvestLockerMode: s.ui?.harvestLockerMode === "bySpecies" ? "bySpecies" : "overall",
           selectedSpecies: typeof s.ui?.selectedSpecies === "string" ? s.ui.selectedSpecies : null,
           searchQuery: typeof s.ui?.searchQuery === "string" ? s.ui.searchQuery : "",
+          harvestLockerExpanded: typeof s.ui?.harvestLockerExpanded === "boolean" ? s.ui.harvestLockerExpanded : true,
+          eggLockerExpanded: typeof s.ui?.eggLockerExpanded === "boolean" ? s.ui.eggLockerExpanded : true,
+          decorLockerExpanded: typeof s.ui?.decorLockerExpanded === "boolean" ? s.ui.decorLockerExpanded : true,
         },
       }),
     });
@@ -88,6 +97,36 @@ export function setSearchQuery(query: string): void {
     ui: {
       ...state.get().ui,
       searchQuery: query,
+    },
+  });
+}
+
+export function setHarvestLockerExpanded(expanded: boolean): void {
+  const state = getLockerState();
+  state.update({
+    ui: {
+      ...state.get().ui,
+      harvestLockerExpanded: expanded,
+    },
+  });
+}
+
+export function setEggLockerExpanded(expanded: boolean): void {
+  const state = getLockerState();
+  state.update({
+    ui: {
+      ...state.get().ui,
+      eggLockerExpanded: expanded,
+    },
+  });
+}
+
+export function setDecorLockerExpanded(expanded: boolean): void {
+  const state = getLockerState();
+  state.update({
+    ui: {
+      ...state.get().ui,
+      decorLockerExpanded: expanded,
     },
   });
 }

@@ -72,6 +72,11 @@ interface FeatureConfig {
   // HUD Sections (tabs visibility)
   pets: { enabled: boolean };
   autoFavorite: { enabled: boolean };
+  locker: { enabled: boolean };
+  trackers: { enabled: boolean };
+  alerts: { enabled: boolean };
+  avatar: { enabled: boolean };
+  room: { enabled: boolean };
 
   // In-Game Enhancements
   bulkFavorite: { enabled: boolean };
@@ -84,6 +89,11 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   // HUD Sections - default to enabled (show all tabs)
   pets: { enabled: true },
   autoFavorite: { enabled: true },
+  locker: { enabled: true },
+  trackers: { enabled: true },
+  alerts: { enabled: true },
+  avatar: { enabled: true },
+  room: { enabled: true },
   // In-Game Enhancements - default to disabled
   bulkFavorite: { enabled: false },
   cropSizeIndicator: { enabled: false },
@@ -210,6 +220,11 @@ export class SettingsSection extends BaseSection {
     return {
       pets: { ...DEFAULT_FEATURE_CONFIG.pets, ...stored.pets },
       autoFavorite: { ...DEFAULT_FEATURE_CONFIG.autoFavorite, ...stored.autoFavorite },
+      locker: { ...DEFAULT_FEATURE_CONFIG.locker, ...stored.locker },
+      trackers: { ...DEFAULT_FEATURE_CONFIG.trackers, ...stored.trackers },
+      alerts: { ...DEFAULT_FEATURE_CONFIG.alerts, ...stored.alerts },
+      avatar: { ...DEFAULT_FEATURE_CONFIG.avatar, ...stored.avatar },
+      room: { ...DEFAULT_FEATURE_CONFIG.room, ...stored.room },
       bulkFavorite: { ...DEFAULT_FEATURE_CONFIG.bulkFavorite, ...stored.bulkFavorite },
       cropSizeIndicator: { ...DEFAULT_FEATURE_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
       eggProbabilityIndicator: { ...DEFAULT_FEATURE_CONFIG.eggProbabilityIndicator, ...stored.eggProbabilityIndicator },
@@ -300,8 +315,53 @@ export class SettingsSection extends BaseSection {
             this.featureConfig.pets.enabled = v;
             this.saveFeatureConfig();
           },
-          "Pet management and team tracking",
-          false, // Not first
+          "Pet management and team tracking"
+        ),
+        createSectionRow(
+          "Locker",
+          this.featureConfig.locker.enabled,
+          (v: boolean) => {
+            this.featureConfig.locker.enabled = v;
+            this.saveFeatureConfig();
+          },
+          "Configure crop, egg, and decor blockers"
+        ),
+        createSectionRow(
+          "Trackers",
+          this.featureConfig.trackers.enabled,
+          (v: boolean) => {
+            this.featureConfig.trackers.enabled = v;
+            this.saveFeatureConfig();
+          },
+          "Resource and progress tracking"
+        ),
+        createSectionRow(
+          "Alerts",
+          this.featureConfig.alerts.enabled,
+          (v: boolean) => {
+            this.featureConfig.alerts.enabled = v;
+            this.saveFeatureConfig();
+          },
+          "Event notifications and alerts"
+        ),
+        createSectionRow(
+          "Avatar",
+          this.featureConfig.avatar.enabled,
+          (v: boolean) => {
+            this.featureConfig.avatar.enabled = v;
+            this.saveFeatureConfig();
+          },
+          "Avatar customization and loadouts"
+        ),
+        createSectionRow(
+          "Room",
+          this.featureConfig.room.enabled,
+          (v: boolean) => {
+            this.featureConfig.room.enabled = v;
+            this.saveFeatureConfig();
+          },
+          "Public room browser",
+          false,
           true // Last item
         )
       )
