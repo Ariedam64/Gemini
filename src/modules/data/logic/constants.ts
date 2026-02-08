@@ -13,7 +13,7 @@ export const SIGNATURE_KEYS: Record<CapturedDataKey, readonly string[]> = {
   plants: ["Carrot", "Strawberry", "Aloe", "Blueberry", "Apple"],
 } as const;
 
-export const WEATHER_IDS = ["Rain", "Frost", "Dawn", "AmberMoon"] as const;
+export const WEATHER_IDS = ["Rain", "Frost", "Thunderstorm", "Dawn", "AmberMoon"] as const;
 export const MAIN_BUNDLE_PATTERN = /main-[^/]+\.js(\?|$)/;
 
 export const MAX_SCAN_DEPTH = 6;

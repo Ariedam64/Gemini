@@ -60,7 +60,9 @@ export default defineConfig(({ mode }) => ({
                 resource: {
                     ICON: 'https://imgur.com/a/nf1ZKbp'
                 },
-                connect: ['i.imgur.com']
+                connect: ['i.imgur.com',
+                          'magicgarden.gg'
+                ]
             },
             build: {
                 fileName: 'gemini-build.user.js',

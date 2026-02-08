@@ -69,8 +69,13 @@ function extractWeatherObject(text: string, anchorPos: number): string | null {
 
 function normalizeWeatherLiteral(literal: string): string {
   return literal
-    .replace(/\$t\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"')
-    .replace(/\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"');
+    // Handle computed property keys like [gt.Rain]
+    .replace(/\[([A-Za-z_$][\w$]*\.)(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\]/g, '"$2"')
+    // Normalize groupId enum references (Bc.Hydro → "Hydro", Bc.Lunar → "Lunar")
+    .replace(/\b[A-Za-z_$][\w$]*\.(Hydro|Lunar)\b/g, '"$1"')
+    // Keep old weather enum patterns as fallback
+    .replace(/\$t\.(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\b/g, '"$1"')
+    .replace(/\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\b/g, '"$1"');
 }
 
 /**
