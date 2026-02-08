@@ -8,14 +8,7 @@ import { AvatarOutfit, ALT_ASSET_PATH } from "../types";
 import { setPlayerData } from "../../../../websocket/api";
 import { pageWindow } from "../../../../utils/windowContext";
 import { isDevBuild } from "../../../../utils/buildMode";
-
-
-const AVATAR_INDICES = {
-    BOTTOM: 0,
-    MID: 1,
-    TOP: 2,
-    EXPRESSION: 3,
-} as const;
+import { outfitToArray } from "./internal";
 
 /**
  * Check if a filename represents a blank/hidden part.
@@ -194,24 +187,6 @@ function applyRenderingPatch() {
     };
 
     findAndPatch();
-}
-
-/**
- * Convert outfit to array
- */
-function outfitToArray(outfit: AvatarOutfit, current?: string[] | null): string[] {
-    const base = current || [
-        "Bottom_DefaultGray.png",
-        "Mid_DefaultGray.png",
-        "Top_DefaultGray.png",
-        "Expression_Default.png",
-    ];
-    const result = [...base];
-    if (outfit.bottom) result[AVATAR_INDICES.BOTTOM] = outfit.bottom;
-    if (outfit.mid) result[AVATAR_INDICES.MID] = outfit.mid;
-    if (outfit.top) result[AVATAR_INDICES.TOP] = outfit.top;
-    if (outfit.expression) result[AVATAR_INDICES.EXPRESSION] = outfit.expression;
-    return result;
 }
 
 /**

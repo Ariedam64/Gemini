@@ -16,6 +16,7 @@ import {
   MGCosmetic,
   MGCalculators,
   MGShopActions,
+  MGRiveLoader,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
@@ -55,6 +56,7 @@ export const GeminiAPI = {
     Sprite: MGSprite,
     Tile: MGTile,
     Pixi: MGPixi,
+    RiveLoader: MGRiveLoader,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
     Calculators: MGCalculators,
@@ -157,6 +159,7 @@ export function exposeGeminiAPI(): void {
   win.MGSprite = MGSprite;
   win.MGData = MGData;
   win.MGPixi = MGPixi;
+  win.MGRiveLoader = MGRiveLoader;
   win.MGAssets = MGAssets;
   win.MGEnvironment = MGEnvironment;
 }

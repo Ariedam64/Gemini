@@ -4,6 +4,7 @@
  */
 
 import { CRITICAL_DEFAULTS } from "./criticalDefaults";
+import { getCurrentAvatarState } from "./internal";
 import {
     CosmeticInfo,
     CurrentAvatar,
@@ -15,16 +16,8 @@ import {
 } from "../types";
 
 import { pageWindow } from "../../../../utils/windowContext";
-import { waitForStore } from "../../../../atoms/store";
 import { isOwned, initOwnership } from './ownership';
 import { isDevBuild } from '../../../../utils/buildMode';
-
-const AVATAR_INDICES = {
-    BOTTOM: 0,
-    MID: 1,
-    TOP: 2,
-    EXPRESSION: 3,
-} as const;
 
 const discoveredItems: CosmeticInfo[] = [];
 let isDiscovered = false;
@@ -74,53 +67,6 @@ export function getAssetBaseUrl(): string {
     } catch (err) {
         console.error("[Avatar] Failed to get asset base URL:", err);
         return "https://magicgarden.gg/assets/cosmetic/"; // Last resort
-    }
-}
-
-/**
- * Get current avatar state from game atoms
- */
-async function getCurrentAvatarState(): Promise<{ avatar: (string | null)[]; color: string; name: string }> {
-    try {
-        await waitForStore();
-        const { Store } = await import("../../../../atoms/store");
-
-        // Use playerAtom which contains the equipped cosmetics
-        let playerData = await Store.select("playerAtom");
-        for (let i = 0; i < 5 && (!playerData || Object.keys(playerData).length === 0); i++) {
-            await new Promise(r => setTimeout(r, 200 * i));
-            playerData = await Store.select("playerAtom");
-        }
-
-        if (!playerData || (typeof playerData === "object" && Object.keys(playerData).length === 0)) {
-            throw new Error("playerAtom not available");
-        }
-
-        const cosmetic = (playerData as any).cosmetic as Record<string, unknown> | undefined;
-        const name = (playerData as any).name as string | undefined;
-
-        return {
-            avatar: (cosmetic?.avatar as (string | null)[]) || [
-                "Bottom_DefaultGray.png",
-                "Mid_DefaultGray.png",
-                "Top_DefaultGray.png",
-                "Expression_Default.png",
-            ],
-            color: (cosmetic?.color as string) || "Red",
-            name: name || "Player",
-        };
-    } catch (err) {
-        console.error("[Avatar] Failed to get current avatar state:", err);
-        return {
-            avatar: [
-                "Bottom_DefaultGray.png",
-                "Mid_DefaultGray.png",
-                "Top_DefaultGray.png",
-                "Expression_Default.png",
-            ],
-            color: "Red",
-            name: "Player",
-        };
     }
 }
 

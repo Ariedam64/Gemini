@@ -7,10 +7,16 @@ import { createSectionStore } from "../core/State";
 
 export interface AvatarUIState {
     lastSelectedSlot: string;
+    builderExpanded: boolean;
+    outfitsExpanded: boolean;
+    loadoutsExpanded: boolean;
 }
 
 const DEFAULT_STATE: AvatarUIState = {
-    lastSelectedSlot: 'bottom'
+    lastSelectedSlot: 'bottom',
+    builderExpanded: true,
+    outfitsExpanded: true,
+    loadoutsExpanded: true,
 };
 
 export type AvatarUIController = {

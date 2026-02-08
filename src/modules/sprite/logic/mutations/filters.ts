@@ -28,6 +28,7 @@ export const FILTERS: Record<MutationName, FilterDef> = {
   Wet: { op: "source-atop", colors: ["rgb(50,180,200)"], a: 0.25 },
   Chilled: { op: "source-atop", colors: ["rgb(100,160,210)"], a: 0.45 },
   Frozen: { op: "source-atop", colors: ["rgb(100,130,220)"], a: 0.5 },
+  Thunderstruck: { op: "source-atop", colors: ["rgb(16, 141, 163)"], a: 0.4 },
   Dawnlit: { op: "source-atop", colors: ["rgb(209,70,231)"], a: 0.5 },
   Ambershine: { op: "source-atop", colors: ["rgb(190,100,40)"], a: 0.5 },
   Dawncharged: { op: "source-atop", colors: ["rgb(140,80,200)"], a: 0.5 },

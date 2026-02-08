@@ -82,7 +82,7 @@ async function loadWeatherFromBundle(): Promise<boolean> {
   const bundleText = await fetchMainBundle();
   if (!bundleText) return false;
 
-  let anchor = bundleText.indexOf("fixedTimeSlots:[0,48,96,144,192,240]");
+  let anchor = bundleText.indexOf("mutator");
   if (anchor < 0) anchor = bundleText.indexOf('name:"Amber Moon"');
   if (anchor < 0) return false;
 

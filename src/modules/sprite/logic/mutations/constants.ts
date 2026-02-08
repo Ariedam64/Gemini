@@ -13,6 +13,7 @@ export const MUT_META: Record<MutationName, MutationMeta> = {
   Wet: { overlayTall: "sprite/mutation-overlay/WetTallPlant", tallIconOverride: "sprite/mutation/Puddle" },
   Chilled: { overlayTall: "sprite/mutation-overlay/ChilledTallPlant", tallIconOverride: null },
   Frozen: { overlayTall: "sprite/mutation-overlay/FrozenTallPlant", tallIconOverride: null },
+  Thunderstruck: { overlayTall: 'sprite/mutation-overlay/ThunderstruckTallPlant', tallIconOverride: 'sprite/mutation/ThunderstruckGround' },
   Dawnlit: { overlayTall: null, tallIconOverride: null },
   Ambershine: { overlayTall: null, tallIconOverride: null },
   Dawncharged: { overlayTall: null, tallIconOverride: null },
@@ -31,6 +32,7 @@ export const MUTATION_ORDER: MutationName[] = [
   "Wet",
   "Chilled",
   "Frozen",
+  "Thunderstruck",
   "Ambershine",
   "Dawnlit",
   "Dawncharged",
@@ -51,7 +53,7 @@ export function sortMutations(list: MutationName[]): MutationName[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MUT_G1: MutationName[] = ["Gold", "Rainbow"];
-export const MUT_G2: MutationName[] = ["Wet", "Chilled", "Frozen"];
+export const MUT_G2: MutationName[] = ["Wet", "Chilled", "Frozen", "Thunderstruck"];
 export const MUT_G3: MutationName[] = ["Dawnlit", "Ambershine", "Dawncharged", "Ambercharged"];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,7 +72,8 @@ export const FLOATING_MUTATION_ICONS = new Set<MutationName>([
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const MUT_ICON_Y_EXCEPT: Record<string, number> = {
-  Banana: 0.6,
+  Banana: 0.68,
+  Beet: 0.65,
   Carrot: 0.6,
   Sunflower: 0.5,
   Starweaver: 0.5,
@@ -79,7 +82,7 @@ export const MUT_ICON_Y_EXCEPT: Record<string, number> = {
 };
 
 export const MUT_ICON_X_EXCEPT: Record<string, number> = {
-  Pepper: 0.5,
+  Pepper: 0.6,
   Banana: 0.6,
 };
 

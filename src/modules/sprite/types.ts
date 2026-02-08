@@ -53,6 +53,7 @@ export type MutationName =
   | "Wet"
   | "Chilled"
   | "Frozen"
+  | "Thunderstruck"
   | "Dawnlit"
   | "Ambershine"
   | "Dawncharged"

@@ -18,6 +18,7 @@ export { MGSprite } from "./sprite";
 export { MGTile } from "./tile";
 export { MGPixi } from "./pixi";
 export { MGPixiHooks } from "./pixi/logic/hooks";
+export { MGRiveLoader } from "./riveLoader";
 
 // Media modules
 export { MGAudio } from "./audio";
@@ -38,6 +39,7 @@ import { MGPixi } from "./pixi";
 import { MGAudio } from "./audio";
 import { MGCosmetic } from "./cosmetic";
 import { MGShopActions } from "./shopActions";
+import { MGRiveLoader } from "./riveLoader";
 
 export type ModuleInitProgress = {
   name: string;
@@ -54,6 +56,7 @@ export async function initAllModules(
     { name: "Sprites", init: () => MGSprite.init() },
     { name: "TileObjectSystem", init: () => MGTile.init() },
     { name: "Pixi", init: () => MGPixi.init() },
+    { name: "RiveLoader", init: () => MGRiveLoader.init() },
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
     { name: "ShopActions", init: () => MGShopActions.init() },

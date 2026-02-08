@@ -36,9 +36,20 @@ export const MGAvatarLoadouts = {
     },
 
     /**
-     * Save a new loadout or update existing one
+     * Save a new loadout or update existing one.
+     * Returns the id of the saved loadout, or the existing id if the outfit is a duplicate.
      */
     async save(name: string, outfit: Required<Omit<AvatarOutfit, 'color'>>, id?: string): Promise<string> {
+        if (!id) {
+            const duplicate = loadouts.find(l =>
+                l.top === outfit.top &&
+                l.mid === outfit.mid &&
+                l.bottom === outfit.bottom &&
+                l.expression === outfit.expression
+            );
+            if (duplicate) return duplicate.id;
+        }
+
         const newId = id || Math.random().toString(36).substring(2, 9);
 
         const newLoadout: AvatarLoadout = {

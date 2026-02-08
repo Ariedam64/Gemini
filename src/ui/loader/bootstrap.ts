@@ -147,19 +147,21 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
 export async function initModules(loader: LoaderController): Promise<void> {
   loader.setSubtitle("Activating Gemini modules...");
 
-  const TOTAL_MODULES = 7;
   let loadedCount = 0;
+  let totalCount = 0;
 
   await initAllModules((progress) => {
-    if (progress.status === "success") {
+    if (progress.status === "start") {
+      totalCount++;
+    } else if (progress.status === "success") {
       loadedCount++;
-      loader.logStep("Modules", `Loading modules... (${loadedCount}/${TOTAL_MODULES})`);
+      loader.logStep("Modules", `Loading modules... (${loadedCount}/${totalCount})`);
     } else if (progress.status === "error") {
-      loader.logStep("Modules", `Loading modules... (${loadedCount}/${TOTAL_MODULES}) - ${progress.name} failed`, "error");
+      loader.logStep("Modules", `Loading modules... (${loadedCount}/${totalCount}) - ${progress.name} failed`, "error");
     }
   });
 
-  loader.logStep("Modules", `All modules loaded (${TOTAL_MODULES}/${TOTAL_MODULES})`, "success");
+  loader.logStep("Modules", `All modules loaded (${totalCount}/${totalCount})`, "success");
 }
 
 export async function initSpriteWarmup(loader: LoaderController): Promise<void> {

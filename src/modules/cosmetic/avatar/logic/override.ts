@@ -6,14 +6,8 @@
 
 import type { AvatarOutfit } from "../types";
 import { pageWindow } from "../../../../utils/windowContext";
-import { list } from "./query";
-
-const AVATAR_INDICES = {
-    BOTTOM: 0,
-    MID: 1,
-    TOP: 2,
-    EXPRESSION: 3,
-} as const;
+import { getAssetBaseUrl } from "./query";
+import { outfitToArray } from "./internal";
 
 // State
 let currentOverride: { avatar: string[]; color?: string } | null = null;
@@ -21,46 +15,8 @@ let monitorInterval: any = null;
 let mutationObserver: MutationObserver | null = null;
 let styleElement: HTMLStyleElement | null = null;
 
-/**
- * Get the base URL for cosmetic assets
- */
-function getAssetBaseUrl(): string {
-    try {
-        const scripts = Array.from(pageWindow.document.querySelectorAll("script"));
-        const versionedScript = scripts.find((s) => s.src.includes("/version/"));
-        if (versionedScript) {
-            const match = versionedScript.src.match(/(https:\/\/.+?\/version\/[^/]+)/);
-            if (match) return `${match[1]}/assets/cosmetic/`;
-        }
-        return `${pageWindow.location.origin}/assets/cosmetic/`;
-    } catch {
-        return "https://magicgarden.gg/assets/cosmetic/";
-    }
-}
-
-/**
- * Get cosmetic URL
- */
 function getCosmeticURL(filename: string): string {
     return getAssetBaseUrl() + filename;
-}
-
-/**
- * Convert outfit to array
- */
-function outfitToArray(outfit: AvatarOutfit, current?: string[]): string[] {
-    const base = current || [
-        "Bottom_DefaultGray.png",
-        "Mid_DefaultGray.png",
-        "Top_DefaultGray.png",
-        "Expression_Default.png",
-    ];
-    const result = [...base];
-    if (outfit.bottom) result[AVATAR_INDICES.BOTTOM] = outfit.bottom;
-    if (outfit.mid) result[AVATAR_INDICES.MID] = outfit.mid;
-    if (outfit.top) result[AVATAR_INDICES.TOP] = outfit.top;
-    if (outfit.expression) result[AVATAR_INDICES.EXPRESSION] = outfit.expression;
-    return result;
 }
 
 /**
