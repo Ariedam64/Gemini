@@ -22,11 +22,13 @@ import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
 import { MGShopNotifier } from "../../features/shopNotifier";
+import { MGShopRestock } from "../../features/shopRestock";
 import { MGWeatherNotifier } from "../../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../../features/petHungerNotifier";
 import { MGAriesAPI } from "../../features/ariesAPI";
 import { MGHarvestLocker } from "../../features/harvestLocker";
 import { MGMissingVariantsIndicator } from "../../features/missingVariantsIndicator";
+import { MGSkinChanger } from "../../features/skinChanger";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
 import { StorageValueIndicatorInject } from "../inject/qol/storageValueIndicator";
@@ -242,11 +244,13 @@ export function initFeatures(loader: LoaderController): void {
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
     { name: "ShopNotifier", init: MGShopNotifier.init.bind(MGShopNotifier) },
+    { name: "ShopRestock", init: MGShopRestock.init.bind(MGShopRestock) },
     { name: "WeatherNotifier", init: MGWeatherNotifier.init.bind(MGWeatherNotifier) },
     { name: "PetHungerNotifier", init: MGPetHungerNotifier.init.bind(MGPetHungerNotifier) },
     { name: "AriesAPI", init: MGAriesAPI.init.bind(MGAriesAPI) },
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
     { name: "MissingVariantsIndicator", init: MGMissingVariantsIndicator.init.bind(MGMissingVariantsIndicator) },
+    ...(import.meta.env.MODE !== 'production' ? [{ name: "SkinChanger", init: MGSkinChanger.init.bind(MGSkinChanger) }] : []),
     { name: "Journal", init: MGJournal.init.bind(MGJournal) },
   ];
 

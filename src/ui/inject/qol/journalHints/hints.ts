@@ -16,6 +16,7 @@ export const CROP_HINTS: Record<string, string> = {
     'Frozen': 'The Frozen mutation is obtained from Wet crops during the Snow weather event, or Chilled crops during Rain.',
     'Dawnlit': 'The Dawnlit mutation is gained during the Dawn weather event.',
     'Ambershine': 'The Amberlit mutation is gained during the Amber Moon weather event.',
+    'Thunderstruck': 'The Thunderstruck mutation is gained during the Thunderstorm weather event.',
     'Gold': 'Gold is a rare mutation that appears in 1% of newly planted crops. Pets with the Gold Granter ability have a small chance to apply the Gold mutation to a random crop.',
     'Rainbow': 'Rainbow is a very rare mutation that appears in 0.1% of newly planted crops.  Pets with the Rainbow Granter ability have a small chance to apply the Rainbow mutation to a random crop.',
     'Dawncharged': 'Dawnbound: During the Dawn lunar event, place a {cropName} with the Dawnlit mutation adjacent to a Dawnbinder crop.',

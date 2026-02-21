@@ -19,6 +19,17 @@ npm-debug.log*
 
 # Temp files
 message*.txt
+_tmp_*.txt
+nul
+
+# Local scratch / one-off scripts
+index.html
+script-extract.js
+
+# Screenshots
+*.png
+*.jpg
+*.jpeg
 
 #Kilocode
 .kilocode/

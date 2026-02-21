@@ -60,7 +60,12 @@ export default defineConfig(({ mode }) => ({
                 resource: {
                     ICON: 'https://imgur.com/a/nf1ZKbp'
                 },
-                connect: ['i.imgur.com']
+                connect: [
+                    'i.imgur.com',
+                    'raw.githubusercontent.com',
+                    'ariesmod-api.ariedam.fr',
+                    'xjuvryjgrjchbhjixwzh.supabase.co'
+                ]
             },
             build: {
                 fileName: 'gemini-build.user.js',

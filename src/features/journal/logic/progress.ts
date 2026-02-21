@@ -45,13 +45,25 @@ function getJournalHash(journal: RawJournal | null): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function getCropVariants(): string[] {
-    const mutations = MGData.get('mutations') ?? {};
-    const mutationNames = Object.keys(mutations);
-    return ['Normal', ...mutationNames, 'Max Weight'];
+    // Dynamic: Normal + all mutations from MGData + Max Weight
+    // Order doesn't matter for progress calculation (set membership only)
+    const mutations = Object.keys(MGData.get('mutations') ?? {});
+    return ['Normal', ...mutations, 'Max Weight'];
 }
 
 export function getPetVariants(): string[] {
-    return ['Normal', 'Gold', 'Rainbow', 'Max Weight'];
+    // Growth mutations (baseChance > 0, no tileRef) are the only mutations pets can have
+    const mutations = MGData.get('mutations') ?? {};
+    const growthMuts: Array<{ id: string; chance: number }> = [];
+
+    for (const [id, data] of Object.entries(mutations) as [string, any][]) {
+        if ((data?.baseChance ?? 0) > 0 && !data?.tileRef) {
+            growthMuts.push({ id, chance: data.baseChance });
+        }
+    }
+
+    growthMuts.sort((a, b) => b.chance - a.chance);
+    return ['Normal', ...growthMuts.map(m => m.id), 'Max Weight'];
 }
 
 export function getAllMutations(): string[] {

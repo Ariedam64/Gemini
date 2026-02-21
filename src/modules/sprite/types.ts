@@ -53,6 +53,7 @@ export type MutationName =
   | "Wet"
   | "Chilled"
   | "Frozen"
+  | "Thunderstruck"
   | "Dawnlit"
   | "Ambershine"
   | "Dawncharged"
@@ -114,6 +115,8 @@ export interface SpriteState {
   overlay: PixiContainer | null;
 
   categoryIndex: Map<string, Set<string>> | null;
+  /** Reverse index: sprite key -> atlas json path that provides it */
+  keyToAtlasJson?: Map<string, string>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

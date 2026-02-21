@@ -40,6 +40,8 @@ export type TableHandle<T = any> = {
   setData: (rows: T[]) => void;
   setColumns: (cols: ColDef<T>[]) => void;
   sortBy: (key: string | null, dir?: "asc" | "desc" | null) => void;
+  getScrollTop: () => number;
+  setScrollTop: (value: number) => void;
   getSelection: () => string[];
   setSelection: (ids: string[]) => void;
   clearSelection: () => void;
@@ -503,6 +505,8 @@ export function Table<T = any>(opts: TableOptions<T>): TableHandle<T> {
     setData,
     setColumns,
     sortBy,
+    getScrollTop: () => body.scrollTop,
+    setScrollTop: (value: number) => { body.scrollTop = value; },
     getSelection,
     setSelection,
     clearSelection,

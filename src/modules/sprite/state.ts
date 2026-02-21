@@ -20,6 +20,7 @@ export function createSpriteState(): SpriteState {
     defaultParent: null,
     overlay: null,
     categoryIndex: null,
+    keyToAtlasJson: new Map(),
   };
 }
 

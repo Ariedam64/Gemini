@@ -37,10 +37,10 @@ export class ShopNotifierSection extends BaseSection {
     // Wait for MGData categories needed for shop items
     const { MGData } = await import("../../../modules");
     await Promise.all([
-      MGData.waitFor("plants"),
-      MGData.waitFor("items"),
-      MGData.waitFor("eggs"),
-      MGData.waitFor("decor"),
+      MGData.waitFor("plants").catch(() => { }),
+      MGData.waitFor("items").catch(() => { }),
+      MGData.waitFor("eggs").catch(() => { }),
+      MGData.waitFor("decor").catch(() => { }),
     ]);
 
     // Build parts

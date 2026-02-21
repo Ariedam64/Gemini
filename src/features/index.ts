@@ -19,6 +19,8 @@ export { MGMissingVariantsIndicator } from "./missingVariantsIndicator";
 export type { MissingVariantsIndicatorConfig } from "./missingVariantsIndicator";
 export { MGShopNotifier } from "./shopNotifier";
 export type { TrackedItem, ShopNotifierConfig } from "./shopNotifier";
+export { MGShopRestock } from "./shopRestock";
+export type { TrackedShopType } from "./shopRestock";
 export { MGWeatherNotifier } from "./weatherNotifier";
 export type { WeatherNotifierConfig } from "./weatherNotifier/types";
 export { MGPetHungerNotifier } from "./petHungerNotifier";
@@ -47,6 +49,8 @@ export type {
     SizeCondition,
     MutationCondition,
 } from "./harvestLocker";
+export { MGSkinChanger } from "./skinChanger";
+export type { SkinChangerConfig, SkinChangerSkinEntry } from "./skinChanger";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

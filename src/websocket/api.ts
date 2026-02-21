@@ -48,11 +48,10 @@ export function wish(wish: string, win: any = pageWindow): SendResult {
 }
 
 export function kickPlayer(playerId: string, win: any = pageWindow): SendResult {
-  return send(T.KickPlayer, { scope: "Room", playerId }, win);
+  return send(T.KickPlayer, { scope: "Room", targetPlayerId: playerId }, win);
 }
 
 export function setPlayerData(data: { name?: string; cosmetic?: any }, win: any = pageWindow): SendResult {
-  console.log("[Gemini][WS] setPlayerData:", data);
   const { name, cosmetic } = data;
   return send(T.SetPlayerData, { scope: "Room", name, cosmetic }, win);
 }

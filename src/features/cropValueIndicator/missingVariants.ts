@@ -46,7 +46,7 @@ export function getUnloggedCropVariants(speciesId: string): string[] {
  * Create a single colored variant letter element
  */
 function createVariantLetter(variantId: string): HTMLElement {
-  const style = getVariantLetterStyle(variantId);
+  const style = getVariantLetterStyle(variantId, '10px');
   const span = document.createElement('span');
   span.textContent = style.text;
   span.title = variantId;

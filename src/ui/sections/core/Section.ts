@@ -67,7 +67,11 @@ export abstract class BaseSection {
    * Called by SectionManager when the section is activated
    */
   render(container: HTMLElement): void {
-    this.unmount();
+    // Only unmount if there's a previous render to clean up.
+    // Skipping on first render preserves event listeners from preload().
+    if (this.container !== null) {
+      this.unmount();
+    }
 
     while (container.firstChild) {
       container.removeChild(container.firstChild);

@@ -4,10 +4,11 @@ import { createNavTabs } from '../../components/NavTabs/NavTabs';
 import { AtomInspector } from './inspectors/AtomInspector';
 import { WSLogger } from './tools/WSLogger';
 import { UIGallery } from './tools/UIGallery';
+import { SpriteDownloader } from './tools/SpriteDownloader';
 import { PixiInspector } from './inspectors/PixiInspector';
 // Per .claude/rules/core.md: use unified storage wrapper
 import { storageGet, storageSet, DEV_KEYS } from '../../../utils/storage';
-import { isAllDataCaptured, tryCapture  } from '../../../modules/data/logic/capture';
+import { isAllDataCaptured, tryCapture } from '../../../modules/data/logic/capture';
 import { pageWindow } from '../../../utils/windowContext';
 
 export class DevSection extends BaseSection {
@@ -131,7 +132,8 @@ export class DevSection extends BaseSection {
             { id: 'atoms', label: 'Atoms', content: AtomInspector() },
             { id: 'ws', label: 'WS Trace', content: WSLogger() },
             { id: 'pixi', label: 'Pixi Tools', content: PixiInspector() },
-            { id: 'ui', label: 'UI Gallery', content: UIGallery() }
+            { id: 'ui', label: 'UI Gallery', content: UIGallery() },
+            { id: 'sprites', label: 'Sprite DL', content: SpriteDownloader().root }
         ];
 
         const nav = createNavTabs(

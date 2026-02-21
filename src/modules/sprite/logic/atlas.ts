@@ -164,22 +164,27 @@ export interface LoadAtlasesResult {
   textures: Map<string, PixiTexture>;
   animations: Map<string, PixiTexture[]>;
   categoryIndex: Map<string, Set<string>>;
+  keyToAtlasJson: Map<string, string>;
 }
 
 export async function loadAtlasesFromManifest(
   baseUrl: string,
-  ctors: PixiConstructors
+  ctors: PixiConstructors,
+  opts?: { onlyJsonPaths?: string[] }
 ): Promise<LoadAtlasesResult> {
   const manifest = await MGManifest.load({ baseUrl });
   const bundle = MGManifest.getBundle(manifest, "default");
   if (!bundle) throw new Error("No default bundle in manifest");
 
-  const jsonPaths = MGManifest.listJsonFromBundle(bundle);
+  const allJsonPaths = MGManifest.listJsonFromBundle(bundle);
+  const only = opts?.onlyJsonPaths?.map((p) => String(p || "").trim()).filter(Boolean) ?? null;
+  const jsonPaths = only && only.length ? allJsonPaths.filter((p) => only.includes(p)) : allJsonPaths;
   const seen = new Set<string>();
 
   const textures = new Map<string, PixiTexture>();
   const animations = new Map<string, PixiTexture[]>();
   const categoryIndex = new Map<string, Set<string>>();
+  const keyToAtlasJson = new Map<string, string>();
 
   async function loadAtlasJson(path: string): Promise<void> {
     if (seen.has(path)) return;
@@ -202,11 +207,20 @@ export async function loadAtlasesFromManifest(
     buildAtlasTextures(atlas, baseTex, textures, ctors);
     buildAtlasAnimations(atlas, textures, animations);
     buildCategoryIndex(atlas, categoryIndex);
+
+    // Reverse index: which atlas json produced which sprite keys.
+    try {
+      for (const k of Object.keys(atlas.frames || {})) {
+        if (typeof k === "string" && k.startsWith("sprite/")) {
+          keyToAtlasJson.set(k, path);
+        }
+      }
+    } catch {}
   }
 
   for (const p of jsonPaths) {
     await loadAtlasJson(p);
   }
 
-  return { textures, animations, categoryIndex };
+  return { textures, animations, categoryIndex, keyToAtlasJson };
 }

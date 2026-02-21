@@ -66,3 +66,16 @@ export function getDisplayName(speciesId: string, type: 'crop' | 'pet'): string 
         return pet?.name || pet?.displayName || speciesId;
     }
 }
+
+/**
+ * Maps species ID to the correct sprite asset ID for MGSprite.toCanvas().
+ * Some crops have different internal IDs vs sprite sheet names.
+ */
+export function getSpriteAssetId(speciesId: string, type: 'crop' | 'pet'): string {
+    if (type === 'crop') {
+        if (speciesId === 'DawnCelestial') return 'DawnCelestialCrop';
+        if (speciesId === 'MoonCelestial') return 'MoonCelestialCrop';
+        if (speciesId === 'OrangeTulip') return 'Tulip';
+    }
+    return speciesId;
+}

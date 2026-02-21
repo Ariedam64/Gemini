@@ -9,15 +9,17 @@ import { AbilitiesInject } from '../../../ui/inject/qol/abilitiesInject';
 import * as JournalHints from '../../../ui/inject/qol/journalHints';
 import * as JournalFilterSort from '../../../ui/inject/qol/journalFilterSort';
 import * as JournalAllTab from '../../../ui/inject/qol/journalAllTab';
+import * as JournalGuide from '../../../ui/inject/qol/journalGuide';
 import { INJECT_KEYS, storageSet } from '../../../utils/storage';
 
 export function registerInjections(): void {
     const registry = getRegistry();
 
-    // Journal Hints and Filter/Sort are now always enabled.
+    // Journal Hints, Filter/Sort, and Guide are now always enabled.
     // Force storage to true so users can't persist a disabled state.
     storageSet(INJECT_KEYS.JOURNAL_HINTS, true);
     storageSet(INJECT_KEYS.JOURNAL_FILTER_SORT, true);
+    storageSet(INJECT_KEYS.JOURNAL_GUIDE, true);
 
     registry.register({
         id: 'abilitiesInject',
@@ -52,6 +54,15 @@ export function registerInjections(): void {
         description: 'Adds an All tab showing combined crops and pets view',
         injection: JournalAllTab,
         storageKey: INJECT_KEYS.JOURNAL_ALL_TAB,
+        defaultEnabled: true,
+    });
+
+    registry.register({
+        id: 'journalGuide',
+        name: 'Journal Guide',
+        description: 'Shows difficulty-sorted recommendations and progress badges',
+        injection: JournalGuide,
+        storageKey: INJECT_KEYS.JOURNAL_GUIDE,
         defaultEnabled: true,
     });
 }

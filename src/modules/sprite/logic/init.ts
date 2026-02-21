@@ -36,7 +36,7 @@ export async function initSpriteSystem(): Promise<boolean> {
     state.baseUrl = await MGAssets.base();
     log("base url", state.baseUrl);
 
-    const { textures, animations, categoryIndex } = await loadAtlasesFromManifest(
+    const { textures, animations, categoryIndex, keyToAtlasJson } = await loadAtlasesFromManifest(
       state.baseUrl!,
       state.ctors!
     );
@@ -44,6 +44,7 @@ export async function initSpriteSystem(): Promise<boolean> {
     state.textures = textures;
     state.animations = animations;
     state.categoryIndex = categoryIndex;
+    (state as any).keyToAtlasJson = keyToAtlasJson;
 
     log(
       "atlases loaded",

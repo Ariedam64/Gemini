@@ -77,6 +77,7 @@ export interface JournalInjectionToggles {
     journalHints: boolean;
     journalFilterSort: boolean;
     journalAllTab: boolean;
+    journalGuide: boolean;
 }
 
 export interface JournalConfig {
@@ -94,5 +95,6 @@ export const DEFAULT_CONFIG: JournalConfig = {
         journalHints: true,
         journalFilterSort: true,
         journalAllTab: true,
+        journalGuide: true,
     },
 };

@@ -13,6 +13,7 @@ import { MGData, MGSprite } from '../../../../modules';
 import { MGJournal } from '../../../../features/journal';
 import type { SpeciesProgress } from '../../../../features/journal';
 import { getDisplayName } from '../_shared/names';
+import { setActiveCustomTab, onCustomTabChange } from '../_shared/tabState';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -23,6 +24,7 @@ let buttonTracker = createCleanupTracker(); // Never cleared - button persists
 let contentTracker = createCleanupTracker(); // Cleared on deactivate
 let initialized = false;
 let allTabActive = false;
+let lastAllTabClickTime = 0; // For click debouncing
 const ALL_TAB_CLASS = 'gemini-journal-allTab';
 const OVERLAY_CLASS = 'gemini-journal-allOverlay';
 
@@ -179,14 +181,13 @@ function createAllTabButton(): HTMLButtonElement {
 
     // Tab element - matching game's MotionMcFlex styling
     // Using an olive/teal green to distinguish from Crops (green) and Pets (purple)
-    const isSmallScreen = window.innerWidth < 768;
     const tab = document.createElement('div');
     tab.className = 'gemini-allTab-tab';
     tab.style.cssText = `
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        width: ${isSmallScreen ? '70px' : '100px'};
+        width: clamp(70px, 12vw, 100px);
         height: 20px;
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
@@ -202,7 +203,7 @@ function createAllTabButton(): HTMLButtonElement {
     const text = document.createElement('span');
     text.textContent = 'All';
     text.style.cssText = `
-        font-size: ${isSmallScreen ? '12px' : '14px'};
+        font-size: clamp(12px, 2vw, 14px);
         font-weight: bold;
         color: white;
         position: relative;
@@ -212,15 +213,6 @@ function createAllTabButton(): HTMLButtonElement {
     tab.appendChild(text);
     inner.appendChild(tab);
     btn.appendChild(inner);
-
-    // Update width on resize
-    const handleResize = () => {
-        const small = window.innerWidth < 768;
-        tab.style.width = small ? '70px' : '100px';
-        text.style.fontSize = small ? '12px' : '14px';
-    };
-    window.addEventListener('resize', handleResize);
-    buttonTracker.add(() => window.removeEventListener('resize', handleResize));
 
     // Hover effect
     btn.onmouseenter = () => {
@@ -237,6 +229,12 @@ function createAllTabButton(): HTMLButtonElement {
     btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Debounce rapid clicks (300ms)
+        const now = Date.now();
+        if (now - lastAllTabClickTime < 300) return;
+        lastAllTabClickTime = now;
+
         withMutationGuard(() => activateAllTab());
     };
 
@@ -251,21 +249,21 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
     const row = document.createElement('div');
     row.style.cssText = `
         display: grid;
-        grid-template-columns: 50px 1fr;
+        grid-template-columns: minmax(36px, 50px) 1fr;
         align-items: center;
         gap: 8px;
         cursor: pointer;
     `;
 
-    // Sprite container - no background to match game journal
+    // Sprite container - responsive sizing to match game journal
     const spriteContainer = document.createElement('div');
     spriteContainer.style.cssText = `
-        width: 50px;
-        height: 50px;
+        width: clamp(36px, 8vw, 50px);
+        height: clamp(36px, 8vw, 50px);
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        overflow: visible;
     `;
 
     const isUnknown = species.variantsLogged.length === 0;
@@ -307,7 +305,7 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
                     (type === 'crop' ? tryCanvas('tallplant', loadAsset.toLowerCase()) : null);
 
                 if (canvas) {
-                    canvas.style.cssText = 'max-width: 46px; max-height: 46px; display: block;';
+                    canvas.style.cssText = 'width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: pixelated;';
                     spriteContainer.appendChild(canvas);
                 } else {
                     // Fallback emoji if sprite not found
@@ -367,6 +365,7 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
         overflow: hidden;
         flex: 1;
         min-width: 0;
+        max-width: 100%;
     `;
 
     // Progress fill
@@ -548,7 +547,7 @@ function createAllTabContent(): HTMLElement {
     headerSection.style.cssText = 'text-align: center; padding-bottom: 8px;';
     const headerTitle = document.createElement('p');
     headerTitle.textContent = 'GARDEN JOURNAL';
-    headerTitle.style.cssText = 'font-size: 20px; font-weight: bold; font-family: shrikhand, serif; color: #4F6981; margin-bottom: 4px;';
+    headerTitle.style.cssText = 'font-size: clamp(14px, 3vw, 20px); font-weight: bold; font-family: shrikhand, serif; color: #4F6981; margin-bottom: 4px;';
 
     // Collective progress for the All tab
     const totalLogged = cropsProgress.variantsLogged + petsProgress.variantsLogged + (petsProgress.abilitiesLogged ?? 0);
@@ -633,15 +632,12 @@ function createAllTabContent(): HTMLElement {
 
     // Scrollable content area with game-style scrollbar
     const scrollArea = document.createElement('div');
-    scrollArea.className = 'gemini-all-scroll';
+    scrollArea.className = 'gemini-journal-scrollbar';
     scrollArea.style.cssText = `
         flex: 1;
         overflow-y: auto;
         padding-right: 4px;
     `;
-
-    // Inject scrollbar styles
-    injectScrollbarStyles();
 
     // Apply filter and sort to species
     const filteredCrops = filterAndSortSpecies(cropsProgress.speciesDetails, 'crop');
@@ -730,37 +726,7 @@ function filterAndSortSpecies(species: SpeciesProgress[], _type: 'crop' | 'pet')
     return filtered;
 }
 
-/**
- * Inject game-style scrollbar CSS
- */
-let scrollbarStylesInjected = false;
-function injectScrollbarStyles(): void {
-    if (scrollbarStylesInjected) return;
-    scrollbarStylesInjected = true;
-
-    const style = document.createElement('style');
-    style.textContent = `
-        .gemini-all-scroll::-webkit-scrollbar {
-            width: 4px;
-            height: 6px;
-        }
-        .gemini-all-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .gemini-all-scroll::-webkit-scrollbar-thumb {
-            background: rgba(85, 48, 20, 0.2);
-            border-radius: 3px;
-        }
-        .gemini-all-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(110, 60, 24, 0.3);
-        }
-    `;
-    document.head.appendChild(style);
-    buttonTracker.add(() => {
-        style.remove();
-        scrollbarStylesInjected = false;
-    });
-}
+// Scrollbar styles now provided by journalGuide/styles.ts (shared .gemini-journal-scrollbar class)
 
 /**
  * Refresh the All tab content (called when filter/sort changes)
@@ -782,15 +748,15 @@ function activateAllTab(): void {
     if (allTabActive) return;
     allTabActive = true;
 
+    // Notify tab state system (handles native tab retraction)
+    setActiveCustomTab('all');
+
     // Update our All tab styling to be "active" (taller, like game tabs)
     const allBtn = document.querySelector<HTMLElement>(`.${ALL_TAB_CLASS}`);
     const allTab = allBtn?.querySelector<HTMLElement>('.gemini-allTab-tab');
     if (allTab) {
         allTab.style.height = '35px';
     }
-
-    // Deactivate native Crops/Pets tabs
-    deactivateNativeTabs();
 
     // Find content wrapper
     const contentWrapper = findContentWrapper();
@@ -918,6 +884,9 @@ function deactivateAllTab(): void {
     if (!allTabActive) return;
     allTabActive = false;
 
+    // Notify tab state system (handles native tab reactivation)
+    setActiveCustomTab(null);
+
     // Reset All tab styling
     const allBtn = document.querySelector<HTMLElement>(`.${ALL_TAB_CLASS}`);
     const allTab = allBtn?.querySelector<HTMLElement>('.gemini-allTab-tab');
@@ -972,12 +941,24 @@ function injectAllTab(): void {
         buttonTracker.add(() => pets.removeEventListener('click', handleTabClick));
     }
 
+    // Subscribe to tab state changes for mutual exclusion with Guide tab
+    const unsubscribe = onCustomTabChange((tab) => {
+        if (tab !== 'all' && allTabActive) {
+            withMutationGuard(() => deactivateAllTab());
+        }
+    });
+    buttonTracker.add(unsubscribe);
+
     console.log('[JournalAllTab] Tab injected');
 }
 
 function processPage(): void {
     withMutationGuard(() => {
-        injectAllTab();
+        try {
+            injectAllTab();
+        } catch (err) {
+            console.warn('[JournalAllTab] processPage error:', err);
+        }
     });
 }
 
@@ -1036,6 +1017,10 @@ function stopObserving(): void {
     buttonTracker.clear();
     contentTracker = createCleanupTracker();
     buttonTracker = createCleanupTracker();
+
+    // Reset module-level state
+    allTabActive = false;
+    lastAllTabClickTime = 0;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@
 
 import { createCleanupTracker, addObserverWithCleanup, isMutationGuarded, withMutationGuard } from '../../core/lifecycle';
 import { findJournalModal, findScrollableSpeciesList } from '../_shared/dom';
+import { onCustomTabChange } from '../_shared/tabState';
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Types
@@ -306,6 +307,15 @@ function startObserving(): void {
     });
 
     addObserverWithCleanup(tracker, observer);
+
+    // Hide controls when custom tabs (All/Guide) are active
+    const unsubscribe = onCustomTabChange((tab) => {
+        const controls = document.querySelector<HTMLElement>(`.${CONTROLS_CLASS}`);
+        if (controls) {
+            controls.style.display = tab ? 'none' : '';
+        }
+    });
+    tracker.add(unsubscribe);
 
     // Cleanup debounce timer on destroy
     tracker.add(() => {

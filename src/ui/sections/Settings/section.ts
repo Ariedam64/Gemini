@@ -17,6 +17,8 @@ import { attachCopyHandler } from "../../../utils/clipboard";
 import { THEMES } from "../../theme";
 import { initSettingsState, DEFAULT_SETTINGS_STATE, SettingsStateController } from "./State";
 import { storageGet, storageSet, FEATURE_KEYS } from "../../../utils/storage";
+import { MGShopRestock } from "../../../features/shopRestock";
+import { loadConfig as loadRestockConfig } from "../../../features/shopRestock/state";
 import { getRegistry } from "../../inject/core/registry";
 
 /* ------------------------- Utilities ------------------------- */
@@ -72,6 +74,7 @@ interface FeatureConfig {
   // HUD Sections (tabs visibility)
   pets: { enabled: boolean };
   autoFavorite: { enabled: boolean };
+  shopRestock: { enabled: boolean };
 
   // In-Game Enhancements
   bulkFavorite: { enabled: boolean };
@@ -84,6 +87,7 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   // HUD Sections - default to enabled (show all tabs)
   pets: { enabled: true },
   autoFavorite: { enabled: true },
+  shopRestock: { enabled: true },
   // In-Game Enhancements - default to disabled
   bulkFavorite: { enabled: false },
   cropSizeIndicator: { enabled: false },
@@ -192,6 +196,12 @@ export class SettingsSection extends BaseSection {
       onExpandChange: (v) => state.setCardExpanded("journal", v),
     });
 
+    // Restock card
+    const restockCard = this.createRestockCard({
+      defaultExpanded: !!currentState.ui.expandedCards.restock,
+      onExpandChange: (v) => state.setCardExpanded("restock", v),
+    });
+
     // Environment card
     const envCard = this.createEnvCard({
       defaultExpanded: !!currentState.ui.expandedCards.system,
@@ -202,6 +212,7 @@ export class SettingsSection extends BaseSection {
     section.appendChild(hudSectionsCard);
     section.appendChild(enhancementsCard);
     section.appendChild(journalCard);
+    section.appendChild(restockCard);
     section.appendChild(envCard);
   }
 
@@ -210,6 +221,7 @@ export class SettingsSection extends BaseSection {
     return {
       pets: { ...DEFAULT_FEATURE_CONFIG.pets, ...stored.pets },
       autoFavorite: { ...DEFAULT_FEATURE_CONFIG.autoFavorite, ...stored.autoFavorite },
+      shopRestock: { ...DEFAULT_FEATURE_CONFIG.shopRestock, ...stored.shopRestock },
       bulkFavorite: { ...DEFAULT_FEATURE_CONFIG.bulkFavorite, ...stored.bulkFavorite },
       cropSizeIndicator: { ...DEFAULT_FEATURE_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
       eggProbabilityIndicator: { ...DEFAULT_FEATURE_CONFIG.eggProbabilityIndicator, ...stored.eggProbabilityIndicator },
@@ -292,6 +304,18 @@ export class SettingsSection extends BaseSection {
           },
           "Automatic mutation favoriting settings",
           true // First item
+        ),
+        createSectionRow(
+          "Restock",
+          this.featureConfig.shopRestock.enabled,
+          (v: boolean) => {
+            this.featureConfig.shopRestock.enabled = v;
+            this.saveFeatureConfig();
+            MGShopRestock.setEnabled(v);
+          },
+          "Shop restock tracking and predictions",
+          false,
+          false
         ),
         createSectionRow(
           "Pets",
@@ -448,6 +472,36 @@ export class SettingsSection extends BaseSection {
         onExpandChange: params?.onExpandChange,
       },
       element("div", {}, ...rows)
+    );
+  }
+
+  /**
+   * Create Restock settings card
+   */
+  private createRestockCard(params?: {
+    defaultExpanded?: boolean;
+    onExpandChange?: (v: boolean) => void;
+  }): HTMLDivElement {
+    const config = loadRestockConfig();
+
+    return Card(
+      {
+        title: "Restock",
+        variant: "soft",
+        padding: "lg",
+        expandable: true,
+        defaultExpanded: params?.defaultExpanded ?? false,
+        onExpandChange: params?.onExpandChange,
+      },
+      element(
+        "div",
+        {},
+        element(
+          "div",
+          { style: "font-size: 12px; opacity: 0.7; line-height: 1.4;" },
+          "Community upload is disabled. Restock and weather data are now sourced from the server API."
+        )
+      )
     );
   }
 

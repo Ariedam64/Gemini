@@ -2,7 +2,7 @@
 // Weather data extraction from main bundle
 
 import { captureState } from "../state";
-import { WEATHER_IDS, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
+import { MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
 import { fetchMainBundle, extractBalancedBlock, extractBalancedObjectLiteral } from "./bundleParser";
 
 /**
@@ -12,9 +12,12 @@ function buildWeather(data: any): Record<string, any> | null {
   const out: Record<string, any> = {};
   let found = false;
 
-  for (const id of WEATHER_IDS) {
-    const blueprint = data?.[id];
+  // Iterate ALL keys from parsed object instead of only known IDs
+  for (const id of Object.keys(data ?? {})) {
+    const blueprint = data[id];
     if (!blueprint || typeof blueprint !== "object") continue;
+    // Validate entry has expected weather fields
+    if (!blueprint.name && !blueprint.type) continue;
     const spriteId = (blueprint as any).iconSpriteKey || null;
     const { iconSpriteKey, ...rest } = blueprint as any;
     out[id] = { weatherId: id, spriteId, ...rest };
@@ -32,6 +35,7 @@ function buildWeather(data: any): Record<string, any> | null {
   }
 
   if (!found) return null;
+  // Sanity check: Rain should map to Wet mutation
   if (out.Rain && out.Rain.mutator?.mutation !== "Wet") return null;
 
   return out;
@@ -69,8 +73,8 @@ function extractWeatherObject(text: string, anchorPos: number): string | null {
 
 function normalizeWeatherLiteral(literal: string): string {
   return literal
-    .replace(/\$t\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"')
-    .replace(/\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon)\b/g, '"$1"');
+    .replace(/\$t\.([A-Z][A-Za-z]*)\b/g, '"$1"')
+    .replace(/\b[A-Za-z_$][\w$]*\.([A-Z][A-Za-z]*)\b/g, '"$1"');
 }
 
 /**

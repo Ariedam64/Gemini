@@ -94,6 +94,14 @@ export const FEATURE_KEYS = {
     MISSING_VARIANTS_INDICATOR: 'feature:missingVariantsIndicator:config',
     /** Journal feature config (replaces journalChecker) */
     JOURNAL: 'feature:journal:config',
+    /** Shop restock feature config */
+    SHOP_RESTOCK: 'feature:shopRestock:config',
+    /** Shop restock feature history */
+    SHOP_RESTOCK_HISTORY: 'feature:shopRestock:history',
+    /** Shop restock feature shopkeeper history */
+    SHOP_RESTOCK_SHOPKEEPER_HISTORY: 'feature:shopRestock:history:shopkeeper',
+    /** Skin changer feature config */
+    SKIN_CHANGER: 'feature:skinChanger:config',
 } as const;
 
 /** Keys for UI injections (per ui/inject.md) */
@@ -108,6 +116,12 @@ export const INJECT_KEYS = {
     JOURNAL_ALL_TAB: 'inject:journalAllTab:config',
     /** Storage value indicator (seed silo, pet hutch, decor shed) */
     STORAGE_VALUE_INDICATOR: 'inject:storageValueIndicator:config',
+    /** Journal guide (difficulty-sorted recommendations + progress badges) */
+    JOURNAL_GUIDE: 'inject:journalGuide:config',
+    /** Weather tracking community config (journal guide weather data) */
+    WEATHER_TRACKING_CONFIG: 'inject:weatherTracking:config',
+    /** Weather tracking data (timestamps for prediction engine) */
+    WEATHER_TRACKING: 'inject:weatherTracking:data',
 } as const;
 
 /** Keys for debug purposes */
@@ -151,6 +165,20 @@ export const EVENTS = {
     UPDATE_PENDING: 'gemini:update-pending',
     /** Force reload request */
     FORCE_RELOAD: 'gemini:force-reload',
+    /** Shop restock recorded */
+    SHOP_RESTOCK_RECORDED: 'gemini:shop-restock-recorded',
+    /** Shop restock tracked items changed */
+    SHOP_RESTOCK_TRACKED_CHANGED: 'gemini:shop-restock-tracked-changed',
+    /** Shop restock history updated (remote merge) */
+    SHOP_RESTOCK_HISTORY_UPDATED: 'gemini:shop-restock-history-updated',
+    /** Shop restock community meta updated */
+    SHOP_RESTOCK_META_UPDATED: 'gemini:shop-restock-meta-updated',
+    /** Weather transition detected (inject/journal guide) */
+    WEATHER_TRANSITION: 'gemini:weather-transition',
+    /** Shop restock debug simulate */
+    SHOP_RESTOCK_SIMULATE: 'gemini:shop-restock-simulate',
+    /** Shop restock tracked item changed (alerts) */
+    SHOP_RESTOCK_TRACKED: 'gemini:shop-restock-tracked',
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,7 +229,7 @@ export function storageSet<T>(key: string, value: T): void {
         GM_setValue(fullKey, serialized);
 
         // Dispatch event for reactivity within the same window
-        window.dispatchEvent(new CustomEvent('gemini:storage:change', {
+        window.dispatchEvent(new CustomEvent(EVENTS.STORAGE_CHANGE, {
             detail: { key: cleanKey, value }
         }));
     } catch (error) {

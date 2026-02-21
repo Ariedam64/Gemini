@@ -27,10 +27,12 @@ import { MGXPTracker } from "../features/xpTracker";
 import { MGCropValueIndicator } from "../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
 import { MGShopNotifier } from "../features/shopNotifier";
+import { MGShopRestock } from "../features/shopRestock";
 import { MGWeatherNotifier } from "../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../features/petHungerNotifier";
 import { MGAriesAPI } from "../features/ariesAPI";
 import { MGHarvestLocker } from "../features/harvestLocker";
+import { MGSkinChanger } from "../features/skinChanger";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -72,10 +74,12 @@ export const GeminiAPI = {
     CropValueIndicator: MGCropValueIndicator,
     CropSizeIndicator: MGCropSizeIndicator,
     ShopNotifier: MGShopNotifier,
+    ShopRestock: MGShopRestock,
     WeatherNotifier: MGWeatherNotifier,
     PetHungerNotifier: MGPetHungerNotifier,
     AriesAPI: MGAriesAPI,
     HarvestLocker: MGHarvestLocker,
+    ...(import.meta.env.MODE !== 'production' ? { SkinChanger: MGSkinChanger } : {}),
   },
 
   WebSocket: {

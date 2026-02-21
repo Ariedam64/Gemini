@@ -488,7 +488,7 @@ export function startAlertInjector(): AlertInjectorHandle {
     }));
     enqueueShopOneShots(restockItems, getShopConfig());
   };
-  window.addEventListener("gemini:shop-restock-tracked", handleShopRestock);
+  window.addEventListener(EVENTS.SHOP_RESTOCK_TRACKED, handleShopRestock);
 
   const handleCustomSoundChange = (event: Event) => {
     const customEvent = event as CustomEvent<{
@@ -542,7 +542,7 @@ export function startAlertInjector(): AlertInjectorHandle {
       window.removeEventListener("gemini:tracked-items-changed", handleTrackedItemsChange);
 
       // Remove shop restock listener
-      window.removeEventListener("gemini:shop-restock-tracked", handleShopRestock);
+      window.removeEventListener(EVENTS.SHOP_RESTOCK_TRACKED, handleShopRestock);
       window.removeEventListener(EVENTS.CUSTOM_SOUND_CHANGE, handleCustomSoundChange);
 
       // Destroy button

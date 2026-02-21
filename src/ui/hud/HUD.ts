@@ -254,12 +254,13 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   const TAB_FEATURE_MAP: Record<string, string> = {
     'tab-auto-favorite': 'autoFavorite',
     'tab-pets': 'pets',
+    'tab-shop-restock': 'shopRestock',
   };
 
   function applyTabVisibility(): void {
     const config = storageGet<Record<string, { enabled: boolean }>>(
       FEATURE_KEYS.CONFIG,
-      { autoFavorite: { enabled: true }, pets: { enabled: true } }
+      { autoFavorite: { enabled: true }, pets: { enabled: true }, shopRestock: { enabled: true } }
     );
 
     for (const [tabId, featureKey] of Object.entries(TAB_FEATURE_MAP)) {

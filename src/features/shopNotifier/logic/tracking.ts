@@ -3,7 +3,8 @@
  */
 
 import type { Shop, ShopRestockEvent, ShopType, Unsubscribe } from "../../../globals/core/types";
-import { getShops } from "../../../globals/variables/shops";
+import { getShops } from "../../../globals";
+import { EVENTS } from "../../../utils/storage";
 import { getTrackedItemsByShop } from "../state";
 
 let started = false;
@@ -30,7 +31,7 @@ function handleRestock(shopType: ShopType, event: ShopRestockEvent): void {
   });
 
   // Dispatch custom event for notification
-  const customEvent = new CustomEvent("gemini:shop-restock-tracked", {
+  const customEvent = new CustomEvent(EVENTS.SHOP_RESTOCK_TRACKED, {
     detail: {
       shopType,
       items: available,

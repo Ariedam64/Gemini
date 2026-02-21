@@ -14,6 +14,9 @@ import { makeKey, normalizeKey, resolveKey } from "./logic/utils";
 import { showSprite, spriteToCanvas, clearSprites, attachParent, attachParentProvider, clearCanvasCache, getCanvasCacheStats, warmupCanvasCache, WarmupProgressCallback } from "./logic/display";
 import { clearCache } from "./logic/mutations/cache";
 import { MUT_NAMES } from "./logic/mutations/constants";
+import type { PixiTexture } from "./types";
+import type { PixiRectangle } from "./types";
+import { loadAtlasesFromManifest } from "./logic/atlas";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -313,6 +316,85 @@ export const MGSprite = {
   getToCanvasCacheStats,
   getMutationNames,
   warmup,
+
+  // Internal helpers (used by features like SkinChanger)
+  _internal: {
+    getTexture: (spriteId: string): PixiTexture | null => {
+      const s = String(spriteId || "").trim();
+      if (!s) return null;
+      return getState().textures.get(s) || null;
+    },
+    setTexture: (spriteId: string, tex: PixiTexture): void => {
+      const s = String(spriteId || "").trim();
+      if (!s) throw new Error("MGSprite._internal.setTexture: empty spriteId");
+      getState().textures.set(s, tex);
+    },
+    hasTexture: (spriteId: string): boolean => {
+      const s = String(spriteId || "").trim();
+      if (!s) return false;
+      return getState().textures.has(s);
+    },
+    getTextureSize: (spriteId: string): { w: number; h: number } | null => {
+      const s = String(spriteId || "").trim();
+      if (!s) return null;
+      const tex = getState().textures.get(s) as any;
+      if (!tex) return null;
+      const frame = tex.frame as PixiRectangle | undefined;
+      const orig = tex.orig as PixiRectangle | undefined;
+      const w = Number(orig?.width ?? frame?.width ?? 0);
+      const h = Number(orig?.height ?? frame?.height ?? 0);
+      if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+      return { w, h };
+    },
+    listLoadedKeys: (): string[] => {
+      const s = getState();
+      const keys = new Set<string>();
+      for (const k of s.textures.keys()) keys.add(k);
+      for (const k of s.animations.keys()) keys.add(k);
+      return [...keys.values()].sort((a, b) => a.localeCompare(b));
+    },
+    ensureLoadedKeys: async (spriteKeys: string[]): Promise<number> => {
+      const keys = Array.isArray(spriteKeys) ? spriteKeys.map((k) => String(k || "").trim()).filter(Boolean) : [];
+      if (!keys.length) return 0;
+
+      const s = getState() as any;
+      const baseUrl = s.baseUrl as string | null;
+      const ctors = s.ctors as any;
+      const keyToAtlasJson: Map<string, string> | undefined = s.keyToAtlasJson;
+      if (!baseUrl || !ctors || !keyToAtlasJson) return 0;
+
+      const missing = keys.filter((k) => !s.textures.has(k) && !s.animations.has(k));
+      if (!missing.length) return 0;
+
+      // Determine which atlas json files contain the missing keys.
+      // We might not have reverse-index coverage (e.g. if the key was never in frames but is in categoryIndex),
+      // so as a robust fallback we can re-load all atlases once to populate the key.
+      const needed = new Set<string>();
+      for (const k of missing) {
+        const p = keyToAtlasJson.get(k);
+        if (p) needed.add(p);
+      }
+
+      // Load only those atlases (and any multi-pack relations) and merge into existing maps.
+      const res = await loadAtlasesFromManifest(
+        baseUrl,
+        ctors,
+        needed.size ? ({ onlyJsonPaths: [...needed] } as any) : undefined
+      );
+      for (const [k, v] of res.textures) s.textures.set(k, v);
+      for (const [k, v] of res.animations) s.animations.set(k, v);
+      for (const [cat, ids] of res.categoryIndex) {
+        if (!s.categoryIndex) s.categoryIndex = new Map();
+        if (!s.categoryIndex.has(cat)) s.categoryIndex.set(cat, new Set());
+        const set = s.categoryIndex.get(cat);
+        for (const id of ids.values()) set.add(id);
+      }
+      for (const [k, p] of res.keyToAtlasJson) keyToAtlasJson.set(k, p);
+
+      // return count of atlas jsons loaded as a coarse signal
+      return needed.size || 1;
+    },
+  },
 };
 
 // Re-export types

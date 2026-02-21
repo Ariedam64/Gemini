@@ -62,6 +62,26 @@ export function readSharedGlobal<T = any>(name: string): T | undefined {
   return (pageWin as any)[name] as T | undefined;
 }
 
+/**
+ * Dispatch a CustomEvent to both page and sandbox windows.
+ * Creates a fresh event per realm to avoid cross-realm event issues.
+ */
+export function dispatchCustomEventAll<T = any>(type: string, detail?: T): void {
+  const dispatch = (win: Window & typeof globalThis) => {
+    try {
+      const Ctor = (win as any).CustomEvent || CustomEvent;
+      win.dispatchEvent(new Ctor(type, detail !== undefined ? { detail } : undefined));
+    } catch {
+      // ignore
+    }
+  };
+
+  dispatch(pageWin);
+  if (isIsolatedContext) {
+    dispatch(sandboxWin);
+  }
+}
+
 /** True if the current page context is inside an iframe. */
 export function isInIframe(win: Window & typeof globalThis = pageWin): boolean {
   try { return win.top !== win; } catch { return true; }
