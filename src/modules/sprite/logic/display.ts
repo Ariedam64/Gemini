@@ -383,6 +383,62 @@ function extractCanvas(state: SpriteState, target: any): HTMLCanvasElement {
   throw new Error("No extract.canvas available on renderer");
 }
 
+function trimCanvasToAlpha(source: HTMLCanvasElement, pad: number): HTMLCanvasElement {
+  const w = source.width;
+  const h = source.height;
+  if (!w || !h) return source;
+
+  const ctx = source.getContext("2d");
+  if (!ctx) return source;
+
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+
+  const img = ctx.getImageData(0, 0, w, h);
+  const data = img.data;
+
+  for (let y = 0; y < h; y++) {
+    const row = y * w * 4;
+    for (let x = 0; x < w; x++) {
+      const a = data[row + x * 4 + 3];
+      if (a !== 0) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < 0 || maxY < 0) return source;
+
+  const padValue = clampPad(pad);
+  minX = Math.max(0, minX - padValue);
+  minY = Math.max(0, minY - padValue);
+  maxX = Math.min(w - 1, maxX + padValue);
+  maxY = Math.min(h - 1, maxY + padValue);
+
+  if (minX === 0 && minY === 0 && maxX === w - 1 && maxY === h - 1) {
+    return source;
+  }
+
+  const outW = Math.max(1, maxX - minX + 1);
+  const outH = Math.max(1, maxY - minY + 1);
+  const out = document.createElement("canvas");
+  out.width = outW;
+  out.height = outH;
+
+  const octx = out.getContext("2d");
+  if (octx) {
+    octx.imageSmoothingEnabled = false;
+    octx.drawImage(source, -minX, -minY);
+  }
+
+  return out;
+}
+
 type TextureBaseMeta = {
   baseX: number;
   baseY: number;
@@ -396,7 +452,7 @@ const autoBoundsPaddingCache = new Map<string, BoundsPadding>();
 
 function resolveBoundsMode(options: ToCanvasOptions): CanvasBoundsMode {
   if (options.boundsMode) return options.boundsMode;
-  if (options.mutations && options.mutations.length > 0) return "base";
+  if (options.mutations && options.mutations.length > 0) return "mutations";
   return "mutations";
 }
 
@@ -557,9 +613,10 @@ export function spriteToCanvas(
     } catch {}
 
     const bnd = spr.getBounds?.(true) || { x: 0, y: 0, width: spr.width, height: spr.height };
-    spr.position.set(-bnd.x + pad, -bnd.y + pad);
+    spr.position.set(-bnd.x, -bnd.y);
 
     canvas = extractCanvas(state, tmp);
+    canvas = trimCanvasToAlpha(canvas, pad);
 
     try {
       tmp.destroy?.({ children: true });

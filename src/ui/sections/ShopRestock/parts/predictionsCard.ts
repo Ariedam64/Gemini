@@ -12,6 +12,7 @@ import { SHOP_CYCLE_INTERVALS } from "../../../../features/shopRestock/types";
 import type { TrackedShopType } from "../../../../features/shopRestock";
 import { EVENTS, FEATURE_KEYS } from "../../../../utils/storage";
 import { getItemName, getRarity, getSpriteId } from "./itemMeta";
+import { getWeather } from "../../../../globals";
 
 export interface PredictionsCardPart {
   root: HTMLElement;
@@ -33,6 +34,12 @@ function formatRelative(ms: number | null): string {
 
 function formatFrequency(rate: number | null, shopType: TrackedShopType): string {
   if (rate === null || rate <= 0) return "-";
+  if (shopType === "weather") {
+    const minutesBetween = Math.round(1440 / rate);
+    if (minutesBetween < 60) return `Every ~${minutesBetween}m`;
+    const hours = Math.round(minutesBetween / 60);
+    return `Every ~${hours}h`;
+  }
   const interval = SHOP_CYCLE_INTERVALS[shopType];
   const expectedMs = interval / rate;
 
@@ -67,8 +74,13 @@ function formatAvgQty(qty: number | null): string {
   return `~${qty.toFixed(1)} avg`;
 }
 
-function ratePercent(rate: number | null): string {
+function ratePercent(rate: number | null, shopType: TrackedShopType): string {
   if (rate === null) return "-";
+  if (shopType === "weather") {
+    if (!Number.isFinite(rate) || rate <= 0) return "-";
+    const display = rate >= 10 ? Math.round(rate) : rate.toFixed(1);
+    return `${display}/day`;
+  }
   const pct = rate * 100;
 
   // Determine max decimals needed
@@ -84,7 +96,8 @@ function ratePercent(rate: number | null): string {
   return `${parseFloat(formatted)}%`;
 }
 
-function rateColorClass(rate: number | null): string {
+function rateColorClass(rate: number | null, shopType: TrackedShopType): string {
+  if (shopType === "weather") return "restock-rate-weather";
   if (rate === null) return "restock-rate-low";
   const pct = rate * 100;
   if (pct >= 80) return "restock-rate-high";
@@ -96,8 +109,10 @@ function rateTooltip(pred: PredictionLike): string {
   const parts: string[] = [];
 
   // Add avg qty if available
-  const avgQty = formatAvgQty(pred.averageQuantity);
-  if (avgQty) parts.push(avgQty);
+  if (pred.shopType !== "weather") {
+    const avgQty = formatAvgQty(pred.averageQuantity);
+    if (avgQty) parts.push(avgQty);
+  }
 
   // Add frequency
   parts.push(formatFrequency(pred.appearanceRate, pred.shopType));
@@ -125,11 +140,12 @@ const SHOP_PILL_LABELS: Record<TrackedShopType, string> = {
   seed: "S",
   egg: "E",
   decor: "D",
+  weather: "W",
 };
 
 type PredictionLike = ItemPrediction & { isEmpty?: boolean };
 
-function predictionRow(pred: PredictionLike): HTMLElement {
+function predictionRow(pred: PredictionLike, activeWeatherId: string | null): HTMLElement {
   const row = element("div", { className: "restock-pred-row restock-row-hover" });
 
   // === Left side: icon + text block ===
@@ -174,6 +190,10 @@ function predictionRow(pred: PredictionLike): HTMLElement {
   // === Right side: dual hero metrics (ETA | Rate) ===
   const right = element("div", { className: "restock-pred-metrics" });
 
+  const isActiveNow = pred.shopType === "weather"
+    && activeWeatherId !== null
+    && normalizeWeatherId(pred.itemId) === activeWeatherId;
+
   if (pred.isEmpty) {
     const placeholder = element("div", { className: "restock-pred-rate restock-rate-low" }, "--");
     right.appendChild(placeholder);
@@ -181,8 +201,8 @@ function predictionRow(pred: PredictionLike): HTMLElement {
     // ETA metric
     const etaWrap = element("div", { className: "restock-pred-metric-wrap" });
     const etaValue = element("div", {
-      className: `restock-pred-metric-value restock-eta-value ${etaColorClass(pred.estimatedNextTimestamp)}`,
-    }, formatETA(pred.estimatedNextTimestamp));
+      className: `restock-pred-metric-value restock-eta-value ${isActiveNow ? "restock-eta-now" : etaColorClass(pred.estimatedNextTimestamp)}`,
+    }, isActiveNow ? "Active Now" : formatETA(pred.estimatedNextTimestamp));
     const etaLabel = element("div", { className: "restock-pred-metric-label" }, "next");
     etaWrap.append(etaValue, etaLabel);
 
@@ -191,8 +211,8 @@ function predictionRow(pred: PredictionLike): HTMLElement {
     rateWrap.dataset.tooltip = rateTooltip(pred); // Store tooltip content
 
     const rateValue = element("div", {
-      className: `restock-pred-metric-value ${rateColorClass(pred.appearanceRate)}`,
-    }, ratePercent(pred.appearanceRate));
+      className: `restock-pred-metric-value ${rateColorClass(pred.appearanceRate, pred.shopType)}`,
+    }, ratePercent(pred.appearanceRate, pred.shopType));
     const rateLabel = element("div", { className: "restock-pred-metric-label" }, "rate");
     rateWrap.append(rateValue, rateLabel);
 
@@ -212,6 +232,17 @@ function predictionRow(pred: PredictionLike): HTMLElement {
 export function createPredictionsCard(): PredictionsCardPart {
   let refreshTimer: number | null = null;
   const content = element("div", { className: "restock-pred-list" });
+  const weatherGlobal = getWeather();
+  let activeWeatherId: string | null = null;
+
+  function updateActiveWeather(): void {
+    const current = weatherGlobal.get();
+    if (!current.isActive) {
+      activeWeatherId = null;
+      return;
+    }
+    activeWeatherId = normalizeWeatherId(current.id);
+  }
 
   function render(): void {
     content.innerHTML = "";
@@ -256,7 +287,7 @@ export function createPredictionsCard(): PredictionsCardPart {
     });
 
     for (const item of items) {
-      content.appendChild(predictionRow(item));
+      content.appendChild(predictionRow(item, activeWeatherId));
     }
 
     // Add hint at bottom when there are items
@@ -266,12 +297,17 @@ export function createPredictionsCard(): PredictionsCardPart {
     content.appendChild(hint);
   }
 
+  updateActiveWeather();
   render();
   refreshTimer = window.setInterval(render, 30000);
 
   window.addEventListener(EVENTS.SHOP_RESTOCK_TRACKED_CHANGED, render as EventListener);
   window.addEventListener(EVENTS.SHOP_RESTOCK_TRACKED, render as EventListener);
   window.addEventListener(EVENTS.SHOP_RESTOCK_HISTORY_UPDATED, render as EventListener);
+  const weatherUnsub = weatherGlobal.subscribeStable(() => {
+    updateActiveWeather();
+    render();
+  });
   const handleStorage = (event: Event) => {
     const detail = (event as CustomEvent<{ key?: string }>).detail;
     if (detail?.key === FEATURE_KEYS.SHOP_RESTOCK) {
@@ -303,6 +339,12 @@ export function createPredictionsCard(): PredictionsCardPart {
       window.removeEventListener(EVENTS.SHOP_RESTOCK_TRACKED, render as EventListener);
       window.removeEventListener(EVENTS.SHOP_RESTOCK_HISTORY_UPDATED, render as EventListener);
       window.removeEventListener(EVENTS.STORAGE_CHANGE, handleStorage as EventListener);
+      weatherUnsub();
     },
   };
+}
+
+function normalizeWeatherId(id: string): string {
+  if (id === "Frost") return "Snow";
+  return id;
 }

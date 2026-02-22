@@ -32,6 +32,8 @@ export function mutationAliases(mut: MutationName): string[] {
       return ["Dawncharged", "Dawnbound"];
     case "Ambercharged":
       return ["Ambercharged", "Amberbound"];
+    case 'Thunderstruck':
+      return ['Thunderstruck', 'ThunderstruckGround'];
     default:
       return [mut];
   }

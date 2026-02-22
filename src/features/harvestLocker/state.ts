@@ -140,7 +140,7 @@ export function updateConfig(updates: Partial<HarvestLockerConfig>): HarvestLock
 export function createRule(
     name: string,
     mode: 'allow' | 'lock',
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: 'any' | 'all' }
 ): HarvestRule {
     return {
@@ -236,4 +236,32 @@ export function deleteRule(ruleId: string): void {
     }
 
     console.warn(`[HarvestLocker] Rule ${ruleId} not found`);
+}
+
+/**
+ * Clone an existing rule and add it to species rules
+ */
+export function cloneRuleToSpecies(ruleId: string, species: string): void {
+    const config = loadConfig();
+
+    // Find the rule in overall rules
+    const originalRule = config.overallRules.find((r) => r.id === ruleId);
+    if (!originalRule) {
+        console.warn(`[HarvestLocker] Rule ${ruleId} not found`);
+        return;
+    }
+
+    // Clone with new ID
+    const clonedRule: HarvestRule = {
+        ...originalRule,
+        id: generateRuleId(),
+        name: `${originalRule.name} (${species})`,
+    };
+
+    // Add to species rules
+    if (!config.speciesRules[species]) {
+        config.speciesRules[species] = [];
+    }
+    config.speciesRules[species].push(clonedRule);
+    saveConfig(config);
 }

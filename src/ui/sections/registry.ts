@@ -20,6 +20,7 @@ let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
 let shopNotifierSectionInstance: ShopNotifierSection | null = null;
 let shopRestockSectionInstance: ShopRestockSection | null = null;
+let lockerSectionInstance: LockerSection | null = null;
 
 function getTestSection(): TestSection {
   if (!testSectionInstance) {
@@ -40,6 +41,13 @@ function getShopNotifierSection(): ShopNotifierSection {
     shopNotifierSectionInstance = new ShopNotifierSection();
   }
   return shopNotifierSectionInstance;
+}
+
+function getLockerSection(): LockerSection {
+  if (!lockerSectionInstance) {
+    lockerSectionInstance = new LockerSection();
+  }
+  return lockerSectionInstance;
 }
 
 function getShopRestockSection(): ShopRestockSection {
@@ -64,7 +72,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new TrackersSection(deps),
     new AvatarSection(),
     new RoomSection(deps),
-    new LockerSection(),
+    getLockerSection(),
   ];
 
   // Only include developer tools in non-production builds
@@ -85,6 +93,7 @@ export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
   const shopNotifierSection = getShopNotifierSection();
   const shopRestockSection = getShopRestockSection();
+  const lockerSection = getLockerSection();
   const testSection = getTestSection();
 
   // Preload in parallel
@@ -92,6 +101,7 @@ export async function preloadSections(): Promise<void> {
     alertsSection.preload(),
     shopNotifierSection.preload(),
     shopRestockSection.preload(),
+    lockerSection.preload(),
     testSection.preload(),
   ]);
 }

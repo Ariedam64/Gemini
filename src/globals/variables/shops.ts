@@ -318,12 +318,18 @@ function createShopsGlobal(): ShopsGlobal {
     });
     unsubscribes.push(unsub1);
 
-    const unsub2 = await myShopPurchasesAtom.onChangeNow((value) => {
-      sources.purchases = value;
+    try {
+      const unsub2 = await myShopPurchasesAtom.onChangeNow((value) => {
+        sources.purchases = value;
+        ready.add("purchases");
+        notify();
+      });
+      unsubscribes.push(unsub2);
+    } catch {
+      sources.purchases = {};
       ready.add("purchases");
       notify();
-    });
-    unsubscribes.push(unsub2);
+    }
 
     initialized = true;
 

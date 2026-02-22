@@ -63,6 +63,51 @@ export const shopRestockCss = `
     min-width: 140px;
   }
 
+  /* Stacked variant: chips on top, search below */
+  .restock-filter-bar--stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .restock-filter-bar--stacked .search-bar {
+    flex: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* --- History Shop-Type Chips --- */
+  .restock-history-chips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .restock-history-chip {
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    opacity: 0.75;
+  }
+  .restock-history-chip:hover {
+    background: var(--soft);
+    border-color: color-mix(in oklab, var(--border) 50%, var(--accent));
+    opacity: 1;
+  }
+  .restock-history-chip.is-active {
+    background: color-mix(in oklab, var(--accent) 15%, transparent);
+    border-color: var(--accent);
+    color: var(--accent);
+    opacity: 1;
+  }
+
   /* --- Table / List Rows --- */
   .restock-row-hover,
   .restock-history-table .lg-tr-body {
@@ -379,6 +424,7 @@ export const shopRestockCss = `
   .restock-rate-high { color: #4ade80; }
   .restock-rate-mid  { color: #fbbf24; }
   .restock-rate-low  { color: #f87171; }
+  .restock-rate-weather { color: var(--accent); }
 
   /* --- Responsive --- */
   @media (max-width: 520px) {

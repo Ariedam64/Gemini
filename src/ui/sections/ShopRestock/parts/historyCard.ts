@@ -88,8 +88,17 @@ function formatExactWhen(ms: number | null): { primary: string; secondary: strin
   return { primary, secondary, title };
 }
 
+const SHOP_CHIPS: Array<{ label: string; value: TrackedShopType | null }> = [
+  { label: "All", value: null },
+  { label: "Seeds", value: "seed" },
+  { label: "Eggs", value: "egg" },
+  { label: "Decor", value: "decor" },
+  { label: "Weather", value: "weather" },
+];
+
 export function createHistoryCard(): HistoryCardPart {
   let query = "";
+  let activeFilter: TrackedShopType | null = null;
 
   let table: ReturnType<typeof Table<RowData>> | null = null;
   let currentMaxOccurrences = 1;
@@ -148,19 +157,20 @@ export function createHistoryCard(): HistoryCardPart {
           sub.appendChild(star);
         }
 
-        // Price with Coin Icon
-        const price = element("span", { className: "restock-price-wrap" });
-        try {
-          const coinIcon = MGSprite.toCanvas("ui", "Coin");
-          if (coinIcon) {
-            coinIcon.className = "restock-coin-icon";
-            price.appendChild(coinIcon);
-          }
-        } catch (e) { /* ignore */ }
-        const valText = element("span", {}, formatPrice(row.price));
-        price.appendChild(valText);
-
-        sub.appendChild(price);
+        if (row.shopType !== "weather") {
+          // Price with Coin Icon
+          const price = element("span", { className: "restock-price-wrap" });
+          try {
+            const coinIcon = MGSprite.toCanvas("ui", "Coin");
+            if (coinIcon) {
+              coinIcon.className = "restock-coin-icon";
+              price.appendChild(coinIcon);
+            }
+          } catch (e) { /* ignore */ }
+          const valText = element("span", {}, formatPrice(row.price));
+          price.appendChild(valText);
+          sub.appendChild(price);
+        }
 
         info.append(name, sub);
         cell.append(iconWrap, info);
@@ -176,7 +186,9 @@ export function createHistoryCard(): HistoryCardPart {
       render: (row) => {
         const val = element("div", {
           style: "font-variant-numeric: tabular-nums; font-weight: 600; opacity: 0.9;"
-        }, row.totalQuantity != null ? formatPrice(row.totalQuantity) : "-");
+        }, row.shopType === "weather"
+          ? String(row.totalOccurrences ?? 0)
+          : (row.totalQuantity != null ? formatPrice(row.totalQuantity) : "-"));
         return val;
       }
     },
@@ -202,10 +214,16 @@ export function createHistoryCard(): HistoryCardPart {
   ];
 
   function buildRows(): RowData[] {
+    const shopTypes: TrackedShopType[] = activeFilter
+      ? [activeFilter]
+      : ["seed", "egg", "decor", "weather"];
+
     const remote = new Map<string, ReturnType<typeof MGShopRestock.getHistoryForShop>[number]>();
-    for (const item of MGShopRestock.getHistoryForShop("seed")) remote.set(`${item.shopType}:${item.itemId}`, item);
-    for (const item of MGShopRestock.getHistoryForShop("egg")) remote.set(`${item.shopType}:${item.itemId}`, item);
-    for (const item of MGShopRestock.getHistoryForShop("decor")) remote.set(`${item.shopType}:${item.itemId}`, item);
+    for (const shopType of shopTypes) {
+      for (const item of MGShopRestock.getHistoryForShop(shopType)) {
+        remote.set(`${item.shopType}:${item.itemId}`, item);
+      }
+    }
 
     let rows = Array.from(remote.values())
       .map((selected) => {
@@ -263,7 +281,7 @@ export function createHistoryCard(): HistoryCardPart {
     rows.sort((a, b) => {
       // 1. Shop Type
       // Custom order: Seed > Egg > Decor
-      const shopOrder: Record<string, number> = { seed: 0, egg: 1, decor: 2 };
+      const shopOrder: Record<string, number> = { seed: 0, egg: 1, decor: 2, weather: 3 };
       const shopA = shopOrder[a.shopType] ?? 99;
       const shopB = shopOrder[b.shopType] ?? 99;
       if (shopA !== shopB) return shopA - shopB;
@@ -335,8 +353,33 @@ export function createHistoryCard(): HistoryCardPart {
   window.addEventListener(EVENTS.STORAGE_CHANGE, handleStorage as EventListener);
   shopsUnsub = shopsGlobal.subscribeStable(() => refresh());
 
-  const filterBar = element("div", { className: "restock-filter-bar" });
-  filterBar.append(search.root);
+  // --- Shop type filter chips ---
+  const chipRow = element("div", { className: "restock-history-chips" });
+  const chipButtons: HTMLButtonElement[] = [];
+
+  function updateChipStates(): void {
+    chipButtons.forEach((btn, idx) => {
+      btn.classList.toggle("is-active", SHOP_CHIPS[idx].value === activeFilter);
+    });
+  }
+
+  for (const chip of SHOP_CHIPS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "restock-history-chip";
+    btn.textContent = chip.label;
+    btn.addEventListener("click", () => {
+      activeFilter = chip.value;
+      updateChipStates();
+      refresh();
+    });
+    chipButtons.push(btn);
+    chipRow.appendChild(btn);
+  }
+  updateChipStates();
+
+  const filterBar = element("div", { className: "restock-filter-bar restock-filter-bar--stacked" });
+  filterBar.append(chipRow, search.root);
 
   const root = Card(
     {

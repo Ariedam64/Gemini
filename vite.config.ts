@@ -64,7 +64,8 @@ export default defineConfig(({ mode }) => ({
                     'i.imgur.com',
                     'raw.githubusercontent.com',
                     'ariesmod-api.ariedam.fr',
-                    'xjuvryjgrjchbhjixwzh.supabase.co'
+                    'xjuvryjgrjchbhjixwzh.supabase.co',
+                    'magicgarden.gg'
                 ]
             },
             build: {

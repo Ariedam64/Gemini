@@ -21,7 +21,9 @@ export interface InventoryCardPart {
   destroy(): void;
 }
 
-const SHOP_LABELS: Record<TrackedShopType, string> = {
+type InventoryShopType = Exclude<TrackedShopType, "weather">;
+
+const SHOP_LABELS: Record<InventoryShopType, string> = {
   seed: "Seeds",
   egg: "Eggs",
   decor: "Decor",
@@ -43,7 +45,7 @@ function formatPrice(value: number): string {
 
 interface RowData {
   id: string;
-  shopType: TrackedShopType;
+  shopType: InventoryShopType;
   itemName: string;
   rarity: string | null;
   spriteId: string | null;
@@ -53,7 +55,7 @@ interface RowData {
   tracked: boolean;
 }
 
-function buildRestockTimer(shopType: TrackedShopType): HTMLElement {
+function buildRestockTimer(shopType: InventoryShopType): HTMLElement {
   // Digital Clock Style
   const wrap = element("div", {
     style: "display: flex; flex-direction: column; align-items: flex-end; line-height: 1;"
@@ -108,7 +110,7 @@ function buildRestockTimer(shopType: TrackedShopType): HTMLElement {
 export function createInventoryCard(): InventoryCardPart {
   const shops = getShops();
   const store = getStore();
-  let activeShop: TrackedShopType = store.get().activeInventoryTab ?? "seed";
+  let activeShop: InventoryShopType = (store.get().activeInventoryTab ?? "seed") as InventoryShopType;
   let query = "";
   let tableHandle: ReturnType<typeof Table<RowData>> | null = null;
   let unsubscribe: (() => void) | null = null;
@@ -124,7 +126,7 @@ export function createInventoryCard(): InventoryCardPart {
     ],
     activeShop,
     (id: string) => {
-      activeShop = id as TrackedShopType;
+      activeShop = id as InventoryShopType;
       store.set({ ...store.get(), activeInventoryTab: activeShop });
       rebuildTable(activeShop);
       updateTimer(activeShop);
@@ -220,7 +222,7 @@ export function createInventoryCard(): InventoryCardPart {
     }
   ];
 
-  function buildRows(shopType: TrackedShopType, q: string): RowData[] {
+  function buildRows(shopType: InventoryShopType, q: string): RowData[] {
     const shopData = getShops().getShop(shopType);
     const rows = shopData.items.map((item) => ({
       id: item.id,
@@ -241,7 +243,7 @@ export function createInventoryCard(): InventoryCardPart {
     return filtered;
   }
 
-  function rebuildTable(shopType: TrackedShopType): void {
+  function rebuildTable(shopType: InventoryShopType): void {
     if (tableHandle) tableHandle.destroy();
 
     tableHandle = Table<RowData>({
@@ -272,7 +274,7 @@ export function createInventoryCard(): InventoryCardPart {
     contentWrapper.replaceChildren(headerActionsStart, search.root, tableHandle.root);
   }
 
-  function updateTimer(shopType: TrackedShopType): void {
+  function updateTimer(shopType: InventoryShopType): void {
     if (timerWrap) (timerWrap as any).__destroy?.();
     timerWrap = buildRestockTimer(shopType);
     timerContainer.replaceChildren(timerWrap);

@@ -24,7 +24,7 @@
 
 import { BaseSection } from '../core/Section';
 import type { SectionsDeps } from '../core/Types';
-import { TrackerCardPart } from './parts';
+import { TrackerCardPart, ActiveTeamCard, activeTeamCardCss } from './parts';
 import { initTrackersState } from './state';
 import { Globals } from '../../../globals';
 import { injectStyleOnce } from '../../styles/inject';
@@ -44,6 +44,7 @@ import { geminiIconButtonCss } from '../../components/GeminiIconButton';
 export class TrackersSection extends BaseSection {
     private deps?: SectionsDeps;
     private trackerCardPart: TrackerCardPart | null = null;
+    private activeTeamCard: ActiveTeamCard | null = null;
     private unsubscribeMyPets?: () => void;
 
     constructor(deps?: SectionsDeps) {
@@ -74,10 +75,13 @@ export class TrackersSection extends BaseSection {
         section.id = 'trackers';
         container.appendChild(section);
 
-        // Initialize TrackerCard part
+        // Initialize ActiveTeamCard (always-expanded, shown first)
+        this.initializeActiveTeamCard(section);
+
+        // Initialize TrackerCard part (per-team expandable list)
         this.initializeTrackerCard(section);
 
-        // Subscribe to pet changes to re-render when teams change
+        // Subscribe to pet changes to re-render tracker card when teams change
         this.unsubscribeMyPets = Globals.myPets.subscribeStable(() => {
             this.trackerCardPart?.render();
         });
@@ -88,6 +92,12 @@ export class TrackersSection extends BaseSection {
         if (this.unsubscribeMyPets) {
             this.unsubscribeMyPets();
             this.unsubscribeMyPets = undefined;
+        }
+
+        // Cleanup ActiveTeamCard
+        if (this.activeTeamCard) {
+            this.activeTeamCard.destroy();
+            this.activeTeamCard = null;
         }
 
         // Cleanup TrackerCard part
@@ -109,6 +119,7 @@ export class TrackersSection extends BaseSection {
     private injectStyles(shadow: ShadowRoot): void {
         // Tracker-specific styles
         injectStyleOnce(shadow, trackerCardCss, 'tracker-card-styles');
+        injectStyleOnce(shadow, activeTeamCardCss, 'active-team-card-styles');
         injectStyleOnce(shadow, tileGridOverlayCss, 'tile-grid-overlay-styles');
 
         // Shared styles from Pets section (will move here eventually)
@@ -122,6 +133,19 @@ export class TrackersSection extends BaseSection {
         injectStyleOnce(shadow, badgeCss, 'badge-styles');
         injectStyleOnce(shadow, arcadeButtonCss, 'arcade-button-styles');
         injectStyleOnce(shadow, geminiIconButtonCss, 'gemini-icon-button-styles');
+    }
+
+    private initializeActiveTeamCard(section: HTMLElement): void {
+        if (!this.activeTeamCard) {
+            this.activeTeamCard = new ActiveTeamCard({
+                setHUDOpen: this.deps?.setHUDOpen,
+            });
+        }
+
+        const card = this.activeTeamCard.build();
+        section.appendChild(card);
+        this.activeTeamCard.render();
+        this.activeTeamCard.subscribe();
     }
 
     private initializeTrackerCard(section: HTMLElement): void {

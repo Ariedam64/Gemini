@@ -77,13 +77,32 @@ export const xpPanel: FeaturePanelDefinition = {
         const weather = Globals.weather.get();
         const currentWeather = weather.isActive ? weather.type : null;
 
-        // Calculate team-wide bonus for context
+        // Calculate team-wide bonus for context.
+        // calculateTeamXpData returns null for virtual teams (id not in MGPetTeam storage),
+        // so we fall back to summing per-pet XP boost contributions directly.
         const teamData = calculateTeamXpData(team.id);
-        const teamBonus = teamData?.teamSummary.bonusXpPerHour || 0;
+        let teamBonus: number;
+        let longestHoursToMax: number;
 
-        // Find longest time to max for supporting feeds calc
-        const petsInTeam = teamData?.pets || [];
-        const longestHoursToMax = Math.max(0, ...petsInTeam.map((p: { hoursToMaxStrength?: number }) => p.hoursToMaxStrength || 0));
+        if (teamData) {
+            teamBonus = teamData.teamSummary.bonusXpPerHour;
+            const petsInTeam = teamData.pets || [];
+            longestHoursToMax = Math.max(0, ...petsInTeam.map((p: { hoursToMaxStrength?: number }) => p.hoursToMaxStrength || 0));
+        } else {
+            // Fallback for virtual teams: resolve pets from team.petIds via myPets.all
+            const myPets = Globals.myPets.get();
+            const teamPets = team.petIds
+                .filter(id => id !== '')
+                .map(id => myPets.all.find(p => p.id === id))
+                .filter((p): p is UnifiedPet => p !== undefined);
+            teamBonus = 0;
+            longestHoursToMax = 0;
+            for (const teamPet of teamPets) {
+                const petData = calculatePetXpData(teamPet, currentWeather, 0, 0);
+                teamBonus += petData.xpBoostStats?.expectedXpPerHour ?? 0;
+                longestHoursToMax = Math.max(longestHoursToMax, petData.hoursToMaxStrength ?? 0);
+            }
+        }
 
         const xpData = calculatePetXpData(pet, currentWeather, teamBonus, longestHoursToMax);
 
@@ -170,7 +189,17 @@ export const xpPanel: FeaturePanelDefinition = {
         const weather = Globals.weather.get();
         const currentWeather = weather.isActive ? weather.type : null;
         const teamData = calculateTeamXpData(team.id);
-        const teamBonus = teamData?.teamSummary.bonusXpPerHour || 0;
+        // Fallback for virtual teams: sum XP boost from each grouped pet
+        let teamBonus: number;
+        if (teamData) {
+            teamBonus = teamData.teamSummary.bonusXpPerHour;
+        } else {
+            teamBonus = 0;
+            for (const teamPet of pets) {
+                const petData = calculatePetXpData(teamPet, currentWeather, 0, 0);
+                teamBonus += petData.xpBoostStats?.expectedXpPerHour ?? 0;
+            }
+        }
 
         // For max-STR grouped display, show combined boost info
         let totalBoostXpPerHour = 0;
@@ -218,7 +247,12 @@ export const xpPanel: FeaturePanelDefinition = {
                     </div>
                 `;
             } else {
-                const progress = calculateTeamProgressPercent(team.id);
+                // For virtual teams calculateTeamProgressPercent returns 0; compute directly.
+                const progress = teamData
+                    ? calculateTeamProgressPercent(team.id)
+                    : pets.length > 0
+                        ? pets.reduce((sum, p) => sum + (p.currentStrength / p.maxStrength) * 100, 0) / pets.length
+                        : 0;
                 container.innerHTML = `
                     <div class="xp-stats-compact xp-stats-grouped">
                         <div class="stat-row stat-row--info">

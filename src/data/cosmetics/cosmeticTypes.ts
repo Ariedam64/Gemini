@@ -1,46 +1,30 @@
-export const cosmeticTypes = [
-  'Top',
-  'Mid',
-  'Bottom',
-  'Expression',
-  'Color',
-] as const;
+// src/data/cosmetics/cosmeticTypes.ts
+// Shared cosmetic type definitions for avatar system
 
-export const avatarSections = [
-  'Bottom',
-  'Mid',
-  'Top',
-  'Expression',
-] as const satisfies CosmeticType[];
+/**
+ * Cosmetic item slot type (which part of the avatar it covers)
+ */
+export type CosmeticType = 'Top' | 'Mid' | 'Bottom' | 'Expression';
 
-export type CosmeticType = (typeof cosmeticTypes)[number];
+/**
+ * How a cosmetic item becomes available to the player
+ */
+export type CosmeticAvailability = 'default' | 'purchasable' | 'reward' | 'seasonal';
 
-export type AvatarSection = (typeof avatarSections)[number];
-
-export const cosmeticAvailabilities = [
-  'default',
-  'authenticated',
-  'claimable',
-  'purchasable',
-] as const;
-
-export type CosmeticAvailability = (typeof cosmeticAvailabilities)[number];
-
+/**
+ * A cosmetic item discovered from the game manifest or defined as a critical default
+ */
 export interface CosmeticItem {
-  id: string;
-  type: CosmeticType;
-  availability: CosmeticAvailability;
-  filename: string;
-  displayName: string;
-  price: number;
-}
-
-export interface CosmeticItem_MaybeLocked extends CosmeticItem {
-  isLocked: boolean;
-}
-
-export interface CosmeticItemSubGroups {
-  owned: CosmeticItem_MaybeLocked[];
-  claimed: CosmeticItem_MaybeLocked[];
-  forSale: CosmeticItem_MaybeLocked[];
+    /** Unique identifier (typically the filename) */
+    id: string;
+    /** Filename (e.g. "Top_WizardHat.png") */
+    filename: string;
+    /** Slot type */
+    type: CosmeticType;
+    /** How the item is obtained */
+    availability: CosmeticAvailability;
+    /** Human-readable display name */
+    displayName: string;
+    /** Shop price (0 for non-purchasable items) */
+    price: number;
 }

@@ -9,7 +9,7 @@ export const harvestLockerCardCss = `
     flex-direction: column;
     gap: 12px;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow: clip;
 }
 
 .harvest-locker-card__mode-container {
@@ -30,8 +30,15 @@ export const harvestLockerCardCss = `
 .harvest-locker-card__empty {
     padding: 24px;
     text-align: center;
-    color: var(--muted);
     font-size: 14px;
+}
+
+.harvest-locker-card__message {
+    color: var(--muted);
+}
+
+.harvest-locker-card__empty {
+    color: var(--fg);
 }
 
 .harvest-locker-card__message--compact {
@@ -42,19 +49,86 @@ export const harvestLockerCardCss = `
     margin-bottom: 16px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPECIES SECTION HEADER (Title with divider)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.harvest-locker-card__species-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    margin-bottom: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.harvest-locker-card__species-section-sprite {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--soft);
+    border-radius: 4px;
+}
+
+.harvest-locker-card__species-section-text {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.harvest-locker-card__species-section-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg);
+}
+
+.harvest-locker-card__species-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RULES SECTION FRAME (cadran)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.harvest-locker-card__rules-section {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--bg) 60%, transparent);
+}
+
+.harvest-locker-card__rules-section-label {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in oklab, var(--fg) 4%, transparent);
+}
+
+.harvest-locker-card__rules-section .harvest-locker-card__empty {
+    padding: 16px;
+}
+
 .harvest-locker-card__list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 16px;
+    padding: 8px;
+    max-height: 272px; /* ~4 items visible, scrollable après */
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
-}
-
-/* Scrollable after 4 items (assuming ~60px per item + gap) */
-.harvest-locker-card__list:has(.harvest-locker-rule-item:nth-child(5)) {
-    max-height: 272px; /* 4 items * (60px + 8px gap) */
 }
 
 .harvest-locker-card__list::-webkit-scrollbar {
@@ -68,6 +142,31 @@ export const harvestLockerCardCss = `
 
 .harvest-locker-card__list::-webkit-scrollbar-track {
     background: transparent;
+}
+
+.harvest-locker-card__rules-hint {
+    padding: 6px 8px 4px;
+    text-align: center;
+}
+
+.harvest-locker-card__rules-hint--desktop,
+.harvest-locker-card__rules-hint--mobile {
+    font-size: 11px;
+    color: color-mix(in oklab, var(--fg) 40%, transparent);
+    font-style: italic;
+}
+
+.harvest-locker-card__rules-hint--mobile {
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .harvest-locker-card__rules-hint--desktop {
+        display: none;
+    }
+    .harvest-locker-card__rules-hint--mobile {
+        display: inline;
+    }
 }
 
 .harvest-locker-card__actions {

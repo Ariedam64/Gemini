@@ -12,8 +12,11 @@ import { modalCss } from './modal.css';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ModalOptions {
-  /** Modal title */
-  title: string;
+  /** Modal title (string or custom Node) */
+  title: string | Node;
+
+  /** Optional subtitle below the title */
+  subtitle?: string;
 
   /** Modal content (pre-built HTMLElement) */
   content: HTMLElement;
@@ -49,7 +52,7 @@ export interface ModalHandle {
 // Defaults
 // ─────────────────────────────────────────────────────────────────────────────
 
-const DEFAULT_OPTIONS: Required<Omit<ModalOptions, 'title' | 'content' | 'footer' | 'onClose'>> = {
+const DEFAULT_OPTIONS: Required<Omit<ModalOptions, 'title' | 'subtitle' | 'content' | 'footer' | 'onClose'>> = {
   size: 'md',
   closeOnBackdrop: true,
   closeOnEscape: true,
@@ -177,7 +180,16 @@ export function Modal(options: ModalOptions): ModalHandle {
     const header = element('div', { className: 'modal-header' });
 
     const title = element('h2', { className: 'modal-title', id: 'modal-title' }, opts.title);
-    header.appendChild(title);
+
+    if (opts.subtitle) {
+      // Wrap title + subtitle in a column so close button stays right
+      const titleGroup = element('div', { className: 'modal-title-group' });
+      titleGroup.appendChild(title);
+      titleGroup.appendChild(element('p', { className: 'modal-subtitle' }, opts.subtitle));
+      header.appendChild(titleGroup);
+    } else {
+      header.appendChild(title);
+    }
 
     const closeBtn = element('button', {
       className: 'modal-close',

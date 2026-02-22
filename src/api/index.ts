@@ -16,6 +16,7 @@ import {
   MGCosmetic,
   MGCalculators,
   MGShopActions,
+  MGRiveLoader,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
 import { MGAutoFavorite } from "../features/autoFavorite";
@@ -32,6 +33,8 @@ import { MGWeatherNotifier } from "../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../features/petHungerNotifier";
 import { MGAriesAPI } from "../features/ariesAPI";
 import { MGHarvestLocker } from "../features/harvestLocker";
+import { MGEggLocker } from "../features/eggLocker";
+import { MGDecorLocker } from "../features/decorLocker";
 import { MGSkinChanger } from "../features/skinChanger";
 import { MGPets, MGTracker } from "../features";
 
@@ -55,6 +58,7 @@ export const GeminiAPI = {
     Sprite: MGSprite,
     Tile: MGTile,
     Pixi: MGPixi,
+    RiveLoader: MGRiveLoader,
     Audio: MGAudio,
     Cosmetic: MGCosmetic,
     Calculators: MGCalculators,
@@ -79,6 +83,8 @@ export const GeminiAPI = {
     PetHungerNotifier: MGPetHungerNotifier,
     AriesAPI: MGAriesAPI,
     HarvestLocker: MGHarvestLocker,
+    EggLocker: MGEggLocker,
+    DecorLocker: MGDecorLocker,
     ...(import.meta.env.MODE !== 'production' ? { SkinChanger: MGSkinChanger } : {}),
   },
 
@@ -157,6 +163,7 @@ export function exposeGeminiAPI(): void {
   win.MGSprite = MGSprite;
   win.MGData = MGData;
   win.MGPixi = MGPixi;
+  win.MGRiveLoader = MGRiveLoader;
   win.MGAssets = MGAssets;
   win.MGEnvironment = MGEnvironment;
 }

@@ -6,54 +6,6 @@
 import type { AvatarOutfit } from "../types";
 import { setPlayerData } from "../../../../websocket/api";
 import { pageWindow } from "../../../../utils/windowContext";
-
-const AVATAR_INDICES = {
-    BOTTOM: 0,
-    MID: 1,
-    TOP: 2,
-    EXPRESSION: 3,
-} as const;
-
-/**
- * Get current avatar state from game atoms
- */
-async function getCurrentAvatarState(): Promise<{ avatar: string[]; color: string; name: string }> {
-    try {
-        const { Store } = await import("../../../../atoms/store");
-        const myData = await Store.select("myDataAtom");
-
-        if (!myData || typeof myData !== "object") {
-            throw new Error("myDataAtom not available");
-        }
-
-        const cosmetic = (myData as any).cosmetic as Record<string, unknown> | undefined;
-        const name = (myData as any).name as string | undefined;
-
-        return {
-            avatar: (cosmetic?.avatar as string[]) || [
-                "Bottom_DefaultGray.png",
-                "Mid_DefaultGray.png",
-                "Top_DefaultGray.png",
-                "Expression_Default.png",
-            ],
-            color: (cosmetic?.color as string) || "Red",
-            name: name || "Player",
-        };
-    } catch (err) {
-        console.error("[Avatar] Failed to get current avatar state:", err);
-        return {
-            avatar: [
-                "Bottom_DefaultGray.png",
-                "Mid_DefaultGray.png",
-                "Top_DefaultGray.png",
-                "Expression_Default.png",
-            ],
-            color: "Red",
-            name: "Player",
-        };
-    }
-}
-
 import { get } from "./query";
 
 /**

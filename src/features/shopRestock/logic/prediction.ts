@@ -56,16 +56,20 @@ function buildPrediction(entry: ItemHistorySummary): ItemPrediction {
   const dataPoints = entry.totalOccurrences ?? 0;
   const lastSeen = entry.lastSeen ?? null;
   const rate = entry.appearanceRate ?? null;
-  const shopInterval = SHOP_CYCLE_INTERVALS[entry.shopType];
+  const shopInterval = entry.shopType === "weather" ? null : SHOP_CYCLE_INTERVALS[entry.shopType];
 
-  let expectedIntervalMs: number | null = null;
+  let expectedIntervalMs: number | null = entry.averageIntervalMs ?? null;
   let estimatedNext: number | null = null;
 
-  if (rate !== null && rate > 0) {
+  if (expectedIntervalMs === null && shopInterval !== null && rate !== null && rate > 0) {
     expectedIntervalMs = Math.round(shopInterval / rate);
+  }
 
-    if (lastSeen !== null) {
-      estimatedNext = entry.estimatedNextTimestamp ?? (lastSeen + expectedIntervalMs);
+  if (lastSeen !== null) {
+    if (entry.estimatedNextTimestamp !== null) {
+      estimatedNext = entry.estimatedNextTimestamp;
+    } else if (expectedIntervalMs !== null) {
+      estimatedNext = lastSeen + expectedIntervalMs;
 
       // If estimated_next is in the past, project forward
       const now = Date.now();

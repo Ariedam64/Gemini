@@ -2,7 +2,7 @@
 // Weather data extraction from main bundle
 
 import { captureState } from "../state";
-import { MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
+import { WEATHER_IDS, MAX_WEATHER_POLL_ATTEMPTS, WEATHER_POLL_INTERVAL_MS } from "./constants";
 import { fetchMainBundle, extractBalancedBlock, extractBalancedObjectLiteral } from "./bundleParser";
 
 /**
@@ -12,12 +12,9 @@ function buildWeather(data: any): Record<string, any> | null {
   const out: Record<string, any> = {};
   let found = false;
 
-  // Iterate ALL keys from parsed object instead of only known IDs
-  for (const id of Object.keys(data ?? {})) {
-    const blueprint = data[id];
+  for (const id of WEATHER_IDS) {
+    const blueprint = data?.[id];
     if (!blueprint || typeof blueprint !== "object") continue;
-    // Validate entry has expected weather fields
-    if (!blueprint.name && !blueprint.type) continue;
     const spriteId = (blueprint as any).iconSpriteKey || null;
     const { iconSpriteKey, ...rest } = blueprint as any;
     out[id] = { weatherId: id, spriteId, ...rest };
@@ -35,7 +32,6 @@ function buildWeather(data: any): Record<string, any> | null {
   }
 
   if (!found) return null;
-  // Sanity check: Rain should map to Wet mutation
   if (out.Rain && out.Rain.mutator?.mutation !== "Wet") return null;
 
   return out;
@@ -73,8 +69,13 @@ function extractWeatherObject(text: string, anchorPos: number): string | null {
 
 function normalizeWeatherLiteral(literal: string): string {
   return literal
-    .replace(/\$t\.([A-Z][A-Za-z]*)\b/g, '"$1"')
-    .replace(/\b[A-Za-z_$][\w$]*\.([A-Z][A-Za-z]*)\b/g, '"$1"');
+    // Handle computed property keys like [gt.Rain]
+    .replace(/\[([A-Za-z_$][\w$]*\.)(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\]/g, '"$2"')
+    // Normalize groupId enum references (Bc.Hydro → "Hydro", Bc.Lunar → "Lunar")
+    .replace(/\b[A-Za-z_$][\w$]*\.(Hydro|Lunar)\b/g, '"$1"')
+    // Keep old weather enum patterns as fallback
+    .replace(/\$t\.(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\b/g, '"$1"')
+    .replace(/\b[A-Za-z_$][\w$]*\.(Rain|Frost|Dawn|AmberMoon|Thunderstorm)\b/g, '"$1"');
 }
 
 /**
@@ -86,7 +87,7 @@ async function loadWeatherFromBundle(): Promise<boolean> {
   const bundleText = await fetchMainBundle();
   if (!bundleText) return false;
 
-  let anchor = bundleText.indexOf("fixedTimeSlots:[0,48,96,144,192,240]");
+  let anchor = bundleText.indexOf("mutator");
   if (anchor < 0) anchor = bundleText.indexOf('name:"Amber Moon"');
   if (anchor < 0) return false;
 

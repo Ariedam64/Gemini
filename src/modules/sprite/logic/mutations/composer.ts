@@ -184,7 +184,6 @@ function buildTallOverlaySprites(
   const overlays: PixiSprite[] = [];
 
   for (const step of overlayPipeline) {
-    console.log(`[Sprite] buildTallOverlaySprites: Processing ${step.name}, overlayTall = ${step.overlayTall}`);
     const hit =
       (step.overlayTall && textures.get(step.overlayTall) && {
         tex: textures.get(step.overlayTall)!,
@@ -192,30 +191,18 @@ function buildTallOverlaySprites(
       }) ||
       findOverlayTexture(itKey, step.name, textures, true);
 
-    console.log(`[Sprite] buildTallOverlaySprites: ${step.name} hit = `, hit ? hit.key : 'null');
     if (!hit?.tex) continue;
 
     const oCan = textureToCanvas(hit.tex, renderer, ctors, cacheState, cacheConfig);
     if (!oCan) continue;
 
     const ow = oCan.width;
-    const oh = oCan.height;
-
-    // Position overlay so its BOTTOM aligns with the plant's base (ground level)
-    // X: center overlay horizontally on the plant's anchor point
-    const overlayPosX = basePos.x - ow * 0.5;
-    // Y: position overlay so its bottom extends slightly BELOW basePos.y to meet ground icons
-    // Add offset to ensure overlay reaches down to where ground effects are rendered
-    const overlayPosY = basePos.y - oh + 100;
-
     const overlayAnchor = { x: 0, y: 0 };
-    const overlayPos = { x: overlayPosX, y: overlayPosY };
-
-    console.log(`[Sprite] buildTallOverlaySprites: ${step.name} overlayPos = (${overlayPosX.toFixed(0)}, ${overlayPosY.toFixed(0)}), overlaySize = ${ow}x${oh}, basePos.y = ${basePos.y.toFixed(0)}`);
+    const overlayPos = { x: basePos.x - aX * ow, y: 0 };
 
     const maskedCanvas = document.createElement("canvas");
     maskedCanvas.width = ow;
-    maskedCanvas.height = oh;
+    maskedCanvas.height = oCan.height;
 
     const mctx = maskedCanvas.getContext("2d");
     if (!mctx) continue;
@@ -256,9 +243,7 @@ function buildIconSprites(
   for (const step of iconPipeline) {
     if (step.name === "Gold" || step.name === "Rainbow") continue;
 
-    console.log(`[Sprite] buildIconSprites: Looking for icon for ${step.name}, isTall = ${step.isTall}`);
     const itex = findIconTexture(itKey, step.name, step.isTall, textures);
-    console.log(`[Sprite] buildIconSprites: ${step.name} icon = `, itex ? 'found' : 'null');
     if (!itex) continue;
 
     const icon = new ctors.Sprite(itex);
@@ -370,13 +355,9 @@ export function composeMutatedTexture(
       }
     } catch { }
 
-    // Use computed bounds for crop region to include overlays that extend beyond base sprite
+    // Crop region constrains output to base sprite dimensions (matching QPM-GR approach)
     const { Rectangle } = ctx.ctors;
-    const cropX = Math.min(0, bounds.x);
-    const cropY = Math.min(0, bounds.y);
-    const cropW = Math.max(w, bounds.width + Math.abs(bounds.x));
-    const cropH = Math.max(h, bounds.height + Math.abs(bounds.y));
-    const crop = Rectangle ? new Rectangle(cropX, cropY, cropW, cropH) : undefined;
+    const crop = Rectangle ? new Rectangle(0, 0, w, h) : undefined;
 
     let rt: any = null;
     if (typeof ctx.renderer.generateTexture === "function") {

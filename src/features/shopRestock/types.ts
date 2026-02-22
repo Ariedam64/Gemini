@@ -5,7 +5,8 @@
 import { FEATURE_KEYS } from "../../utils/storage";
 import type { ShopType } from "../../globals/core/types";
 
-export type TrackedShopType = Exclude<ShopType, "tool">;
+export type RestockShopType = Exclude<ShopType, "tool">;
+export type TrackedShopType = RestockShopType | "weather";
 
 export type ItemHistorySummary = {
   itemId: string;
@@ -34,7 +35,7 @@ export type ItemPrediction = {
 };
 
 /** Cycle interval in ms per shop type */
-export const SHOP_CYCLE_INTERVALS: Record<TrackedShopType, number> = {
+export const SHOP_CYCLE_INTERVALS: Record<RestockShopType, number> = {
   seed: 300_000,
   egg: 900_000,
   decor: 3_600_000,
@@ -76,7 +77,7 @@ export const DEFAULT_CONFIG: ShopRestockConfig = {
   },
 };
 
-export const TRACKED_SHOPS: TrackedShopType[] = ["seed", "egg", "decor"];
+export const TRACKED_SHOPS: TrackedShopType[] = ["seed", "egg", "decor", "weather"];
 
 export const EVENTS = {
   DEBUG_SIMULATE: "gemini:shop-restock-simulate",

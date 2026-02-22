@@ -11,9 +11,11 @@ import {
     addSpeciesRule,
     updateRule,
     deleteRule,
+    cloneRuleToSpecies,
 } from './state';
 import { start, stop, isSlotLocked, getLockedSlots, updateLockConfig } from './logic/core';
 import type { HarvestLockerConfig, HarvestRule, RuleMode, MutationMatchMode } from './types';
+import { HarvestLockerInject } from '../../ui/inject/qol/harvestLocker';
 
 // Import middleware to ensure it's loaded (auto-registers itself)
 import './middleware';
@@ -44,6 +46,9 @@ function init(): void {
     // Start core logic
     start(config);
 
+    // Start crop card injection (red border + lock icon on locked crops)
+    HarvestLockerInject.init();
+
     console.log('[HarvestLocker] Initialized');
 }
 
@@ -54,6 +59,9 @@ function destroy(): void {
     if (!initialized) {
         return;
     }
+
+    // Stop injection first (may still read core state during cleanup)
+    HarvestLockerInject.destroy();
 
     // Stop core logic
     stop();
@@ -174,7 +182,7 @@ function getAllSpeciesWithRules(): string[] {
 function addNewOverallRule(
     name: string,
     mode: RuleMode,
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
 ): HarvestRule {
     const rule = createRule(name, mode, sizeCondition, mutationCondition);
@@ -190,7 +198,7 @@ function addNewSpeciesRule(
     species: string,
     name: string,
     mode: RuleMode,
-    sizeCondition?: { enabled: boolean; minPercentage: number },
+    sizeCondition?: { enabled: boolean; minPercentage: number; sizeMode?: "min" | "max" },
     mutationCondition?: { enabled: boolean; mutations: string[]; matchMode: MutationMatchMode }
 ): HarvestRule {
     const rule = createRule(name, mode, sizeCondition, mutationCondition);
@@ -251,6 +259,7 @@ export const MGHarvestLocker = {
     modifyRule,
     removeRule,
     toggleRule,
+    cloneRuleToSpecies,
 
     // Configuration
     getConfig,

@@ -10,13 +10,14 @@ import { dispatchCustomEventAll } from "../../../utils/windowContext";
 import { MGData } from "../../../modules";
 
 let historyCache: Record<string, ItemHistorySummary> | null = null;
-let validItemsCache: { seed: Set<string>; egg: Set<string>; decor: Set<string> } | null = null;
+let validItemsCache: { seed: Set<string>; egg: Set<string>; decor: Set<string>; weather: Set<string> } | null = null;
 
-function getValidItems(): { seed: Set<string>; egg: Set<string>; decor: Set<string> } {
+function getValidItems(): { seed: Set<string>; egg: Set<string>; decor: Set<string>; weather: Set<string> } {
   if (validItemsCache) return validItemsCache;
   const seed = new Set<string>();
   const egg = new Set<string>();
   const decor = new Set<string>();
+  const weather = new Set<string>();
   const plants = MGData.get("plants") as Record<string, any> | null;
   if (plants && typeof plants === "object") {
     for (const [id, value] of Object.entries(plants)) {
@@ -31,7 +32,15 @@ function getValidItems(): { seed: Set<string>; egg: Set<string>; decor: Set<stri
   if (decorData && typeof decorData === "object") {
     for (const id of Object.keys(decorData)) decor.add(id);
   }
-  validItemsCache = { seed, egg, decor };
+  const weatherData = MGData.get("weather") as Record<string, any> | null;
+  if (weatherData && typeof weatherData === "object") {
+    for (const id of Object.keys(weatherData)) weather.add(id);
+  }
+  // Frost/Snow equivalence (DB uses Snow, game may use Frost)
+  if (weather.has("Frost")) weather.add("Snow");
+  if (weather.has("Snow")) weather.add("Frost");
+
+  validItemsCache = { seed, egg, decor, weather };
   return validItemsCache;
 }
 
@@ -44,6 +53,7 @@ function isValidItem(shopType: string, itemId: string): boolean {
   if (shopType === "seed") return sets.seed.has(itemId);
   if (shopType === "egg") return sets.egg.has(itemId);
   if (shopType === "decor") return sets.decor.has(itemId);
+  if (shopType === "weather") return sets.weather.has(itemId);
   return false;
 }
 

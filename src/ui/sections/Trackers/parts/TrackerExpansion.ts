@@ -28,7 +28,7 @@ import {
     calculateBoostStats
 } from "../../../../features/growthTimers/logic/boostCalculator";
 import { calculateItemEffectiveGrowth } from "../../../../features/growthTimers/logic/effectiveTime";
-import type { EggWithTile, PlantWithTile } from "../../../../globals/core/types";
+import type { EggWithTile, PlantWithTile, UnifiedPet } from "../../../../globals/core/types";
 import type { FeaturePanelDefinition } from "./featurePanels";
 import { analyzeTeamGrouping } from "../../../../features/growthTimers/logic/petAbilityUtils";
 import { ABILITY_CATEGORIES } from "../../../../features/petTeam/constants";
@@ -63,6 +63,10 @@ export type ExpandedTeamState = {
     growthViewType?: 'egg' | 'plant';
     pinnedItemId?: string;
     currentBarMode?: 'xp' | 'growth';
+    /** Set for virtual (always-expanded) teams — bypasses MGPetTeam storage lookups */
+    virtualTeam?: PetTeam;
+    /** Callback invoked instead of collapse+expand when a virtual team needs full rebuild */
+    reexpandCallback?: () => void;
 };
 
 export interface ExpansionHandlerOptions {
@@ -340,6 +344,137 @@ export class TrackerExpansionHandler {
         this.startUpdates();
     }
 
+    /**
+     * Expand a virtual (always-on) team into a caller-provided container.
+     *
+     * Unlike `expand()`, this method:
+     * - Does NOT look up the team in MGPetTeam storage
+     * - Does NOT insert a container into the tracker list; the caller owns `container`
+     * - Stores `virtualTeam` on the ExpandedTeamState so every internal update
+     *   method can resolve pets without hitting MGPetTeam.getTeam()
+     *
+     * Call this again (with the same container) to rebuild after slot overrides change.
+     * Previous state is cleaned up automatically without removing `container` from the DOM.
+     */
+    expandInto(
+        container: HTMLElement,
+        virtualTeam: PetTeam,
+        pets: UnifiedPet[],
+        options?: { reexpand?: () => void }
+    ): void {
+        const teamId = virtualTeam.id;
+
+        // Soft-cleanup any previous state for this virtual team without removing
+        // the container from the DOM (it is owned by the caller).
+        const existingState = this.expandedTeams.get(teamId);
+        if (existingState) {
+            for (const card of existingState.cards) {
+                if (card.shell) card.shell.destroy();
+            }
+            while (container.firstChild) container.removeChild(container.firstChild);
+            this.expandedTeams.delete(teamId);
+            if (this.expandedTeams.size === 0) this.stopUpdates();
+        }
+
+        const purpose = detectTeamPurpose(virtualTeam);
+
+        const availableFeatures = FEATURE_PANELS.filter(f => {
+            if (!f.isAvailable()) return false;
+            if (f.shouldDisplay && !f.shouldDisplay(virtualTeam, pets, purpose)) return false;
+            return true;
+        });
+
+        if (availableFeatures.length === 0) {
+            console.warn('[TrackerExpansion] No available features for virtual team');
+            return;
+        }
+
+        // Intelligent growth view selection (mirrors expand())
+        const isGrowthTeam = purpose.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
+        let growthViewType: 'egg' | 'plant' | undefined = undefined;
+        if (isGrowthTeam) {
+            const hasEgg = hasEggBoosts(pets);
+            const hasPlant = hasPlantBoosts(pets);
+            const garden = Globals.myGarden.get();
+            const hasGrowingEggs = garden.eggs.growing.length > 0;
+            const hasGrowingPlants = garden.crops.growing.length > 0;
+            if (hasEgg && hasPlant) {
+                growthViewType = (hasGrowingPlants && !hasGrowingEggs) ? 'plant'
+                    : (hasGrowingEggs && !hasGrowingPlants) ? 'egg'
+                    : 'plant';
+            } else if (hasPlant) {
+                growthViewType = 'plant';
+            } else if (hasEgg) {
+                growthViewType = 'egg';
+            }
+        }
+
+        let groupingAnalysis = this.analyzeTeamForGrouping(virtualTeam, pets, growthViewType);
+
+        const hasGroupableFeature = availableFeatures.some(f =>
+            f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+        );
+
+        if (groupingAnalysis.shouldGroup && !hasGroupableFeature) {
+            const allMaxStrength = groupingAnalysis.matchingPets.every(
+                (pet: any) => pet.currentStrength >= pet.maxStrength
+            );
+            if (!allMaxStrength) {
+                groupingAnalysis = { shouldGroup: false, matchingPets: [], remainingPets: pets };
+            }
+        }
+
+        const cardStates: FeatureCardState[] = [];
+
+        if (groupingAnalysis.shouldGroup && groupingAnalysis.matchingPets.length >= 2) {
+            const featuresWithContent = availableFeatures.filter(f =>
+                !f.hasContent || f.hasContent(groupingAnalysis.matchingPets, virtualTeam)
+            );
+            const selectedFeature = featuresWithContent.find(f =>
+                f.id === 'growth' || f.id === 'hatch' || f.id === 'coin'
+            ) || featuresWithContent[0] || availableFeatures[0];
+
+            const groupedRow = this.createGroupedPetRow(
+                virtualTeam, groupingAnalysis.matchingPets, availableFeatures,
+                selectedFeature, growthViewType, teamId
+            );
+            container.appendChild(groupedRow.container);
+            cardStates.push(groupedRow.cardState);
+
+            for (const remainingPet of groupingAnalysis.remainingPets) {
+                const slotIndex = virtualTeam.petIds.indexOf(remainingPet.id);
+                const individualRow = this.createIndividualPetRow(
+                    virtualTeam, remainingPet, slotIndex, availableFeatures, growthViewType, teamId
+                );
+                container.appendChild(individualRow.container);
+                cardStates.push(individualRow.cardState);
+            }
+        } else {
+            const myPets = Globals.myPets.get();
+            for (let slotIndex = 0; slotIndex < 3; slotIndex++) {
+                const petId = virtualTeam.petIds[slotIndex];
+                const pet = petId ? (myPets.all.find(p => p.id === petId) ?? null) : null;
+                const individualRow = this.createIndividualPetRow(
+                    virtualTeam, pet, slotIndex, availableFeatures, growthViewType, teamId
+                );
+                container.appendChild(individualRow.container);
+                cardStates.push(individualRow.cardState);
+            }
+        }
+
+        this.expandedTeams.set(teamId, {
+            cards: cardStates,
+            expandedAt: Date.now(),
+            container,
+            growthViewType,
+            virtualTeam,
+            reexpandCallback: options?.reexpand,
+        });
+
+        this.addProgressBar(container, pets, teamId);
+        this.startUpdates();
+    }
+
     collapse(teamId: string): void {
         const expandedState = this.expandedTeams.get(teamId);
         if (!expandedState) return;
@@ -373,9 +508,9 @@ export class TrackerExpansionHandler {
     // ─────────────────────────────────────────────────────────────────────────
 
     private addProgressBar(container: HTMLElement, pets: any[], teamId: string, forceMode?: 'xp' | 'growth'): void {
-        const team = MGPetTeam.getTeam(teamId);
-        const purpose = team ? detectTeamPurpose(team) : null;
         const state = this.expandedTeams.get(teamId);
+        const team = state?.virtualTeam ?? MGPetTeam.getTeam(teamId);
+        const purpose = team ? detectTeamPurpose(team) : null;
 
         const isGrowthTeam = purpose?.primary === 'time-reduction' || hasEggBoosts(pets) || hasPlantBoosts(pets);
 
@@ -401,7 +536,7 @@ export class TrackerExpansionHandler {
         const state = this.expandedTeams.get(teamId);
         if (!state) return;
 
-        const team = MGPetTeam.getTeam(teamId);
+        const team = state.virtualTeam ?? MGPetTeam.getTeam(teamId);
         if (!team) return;
 
         // Only update progress bar for xp and growth features
@@ -677,7 +812,7 @@ export class TrackerExpansionHandler {
     private updateGrowthSummary(teamId: string): void {
         const state = this.expandedTeams.get(teamId);
         if (state) {
-            const team = MGPetTeam.getTeam(teamId);
+            const team = state.virtualTeam ?? MGPetTeam.getTeam(teamId);
             if (!team) return;
             const pets = MGPetTeam.getPetsForTeam(team);
             this.renderGrowthSummaryBar(state.container, pets, teamId);
@@ -690,6 +825,11 @@ export class TrackerExpansionHandler {
 
             // If grouping state changed, re-expand to rebuild structure
             if (currentlyGrouped !== shouldNowGroup) {
+                if (state.virtualTeam) {
+                    // Virtual teams: rebuildInPlace instead of collapse+expand
+                    requestAnimationFrame(() => this.rebuildInPlace(teamId, false));
+                    return;
+                }
                 this.collapse(teamId);
                 // Use requestAnimationFrame for smoother transition
                 requestAnimationFrame(() => this.expand(teamId, false));
@@ -706,6 +846,10 @@ export class TrackerExpansionHandler {
                             ? 2
                             : 0;
                     if (currentGroupSize !== newGrouping.matchingPets.length) {
+                        if (state.virtualTeam) {
+                            requestAnimationFrame(() => this.rebuildInPlace(teamId, false));
+                            return;
+                        }
                         this.collapse(teamId);
                         // Use requestAnimationFrame for smoother transition
                         requestAnimationFrame(() => this.expand(teamId, false));
@@ -723,7 +867,7 @@ export class TrackerExpansionHandler {
     }
 
     private updateSpecificTeam(teamId: string, state: ExpandedTeamState): void {
-        const team = MGPetTeam.getTeam(teamId);
+        const team = state.virtualTeam ?? MGPetTeam.getTeam(teamId);
         if (!team) return;
 
         const myPets = Globals.myPets.get();
@@ -753,7 +897,7 @@ export class TrackerExpansionHandler {
      * Update grouped cards when viewType changes (egg/plant toggle)
      */
     private updateGroupedCardsViewType(teamId: string, state: ExpandedTeamState): void {
-        const team = MGPetTeam.getTeam(teamId);
+        const team = state.virtualTeam ?? MGPetTeam.getTeam(teamId);
         if (!team) return;
 
         for (const card of state.cards) {
@@ -1317,7 +1461,7 @@ export class TrackerExpansionHandler {
         const state = this.expandedTeams.get(teamId);
         if (!state) return;
 
-        const team = MGPetTeam.getTeam(teamId);
+        const team = state.virtualTeam ?? MGPetTeam.getTeam(teamId);
         if (!team) return;
 
         const pets = MGPetTeam.getPetsForTeam(team);
