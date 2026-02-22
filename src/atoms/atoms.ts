@@ -26,6 +26,7 @@ import type {
   Shops,
   Shop,
   ShopPurchases,
+  GardenPlayer,
   UserSlot,
   GameMap,
   Weather,
@@ -218,7 +219,6 @@ export const myPetInfosAtom = makeAtom<PetInfo[]>("myPetInfosAtom");
 export const myPetSlotInfosAtom = makeAtom<Record<string, PetSlotInfo>>("myPetSlotInfosAtom");
 export const myPrimitivePetSlotsAtom = makeAtom<PetSlot[]>("myPrimitivePetSlotsAtom");
 export const myNonPrimitivePetSlotsAtom = makeAtom<PetSlot[]>("myNonPrimitivePetSlotsAtom");
-export const expandedPetSlotIdAtom = makeAtom<string | null>("expandedPetSlotIdAtom");
 export const myPetsProgressAtom = makeAtom<Record<string, unknown>>("myPetsProgressAtom");
 export const myActiveCropMutationPetsAtom = makeAtom<unknown>("myActiveCropMutationPetsAtom");
 export const totalPetSellPriceAtom = makeAtom<number>("totalPetSellPriceAtom");
@@ -229,7 +229,7 @@ export const selectedPetHasNewVariantsAtom = makeAtom<boolean>("selectedPetHasNe
 // =============================================================================
 
 export const shopsAtom = makeAtom<Shops | null>("shopsAtom");
-export const myShopPurchasesAtom = makeAtom<ShopPurchases>("myShopPurchasesAtom");
+export const shopPurchasesView = makeView<PlayerData | null, ShopPurchases>("myDataAtom", { path: "shopPurchases" });
 
 // Individual shop atoms
 export const seedShopAtom = makeAtom<Shop | null>("seedShopAtom");
@@ -362,7 +362,7 @@ export const traderBunnyEmoteAtom = makeAtom<string>("traderBunnyEmoteAtom");
 // =============================================================================
 
 export const unsortedLeaderboardAtom = makeAtom<unknown[]>("unsortedLeaderboardAtom");
-export const currentGardenNameAtom = makeAtom<string | undefined>("currentGardenNameAtom");
+export const currentGardenPlayerAtom = makeAtom<GardenPlayer | null>("currentGardenPlayer");
 
 // =============================================================================
 // ENGINE & PERFORMANCE

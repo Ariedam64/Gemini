@@ -246,6 +246,18 @@ export type ShopPurchases = Record<string, ShopPurchase>;
 // PLAYER / USER TYPES
 // =============================================================================
 
+export type GardenPlayer = {
+  id: string;
+  name: string;
+  isConnected: boolean;
+  discordAvatarUrl: string | null;
+  cosmetic: Record<string, unknown>;
+  emoteData: Record<string, unknown>;
+  secondsRemainingUntilChatEnabled: number;
+  databaseUserId: string;
+  guildId: string | null;
+};
+
 export type UserSlot = {
   odId: string;
   odType: string;
@@ -277,6 +289,7 @@ export type PlayerData = {
   petSlots: PetSlot[];
   completedTasks: string[];
   activeTasks: string[];
+  shopPurchases?: ShopPurchases;
 };
 
 export type AvatarData = {

@@ -30,8 +30,8 @@ export function AtomInspector(): HTMLElement {
         MGData: ['plants', 'pets', 'mutations', 'items', 'decor', 'eggs', 'abilities', 'weather'],
         Globals: ['currentTile', 'myInventory', 'myPets', 'myGarden', 'players', 'shops', 'weather', 'gameMap'],
         Atoms: [
-            'positionAtom', 'myCoinsCountAtom', 'myInventoryAtom', 'myPetInfosAtom',
-            'weatherAtom', 'currentGardenNameAtom', 'numPlayersAtom', 'avgPingAtom'
+            'positionAtom', 'myCoinsCountAtom', 'myInventoryAtom', 'myPrimitivePetSlotsAtom',
+            'weatherAtom', 'currentGardenPlayer', 'numPlayersAtom', 'avgPingAtom'
         ]
     };
 

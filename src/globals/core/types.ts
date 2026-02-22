@@ -134,8 +134,6 @@ export type MyPetsData = {
     currentItems: number;
     maxItems: number;
   };
-  expandedPetSlotId: string | null;
-  expandedPet: UnifiedPet | null;
   abilityLogs: AbilityLog[];
 };
 
@@ -165,13 +163,6 @@ export type PetCountChange = {
   counts: MyPetsData["counts"];
 };
 
-export type ExpandedPetChange = {
-  current: UnifiedPet | null;
-  previous: UnifiedPet | null;
-  currentId: string | null;
-  previousId: string | null;
-};
-
 export type PetGrowthEvent = {
   pet: UnifiedPet;
   previousStage: number;
@@ -195,7 +186,6 @@ export type MyPetsGlobal = {
   subscribeLocation(callback: (event: PetLocationChange) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeAbility(callback: (event: PetAbilityEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeCount(callback: (event: PetCountChange) => void, options?: SubscribeOptions): Unsubscribe;
-  subscribeExpandedPet(callback: (event: ExpandedPetChange) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeGrowth(callback: (event: PetGrowthEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeStrengthGain(callback: (event: PetStrengthGainEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeMaxStrength(callback: (event: PetMaxStrengthEvent) => void, options?: SubscribeOptions): Unsubscribe;

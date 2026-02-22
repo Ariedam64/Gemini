@@ -1,4 +1,4 @@
-import { shopsAtom, myShopPurchasesAtom } from "../../atoms";
+import { shopsAtom, shopPurchasesView } from "../../atoms";
 import { deepEqual } from "../core/reactive";
 import type {
   ShopsGlobal,
@@ -318,7 +318,7 @@ function createShopsGlobal(): ShopsGlobal {
     });
     unsubscribes.push(unsub1);
 
-    const unsub2 = await myShopPurchasesAtom.onChangeNow((value) => {
+    const unsub2 = await shopPurchasesView.onChangeNow((value) => {
       sources.purchases = value;
       ready.add("purchases");
       notify();

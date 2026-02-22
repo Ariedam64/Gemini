@@ -54,6 +54,7 @@ export type {
   ShopPurchases,
 
   // Player types
+  GardenPlayer,
   UserSlot,
   PlayerData,
   AvatarData,
@@ -221,7 +222,6 @@ export {
   myPetSlotInfosAtom,
   myPrimitivePetSlotsAtom,
   myNonPrimitivePetSlotsAtom,
-  expandedPetSlotIdAtom,
   myPetsProgressAtom,
   myActiveCropMutationPetsAtom,
   totalPetSellPriceAtom,
@@ -229,7 +229,7 @@ export {
 
   // Shops
   shopsAtom,
-  myShopPurchasesAtom,
+  shopPurchasesView,
   seedShopAtom,
   seedShopInventoryAtom,
   seedShopRestockSecondsAtom,
@@ -324,7 +324,7 @@ export {
 
   // Leaderboard
   unsortedLeaderboardAtom,
-  currentGardenNameAtom,
+  currentGardenPlayerAtom,
 
   // Engine & Performance
   quinoaEngineAtom,

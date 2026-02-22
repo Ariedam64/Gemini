@@ -14,7 +14,7 @@ import type {
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
-import type { GardenTileObject, PlantTileObject } from "../../atoms/types";
+import type { GardenTileObject, PlantTileObject, GardenPlayer } from "../../atoms/types";
 
 type CurrentTileSources = {
   currentGardenTile: {
@@ -26,7 +26,7 @@ type CurrentTileSources = {
   gardenObject: GardenTileObject | null;
   isMature: boolean;
   isInMyGarden: boolean;
-  gardenName: string | null;
+  gardenName: GardenPlayer | null;
   sortedSlotIndices: number[];
   currentGrowSlotIndex: number | null;
 };
@@ -37,7 +37,7 @@ const atomSources = {
   gardenObject: "myCurrentGardenObjectAtom",
   isMature: "isGardenObjectMatureAtom",
   isInMyGarden: "isInMyGardenAtom",
-  gardenName: "currentGardenNameAtom",
+  gardenName: "currentGardenPlayer",
   sortedSlotIndices: "myCurrentSortedGrowSlotIndicesAtom",
   currentGrowSlotIndex: "myCurrentGrowSlotIndexAtom",
 };
@@ -83,7 +83,7 @@ function buildTileInfo(sources: CurrentTileSources): TileInfo {
 function buildGardenContext(sources: CurrentTileSources): GardenContext {
   const tile = sources.currentGardenTile;
   return {
-    name: sources.gardenName,
+    name: sources.gardenName?.name ?? null,
     isOwner: sources.isInMyGarden ?? false,
     playerSlotIndex: tile?.userSlotIdx ?? null,
   };

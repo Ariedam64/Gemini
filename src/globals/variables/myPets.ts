@@ -11,7 +11,6 @@ import type {
   PetLocationChange,
   PetAbilityEvent,
   PetCountChange,
-  ExpandedPetChange,
   PetGrowthEvent,
   PetStrengthGainEvent,
   PetMaxStrengthEvent,
@@ -19,7 +18,7 @@ import type {
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
-import type { PetInventoryItem, PetInfo, PetSlotInfo } from "../../atoms/types";
+import type { PetInventoryItem, PetSlot, PetSlotInfo } from "../../atoms/types";
 import {
   calculatePetAge,
   calculateMaxStrength,
@@ -30,9 +29,8 @@ import {
 type MyPetsSources = {
   inventory: PetInventoryItem[];
   hutch: PetInventoryItem[];
-  active: PetInfo[];
+  active: PetSlot[];
   slotInfos: Record<string, PetSlotInfo>;
-  expandedPetSlotId: string | null;
   myNumPetHutchItems: number;
   activityLogs: ActivityLogEntry[];
 };
@@ -40,9 +38,8 @@ type MyPetsSources = {
 const atomSources = {
   inventory: "myPetInventoryAtom",
   hutch: "myPetHutchPetItemsAtom",
-  active: "myPetInfosAtom",
+  active: "myPrimitivePetSlotsAtom",
   slotInfos: "myPetSlotInfosAtom",
-  expandedPetSlotId: "expandedPetSlotIdAtom",
   myNumPetHutchItems: "myNumPetHutchItemsAtom",
   activityLogs: "myDataAtom",
 };
@@ -79,33 +76,34 @@ function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutc
   };
 }
 
-function fromPetInfo(info: PetInfo, slotInfos: Record<string, PetSlotInfo>): UnifiedPet {
-  const slotInfo = slotInfos[info.slot.id];
+function fromPrimitiveSlot(slot: PetSlot, slotInfos: Record<string, PetSlotInfo>): UnifiedPet {
+  const slotInfo = slotInfos[slot.id];
   const lastAbilityTrigger: PetAbilityTrigger = slotInfo?.lastAbilityTrigger ?? null;
+  const position = slotInfo?.position ?? null;
 
-  const growthStage = calculatePetAge(info.slot.xp);
-  const maxStrength = calculateMaxStrength(info.slot.petSpecies, info.slot.targetScale);
-  const currentStrength = calculateCurrentStrength(info.slot.petSpecies, info.slot.xp, maxStrength);
-  const isMature = isPetMature(info.slot.petSpecies, growthStage);
+  const growthStage = calculatePetAge(slot.xp);
+  const maxStrength = calculateMaxStrength(slot.petSpecies, slot.targetScale);
+  const currentStrength = calculateCurrentStrength(slot.petSpecies, slot.xp, maxStrength);
+  const isMature = isPetMature(slot.petSpecies, growthStage);
 
   // Calculate hunger percentage
   const pets = MGData.get("pets") as Record<string, any> | null;
-  const petData = pets?.[info.slot.petSpecies];
+  const petData = pets?.[slot.petSpecies];
   const coinsToFullyReplenishHunger = petData?.coinsToFullyReplenishHunger ?? 1;
-  const hungerPercent = (info.slot.hunger / coinsToFullyReplenishHunger) * 100;
+  const hungerPercent = (slot.hunger / coinsToFullyReplenishHunger) * 100;
 
   return {
-    id: info.slot.id,
-    petSpecies: info.slot.petSpecies,
-    name: info.slot.name,
-    xp: info.slot.xp,
-    hunger: info.slot.hunger,
+    id: slot.id,
+    petSpecies: slot.petSpecies,
+    name: slot.name,
+    xp: slot.xp,
+    hunger: slot.hunger,
     hungerPercent,
-    mutations: [...info.slot.mutations],
-    targetScale: info.slot.targetScale,
-    abilities: [...info.slot.abilities],
+    mutations: [...slot.mutations],
+    targetScale: slot.targetScale,
+    abilities: [...slot.abilities],
     location: "active",
-    position: info.position ? { x: info.position.x, y: info.position.y } : null,
+    position: position ? { x: position.x, y: position.y } : null,
     lastAbilityTrigger,
     growthStage,
     currentStrength,
@@ -228,8 +226,8 @@ function buildData(sources: MyPetsSources): MyPetsData {
   const seenIds = new Set<string>();
 
   const activePets: UnifiedPet[] = [];
-  for (const info of sources.active ?? []) {
-    const pet = fromPetInfo(info, sources.slotInfos ?? {});
+  for (const slot of sources.active ?? []) {
+    const pet = fromPrimitiveSlot(slot, sources.slotInfos ?? {});
     activePets.push(pet);
     seenIds.add(pet.id);
   }
@@ -251,9 +249,6 @@ function buildData(sources: MyPetsSources): MyPetsData {
   }
 
   const all = [...activePets, ...inventoryPets, ...hutchPets];
-
-  const expandedPetSlotId = sources.expandedPetSlotId ?? null;
-  const expandedPet = expandedPetSlotId ? all.find((p) => p.id === expandedPetSlotId) ?? null : null;
 
   const myGarden = getMyGarden();
   const gardenData = myGarden.get();
@@ -279,8 +274,6 @@ function buildData(sources: MyPetsSources): MyPetsData {
       currentItems,
       maxItems,
     },
-    expandedPetSlotId,
-    expandedPet,
     abilityLogs: [...abilityLogsStorage],
   };
 }
@@ -290,8 +283,6 @@ const initialData: MyPetsData = {
   byLocation: { inventory: [], hutch: [], active: [] },
   counts: { inventory: 0, hutch: 0, active: 0, total: 0 },
   hutch: { hasHutch: false, currentItems: 0, maxItems: 25 },
-  expandedPetSlotId: null,
-  expandedPet: null,
   abilityLogs: [],
 };
 
@@ -420,7 +411,6 @@ type ListenerSets = {
   location: Set<(event: PetLocationChange) => void>;
   ability: Set<(event: PetAbilityEvent) => void>;
   count: Set<(event: PetCountChange) => void>;
-  expandedPet: Set<(event: ExpandedPetChange) => void>;
   growth: Set<(event: PetGrowthEvent) => void>;
   strengthGain: Set<(event: PetStrengthGainEvent) => void>;
   maxStrength: Set<(event: PetMaxStrengthEvent) => void>;
@@ -438,7 +428,6 @@ function createMyPetsGlobal(): MyPetsGlobal {
     location: new Set(),
     ability: new Set(),
     count: new Set(),
-    expandedPet: new Set(),
     growth: new Set(),
     strengthGain: new Set(),
     maxStrength: new Set(),
@@ -521,17 +510,6 @@ function createMyPetsGlobal(): MyPetsGlobal {
       }
     }
 
-    if (previousData.expandedPetSlotId !== currentData.expandedPetSlotId) {
-      const event: ExpandedPetChange = {
-        current: currentData.expandedPet,
-        previous: previousData.expandedPet,
-        currentId: currentData.expandedPetSlotId,
-        previousId: previousData.expandedPetSlotId,
-      };
-      for (const cb of listeners.expandedPet) {
-        cb(event);
-      }
-    }
   }
 
   async function init(): Promise<void> {
@@ -614,19 +592,6 @@ function createMyPetsGlobal(): MyPetsGlobal {
       return () => listeners.count.delete(callback);
     },
 
-    subscribeExpandedPet(callback: (event: ExpandedPetChange) => void, options?: SubscribeOptions): Unsubscribe {
-      listeners.expandedPet.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
-        callback({
-          current: currentData.expandedPet,
-          previous: currentData.expandedPet,
-          currentId: currentData.expandedPetSlotId,
-          previousId: currentData.expandedPetSlotId,
-        });
-      }
-      return () => listeners.expandedPet.delete(callback);
-    },
-
     subscribeGrowth(callback: (event: PetGrowthEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.growth.add(callback);
       if (options?.immediate && initialized && ready.size === sourceKeys.length) {
@@ -669,7 +634,6 @@ function createMyPetsGlobal(): MyPetsGlobal {
       listeners.location.clear();
       listeners.ability.clear();
       listeners.count.clear();
-      listeners.expandedPet.clear();
       listeners.growth.clear();
       listeners.strengthGain.clear();
       listeners.maxStrength.clear();
