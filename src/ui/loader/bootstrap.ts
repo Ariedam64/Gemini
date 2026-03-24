@@ -31,7 +31,6 @@ import { MGDecorLocker } from "../../features/decorLocker";
 import { MGMissingVariantsIndicator } from "../../features/missingVariantsIndicator";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
-import { StorageValueIndicatorInject } from "../inject/qol/storageValueIndicator";
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -313,15 +312,6 @@ export function initFeatures(loader: LoaderController): void {
       injection: MGMissingVariantsIndicator.render,
       storageKey: FEATURE_KEYS.MISSING_VARIANTS_INDICATOR,
       defaultEnabled: false,
-    });
-
-    registry.register({
-      id: 'storageValueIndicator',
-      name: 'Storage Value',
-      description: 'Shows total coin value for storage modals',
-      injection: StorageValueIndicatorInject,
-      storageKey: INJECT_KEYS.STORAGE_VALUE_INDICATOR,
-      defaultEnabled: true,
     });
 
     // EggLockerInject and DecorLockerInject are now managed directly by their features

@@ -110,8 +110,6 @@ export const INJECT_KEYS = {
     JOURNAL_FILTER_SORT: 'inject:journalFilterSort:config',
     /** Journal All tab (combined view) */
     JOURNAL_ALL_TAB: 'inject:journalAllTab:config',
-    /** Storage value indicator (seed silo, pet hutch, decor shed) */
-    STORAGE_VALUE_INDICATOR: 'inject:storageValueIndicator:config',
 } as const;
 
 /** Keys for debug purposes */
