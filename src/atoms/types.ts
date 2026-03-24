@@ -154,11 +154,6 @@ export type PetSlot = {
   abilities: string[];
 };
 
-export type PetInfo = {
-  slot: PetSlot;
-  position: GridPosition | null;
-};
-
 export type PetSlotInfo = {
   position: GridPosition | null;
   lastAbilityTrigger: {
@@ -435,9 +430,6 @@ export type XY = GridPosition;
 export type GardenState = Garden;
 /** @deprecated Use GardenTileObject */
 export type CurrentGardenObject = GardenTileObject | null;
-/** @deprecated Use PetInfo[] */
-export type PetState = PetInfo[] | null;
-
 export type CropInventoryState = CropInventoryItem[] | null;
 export type SeedInventoryState = SeedInventoryItem[] | null;
 export type ToolInventoryState = ToolInventoryItem[] | null;

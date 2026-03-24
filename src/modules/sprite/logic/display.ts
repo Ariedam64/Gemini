@@ -1,9 +1,9 @@
 // src/modules/sprite/display.ts
 // show() and toCanvas() functions for sprite display
+// Now uses pure canvas rendering (no PIXI dependency for toCanvas)
 
 import type {
   PixiSprite,
-  PixiTexture,
   PixiContainer,
   ShowOptions,
   ToCanvasOptions,
@@ -16,10 +16,16 @@ import type {
   CanvasBoundsMode,
   BoundsPadding,
 } from "../types";
-import { resolveKey, makeKey } from "./utils";
-import { computeVariantSignature, MUT_NAMES } from "./mutations/constants";
-import { composeMutatedTexture, composeMutatedAnimation, textureToCanvas } from "./mutations/composer";
-import { variantKey, lruGet, lruSet } from "./mutations/cache";
+import { resolveKey } from "./utils";
+import { computeVariantSignature, buildMutationPipeline, MUT_META, FLOATING_MUTATION_ICONS } from "./mutations/constants";
+import { applyFilterOnto } from "./mutations/filters";
+import {
+  baseNameOf,
+  mutationAliases,
+  findOverlayTexture,
+  findIconTexture,
+  computeIconLayout,
+} from "./mutations/overlay";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Canvas Cache
@@ -123,8 +129,8 @@ function yieldToMain(): Promise<void> {
 export async function warmupCanvasCache(
   spriteIds: string[],
   state: SpriteState,
-  mutCacheState: MutationCacheState,
-  mutCacheConfig: CacheConfig,
+  _mutCacheState: MutationCacheState,
+  _mutCacheConfig: CacheConfig,
   canvasCacheState: CanvasCacheState,
   canvasCacheConfig: CanvasCacheConfig,
   onProgress?: WarmupProgressCallback,
@@ -153,8 +159,8 @@ export async function warmupCanvasCache(
         if (!canvasCacheState.cache.has(cacheKey)) {
           spriteToCanvas(
             state,
-            mutCacheState,
-            mutCacheConfig,
+            _mutCacheState,
+            _mutCacheConfig,
             null,
             spriteId,
             options,
@@ -179,229 +185,231 @@ export async function warmupCanvasCache(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Overlay Management
+// Image/Texture to Canvas Helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ensureOverlay(state: SpriteState): PixiContainer {
-  if (state.overlay) return state.overlay;
+/**
+ * Convert an image-like object (HTMLImageElement, HTMLCanvasElement, or PixiTexture) to canvas
+ */
+function toCanvasElement(source: unknown): HTMLCanvasElement {
+  if (source instanceof HTMLCanvasElement) return cloneCanvas(source);
 
-  const container = new state.ctors!.Container();
-  container.sortableChildren = true;
-  container.zIndex = 99999999;
-
-  try {
-    state.app!.stage.sortableChildren = true;
-  } catch {}
-  state.app!.stage.addChild(container);
-
-  state.overlay = container;
-  return container;
-}
-
-function getDefaultParent(state: SpriteState): PixiContainer | null {
-  const p = state.defaultParent;
-  if (!p) return null;
-  try {
-    return typeof p === "function" ? p() : p;
-  } catch {
-    return null;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Get Mutated Texture (with caching)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function getMutatedTexture(
-  key: string,
-  tex: PixiTexture,
-  mutations: MutationName[],
-  state: SpriteState,
-  cacheState: MutationCacheState,
-  cacheConfig: CacheConfig
-): PixiTexture {
-  if (!mutations.length) return tex;
-
-  const variant = computeVariantSignature(mutations);
-  if (!variant.sig) return tex;
-
-  const cacheKey = variantKey(key, variant);
-  const cached = lruGet(cacheState, cacheKey);
-  if (cached?.tex) return cached.tex;
-
-  const composed = composeMutatedTexture(tex, key, variant, {
-    renderer: state.renderer!,
-    ctors: state.ctors!,
-    textures: state.textures,
-    cacheState,
-    cacheConfig,
-  });
-
-  if (composed) {
-    lruSet(cacheState, cacheKey, { isAnim: false, tex: composed }, cacheConfig);
-    return composed;
-  }
-
-  return tex;
-}
-
-function getMutatedFrames(
-  key: string,
-  frames: PixiTexture[],
-  mutations: MutationName[],
-  state: SpriteState,
-  cacheState: MutationCacheState,
-  cacheConfig: CacheConfig
-): PixiTexture[] {
-  if (!mutations.length) return frames;
-
-  const variant = computeVariantSignature(mutations);
-  if (!variant.sig) return frames;
-
-  const cacheKey = variantKey(key, variant);
-  const cached = lruGet(cacheState, cacheKey);
-  if (cached?.isAnim && cached.frames?.length) return cached.frames;
-
-  const composed = composeMutatedAnimation(frames, key, variant, {
-    renderer: state.renderer!,
-    ctors: state.ctors!,
-    textures: state.textures,
-    cacheState,
-    cacheConfig,
-  });
-
-  if (composed) {
-    lruSet(cacheState, cacheKey, { isAnim: true, frames: composed }, cacheConfig);
-    return composed;
-  }
-
-  return frames;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Show Sprite
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function showSprite(
-  state: SpriteState,
-  cacheState: MutationCacheState,
-  cacheConfig: CacheConfig,
-  category: string | null,
-  asset: string,
-  options: ShowOptions = {}
-): PixiSprite {
-  if (!state.ready) throw new Error("MGSprite not ready yet");
-
-  const key = resolveKey(category, asset, state.textures, state.animations);
-  const mutations = options.mutations || [];
-  const parent = options.parent || getDefaultParent(state) || ensureOverlay(state);
-
-  const W = state.renderer?.width || state.renderer?.view?.width || innerWidth;
-  const H = state.renderer?.height || state.renderer?.view?.height || innerHeight;
-  const x = options.center ? W / 2 : (options.x ?? W / 2);
-  const y = options.center ? H / 2 : (options.y ?? H / 2);
-
-  let obj: PixiSprite;
-  const rawFrames = state.animations.get(key);
-
-  if (rawFrames && rawFrames.length >= 2) {
-    const frames = getMutatedFrames(key, rawFrames, mutations, state, cacheState, cacheConfig);
-    const AS = state.ctors!.AnimatedSprite;
-
-    if (AS) {
-      obj = new AS(frames);
-      obj.animationSpeed = options.fps ? options.fps / 60 : (options.speed ?? 0.15);
-      obj.loop = options.loop ?? true;
-      obj.play();
-    } else {
-      const spr = new state.ctors!.Sprite(frames[0]);
-      const fps = Math.max(1, options.fps || 8);
-      const frameMs = 1000 / fps;
-      let acc = 0;
-      let i = 0;
-
-      const tick = (delta: number) => {
-        const ms = state.app!.ticker?.deltaMS ?? delta * (1000 / 60);
-        acc += ms;
-        if (acc < frameMs) return;
-        const step = (acc / frameMs) | 0;
-        acc %= frameMs;
-        i = (i + step) % frames.length;
-        spr.texture = frames[i];
-      };
-
-      (spr as any).__mgTick = tick;
-      state.app!.ticker?.add?.(tick);
-      obj = spr;
+  if (source instanceof HTMLImageElement) {
+    const canvas = document.createElement("canvas");
+    canvas.width = source.naturalWidth || source.width;
+    canvas.height = source.naturalHeight || source.height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(source, 0, 0);
     }
-  } else {
-    const rawTex = state.textures.get(key);
-    if (!rawTex) throw new Error(`Unknown sprite/anim key: ${key}`);
-
-    const tex = getMutatedTexture(key, rawTex, mutations, state, cacheState, cacheConfig);
-    obj = new state.ctors!.Sprite(tex);
+    return canvas;
   }
 
-  const ax = options.anchorX ?? obj.texture?.defaultAnchor?.x ?? 0.5;
-  const ay = options.anchorY ?? obj.texture?.defaultAnchor?.y ?? 0.5;
-  obj.anchor?.set?.(ax, ay);
+  // Fallback: try drawing as ImageBitmap or similar
+  throw new Error("Cannot convert to canvas: unknown source type");
+}
 
-  obj.position.set(x, y);
-  obj.scale.set(options.scale ?? 1);
-  obj.alpha = options.alpha ?? 1;
-  obj.rotation = options.rotation ?? 0;
-  obj.zIndex = options.zIndex ?? 999999;
-
-  parent.addChild(obj);
-  state.live.add(obj);
-
-  (obj as any).__mgDestroy = () => {
-    try {
-      if ((obj as any).__mgTick) state.app!.ticker?.remove?.((obj as any).__mgTick);
-    } catch {}
-    try {
-      obj.destroy?.({ children: true, texture: false, baseTexture: false });
-    } catch {
-      try {
-        obj.destroy?.();
-      } catch {}
-    }
-    state.live.delete(obj);
+function getImageSize(source: unknown): { w: number; h: number } {
+  if (source instanceof HTMLImageElement) {
+    return { w: source.naturalWidth || source.width, h: source.naturalHeight || source.height };
+  }
+  if (source instanceof HTMLCanvasElement) {
+    return { w: source.width, h: source.height };
+  }
+  // Fallback for PixiTexture-like objects
+  const tex = source as Record<string, unknown>;
+  const orig = tex?.orig as { width?: number; height?: number } | undefined;
+  const frame = tex?.frame as { width?: number; height?: number } | undefined;
+  return {
+    w: (orig?.width ?? frame?.width ?? (tex?.width as number) ?? 1) as number,
+    h: (orig?.height ?? frame?.height ?? (tex?.height as number) ?? 1) as number,
   };
+}
 
-  return obj;
+/**
+ * Find the sprite key for a mutation icon (mirrors findIconTexture but returns the key)
+ */
+function findIconKey(
+  itKey: string,
+  mutName: MutationName,
+  isTall: boolean,
+  textures: Map<string, unknown>,
+): string | null {
+  const meta = MUT_META[mutName];
+  if (isTall && meta?.tallIconOverride) {
+    if (textures.has(meta.tallIconOverride)) return meta.tallIconOverride;
+  }
+
+  const base = baseNameOf(itKey);
+  const aliases = mutationAliases(mutName);
+
+  for (const name of aliases) {
+    const tries = [
+      `sprite/mutation/${name}Icon`,
+      `sprite/mutation/${name}`,
+      `sprite/mutation/${name}${base}`,
+    ];
+    for (const k of tries) {
+      if (textures.has(k)) return k;
+    }
+  }
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Extract Canvas
+// Pure Canvas Mutation Composition
+// Replicates the old PIXI-based composer logic using canvas 2D.
+// All positioning uses basePos = { w * aX, h * aY } as the anchor reference,
+// exactly like the old Container/Sprite system with generateTexture({ region: crop }).
 // ─────────────────────────────────────────────────────────────────────────────
 
-function extractCanvas(state: SpriteState, target: any): HTMLCanvasElement {
-  const r = state.renderer;
-  if (r?.extract?.canvas) return r.extract.canvas(target);
-  if (r?.plugins?.extract?.canvas) return r.plugins.extract.canvas(target);
-  throw new Error("No extract.canvas available on renderer");
+function applyMutationsToCanvas(
+  baseCanvas: HTMLCanvasElement,
+  itemKey: string,
+  mutations: MutationName[],
+  textures: Map<string, unknown>,
+  spriteMeta: SpriteState["spriteMeta"],
+): HTMLCanvasElement {
+  const variant = computeVariantSignature(mutations);
+  if (!variant.sig) return baseCanvas;
+
+  const w = baseCanvas.width;
+  const h = baseCanvas.height;
+
+  // Resolve anchor from API metadata (same as old tex.defaultAnchor)
+  const meta = spriteMeta.get(itemKey);
+  const aX = meta?.anchor?.x ?? 0.5;
+  const aY = meta?.anchor?.y ?? 0.5;
+  const basePos = { x: w * aX, y: h * aY };
+
+  // Detect tall plants from metadata (replaces old isTallKey("tallplant"))
+  const isTall = aY > 0.8 && h > w * 1.8;
+
+  const pipeline = buildMutationPipeline(variant.muts, isTall);
+  const overlayPipeline = buildMutationPipeline(variant.overlayMuts, isTall);
+  const iconPipeline = buildMutationPipeline(variant.selectedMuts, isTall);
+
+  // Pre-compute icon data for z-ordered drawing
+  const baseName = baseNameOf(itemKey);
+  const fakeTexForLayout = { width: w, height: h, defaultAnchor: { x: aX, y: aY } };
+  const iconLayout = computeIconLayout(fakeTexForLayout as unknown, baseName, isTall);
+
+  interface IconDraw { canvas: HTMLCanvasElement; x: number; y: number; sw: number; sh: number; z: number }
+  const iconDraws: IconDraw[] = [];
+
+  for (const step of iconPipeline) {
+    if (step.name === "Gold" || step.name === "Rainbow") continue;
+
+    const itex = findIconTexture(itemKey, step.name, step.isTall, textures as Map<string, unknown>);
+    if (!itex) continue;
+
+    try {
+      const iconCanvas = toCanvasElement(itex);
+      const iconScaledW = iconCanvas.width * iconLayout.iconScale;
+      const iconScaledH = iconCanvas.height * iconLayout.iconScale;
+
+      // Get icon's own anchor from metadata (same as old itex.defaultAnchor)
+      const iconKey = findIconKey(itemKey, step.name, step.isTall, textures as Map<string, unknown>);
+      const iconMeta = iconKey ? spriteMeta.get(iconKey) : null;
+      const iconAnchorX = iconMeta?.anchor?.x ?? 0.5;
+      const iconAnchorY = iconMeta?.anchor?.y ?? 0.5;
+
+      // In PIXI: icon at (basePos + offset) with anchor → top-left = pos - anchor * scaledSize
+      const iconX = basePos.x + iconLayout.offset.x - iconScaledW * iconAnchorX;
+      const iconY = basePos.y + iconLayout.offset.y - iconScaledH * iconAnchorY;
+
+      // Determine z-index (same as old buildIconSprites)
+      let z = 2;
+      if (step.isTall) z = -1;
+      if (FLOATING_MUTATION_ICONS.has(step.name)) z = 10;
+
+      iconDraws.push({ canvas: iconCanvas, x: iconX, y: iconY, sw: iconScaledW, sh: iconScaledH, z });
+    } catch { /* skip icon */ }
+  }
+
+  // Output canvas is always base sprite size (w × h).
+  // Anything that overflows is clipped — this ensures consistent sizing
+  // across different mutation combos (same as old boundsMode: "base").
+  const output = document.createElement("canvas");
+  output.width = w;
+  output.height = h;
+  const ctx = output.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
+
+  // z=-1: Icons behind base (tall plant ground effects)
+  for (const icon of iconDraws) {
+    if (icon.z === -1) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
+  }
+
+  // z=0: Base sprite
+  ctx.drawImage(baseCanvas, 0, 0);
+
+  // z=1: Color filter layers
+  for (const step of pipeline) {
+    const layerCanvas = document.createElement("canvas");
+    layerCanvas.width = w;
+    layerCanvas.height = h;
+    const lctx = layerCanvas.getContext("2d")!;
+    lctx.imageSmoothingEnabled = false;
+    lctx.drawImage(baseCanvas, 0, 0);
+    applyFilterOnto(lctx, layerCanvas, step.name, step.isTall);
+    ctx.drawImage(layerCanvas, 0, 0);
+  }
+
+  // z=2: Normal icons
+  for (const icon of iconDraws) {
+    if (icon.z === 2) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
+  }
+
+  // z=3: Tall overlay mutations (masked to base shape)
+  if (isTall) {
+    for (const step of overlayPipeline) {
+      const overlayKey = step.overlayTall;
+      const hit = overlayKey && textures.get(overlayKey)
+        ? { tex: textures.get(overlayKey)!, key: overlayKey }
+        : findOverlayTexture(itemKey, step.name, textures as Map<string, unknown>, true);
+      if (!hit?.tex) continue;
+
+      try {
+        const overlayCanvas = toCanvasElement(hit.tex);
+        const ow = overlayCanvas.width;
+        const oh = overlayCanvas.height;
+        const overlayX = basePos.x - aX * ow;
+        const overlayY = 0;
+
+        const maskedCanvas = document.createElement("canvas");
+        maskedCanvas.width = ow;
+        maskedCanvas.height = oh;
+        const mctx = maskedCanvas.getContext("2d");
+        if (!mctx) continue;
+        mctx.imageSmoothingEnabled = false;
+        mctx.drawImage(overlayCanvas, 0, 0);
+        mctx.globalCompositeOperation = "destination-in";
+        mctx.drawImage(baseCanvas, -overlayX, -overlayY);
+        ctx.drawImage(maskedCanvas, overlayX, overlayY);
+      } catch { /* skip overlay */ }
+    }
+  }
+
+  // z=10: Floating icons (Dawnlit, Ambershine, Dawncharged, Ambercharged)
+  for (const icon of iconDraws) {
+    if (icon.z === 10) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
+  }
+
+  return output;
 }
 
-type TextureBaseMeta = {
-  baseX: number;
-  baseY: number;
-  baseW: number;
-  baseH: number;
-  texW: number;
-  texH: number;
-};
-
-const autoBoundsPaddingCache = new Map<string, BoundsPadding>();
+// ─────────────────────────────────────────────────────────────────────────────
+// Bounds helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 function resolveBoundsMode(options: ToCanvasOptions): CanvasBoundsMode {
   if (options.boundsMode) return options.boundsMode;
-  if (options.mutations && options.mutations.length > 0) return "base";
-  return "mutations";
+  return "base";
 }
 
 function resolvePad(boundsMode: CanvasBoundsMode, options: ToCanvasOptions): number {
-  if (boundsMode === "mutations") return options.pad ?? 2;
   return options.pad ?? 0;
 }
 
@@ -431,69 +439,14 @@ function boundsPaddingKey(boundsMode: CanvasBoundsMode, padding?: number | Bound
   return `${p.top},${p.right},${p.bottom},${p.left}`;
 }
 
-function getTextureSize(tex: PixiTexture): { w: number; h: number } {
-  const w = tex?.orig?.width ?? tex?.frame?.width ?? tex?.width ?? 1;
-  const h = tex?.orig?.height ?? tex?.frame?.height ?? tex?.height ?? 1;
-  return { w, h };
-}
-
-function getTextureBaseMeta(tex: PixiTexture, baseW: number, baseH: number): TextureBaseMeta {
-  const meta = (tex as any)?.__mg_base;
-  if (
-    meta &&
-    Number.isFinite(meta.baseX) &&
-    Number.isFinite(meta.baseY) &&
-    Number.isFinite(meta.baseW) &&
-    Number.isFinite(meta.baseH) &&
-    Number.isFinite(meta.texW) &&
-    Number.isFinite(meta.texH)
-  ) {
-    return meta as TextureBaseMeta;
-  }
-  return { baseX: 0, baseY: 0, baseW, baseH, texW: baseW, texH: baseH };
-}
-
-function getAutoBoundsPadding(
-  key: string,
-  frameIndex: number,
-  baseTex: PixiTexture,
-  state: SpriteState,
-  cacheState: MutationCacheState,
-  cacheConfig: CacheConfig
-): BoundsPadding {
-  const cacheKey = `${key}|f${frameIndex}`;
-  const cached = autoBoundsPaddingCache.get(cacheKey);
-  if (cached) return cached;
-
-  const baseSize = getTextureSize(baseTex);
-  const max = { top: 0, right: 0, bottom: 0, left: 0 };
-
-  for (const mut of MUT_NAMES) {
-    const mtex = getMutatedTexture(key, baseTex, [mut], state, cacheState, cacheConfig);
-    const meta = getTextureBaseMeta(mtex, baseSize.w, baseSize.h);
-    const left = Math.max(0, meta.baseX);
-    const top = Math.max(0, meta.baseY);
-    const right = Math.max(0, meta.texW - meta.baseX - meta.baseW);
-    const bottom = Math.max(0, meta.texH - meta.baseY - meta.baseH);
-
-    if (left > max.left) max.left = left;
-    if (top > max.top) max.top = top;
-    if (right > max.right) max.right = right;
-    if (bottom > max.bottom) max.bottom = bottom;
-  }
-
-  autoBoundsPaddingCache.set(cacheKey, max);
-  return max;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// To Canvas
+// To Canvas (pure canvas rendering)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function spriteToCanvas(
   state: SpriteState,
-  cacheState: MutationCacheState,
-  cacheConfig: CacheConfig,
+  _cacheState: MutationCacheState,
+  _cacheConfig: CacheConfig,
   category: string | null,
   asset: string,
   options: ToCanvasOptions = {},
@@ -513,88 +466,51 @@ export function spriteToCanvas(
   // Check canvas cache first
   if (cacheKey && canvasCacheState && canvasCacheConfig?.enabled) {
     const cached = canvasCacheGet(canvasCacheState, cacheKey);
-    if (cached) {
-      return cloneCanvas(cached);
-    }
+    if (cached) return cloneCanvas(cached);
   }
 
   const mutations = options.mutations || [];
   const rawFrames = state.animations.get(key);
   const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
 
-  let baseTex: PixiTexture;
-  let tex: PixiTexture;
-
+  // Get the source image (HTMLImageElement stored in textures map)
+  let sourceImg: unknown;
   if (rawFrames?.length) {
-    baseTex = rawFrames[idx % rawFrames.length];
-    if (mutations.length) {
-      const frames = getMutatedFrames(key, rawFrames, mutations, state, cacheState, cacheConfig);
-      tex = frames[idx % frames.length];
-    } else {
-      tex = baseTex;
-    }
+    sourceImg = rawFrames[idx % rawFrames.length];
   } else {
-    const rawTex = state.textures.get(key);
-    if (!rawTex) throw new Error(`Unknown sprite/anim key: ${key}`);
-    baseTex = rawTex;
-    tex = getMutatedTexture(key, rawTex, mutations, state, cacheState, cacheConfig);
+    sourceImg = state.textures.get(key);
+  }
+  if (!sourceImg) throw new Error(`Unknown sprite/anim key: ${key}`);
+
+  // Convert source to canvas
+  let baseCanvas = toCanvasElement(sourceImg);
+
+  // Apply mutations if any
+  if (mutations.length > 0) {
+    baseCanvas = applyMutationsToCanvas(baseCanvas, key, mutations, state.textures, state.spriteMeta);
   }
 
+  // Apply scaling and padding
+  const scale = options.scale ?? 1;
+  const boundsPadding = normalizeBoundsPadding(options.boundsPadding);
+  const baseW = baseCanvas.width;
+  const baseH = baseCanvas.height;
+  const outW = Math.max(1, Math.ceil((baseW + boundsPadding.left + boundsPadding.right + pad * 2) * scale));
+  const outH = Math.max(1, Math.ceil((baseH + boundsPadding.top + boundsPadding.bottom + pad * 2) * scale));
+
   let canvas: HTMLCanvasElement;
-
-  if (boundsMode === "mutations") {
-    const spr = new state.ctors!.Sprite(tex);
-    const ax = options.anchorX ?? spr.texture?.defaultAnchor?.x ?? 0.5;
-    const ay = options.anchorY ?? spr.texture?.defaultAnchor?.y ?? 0.5;
-    spr.anchor?.set?.(ax, ay);
-    spr.scale.set(options.scale ?? 1);
-
-    const tmp = new state.ctors!.Container();
-    tmp.addChild(spr);
-
-    try {
-      tmp.updateTransform?.();
-    } catch {}
-
-    const bnd = spr.getBounds?.(true) || { x: 0, y: 0, width: spr.width, height: spr.height };
-    spr.position.set(-bnd.x + pad, -bnd.y + pad);
-
-    canvas = extractCanvas(state, tmp);
-
-    try {
-      tmp.destroy?.({ children: true });
-    } catch {}
+  if (scale === 1 && !pad && !boundsPadding.top && !boundsPadding.right && !boundsPadding.bottom && !boundsPadding.left) {
+    canvas = baseCanvas;
   } else {
-    const scale = options.scale ?? 1;
-    let boundsPadding = normalizeBoundsPadding(options.boundsPadding);
-    if (boundsMode === "padded" && options.boundsPadding == null) {
-      boundsPadding = getAutoBoundsPadding(key, idx, baseTex, state, cacheState, cacheConfig);
-    }
-    if (pad) {
-      boundsPadding = {
-        top: boundsPadding.top + pad,
-        right: boundsPadding.right + pad,
-        bottom: boundsPadding.bottom + pad,
-        left: boundsPadding.left + pad,
-      };
-    }
-
-    const baseSize = getTextureSize(baseTex);
-    const meta = getTextureBaseMeta(tex, baseSize.w, baseSize.h);
-    const outW = Math.max(1, Math.ceil((baseSize.w + boundsPadding.left + boundsPadding.right) * scale));
-    const outH = Math.max(1, Math.ceil((baseSize.h + boundsPadding.top + boundsPadding.bottom) * scale));
-
     canvas = document.createElement("canvas");
     canvas.width = outW;
     canvas.height = outH;
-
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.imageSmoothingEnabled = false;
-      const srcCanvas = textureToCanvas(tex, state.renderer!, state.ctors!, cacheState, cacheConfig);
-      const drawX = (boundsPadding.left - meta.baseX) * scale;
-      const drawY = (boundsPadding.top - meta.baseY) * scale;
-      ctx.drawImage(srcCanvas, drawX, drawY, srcCanvas.width * scale, srcCanvas.height * scale);
+      const drawX = (boundsPadding.left + pad) * scale;
+      const drawY = (boundsPadding.top + pad) * scale;
+      ctx.drawImage(baseCanvas, drawX, drawY, baseW * scale, baseH * scale);
     }
   }
 
@@ -605,6 +521,26 @@ export function spriteToCanvas(
   }
 
   return canvas;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Show Sprite (requires PIXI - throws if not available)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function showSprite(
+  state: SpriteState,
+  _cacheState: MutationCacheState,
+  _cacheConfig: CacheConfig,
+  _category: string | null,
+  _asset: string,
+  _options: ShowOptions = {}
+): PixiSprite {
+  if (!state.ready) throw new Error("MGSprite not ready yet");
+  if (!state.app || !state.ctors) {
+    throw new Error("MGSprite.show() requires PIXI (not available - use toCanvas() instead)");
+  }
+  // PIXI-based show is no longer supported without the game's PIXI instance
+  throw new Error("MGSprite.show() is not supported in API-only mode");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

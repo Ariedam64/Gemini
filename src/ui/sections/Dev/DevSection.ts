@@ -7,7 +7,6 @@ import { UIGallery } from './tools/UIGallery';
 import { PixiInspector } from './inspectors/PixiInspector';
 // Per .claude/rules/core.md: use unified storage wrapper
 import { storageGet, storageSet, DEV_KEYS } from '../../../utils/storage';
-import { isAllDataCaptured, tryCapture  } from '../../../modules/data/logic/capture';
 import { pageWindow } from '../../../utils/windowContext';
 
 export class DevSection extends BaseSection {

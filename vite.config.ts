@@ -61,7 +61,8 @@ export default defineConfig(({ mode }) => ({
                     ICON: 'https://imgur.com/a/nf1ZKbp'
                 },
                 connect: ['i.imgur.com',
-                          'magicgarden.gg'
+                          'magicgarden.gg',
+                          'mg-api.ariedam.fr'
                 ]
             },
             build: {

@@ -14,11 +14,9 @@ import {
 } from "./ui/loader";
 import { migrateStorageKeys } from "./utils/storage";
 
-import { installObjectHooks } from "./modules/data/logic/hooks";
 import { installReactDevToolsHook } from "./atoms/core/bridge";
 
 // Early setup (Literal Synchronous Entry Point)
-installObjectHooks();
 installReactDevToolsHook();
 
 (async function () {

@@ -1,79 +1,55 @@
 // src/modules/data/index.ts
-// MGData - Game data capture module
+// MGData - Game data module (fetched from MG API)
 
-import { installObjectHooks, restoreObjectHooks } from "./logic/hooks";
-import { startPulseScanning, stopPulseScanning } from "./logic/scanning";
-import { startWeatherPolling, stopWeatherPolling } from "./logic/weather";
-import { startColorPolling, stopColorPolling } from "./logic/abilityColors";
+import { fetchGameData } from "./logic/fetch";
 import { resolveSprites } from "./logic/sprites";
 import { getData, getAllData, hasData, waitForData, waitForAnyData } from "./logic/accessors";
-import { isAllDataCaptured } from "./logic/capture";
+import { state } from "./state";
 
-export type { CapturedDataKey, DataKey, DataBag } from "./types";
-export type { AbilityColor } from "./logic/abilityColors";
+export type { DataKey, DataBag, AbilityColor } from "./types";
 export type { ActivityLogEntry, PetAbilityAction } from "./logic/abilityFormatter";
 export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction, PET_ABILITY_ACTIONS } from "./logic/abilityFormatter";
 
 /**
- * MGData module - Game data capture via Object.* hooks
+ * MGData module - Game data from MG API
  *
- * Captures game data (plants, pets, items, mutations, etc.) by hooking Object.keys/values/entries.
- * Starts pulse scanning on init to capture data even if it loads minutes after mod init.
- * Automatically restores hooks when all data is captured.
+ * Fetches all game data (plants, pets, items, mutations, etc.) from the external API.
  *
  * @example
  * ```typescript
- * // Initialize (installs hooks and starts scanning)
  * await MGData.init();
  *
- * // Get specific data
  * const plants = MGData.get('plants');
  * const mutations = MGData.get('mutations');
  *
- * // Get all captured data
- * const allData = MGData.getAll();
- *
- * // Check if data exists
- * if (MGData.has('plants')) {
- *   console.log('Plants data captured');
- * }
- *
- * // Wait for specific data
- * await MGData.waitFor('plants');
- *
- * // Check if ready (all data captured)
  * if (MGData.isReady()) {
- *   console.log('All data captured');
+ *   console.log('All data loaded');
  * }
- *
- * // Cleanup (restores hooks and stops scanning)
- * MGData.cleanup();
  * ```
  */
 export const MGData = {
   /**
-   * Initialize module (install hooks, start scanning, weather and color polling)
+   * Initialize module (fetch data from API)
    * Safe to call multiple times
    */
   async init(): Promise<void> {
-    installObjectHooks();
-    startPulseScanning();
-    startWeatherPolling();
-    startColorPolling();
+    await fetchGameData();
   },
 
   /**
-   * Check if all data has been captured
+   * Check if data has been loaded
    */
-  isReady: isAllDataCaptured,
+  isReady(): boolean {
+    return state.ready;
+  },
 
   /**
-   * Get captured data for a specific key
+   * Get data for a specific key
    */
   get: getData,
 
   /**
-   * Get all captured data
+   * Get all data
    */
   getAll: getAllData,
 
@@ -83,28 +59,25 @@ export const MGData = {
   has: hasData,
 
   /**
-   * Wait for specific data to be captured
+   * Wait for specific data to be available
    */
   waitFor: waitForData,
 
   /**
-   * Wait for any data to be captured
+   * Wait for any data to be available
    */
   waitForAny: waitForAnyData,
 
   /**
-   * Resolve sprite IDs for all captured data
+   * Resolve sprite IDs for all data
    * (Call after MGSprite is initialized)
    */
   resolveSprites,
 
   /**
-   * Cleanup (restore hooks and stop scanning)
+   * Cleanup (no-op, kept for API compatibility)
    */
   cleanup(): void {
-    restoreObjectHooks();
-    stopPulseScanning();
-    stopWeatherPolling();
-    stopColorPolling();
+    // Nothing to clean up - data is fetched once
   },
 };

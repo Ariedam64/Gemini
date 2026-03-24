@@ -35,7 +35,6 @@ export type {
 
   // Pet types
   PetSlot,
-  PetInfo,
   PetSlotInfo,
 
   // Garden types
@@ -84,7 +83,6 @@ export type {
   XY,
   GardenState,
   CurrentGardenObject,
-  PetState,
   CropInventoryState,
   SeedInventoryState,
   ToolInventoryState,
@@ -208,7 +206,7 @@ export {
   myOwnCurrentGardenObjectTypeView,
   myCurrentStablePlantObjectInfoAtom,
   myCurrentSortedGrowSlotIndicesAtom,
-  myCurrentGrowSlotIndexAtom,
+  mySelectedSlotIdAtom,
   myCurrentGrowSlotsAtom,
   myCurrentGrowSlotAtom,
   secondsUntilCurrentGrowSlotMaturesAtom,
@@ -217,8 +215,6 @@ export {
   myCurrentEggAtom,
 
   // Pets
-  petInfosAtom,
-  myPetInfosAtom,
   myPetSlotInfosAtom,
   myPrimitivePetSlotsAtom,
   myNonPrimitivePetSlotsAtom,

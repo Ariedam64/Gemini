@@ -22,28 +22,6 @@ export interface PixiConstructors {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Atlas Types
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface AtlasFrame {
-  frame: { x: number; y: number; w: number; h: number };
-  rotated?: boolean;
-  trimmed?: boolean;
-  spriteSourceSize?: { x: number; y: number; w: number; h: number };
-  sourceSize?: { w: number; h: number };
-  anchor?: { x: number; y: number };
-}
-
-export interface AtlasJson {
-  frames: Record<string, AtlasFrame>;
-  meta: {
-    image: string;
-    related_multi_packs?: string[];
-  };
-  animations?: Record<string, string[]>;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Display Options
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -102,13 +80,17 @@ export interface ToCanvasOptions {
 
 export interface SpriteState {
   ready: boolean;
+
+  // PIXI references (optional - only available when game PIXI is detected)
   app: PixiApp | null;
   renderer: PixiRenderer | null;
   ctors: PixiConstructors | null;
-  baseUrl: string | null;
 
+  // Sprite data (HTMLImageElement stored as PixiTexture via any-typing)
   textures: Map<string, PixiTexture>;
   animations: Map<string, PixiTexture[]>;
+  /** Sprite metadata (anchor, sourceSize, trim) from API */
+  spriteMeta: Map<string, { anchor: { x: number; y: number }; sourceSize: { w: number; h: number }; trimmed: boolean; trimOffset: { x: number; y: number } }>;
   live: Set<PixiSprite>;
 
   defaultParent: PixiContainer | (() => PixiContainer) | null;

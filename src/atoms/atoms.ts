@@ -20,7 +20,6 @@ import type {
   EggInventoryItem,
   DecorInventoryItem,
   PetInventoryItem,
-  PetInfo,
   PetSlot,
   PetSlotInfo,
   Shops,
@@ -200,7 +199,7 @@ export const myOwnCurrentGardenObjectTypeView = makeView<GardenTileObject | null
 // Grow slots
 export const myCurrentStablePlantObjectInfoAtom = makeAtom<unknown>("myCurrentStablePlantObjectInfoAtom");
 export const myCurrentSortedGrowSlotIndicesAtom = makeAtom<number[] | null>("myCurrentSortedGrowSlotIndicesAtom");
-export const myCurrentGrowSlotIndexAtom = makeAtom<number | null>("myCurrentGrowSlotIndexAtom");
+export const mySelectedSlotIdAtom = makeAtom<number | null>("mySelectedSlotIdAtom");
 export const myCurrentGrowSlotsAtom = makeAtom<GrowSlot[] | null>("myCurrentGrowSlotsAtom");
 export const myCurrentGrowSlotAtom = makeAtom<GrowSlot | null>("myCurrentGrowSlotAtom");
 export const secondsUntilCurrentGrowSlotMaturesAtom = makeAtom<string>("secondsUntilCurrentGrowSlotMaturesAtom");
@@ -214,8 +213,6 @@ export const myCurrentEggAtom = makeAtom<unknown>("myCurrentEggAtom");
 // PETS
 // =============================================================================
 
-export const petInfosAtom = makeAtom<PetInfo[]>("petInfosAtom");
-export const myPetInfosAtom = makeAtom<PetInfo[]>("myPetInfosAtom");
 export const myPetSlotInfosAtom = makeAtom<Record<string, PetSlotInfo>>("myPetSlotInfosAtom");
 export const myPrimitivePetSlotsAtom = makeAtom<PetSlot[]>("myPrimitivePetSlotsAtom");
 export const myNonPrimitivePetSlotsAtom = makeAtom<PetSlot[]>("myNonPrimitivePetSlotsAtom");

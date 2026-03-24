@@ -1,263 +1,130 @@
 // src/modules/data/logic/sprites.ts
-// Sprite ID resolution logic using MGSprite
+// Sprite ID resolution from API sprite URLs
+//
+// The API provides sprite URLs like:
+//   https://mg-api.ariedam.fr/assets/sprites/plants/Carrot.png?v=164
+//
+// We extract a spriteId path that matches the MGSprite catalog key:
+//   "sprite/plants/Carrot"
 
-import type { CapturedDataKey, DataBag } from "../types";
-import { captureState } from "../state";
-import { MGSprite } from "../../sprite";
+import type { DataBag } from "../types";
+import { state } from "../state";
+
+const SPRITE_URL_PATTERN = /\/assets\/sprites\/(.+?)\.png/;
 
 /**
- * Normalize a name for sprite lookup
+ * Special plural → singular overrides for compound categories.
  */
-function normalizeNameForSprite(input: string): string {
-  return String(input || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Za-z0-9]/g, "")
-    .trim();
+const CATEGORY_SINGULAR: Record<string, string> = {
+  "mutation-overlays": "mutation-overlay",
+};
+
+/**
+ * Singularize a category name to match sprite catalog keys.
+ * e.g. "seeds" -> "seed", "mutation-overlays" -> "mutation-overlay"
+ */
+function singularizeCategory(cat: string): string {
+  const override = CATEGORY_SINGULAR[cat];
+  if (override) return override;
+  // Strip trailing "s" if present
+  if (cat.endsWith("s") && cat.length > 1) return cat.slice(0, -1);
+  return cat;
 }
 
 /**
- * Get category candidates for sprite resolution
+ * Extract a sprite path from an API sprite URL, converting to catalog key format
+ * e.g. "https://mg-api.ariedam.fr/assets/sprites/seeds/Carrot.png?v=164" -> "sprite/seed/Carrot"
  */
-function catCandidates(cat: string | null, extras: string[] = []): string[] {
-  const list = new Set<string>();
-  const add = (s: string | null | undefined) => {
-    const v = String(s || "").trim();
-    if (v) list.add(v);
-  };
-
-  add(cat);
-  for (const e of extras) add(e);
-
-  for (const c of Array.from(list.values())) {
-    if (c.endsWith("s")) add(c.slice(0, -1));
-    else add(`${c}s`);
-    if (c.endsWith("es")) add(c.slice(0, -2));
+function extractSpritePath(url: string | undefined): string | null {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(SPRITE_URL_PATTERN);
+  if (!match) return null;
+  const rawPath = match[1];
+  // Convert plural category to singular for catalog key
+  const slashIdx = rawPath.indexOf("/");
+  if (slashIdx > 0) {
+    const cat = rawPath.slice(0, slashIdx);
+    const rest = rawPath.slice(slashIdx);
+    return `sprite/${singularizeCategory(cat)}${rest}`;
   }
-
-  return Array.from(list.values()).filter(Boolean);
+  return `sprite/${rawPath}`;
 }
 
 /**
- * Pick sprite ID from MGSprite catalog
- */
-function pickSpriteId(
-  cat: string | null,
-  idHint: string | null,
-  nameHint: string | null,
-  extraCats: string[] = [],
-  idFallbacks: string[] = []
-): string | null {
-  if (!MGSprite) {
-    console.warn("[MGData] MGSprite not available in pickSpriteId");
-    return null;
-  }
-
-  const cats = catCandidates(cat, extraCats);
-  if (!cats.length) return null;
-
-  const idCandidates = [idHint, ...idFallbacks].filter((v) => typeof v === "string");
-
-  const tryCandidate = (candidate: string | null): string | null => {
-    const c = String(candidate || "").trim();
-    if (!c) return null;
-    for (const category of cats) {
-      try {
-        if (MGSprite.has(category, c)) return MGSprite.getIdPath(category, c);
-      } catch { }
-    }
-    return null;
-  };
-
-  // Try id hints directly
-  for (const cand of idCandidates) {
-    const hit = tryCandidate(cand);
-    if (hit) return hit;
-  }
-
-  // Try from name (normalized)
-  const normName = normalizeNameForSprite(nameHint || "");
-  const fromName = tryCandidate(normName || nameHint || "");
-  if (fromName) return fromName;
-
-  // Search in the category list
-  try {
-    for (const category of cats) {
-      const ids = MGSprite.listIds(`sprite/${category}/`);
-      const idLcList = idCandidates.map((x) => String(x || "").toLowerCase());
-      const nameLc = String(nameHint || normName || "").toLowerCase();
-
-      // First pass: exact match
-      for (const k of ids) {
-        const leaf = k.split("/").pop() || "";
-        const leafLc = leaf.toLowerCase();
-        if (idLcList.some((c) => c && c === leafLc)) return k;
-        if (leafLc === nameLc) return k;
-      }
-
-      // Second pass: bidirectional partial matching
-      for (const k of ids) {
-        const leaf = k.split("/").pop() || "";
-        const leafLc = leaf.toLowerCase();
-
-        // Check both directions: does leaf contain candidate, or does candidate contain leaf?
-        if (idLcList.some((c) => c && (leafLc.includes(c) || c.includes(leafLc)))) return k;
-        if (nameLc && (leafLc.includes(nameLc) || nameLc.includes(leafLc))) return k;
-      }
-    }
-  } catch { }
-
-  return null;
-}
-
-/**
- * Apply sprite ID to an object
- */
-function applySpriteId(
-  target: any,
-  catHint: string | null,
-  idHint: string | null,
-  nameHint: string | null,
-  extraCats: string[] = [],
-  idFallbacks: string[] = []
-): void {
-  if (!target || typeof target !== "object") return;
-  const tileRef = target.tileRef;
-  if (!tileRef || typeof tileRef !== "object") return;
-
-  const category = String((tileRef as any).spritesheet || catHint || "").trim();
-  const spriteId = pickSpriteId(category, idHint, nameHint, extraCats, idFallbacks);
-  if (spriteId) {
-    try {
-      target.spriteId = spriteId;
-    } catch { }
-  }
-
-  // Rotation variants
-  const rv = (target as any).rotationVariants;
-  if (rv && typeof rv === "object") {
-    for (const v of Object.values(rv)) {
-      applySpriteId(v, category, idHint, nameHint);
-    }
-  }
-
-  // Nested tileRefs (plants)
-  if ((target as any).immatureTileRef) {
-    const wrapper = { tileRef: (target as any).immatureTileRef };
-    applySpriteId(wrapper, category, idHint, nameHint);
-    if ((wrapper as any).spriteId) (target as any).immatureSpriteId = (wrapper as any).spriteId;
-  }
-
-  if ((target as any).topmostLayerTileRef) {
-    const wrapper = { tileRef: (target as any).topmostLayerTileRef };
-    applySpriteId(wrapper, category, idHint, nameHint);
-    if ((wrapper as any).spriteId) (target as any).topmostLayerSpriteId = (wrapper as any).spriteId;
-  }
-
-  if ((target as any).activeState && typeof (target as any).activeState === "object") {
-    applySpriteId((target as any).activeState, category, idHint, (target as any).activeState?.name || nameHint);
-  }
-}
-
-/**
- * Resolve sprite ID by hints
- */
-function resolveSpriteIdByHints(
-  category: string,
-  hints: string[],
-  nameHint?: string,
-  extraCats: string[] = []
-): string | null {
-  if (!Array.isArray(hints) || hints.length === 0) return null;
-  const primary = hints[0];
-  const fallbacks = hints.slice(1);
-  return pickSpriteId(category, primary, nameHint ?? null, extraCats, fallbacks);
-}
-
-/**
- * Resolve all sprites for a data bag
+ * Resolve all sprites for the data bag
+ * Simply extracts sprite paths from API URLs — no MGSprite lookup needed
  */
 function resolveAllSprites(bag: DataBag): void {
   // Items
-  for (const [id, entry] of Object.entries(bag.items || {})) {
-    applySpriteId(entry, "items", id, (entry as any)?.name, ["item"]);
+  for (const [, entry] of Object.entries(bag.items || {})) {
+    const item = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(item.sprite as string);
+    if (spriteId) item.spriteId = spriteId;
   }
 
   // Decor
-  for (const [id, entry] of Object.entries(bag.decor || {})) {
-    applySpriteId(entry, "decor", id, (entry as any)?.name);
+  for (const [, entry] of Object.entries(bag.decor || {})) {
+    const decor = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(decor.sprite as string);
+    if (spriteId) decor.spriteId = spriteId;
   }
 
-  // Mutations
-  for (const [id, entry] of Object.entries(bag.mutations || {})) {
-    applySpriteId(entry, "mutations", id, (entry as any)?.name, ["mutation"]);
-
-    const overlay = resolveSpriteIdByHints(
-      "mutation-overlay",
-      [`${id}TallPlant`, `${id}TallPlantIcon`, id],
-      (entry as any)?.name,
-      ["mutation-overlay"]
-    );
-    if (overlay) {
-      try { (entry as any).overlaySpriteId = overlay; } catch { }
-    }
+  // Mutations (may not have sprites)
+  for (const [, entry] of Object.entries(bag.mutations || {})) {
+    const mutation = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(mutation.sprite as string);
+    if (spriteId) mutation.spriteId = spriteId;
   }
 
   // Eggs
-  for (const [id, entry] of Object.entries(bag.eggs || {})) {
-    applySpriteId(entry, "pets", id, (entry as any)?.name, ["pet"]);
+  for (const [, entry] of Object.entries(bag.eggs || {})) {
+    const egg = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(egg.sprite as string);
+    if (spriteId) egg.spriteId = spriteId;
   }
 
   // Pets
-  for (const [id, entry] of Object.entries(bag.pets || {})) {
-    applySpriteId(entry, "pets", id, (entry as any)?.name, ["pet"]);
+  for (const [, entry] of Object.entries(bag.pets || {})) {
+    const pet = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(pet.sprite as string);
+    if (spriteId) pet.spriteId = spriteId;
   }
 
-  // Plants (seed/plant/crop)
-  for (const [id, entry] of Object.entries(bag.plants || {})) {
-    const plant = entry as any;
+  // Weather
+  for (const [, entry] of Object.entries(bag.weather || {})) {
+    const weather = entry as Record<string, unknown>;
+    const spriteId = extractSpritePath(weather.sprite as string);
+    if (spriteId) weather.spriteId = spriteId;
+  }
+
+  // Plants (nested seed/plant/crop)
+  for (const [, entry] of Object.entries(bag.plants || {})) {
+    const plant = entry as Record<string, Record<string, unknown>>;
+
     if (plant.seed) {
-      applySpriteId(
-        plant.seed,
-        plant.seed?.tileRef?.spritesheet || "seeds",
-        `${id}Seed`,
-        plant.seed?.name || `${id} Seed`,
-        ["seed", "plant", "plants"],
-        [id]
-      );
+      const spriteId = extractSpritePath(plant.seed.sprite as string);
+      if (spriteId) plant.seed.spriteId = spriteId;
     }
     if (plant.plant) {
-      applySpriteId(
-        plant.plant,
-        plant.plant?.tileRef?.spritesheet || "plants",
-        `${id}Plant`,
-        plant.plant?.name || `${id} Plant`,
-        ["plant", "plants", "tallplants"],
-        [id]
-      );
+      const spriteId = extractSpritePath(plant.plant.sprite as string);
+      if (spriteId) plant.plant.spriteId = spriteId;
     }
     if (plant.crop) {
-      applySpriteId(
-        plant.crop,
-        plant.crop?.tileRef?.spritesheet || "plants",
-        id,
-        plant.crop?.name || id,
-        ["plant", "plants"],
-        [`${id}Crop`]
-      );
+      const spriteId = extractSpritePath(plant.crop.sprite as string);
+      if (spriteId) plant.crop.spriteId = spriteId;
     }
   }
 }
 
 /**
- * Resolve sprite IDs for all captured data
+ * Resolve sprite IDs for all data
  */
 export function resolveSprites(): void {
   try {
     console.log("[MGData] Resolving sprites...");
-    resolveAllSprites(captureState.data);
+    resolveAllSprites(state.data);
     console.log("[MGData] Sprite resolution complete");
   } catch (err) {
-    try { console.warn("[MGData] sprite resolution failed", err); } catch { }
+    try { console.warn("[MGData] Sprite resolution failed", err); } catch { /* ignore */ }
   }
 }

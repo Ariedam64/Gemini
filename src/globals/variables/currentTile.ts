@@ -39,7 +39,7 @@ const atomSources = {
   isInMyGarden: "isInMyGardenAtom",
   gardenName: "currentGardenPlayer",
   sortedSlotIndices: "myCurrentSortedGrowSlotIndicesAtom",
-  currentGrowSlotIndex: "myCurrentGrowSlotIndexAtom",
+  currentGrowSlotIndex: "mySelectedSlotIdAtom",
 };
 
 const initialData: CurrentTileData = {
