@@ -1,6 +1,5 @@
 import { element } from "../../styles/helpers";
 import { MGData } from "../../../modules";
-import type { AbilityColor } from "../../../modules/data";
 
 export type BadgeType = "neutral" | "info" | "success" | "warning" | "danger";
 export type BadgeTone = "soft" | "outline" | "solid";
@@ -48,7 +47,7 @@ function normalizeRarity(raw: string | null | undefined): RarityKey | null {
   if (k === "uncommon") return "Uncommon";
   if (k === "rare") return "Rare";
   if (k === "legendary") return "Legendary";
-  if (k === "mythical") return "Mythical";
+  if (k === "mythical" || k === "mythic") return "Mythical";
   if (k === "divine") return "Divine";
   if (k === "celestial") return "Celestial";
   // Tolerate both, because humans
@@ -145,14 +144,14 @@ export function Badge(opts: BadgeOptions = {}): BadgeHandle {
   }
 
   function setAbility(id: string, name?: string) {
-    // Get ability colors from MGData
-    const abilities = MGData.get("abilities") as Record<string, { name?: string; color?: AbilityColor }> | null;
+    // Get ability color from MGData (API returns color as a single string: hex or gradient)
+    const abilities = MGData.get("abilities") as Record<string, { name?: string; color?: string }> | null;
     const ability = abilities?.[id];
-    const colors = ability?.color;
+    const rawColor = ability?.color;
 
     // Default gray if no color found
-    const bgColor = colors?.bg || "rgba(100, 100, 100, 0.9)";
-    const hoverColor = colors?.hover || "rgba(150, 150, 150, 1)";
+    const bgColor = rawColor || "rgba(100, 100, 100, 0.9)";
+    const hoverColor = rawColor ? `${rawColor}` : "rgba(150, 150, 150, 1)";
 
     // Reset classes
     root.classList.remove(

@@ -19,8 +19,5 @@ export const API_KEY_MAP: Record<ApiResponseKey, DataKey> = {
   weathers: "weather",
 };
 
-/** Ability color interface (enriched from API) */
-export interface AbilityColor {
-  bg: string;
-  hover: string;
-}
+/** Ability color as returned by the API (single string: hex like "#B49600" or CSS gradient) */
+export type AbilityColor = string;

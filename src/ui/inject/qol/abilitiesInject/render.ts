@@ -40,11 +40,13 @@ interface AbilityColorInfo {
  * Falls back to neutral gray if ability has no color defined.
  */
 function getAbilityColor(abilityId: string): AbilityColorInfo {
-  const abilities = MGData.get('abilities') as Record<string, { name?: string; color?: AbilityColorInfo }> | null;
+  // API returns color as a single string (hex or gradient)
+  const abilities = MGData.get('abilities') as Record<string, { name?: string; color?: string }> | null;
   const ability = abilities?.[abilityId];
+  const color = ability?.color || 'rgba(100, 100, 100, 0.9)';
   return {
-    bg: ability?.color?.bg || 'rgba(100, 100, 100, 0.9)',
-    hover: ability?.color?.hover || 'rgba(150, 150, 150, 1)',
+    bg: color,
+    hover: color,
   };
 }
 
