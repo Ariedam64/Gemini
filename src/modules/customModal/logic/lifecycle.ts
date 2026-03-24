@@ -1,4 +1,4 @@
-import { activeModalAtom } from "../../../atoms";
+import { activeModalAtom, inventoryModalIsActiveAtom } from "../../../atoms";
 import { Store } from "../../../atoms/store";
 import type { QuinoaModal } from "../../../atoms/types";
 import type { CustomizableModal, ModalDataMap } from "../types";
@@ -94,6 +94,10 @@ async function handleCustomModalClosed(
   setIsCustom(false);
   setActiveModal(null);
 
+  if (modal === "inventory") {
+    await inventoryModalIsActiveAtom.set(false);
+  }
+
   await restoreAtomsForModal(modal);
 
   emitClose({
@@ -122,6 +126,10 @@ export async function show<M extends CustomizableModal>(
 
   patchAtomsForModal(modal);
   await primeAtomsForModal(modal);
+
+  if (modal === "inventory") {
+    await inventoryModalIsActiveAtom.set(true);
+  }
 
   await activeModalAtom.set(modal);
   lastKnownModalValue = modal;
@@ -161,6 +169,10 @@ export async function close(): Promise<void> {
   clearShadow();
   setIsCustom(false);
   setActiveModal(null);
+
+  if (modal === "inventory") {
+    await inventoryModalIsActiveAtom.set(false);
+  }
 
   await activeModalAtom.set(null);
   lastKnownModalValue = null;

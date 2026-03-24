@@ -191,6 +191,7 @@ export {
   mySelectedItemRotationAtom,
   setSelectedIndexToEndAtom,
   myPossiblyNoLongerValidSelectedItemIndexAtom,
+  mySelectedItemIdAtom,
 
   // Garden
   myCurrentGlobalTileIndexAtom,
@@ -297,6 +298,7 @@ export {
 
   // UI / Modals
   activeModalAtom,
+  inventoryModalIsActiveAtom,
   hotkeyBeingPressedAtom,
 
   // Avatars & Animations

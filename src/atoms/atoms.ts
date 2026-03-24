@@ -172,6 +172,7 @@ export const mySelectedItemRotationsAtom = makeAtom<number[] | null>("mySelected
 export const mySelectedItemRotationAtom = makeAtom<number>("mySelectedItemRotationAtom");
 export const setSelectedIndexToEndAtom = makeAtom<number | null>("setSelectedIndexToEndAtom");
 export const myPossiblyNoLongerValidSelectedItemIndexAtom = makeAtom<number | null>("myPossiblyNoLongerValidSelectedItemIndexAtom");
+export const mySelectedItemIdAtom = makeAtom<string | null>("mySelectedItemIdAtom");
 
 // =============================================================================
 // GARDEN
@@ -324,6 +325,7 @@ export const weatherAtom = makeAtom<Weather>("weatherAtom");
 // =============================================================================
 
 export const activeModalAtom = makeAtom<QuinoaModal>("activeModalAtom");
+export const inventoryModalIsActiveAtom = makeAtom<boolean>("inventoryModalIsActiveAtom");
 export const hotkeyBeingPressedAtom = makeAtom<string | null>("hotkeyBeingPressedAtom");
 
 // =============================================================================

@@ -442,7 +442,7 @@ export class TeamCardPart {
         const alreadyInTeam = new Set(team.petIds.filter((id) => id !== ""));
         const availablePets = allPets.filter((pet) => !alreadyInTeam.has(pet.id));
 
-        await Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+        await Store.set("mySelectedItemIdAtom", null);
 
         const env = MGEnvironment.detect();
         const isSmallScreen = env.platform === "mobile" || env.viewportWidth < 768;
@@ -459,7 +459,7 @@ export class TeamCardPart {
                 MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
                 this.options.onTeamsUpdated?.();
 
-                Store.set("myPossiblyNoLongerValidSelectedItemIndexAtom", null);
+                Store.set("mySelectedItemIdAtom", null);
 
                 MGCustomModal.close().then(() => {
                     const currentEnv = MGEnvironment.detect();

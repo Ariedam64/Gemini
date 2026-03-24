@@ -6,6 +6,7 @@
 
 import { getMyPets } from '../../../globals/variables/myPets';
 import { getMyInventory } from '../../../globals/variables/myInventory';
+import { getMyGarden } from '../../../globals/variables/myGarden';
 import { loadConfig, saveConfig } from '../state';
 import { EMPTY_SLOT, MAX_PETS_PER_TEAM } from '../types';
 import * as WebSocket from '../../../websocket/api';
@@ -127,6 +128,7 @@ function swapTeamPetByPet(
 ): void {
     const currentActivePets = currentState.byLocation.active;
     let hutchSpaceRemaining = initialHutchSpace;
+    let placementTileOffset = 0;
 
     console.log(`[PetTeam] Starting swap with ${initialHutchSpace} hutch spaces available`);
 
@@ -163,7 +165,8 @@ function swapTeamPetByPet(
                 hutchSpaceRemaining++; // Retrieve from hutch frees a space
             }
 
-            addPetToActive(targetPetId, currentState);
+            addPetToActive(targetPetId, currentState, placementTileOffset);
+            placementTileOffset++;
             continue;
         }
 
@@ -204,7 +207,22 @@ function removePetFromActive(activePetId: string, hasHutchSpace: boolean): void 
     }
 }
 
-function addPetToActive(targetPetId: string, currentState: MyPetsData): void {
+function getMyGardenDirtTile(tileOffset: number): { position: { x: number; y: number }; tileType: string; localTileIndex: number } {
+    const garden = getMyGarden().get();
+    const tile = garden.tiles.tileObjects[tileOffset] ?? garden.tiles.tileObjects[0];
+
+    if (tile) {
+        return {
+            position: tile.position,
+            tileType: 'Dirt',
+            localTileIndex: tile.localIndex,
+        };
+    }
+
+    return { position: { x: 0, y: 0 }, tileType: 'Dirt', localTileIndex: 0 };
+}
+
+function addPetToActive(targetPetId: string, currentState: MyPetsData, tileOffset: number): void {
     const pet = currentState.all.find((p) => p.id === targetPetId);
     if (!pet) {
         console.warn(`[PetTeam] Pet ${targetPetId} not found`);
@@ -216,8 +234,9 @@ function addPetToActive(targetPetId: string, currentState: MyPetsData): void {
         WebSocket.retrieveItemFromStorage(targetPetId);
     }
 
-    // Place pet (now in inventory)
-    WebSocket.placePet(targetPetId);
+    // Place pet on a distinct dirt tile in the player's own garden
+    const { position, tileType, localTileIndex } = getMyGardenDirtTile(tileOffset);
+    WebSocket.placePet(targetPetId, position, tileType, localTileIndex);
 }
 
 function swapPets(
