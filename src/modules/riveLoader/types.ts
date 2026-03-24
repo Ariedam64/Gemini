@@ -80,7 +80,7 @@ export interface RiveFileInfo {
  * Known .riv file patterns to search for
  */
 export const RIVE_FILE_PATTERNS = {
-    AVATAR: /avatarelements[^"']*\.riv/,
-    EMOTES: /emotes[^"']*\.riv/,
-    UI: /(giftbox|currency|bread|donut|streak)[^"']*\.riv/,
+    AVATAR: /avatarelements[^"'`\s]*\.riv/,
+    EMOTES: /emotes[^"'`\s]*\.riv/,
+    UI: /(giftbox|currency|bread|donut|streak|countdown|loader)[^"'`\s]*\.riv/,
 } as const;

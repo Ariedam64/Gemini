@@ -26,7 +26,7 @@
  * ```
  */
 
-import { discoverRiveFiles, findAvatarRiveFile } from './logic/discovery';
+import { discoverRiveFiles, findAvatarRiveFile, removeFetchInterceptor } from './logic/discovery';
 import { loadRiveFile } from './logic/loader';
 import { createRiveInstance, updateInstanceOutfit, type CreateRiveInstanceOptions } from './logic/instance';
 import { isReady as checkReady, setReady, getDiscoveredFiles } from './state';
