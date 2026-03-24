@@ -53,8 +53,8 @@ middleware(ClientToServerMessageType.PurchaseDecor, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.PlantEgg, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Garden] PlantEgg"); }
+middleware(ClientToServerMessageType.GrowEgg, (_msg, ctx) => {
+  if (ctx.debug) { console.log("[MW][Garden] GrowEgg"); }
   const shouldBlock = false;
   return shouldBlock ? false : true;
 });

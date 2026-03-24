@@ -46,12 +46,10 @@ export const ClientToServerMessageType = {
   KickPlayer: "KickPlayer",
   SetPlayerData: "SetPlayerData",
   UsurpHost: "UsurpHost",
-  Dev: "Dev",
 
   // Session / game / heartbeat
   SetSelectedGame: "SetSelectedGame",
   VoteForGame: "VoteForGame",
-  RequestGame: "RequestGame",
   RestartGame: "RestartGame",
   Ping: "Ping",
   PlayerPosition: "PlayerPosition",
@@ -62,11 +60,14 @@ export const ClientToServerMessageType = {
   MoveInventoryItem: "MoveInventoryItem",
   DropObject: "DropObject",
   PickupObject: "PickupObject",
-  ToggleFavoriteItem: "ToggleFavoriteItem",
   PutItemInStorage: "PutItemInStorage",
   RetrieveItemFromStorage: "RetrieveItemFromStorage",
   MoveStorageItem: "MoveStorageItem",
   LogItems: "LogItems",
+
+  // Inventory / items
+  ToggleLockItem: "ToggleLockItem",
+  SetSelectedItem: "SetSelectedItem",
 
   // Garden actions / shops
   PlantSeed: "PlantSeed",
@@ -77,11 +78,12 @@ export const ClientToServerMessageType = {
   PurchaseEgg: "PurchaseEgg",
   PurchaseTool: "PurchaseTool",
   PurchaseDecor: "PurchaseDecor",
-  PlantEgg: "PlantEgg",
+  GrowEgg: "GrowEgg",
   HatchEgg: "HatchEgg",
   PlantGardenPlant: "PlantGardenPlant",
   PotPlant: "PotPlant",
   MutationPotion: "MutationPotion",
+  CropCleanser: "CropCleanser",
   PickupDecor: "PickupDecor",
   PlaceDecor: "PlaceDecor",
   RemoveGardenObject: "RemoveGardenObject",
@@ -91,9 +93,15 @@ export const ClientToServerMessageType = {
   FeedPet: "FeedPet",
   PetPositions: "PetPositions",
   SwapPet: "SwapPet",
-  StorePet: "StorePet",
+  SwapPetFromStorage: "SwapPetFromStorage",
+  PickupPet: "PickupPet",
+  MovePetSlot: "MovePetSlot",
   NamePet: "NamePet",
   SellPet: "SellPet",
+
+  // Seasonal / misc
+  ThrowSnowball: "ThrowSnowball",
+  CheckFriendBonus: "CheckFriendBonus",
 
   // Voice / Discord
   ReportSpeakingStart: "ReportSpeakingStart",

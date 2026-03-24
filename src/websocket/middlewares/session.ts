@@ -5,8 +5,6 @@ import { ClientToServerMessageType } from "../protocol";
  * Session / game / heartbeat outgoing messages.
  */
 
-console.log("[WS] TESTTEST");
-
 middleware(ClientToServerMessageType.SetSelectedGame, (_msg, ctx) => {
   if (ctx.debug) { console.log("[MW][Session] SetSelectedGame"); }
   const shouldBlock = false;
@@ -15,12 +13,6 @@ middleware(ClientToServerMessageType.SetSelectedGame, (_msg, ctx) => {
 
 middleware(ClientToServerMessageType.VoteForGame, (_msg, ctx) => {
   if (ctx.debug) { console.log("[MW][Session] VoteForGame"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
-middleware(ClientToServerMessageType.RequestGame, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Session] RequestGame"); }
   const shouldBlock = false;
   return shouldBlock ? false : true;
 });

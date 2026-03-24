@@ -23,8 +23,8 @@ middleware(ClientToServerMessageType.PickupObject, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.ToggleFavoriteItem, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Inventory] ToggleFavoriteItem"); }
+middleware(ClientToServerMessageType.ToggleLockItem, (_msg, ctx) => {
+  if (ctx.debug) { console.log("[MW][Inventory] ToggleLockItem"); }
   const shouldBlock = false;
   return shouldBlock ? false : true;
 });

@@ -29,8 +29,20 @@ middleware(ClientToServerMessageType.SwapPet, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.StorePet, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Pets] StorePet"); }
+middleware(ClientToServerMessageType.SwapPetFromStorage, (_msg, ctx) => {
+  if (ctx.debug) { console.log("[MW][Pets] SwapPetFromStorage"); }
+  const shouldBlock = false;
+  return shouldBlock ? false : true;
+});
+
+middleware(ClientToServerMessageType.PickupPet, (_msg, ctx) => {
+  if (ctx.debug) { console.log("[MW][Pets] PickupPet"); }
+  const shouldBlock = false;
+  return shouldBlock ? false : true;
+});
+
+middleware(ClientToServerMessageType.MovePetSlot, (_msg, ctx) => {
+  if (ctx.debug) { console.log("[MW][Pets] MovePetSlot"); }
   const shouldBlock = false;
   return shouldBlock ? false : true;
 });

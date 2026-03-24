@@ -11,12 +11,6 @@ middleware(ClientToServerMessageType.Chat, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.Dev, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Social] Dev"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
 middleware(ClientToServerMessageType.Emote, (_msg, ctx) => {
   if (ctx.debug) { console.log("[MW][Social] Emote"); }
   const shouldBlock = false;

@@ -195,8 +195,8 @@ function swapTeamPetByPet(
 }
 
 function removePetFromActive(activePetId: string, hasHutchSpace: boolean): void {
-    // Store active pet (goes to inventory)
-    WebSocket.storePet(activePetId);
+    // Pick up active pet (goes to inventory)
+    WebSocket.pickupPet(activePetId);
 
     // Put in hutch if space available
     if (hasHutchSpace) {
