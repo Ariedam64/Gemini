@@ -64,7 +64,7 @@ export function renderPlantSprite(
 
 /**
  * Render a mutation sprite into a container
- * Uses spriteId from MGData mutations
+ * Uses UI mutation sprites from MGSprite catalog (sprite/ui/MutationGold, etc.)
  */
 export function renderMutationSprite(
     mutationId: string,
@@ -77,19 +77,21 @@ export function renderMutationSprite(
     }
 
     try {
-        const mutationsData = MGData.get("mutations") as Record<string, unknown> | null;
-        const mutationInfo = mutationsData?.[mutationId] as { spriteId?: string } | undefined;
-        const spriteId = mutationInfo?.spriteId;
+        // Map mutation ID to UI sprite key
+        // API catalog has: sprite/ui/MutationGold, sprite/ui/MutationRainbow, sprite/ui/MutationWet, etc.
+        // Special case: "Ambershine" uses "Amberlit" in the sprite catalog
+        const spriteNameMap: Record<string, string> = {
+            Ambershine: "Amberlit",
+        };
+        const spriteName = spriteNameMap[mutationId] ?? mutationId;
+        const spriteKey = `sprite/ui/Mutation${spriteName}`;
 
-        if (!spriteId) {
+        if (!MGSprite.has(spriteKey)) {
             container.appendChild(createMutationPlaceholder(mutationId, size));
             return;
         }
 
-        const canvas = MGSprite.toCanvas(spriteId, {
-            boundsMode: "padded",
-        } as Parameters<typeof MGSprite.toCanvas>[1]);
-
+        const canvas = MGSprite.toCanvas(spriteKey);
         if (canvas) {
             applyCanvasStyles(canvas, size);
             container.appendChild(canvas);
