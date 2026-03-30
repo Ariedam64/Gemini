@@ -405,6 +405,8 @@ function createPlayersGlobal(): PlayersGlobal {
 
 let instance: PlayersGlobal | null = null;
 
+export function destroyPlayers(): void { instance?.destroy(); instance = null; }
+
 export function getPlayers(): PlayersGlobal {
   if (!instance) {
     instance = createPlayersGlobal();

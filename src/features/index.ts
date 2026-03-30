@@ -1,8 +1,6 @@
 // src/features/index.ts
 // Entry point for all optional features
 
-export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
-
 export { MGAchievements } from "./achievements";
 export { MGAntiAfk } from "./antiAfk";
 export { MGPetTeam } from "./petTeam";

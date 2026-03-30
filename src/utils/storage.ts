@@ -56,10 +56,6 @@ export const GLOBAL_KEYS = {
 
 /** Keys for optional features (per .claude/rules/features.md) */
 export const FEATURE_KEYS = {
-    /** Auto-favorite feature config */
-    AUTO_FAVORITE: 'feature:autoFavorite:config',
-    /** Auto-favorite UI configuration */
-    AUTO_FAVORITE_UI: 'feature:autoFavorite:ui',
     /** Achievements feature data */
     ACHIEVEMENTS: 'feature:achievements:data',
     /** Stats tracker feature data */

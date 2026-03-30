@@ -77,7 +77,6 @@ import { soundPickerCss } from "../components/SoundPicker/soundPicker.css";
 // Section styles
 import { settingsCss } from "../sections/Settings/styles.css";
 import { teamCardCss } from "../sections/Pets/parts/team/teamCard.css";
-import { autoFavoriteSettingsCss } from "../sections/AutoFavoriteSettings/styles.css";
 
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
@@ -146,7 +145,6 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     [soundPickerCss, "soundPicker"],
     [settingsCss, "settings"],
     [teamCardCss, "teamCard"],
-    [autoFavoriteSettingsCss, "autoFavoriteSettings"],
   ];
 
   for (let i = 0; i < styleInjections.length; i++) {
@@ -252,7 +250,6 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
 
   // ===== 6b. Tab Visibility (inline - controlled by feature toggles) =====
   const TAB_FEATURE_MAP: Record<string, string> = {
-    'tab-auto-favorite': 'autoFavorite',
     'tab-pets': 'pets',
     'tab-locker': 'locker',
 
@@ -265,7 +262,6 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     const config = storageGet<Record<string, { enabled: boolean }>>(
       FEATURE_KEYS.CONFIG,
       {
-        autoFavorite: { enabled: true },
         pets: { enabled: true },
         locker: { enabled: true },
 

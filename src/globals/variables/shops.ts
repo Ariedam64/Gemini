@@ -442,6 +442,8 @@ function createShopsGlobal(): ShopsGlobal {
 
 let instance: ShopsGlobal | null = null;
 
+export function destroyShops(): void { instance?.destroy(); instance = null; }
+
 export function getShops(): ShopsGlobal {
   if (!instance) {
     instance = createShopsGlobal();

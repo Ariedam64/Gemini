@@ -644,6 +644,8 @@ function createMyPetsGlobal(): MyPetsGlobal {
 
 let instance: MyPetsGlobal | null = null;
 
+export function destroyMyPets(): void { instance?.destroy(); instance = null; }
+
 export function getMyPets(): MyPetsGlobal {
   if (!instance) {
     instance = createMyPetsGlobal();

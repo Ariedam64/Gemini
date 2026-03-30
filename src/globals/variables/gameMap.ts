@@ -207,6 +207,8 @@ function createGameMapGlobal(): GameMapGlobal {
 
 let instance: GameMapGlobal | null = null;
 
+export function destroyGameMap(): void { instance?.destroy(); instance = null; }
+
 export function getGameMap(): GameMapGlobal {
   if (!instance) {
     instance = createGameMapGlobal();

@@ -4,8 +4,8 @@
 
 type Options = {
   onClick: () => void;
-  iconUrl?: string; // default MGH icon
-  ariaLabel?: string; // default "Open MGH"
+  iconUrl?: string; // default Gemini icon
+  ariaLabel?: string; // default "Open Gemini"
 };
 
 const DEFAULT_ICON = "https://i.imgur.com/IMkhMur.png";
@@ -13,7 +13,7 @@ const PREFERRED_REF_ARIA = "Stats";
 
 export function startInjectGamePanelButton(opts: Options) {
   let iconUrl = opts.iconUrl || DEFAULT_ICON;
-  const aria = opts.ariaLabel || "Open MGH";
+  const aria = opts.ariaLabel || "Open Gemini";
 
   let mountedBtn: HTMLButtonElement | null = null;
   let mountedWrap: HTMLDivElement | null = null;

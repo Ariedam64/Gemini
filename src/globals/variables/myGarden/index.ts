@@ -13,6 +13,8 @@ import { createMyGardenGlobal } from "./lifecycle";
 // Singleton instance
 let instance: MyGardenGlobal | null = null;
 
+export function destroyMyGarden(): void { instance?.destroy(); instance = null; }
+
 /**
  * Get myGarden global singleton instance
  *

@@ -19,7 +19,6 @@ import {
   MGRiveLoader,
 } from "../modules";
 import { MGAntiAfk } from "../features/antiAfk";
-import { MGAutoFavorite } from "../features/autoFavorite";
 
 import { MGAchievements } from "../features/achievements";
 import { MGPetTeam } from "../features/petTeam";
@@ -63,8 +62,6 @@ export const GeminiAPI = {
   },
 
   Features: {
-    AutoFavorite: MGAutoFavorite,
-
     Achievements: MGAchievements,
     Tracker: MGTracker,
     AntiAfk: MGAntiAfk,

@@ -1,6 +1,5 @@
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
-import { perfMark, perfCount } from "../../utils/perfLog";
 import type {
   CurrentTileGlobalWithSubscriptions,
   CurrentTileData,
@@ -205,13 +204,9 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
     notifyScheduled = false;
     if (ready.size < sourceKeys.length) return;
 
-    const endFlush = perfMark('currentTile.flush');
     const nextData = buildData(sources as CurrentTileSources);
 
-    if (deepEqual(currentData, nextData)) {
-      endFlush();
-      return;
-    }
+    if (deepEqual(currentData, nextData)) return;
 
     previousData = currentData;
     currentData = nextData;
@@ -257,7 +252,6 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
         cb(event);
       }
     }
-    endFlush();
   }
 
   function notify(): void {
@@ -273,7 +267,6 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
       const atomLabel = atomSources[key];
 
       const unsub = await Store.subscribe(atomLabel, (value: unknown) => {
-        perfCount(`atom:${key}`);
         (sources as Record<string, unknown>)[key] = value;
         ready.add(key);
         notify();
@@ -353,6 +346,8 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 }
 
 let instance: CurrentTileGlobalWithSubscriptions | null = null;
+
+export function destroyCurrentTile(): void { instance?.destroy(); instance = null; }
 
 export function getCurrentTile(): CurrentTileGlobalWithSubscriptions {
   if (!instance) {

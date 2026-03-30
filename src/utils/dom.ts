@@ -4,8 +4,6 @@
  * dispatches to all registered onAdded / onRemoved listeners.
  */
 
-import { perfMark } from './perfLog';
-
 interface ObserverHandle {
   disconnect: () => void;
 }
@@ -26,8 +24,6 @@ function ensureSharedObserver(): void {
   if (sharedObserver) return;
 
   sharedObserver = new MutationObserver((mutations) => {
-    const end = perfMark('MO:shared-hub');
-
     for (const mutation of mutations) {
       // ── Added nodes ──
       for (const node of mutation.addedNodes) {
@@ -59,8 +55,6 @@ function ensureSharedObserver(): void {
         }
       }
     }
-
-    end();
   });
 
   sharedObserver.observe(document.body, {

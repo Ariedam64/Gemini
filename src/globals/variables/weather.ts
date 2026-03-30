@@ -136,6 +136,8 @@ function createWeatherGlobal(): WeatherGlobal {
 
 let instance: WeatherGlobal | null = null;
 
+export function destroyWeather(): void { instance?.destroy(); instance = null; }
+
 export function getWeather(): WeatherGlobal {
   if (!instance) {
     instance = createWeatherGlobal();

@@ -4,7 +4,6 @@ import type { SectionsDeps } from "./core/Types";
 // Concrete sections
 import { SettingsSection } from "./Settings";
 import { TestSection } from "./Test";
-import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { PetsSection } from "./Pets";
 
 import { AlertsSection } from "./Alerts";
@@ -45,7 +44,6 @@ function getLockerSection(): LockerSection {
 export function buildSections(deps: SectionsDeps): BaseSection[] {
   const sections: BaseSection[] = [
     new SettingsSection(deps),
-    new AutoFavoriteSettingsSection(),
     getAlertsSection(),
     new PetsSection(deps),
 

@@ -63,7 +63,6 @@ function toCssValue(value: ColorPickerValue): string {
 interface FeatureConfig {
   // HUD Sections (tabs visibility)
   pets: { enabled: boolean };
-  autoFavorite: { enabled: boolean };
   locker: { enabled: boolean };
 
   alerts: { enabled: boolean };
@@ -80,7 +79,6 @@ interface FeatureConfig {
 const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   // HUD Sections - default to enabled (show all tabs)
   pets: { enabled: true },
-  autoFavorite: { enabled: true },
   locker: { enabled: true },
 
   alerts: { enabled: true },
@@ -204,7 +202,6 @@ export class SettingsSection extends BaseSection {
   private mergeFeatureConfig(stored: Partial<FeatureConfig>): FeatureConfig {
     return {
       pets: { ...DEFAULT_FEATURE_CONFIG.pets, ...stored.pets },
-      autoFavorite: { ...DEFAULT_FEATURE_CONFIG.autoFavorite, ...stored.autoFavorite },
       locker: { ...DEFAULT_FEATURE_CONFIG.locker, ...stored.locker },
 
       alerts: { ...DEFAULT_FEATURE_CONFIG.alerts, ...stored.alerts },
@@ -283,16 +280,6 @@ export class SettingsSection extends BaseSection {
         onExpandChange: params?.onExpandChange,
       },
       element("div", {},
-        createSectionRow(
-          "Auto-Favorite",
-          this.featureConfig.autoFavorite.enabled,
-          (v: boolean) => {
-            this.featureConfig.autoFavorite.enabled = v;
-            this.saveFeatureConfig();
-          },
-          "Automatic mutation favoriting settings",
-          true // First item
-        ),
         createSectionRow(
           "Pets",
           this.featureConfig.pets.enabled,

@@ -12,7 +12,6 @@ import { createCleanupTracker, addObserverWithCleanup } from '../../ui/inject/co
 import { calculateCropSize } from '../../modules/calculators/logic/crop';
 import { getCurrentTile } from '../../globals/variables/currentTile';
 import { MGData } from '../../modules/data';
-import { perfMark } from '../../utils/perfLog';
 import type { Unsubscribe } from '../../globals/core/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -281,7 +280,6 @@ function startObservingTooltips(): void {
 
   // Watch for new crops added to the page and tooltips
   const observer = new MutationObserver((mutations) => {
-    const end = perfMark('MO:cropSizeIndicator');
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
@@ -321,7 +319,6 @@ function startObservingTooltips(): void {
         });
       }
     }
-    end();
   });
 
   observer.observe(document.body, {

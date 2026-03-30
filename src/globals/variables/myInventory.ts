@@ -300,6 +300,8 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
 let instance: MyInventoryGlobal | null = null;
 
+export function destroyMyInventory(): void { instance?.destroy(); instance = null; }
+
 export function getMyInventory(): MyInventoryGlobal {
   if (!instance) {
     instance = createMyInventoryGlobal();
