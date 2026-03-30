@@ -119,7 +119,6 @@ function evaluate(): void {
         data.plant.nextHarvestSlotIndex === null
     ) {
         removeOverlay(currentCard);
-        console.log('[HarvestLocker Inject] No plant data — overlay removed');
         return;
     }
 
@@ -130,10 +129,8 @@ function evaluate(): void {
 
     if (locked) {
         applyOverlay(currentCard);
-        console.log(`[HarvestLocker Inject] LOCKED — overlay applied (${data.plant.species} tile:${tileId} slot:${slotIndex})`);
     } else {
         removeOverlay(currentCard);
-        console.log(`[HarvestLocker Inject] unlocked — overlay removed (${data.plant.species} tile:${tileId} slot:${slotIndex})`);
     }
 }
 

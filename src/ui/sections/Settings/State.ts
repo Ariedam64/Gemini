@@ -8,7 +8,7 @@ import { createSectionStore, mergeExpanded } from "../core/State";
 /* -------------------------------------------------------------------------
  * Types
  * ------------------------------------------------------------------------- */
-export type SettingsCardKey = "style" | "hudSections" | "enhancements" | "journal" | "system";
+export type SettingsCardKey = "style" | "hudSections" | "enhancements" | "system";
 
 export type SettingUI = {
   expandedCards: Record<SettingsCardKey, boolean>;
@@ -27,7 +27,6 @@ export const DEFAULT_SETTINGS_STATE: SettingState = {
       style: false,
       hudSections: false,
       enhancements: false,
-      journal: false,
       system: false,
     },
   },

@@ -125,10 +125,8 @@ function evaluate(): void {
 
     if (blocked) {
         applyOverlay(currentCard);
-        console.log(`[EggLocker Inject] LOCKED — overlay applied (${egg.eggId})`);
     } else {
         removeOverlay(currentCard);
-        console.log(`[EggLocker Inject] unlocked — overlay removed (${egg.eggId})`);
     }
 }
 

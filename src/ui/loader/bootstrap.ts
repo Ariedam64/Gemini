@@ -16,7 +16,6 @@ import { migrateStorageKeys, FEATURE_KEYS, INJECT_KEYS } from "../../utils/stora
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
 
-import { MGJournal } from "../../features/journal";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
 import { MGCropSizeIndicator } from "../../features/cropSizeIndicator";
@@ -27,7 +26,6 @@ import { MGAriesAPI } from "../../features/ariesAPI";
 import { MGHarvestLocker } from "../../features/harvestLocker";
 import { MGEggLocker } from "../../features/eggLocker";
 import { MGDecorLocker } from "../../features/decorLocker";
-import { MGMissingVariantsIndicator } from "../../features/missingVariantsIndicator";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
 
@@ -207,8 +205,6 @@ export function initFeatures(loader: LoaderController): void {
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
     { name: "EggLocker", init: MGEggLocker.init.bind(MGEggLocker) },
     { name: "DecorLocker", init: MGDecorLocker.init.bind(MGDecorLocker) },
-    { name: "MissingVariantsIndicator", init: MGMissingVariantsIndicator.init.bind(MGMissingVariantsIndicator) },
-    { name: "Journal", init: MGJournal.init.bind(MGJournal) },
   ];
 
   let initializedCount = 0;
@@ -253,17 +249,7 @@ export function initFeatures(loader: LoaderController): void {
       defaultEnabled: false,
     });
 
-    registry.register({
-      id: 'missingVariantsIndicator',
-      name: 'Missing Variants',
-      description: 'Shows colored letters for unlogged crop variants',
-      injection: MGMissingVariantsIndicator.render,
-      storageKey: FEATURE_KEYS.MISSING_VARIANTS_INDICATOR,
-      defaultEnabled: false,
-    });
-
     // EggLockerInject and DecorLockerInject are now managed directly by their features
-    // Journal injections are registered by MGJournal.init() via features/journal/logic/injections.ts
 
     // Initialize all enabled injections
     registry.initAll();

@@ -1,11 +1,84 @@
 /**
  * DOM utilities
- * MutationObserver helpers for detecting element addition/removal
+ * Shared MutationObserver hub — a single observer on document.body
+ * dispatches to all registered onAdded / onRemoved listeners.
  */
+
+import { perfMark } from './perfLog';
 
 interface ObserverHandle {
   disconnect: () => void;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared hub — ONE MutationObserver for all onAdded / onRemoved callers
+// ─────────────────────────────────────────────────────────────────────────────
+
+type AddedEntry  = { selector: string; callback: (el: Element) => void };
+type RemovedEntry = { selector: string; callback: (el: Element) => void };
+
+const addedListeners  = new Set<AddedEntry>();
+const removedListeners = new Set<RemovedEntry>();
+
+let sharedObserver: MutationObserver | null = null;
+
+function ensureSharedObserver(): void {
+  if (sharedObserver) return;
+
+  sharedObserver = new MutationObserver((mutations) => {
+    const end = perfMark('MO:shared-hub');
+
+    for (const mutation of mutations) {
+      // ── Added nodes ──
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof Element)) continue;
+
+        for (const entry of addedListeners) {
+          if (node.matches(entry.selector)) {
+            entry.callback(node);
+          }
+          const children = node.querySelectorAll(entry.selector);
+          for (const child of children) {
+            entry.callback(child);
+          }
+        }
+      }
+
+      // ── Removed nodes ──
+      for (const node of mutation.removedNodes) {
+        if (!(node instanceof Element)) continue;
+
+        for (const entry of removedListeners) {
+          if (node.matches(entry.selector)) {
+            entry.callback(node);
+          }
+          const children = node.querySelectorAll(entry.selector);
+          for (const child of children) {
+            entry.callback(child);
+          }
+        }
+      }
+    }
+
+    end();
+  });
+
+  sharedObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+function maybeStopSharedObserver(): void {
+  if (addedListeners.size === 0 && removedListeners.size === 0 && sharedObserver) {
+    sharedObserver.disconnect();
+    sharedObserver = null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public API
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Watch for elements matching selector being added to DOM
@@ -14,28 +87,10 @@ export function onAdded(
   selector: string,
   callback: (element: Element) => void
 ): ObserverHandle {
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (!(node instanceof Element)) continue;
+  ensureSharedObserver();
 
-        if (node.matches(selector)) {
-          callback(node);
-        }
-
-        // Check children
-        const children = node.querySelectorAll(selector);
-        for (const child of children) {
-          callback(child);
-        }
-      }
-    }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  const entry: AddedEntry = { selector, callback };
+  addedListeners.add(entry);
 
   // Check for existing elements
   const existing = document.querySelectorAll(selector);
@@ -44,7 +99,10 @@ export function onAdded(
   }
 
   return {
-    disconnect: () => observer.disconnect(),
+    disconnect: () => {
+      addedListeners.delete(entry);
+      maybeStopSharedObserver();
+    },
   };
 }
 
@@ -55,31 +113,16 @@ export function onRemoved(
   selector: string,
   callback: (element: Element) => void
 ): ObserverHandle {
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of mutation.removedNodes) {
-        if (!(node instanceof Element)) continue;
+  ensureSharedObserver();
 
-        if (node.matches(selector)) {
-          callback(node);
-        }
-
-        // Check children
-        const children = node.querySelectorAll(selector);
-        for (const child of children) {
-          callback(child);
-        }
-      }
-    }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  const entry: RemovedEntry = { selector, callback };
+  removedListeners.add(entry);
 
   return {
-    disconnect: () => observer.disconnect(),
+    disconnect: () => {
+      removedListeners.delete(entry);
+      maybeStopSharedObserver();
+    },
   };
 }
 

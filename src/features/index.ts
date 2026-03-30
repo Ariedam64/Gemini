@@ -2,8 +2,6 @@
 // Entry point for all optional features
 
 export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
-export { MGJournal } from "./journal";
-export type { SpeciesProgress, CategoryProgress, JournalProgress, RawJournal } from "./journal";
 
 export { MGAchievements } from "./achievements";
 export { MGAntiAfk } from "./antiAfk";
@@ -15,8 +13,6 @@ export { MGGrowthTimers } from "./growthTimers";
 export type { GrowthTimer, BoostInfo, GrowthTimersConfig } from "./growthTimers";
 export { MGCropValueIndicator } from "./cropValueIndicator";
 export { MGCropSizeIndicator } from "./cropSizeIndicator";
-export { MGMissingVariantsIndicator } from "./missingVariantsIndicator";
-export type { MissingVariantsIndicatorConfig } from "./missingVariantsIndicator";
 export { MGShopNotifier } from "./shopNotifier";
 export type { TrackedItem, ShopNotifierConfig } from "./shopNotifier";
 export { MGWeatherNotifier } from "./weatherNotifier";

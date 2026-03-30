@@ -60,9 +60,6 @@ export const FEATURE_KEYS = {
     AUTO_FAVORITE: 'feature:autoFavorite:config',
     /** Auto-favorite UI configuration */
     AUTO_FAVORITE_UI: 'feature:autoFavorite:ui',
-    /** Journal checker feature config */
-    JOURNAL_CHECKER: 'feature:journalChecker:config',
-
     /** Achievements feature data */
     ACHIEVEMENTS: 'feature:achievements:data',
     /** Stats tracker feature data */
@@ -93,23 +90,10 @@ export const FEATURE_KEYS = {
     EGG_LOCKER: 'feature:eggLocker:config',
     /** Decor locker feature config */
     DECOR_LOCKER: 'feature:decorLocker:config',
-    /** Missing variants indicator feature config (colored letters in crop tooltips) */
-    MISSING_VARIANTS_INDICATOR: 'feature:missingVariantsIndicator:config',
-    /** Journal feature config (replaces journalChecker) */
-    JOURNAL: 'feature:journal:config',
 } as const;
 
 /** Keys for UI injections (per ui/inject.md) */
-export const INJECT_KEYS = {
-    /** Abilities inject (journal modal enhancement) */
-    ABILITIES_INJECT: 'inject:abilitiesInject:config',
-    /** Journal hints (tooltips for unknown journal entries) */
-    JOURNAL_HINTS: 'inject:journalHints:config',
-    /** Journal filter/sort controls */
-    JOURNAL_FILTER_SORT: 'inject:journalFilterSort:config',
-    /** Journal All tab (combined view) */
-    JOURNAL_ALL_TAB: 'inject:journalAllTab:config',
-} as const;
+export const INJECT_KEYS = {} as const;
 
 /** Keys for debug purposes */
 export const DEV_KEYS = {
@@ -138,8 +122,6 @@ export const KEYS = {
 export const EVENTS = {
     /** Storage value changed */
     STORAGE_CHANGE: 'gemini:storage:change',
-    /** Journal data updated */
-    JOURNAL_UPDATED: 'gemini:journal-updated',
     /** HUD open state changed */
     HUD_OPEN_CHANGE: 'gemini:hud-open-change',
     /** Layout resize request */

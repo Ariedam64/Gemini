@@ -68,8 +68,10 @@ export function createReactiveGlobal<
 
   const sourceKeys = Object.keys(atomSources) as (keyof TSources)[];
   const totalSources = sourceKeys.length;
+  let recomputeScheduled = false;
 
-  function recompute(): void {
+  function flush(): void {
+    recomputeScheduled = false;
     if (state.ready.size < totalSources) return;
 
     const nextValue = combine(state.values as TSources);
@@ -84,6 +86,12 @@ export function createReactiveGlobal<
         listener(currentValue, previousValue);
       }
     }
+  }
+
+  function recompute(): void {
+    if (recomputeScheduled) return;
+    recomputeScheduled = true;
+    queueMicrotask(flush);
   }
 
   async function init(): Promise<void> {

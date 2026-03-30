@@ -1,5 +1,6 @@
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
+import { perfMark, perfCount } from "../../utils/perfLog";
 import type {
   CurrentTileGlobalWithSubscriptions,
   CurrentTileData,
@@ -198,13 +199,19 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
   const sources: Partial<CurrentTileSources> = {};
   const sourceKeys = Object.keys(atomSources) as (keyof CurrentTileSources)[];
   const ready = new Set<keyof CurrentTileSources>();
+  let notifyScheduled = false;
 
-  function notify(): void {
+  function flush(): void {
+    notifyScheduled = false;
     if (ready.size < sourceKeys.length) return;
 
+    const endFlush = perfMark('currentTile.flush');
     const nextData = buildData(sources as CurrentTileSources);
 
-    if (deepEqual(currentData, nextData)) return;
+    if (deepEqual(currentData, nextData)) {
+      endFlush();
+      return;
+    }
 
     previousData = currentData;
     currentData = nextData;
@@ -250,6 +257,13 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
         cb(event);
       }
     }
+    endFlush();
+  }
+
+  function notify(): void {
+    if (notifyScheduled) return;
+    notifyScheduled = true;
+    queueMicrotask(flush);
   }
 
   async function init(): Promise<void> {
@@ -259,6 +273,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
       const atomLabel = atomSources[key];
 
       const unsub = await Store.subscribe(atomLabel, (value: unknown) => {
+        perfCount(`atom:${key}`);
         (sources as Record<string, unknown>)[key] = value;
         ready.add(key);
         notify();

@@ -125,10 +125,8 @@ function evaluate(): void {
 
     if (blocked) {
         applyOverlay(currentCard);
-        console.log(`[DecorLocker Inject] LOCKED — overlay applied (${decor.decorId})`);
     } else {
         removeOverlay(currentCard);
-        console.log(`[DecorLocker Inject] unlocked — overlay removed (${decor.decorId})`);
     }
 }
 
