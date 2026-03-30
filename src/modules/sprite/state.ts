@@ -20,6 +20,10 @@ export function createSpriteState(): SpriteState {
     defaultParent: null,
     overlay: null,
     categoryIndex: null,
+    catalogKeys: new Set(),
+    animationFrameIds: new Map(),
+    loadingPromises: new Map(),
+    spritePngUrlResolver: null,
   };
 }
 

@@ -1,6 +1,6 @@
 // src/modules/sprite/display.ts
 // show() and toCanvas() functions for sprite display
-// Now uses pure canvas rendering (no PIXI dependency for toCanvas)
+// Uses pure canvas rendering with lazy image loading
 
 import type {
   PixiSprite,
@@ -17,6 +17,7 @@ import type {
   BoundsPadding,
 } from "../types";
 import { resolveKey } from "./utils";
+import { ensureImageLoaded, ensureImagesLoaded } from "./loader";
 import { computeVariantSignature, buildMutationPipeline, MUT_META, FLOATING_MUTATION_ICONS } from "./mutations/constants";
 import { applyFilterOnto } from "./mutations/filters";
 import {
@@ -149,25 +150,16 @@ export async function warmupCanvasCache(
 
     for (const spriteId of batch) {
       try {
-        const key = resolveKey(null, spriteId, state.textures, state.animations);
-        const options: ToCanvasOptions = { scale: 1 };
-        const boundsMode = resolveBoundsMode(options);
-        const pad = resolvePad(boundsMode, options);
-        const paddingKey = boundsPaddingKey(boundsMode, options.boundsPadding);
-        const cacheKey = buildCanvasCacheKey(key, options, boundsMode, pad, paddingKey);
-
-        if (!canvasCacheState.cache.has(cacheKey)) {
-          spriteToCanvas(
-            state,
-            _mutCacheState,
-            _mutCacheConfig,
-            null,
-            spriteId,
-            options,
-            canvasCacheState,
-            canvasCacheConfig
-          );
-        }
+        await spriteToCanvas(
+          state,
+          _mutCacheState,
+          _mutCacheConfig,
+          null,
+          spriteId,
+          { scale: 1 },
+          canvasCacheState,
+          canvasCacheConfig
+        );
         loaded++;
       } catch {
         loaded++;
@@ -210,21 +202,64 @@ function toCanvasElement(source: unknown): HTMLCanvasElement {
   throw new Error("Cannot convert to canvas: unknown source type");
 }
 
-function getImageSize(source: unknown): { w: number; h: number } {
-  if (source instanceof HTMLImageElement) {
-    return { w: source.naturalWidth || source.width, h: source.naturalHeight || source.height };
+/**
+ * Collect all sprite keys needed for mutation rendering and lazy-load them in parallel
+ */
+async function ensureMutationImagesLoaded(
+  itemKey: string,
+  mutations: MutationName[],
+  state: SpriteState,
+): Promise<void> {
+  const variant = computeVariantSignature(mutations);
+  if (!variant.sig) return;
+
+  const keysToLoad = new Set<string>();
+
+  const meta = state.spriteMeta.get(itemKey);
+  const aY = meta?.anchor?.y ?? 0.5;
+  const sMeta = meta?.sourceSize;
+  const w = sMeta?.w ?? 1;
+  const h = sMeta?.h ?? 1;
+  const isTall = aY > 0.8 && h > w * 1.8;
+
+  const iconPipeline = buildMutationPipeline(variant.selectedMuts, isTall);
+  const overlayPipeline = buildMutationPipeline(variant.overlayMuts, isTall);
+
+  // Collect icon keys
+  for (const step of iconPipeline) {
+    if (step.name === "Gold" || step.name === "Rainbow") continue;
+    const mutMeta = MUT_META[step.name];
+    if (step.isTall && mutMeta?.tallIconOverride) {
+      keysToLoad.add(mutMeta.tallIconOverride);
+    }
+    const base = baseNameOf(itemKey);
+    for (const alias of mutationAliases(step.name)) {
+      keysToLoad.add(`sprite/mutation/${alias}Icon`);
+      keysToLoad.add(`sprite/mutation/${alias}`);
+      keysToLoad.add(`sprite/mutation/${alias}${base}`);
+    }
   }
-  if (source instanceof HTMLCanvasElement) {
-    return { w: source.width, h: source.height };
+
+  // Collect overlay keys
+  if (isTall) {
+    for (const step of overlayPipeline) {
+      if (step.overlayTall) keysToLoad.add(step.overlayTall);
+      for (const alias of mutationAliases(step.name)) {
+        keysToLoad.add(`sprite/mutation-overlay/${alias}TallPlant`);
+        keysToLoad.add(`sprite/mutation-overlay/${alias}`);
+        keysToLoad.add(`sprite/mutation/${alias}`);
+      }
+    }
   }
-  // Fallback for PixiTexture-like objects
-  const tex = source as Record<string, unknown>;
-  const orig = tex?.orig as { width?: number; height?: number } | undefined;
-  const frame = tex?.frame as { width?: number; height?: number } | undefined;
-  return {
-    w: (orig?.width ?? frame?.width ?? (tex?.width as number) ?? 1) as number,
-    h: (orig?.height ?? frame?.height ?? (tex?.height as number) ?? 1) as number,
-  };
+
+  // Filter to only keys that exist in catalog and aren't loaded yet
+  const toLoad = [...keysToLoad].filter(
+    (k) => state.catalogKeys.has(k) && !state.textures.has(k)
+  );
+
+  if (toLoad.length > 0) {
+    await ensureImagesLoaded(toLoad, state);
+  }
 }
 
 /**
@@ -236,9 +271,9 @@ function findIconKey(
   isTall: boolean,
   textures: Map<string, unknown>,
 ): string | null {
-  const meta = MUT_META[mutName];
-  if (isTall && meta?.tallIconOverride) {
-    if (textures.has(meta.tallIconOverride)) return meta.tallIconOverride;
+  const mutMeta = MUT_META[mutName];
+  if (isTall && mutMeta?.tallIconOverride) {
+    if (textures.has(mutMeta.tallIconOverride)) return mutMeta.tallIconOverride;
   }
 
   const base = baseNameOf(itKey);
@@ -259,9 +294,6 @@ function findIconKey(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pure Canvas Mutation Composition
-// Replicates the old PIXI-based composer logic using canvas 2D.
-// All positioning uses basePos = { w * aX, h * aY } as the anchor reference,
-// exactly like the old Container/Sprite system with generateTexture({ region: crop }).
 // ─────────────────────────────────────────────────────────────────────────────
 
 function applyMutationsToCanvas(
@@ -277,20 +309,17 @@ function applyMutationsToCanvas(
   const w = baseCanvas.width;
   const h = baseCanvas.height;
 
-  // Resolve anchor from API metadata (same as old tex.defaultAnchor)
   const meta = spriteMeta.get(itemKey);
   const aX = meta?.anchor?.x ?? 0.5;
   const aY = meta?.anchor?.y ?? 0.5;
   const basePos = { x: w * aX, y: h * aY };
 
-  // Detect tall plants from metadata (replaces old isTallKey("tallplant"))
   const isTall = aY > 0.8 && h > w * 1.8;
 
   const pipeline = buildMutationPipeline(variant.muts, isTall);
   const overlayPipeline = buildMutationPipeline(variant.overlayMuts, isTall);
   const iconPipeline = buildMutationPipeline(variant.selectedMuts, isTall);
 
-  // Pre-compute icon data for z-ordered drawing
   const baseName = baseNameOf(itemKey);
   const fakeTexForLayout = { width: w, height: h, defaultAnchor: { x: aX, y: aY } };
   const iconLayout = computeIconLayout(fakeTexForLayout as unknown, baseName, isTall);
@@ -309,17 +338,14 @@ function applyMutationsToCanvas(
       const iconScaledW = iconCanvas.width * iconLayout.iconScale;
       const iconScaledH = iconCanvas.height * iconLayout.iconScale;
 
-      // Get icon's own anchor from metadata (same as old itex.defaultAnchor)
       const iconKey = findIconKey(itemKey, step.name, step.isTall, textures as Map<string, unknown>);
       const iconMeta = iconKey ? spriteMeta.get(iconKey) : null;
       const iconAnchorX = iconMeta?.anchor?.x ?? 0.5;
       const iconAnchorY = iconMeta?.anchor?.y ?? 0.5;
 
-      // In PIXI: icon at (basePos + offset) with anchor → top-left = pos - anchor * scaledSize
       const iconX = basePos.x + iconLayout.offset.x - iconScaledW * iconAnchorX;
       const iconY = basePos.y + iconLayout.offset.y - iconScaledH * iconAnchorY;
 
-      // Determine z-index (same as old buildIconSprites)
       let z = 2;
       if (step.isTall) z = -1;
       if (FLOATING_MUTATION_ICONS.has(step.name)) z = 10;
@@ -328,24 +354,18 @@ function applyMutationsToCanvas(
     } catch { /* skip icon */ }
   }
 
-  // Output canvas is always base sprite size (w × h).
-  // Anything that overflows is clipped — this ensures consistent sizing
-  // across different mutation combos (same as old boundsMode: "base").
   const output = document.createElement("canvas");
   output.width = w;
   output.height = h;
   const ctx = output.getContext("2d")!;
   ctx.imageSmoothingEnabled = false;
 
-  // z=-1: Icons behind base (tall plant ground effects)
   for (const icon of iconDraws) {
     if (icon.z === -1) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
   }
 
-  // z=0: Base sprite
   ctx.drawImage(baseCanvas, 0, 0);
 
-  // z=1: Color filter layers
   for (const step of pipeline) {
     const layerCanvas = document.createElement("canvas");
     layerCanvas.width = w;
@@ -357,12 +377,10 @@ function applyMutationsToCanvas(
     ctx.drawImage(layerCanvas, 0, 0);
   }
 
-  // z=2: Normal icons
   for (const icon of iconDraws) {
     if (icon.z === 2) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
   }
 
-  // z=3: Tall overlay mutations (masked to base shape)
   if (isTall) {
     for (const step of overlayPipeline) {
       const overlayKey = step.overlayTall;
@@ -392,7 +410,6 @@ function applyMutationsToCanvas(
     }
   }
 
-  // z=10: Floating icons (Dawnlit, Ambershine, Dawncharged, Ambercharged)
   for (const icon of iconDraws) {
     if (icon.z === 10) ctx.drawImage(icon.canvas, icon.x, icon.y, icon.sw, icon.sh);
   }
@@ -409,7 +426,7 @@ function resolveBoundsMode(options: ToCanvasOptions): CanvasBoundsMode {
   return "base";
 }
 
-function resolvePad(boundsMode: CanvasBoundsMode, options: ToCanvasOptions): number {
+function resolvePad(_boundsMode: CanvasBoundsMode, options: ToCanvasOptions): number {
   return options.pad ?? 0;
 }
 
@@ -440,10 +457,10 @@ function boundsPaddingKey(boundsMode: CanvasBoundsMode, padding?: number | Bound
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// To Canvas (pure canvas rendering)
+// To Canvas (async — lazy loads images on demand)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function spriteToCanvas(
+export async function spriteToCanvas(
   state: SpriteState,
   _cacheState: MutationCacheState,
   _cacheConfig: CacheConfig,
@@ -452,10 +469,10 @@ export function spriteToCanvas(
   options: ToCanvasOptions = {},
   canvasCacheState?: CanvasCacheState,
   canvasCacheConfig?: CanvasCacheConfig
-): HTMLCanvasElement {
+): Promise<HTMLCanvasElement> {
   if (!state.ready) throw new Error("MGSprite not ready yet");
 
-  const key = resolveKey(category, asset, state.textures, state.animations);
+  const key = resolveKey(category, asset, state.catalogKeys, state.animationFrameIds);
   const boundsMode = resolveBoundsMode(options);
   const pad = resolvePad(boundsMode, options);
   const paddingKey = boundsPaddingKey(boundsMode, options.boundsPadding);
@@ -463,20 +480,38 @@ export function spriteToCanvas(
     ? buildCanvasCacheKey(key, options, boundsMode, pad, paddingKey)
     : null;
 
-  // Check canvas cache first
+  // Check canvas cache first (sync — no image loading needed)
   if (cacheKey && canvasCacheState && canvasCacheConfig?.enabled) {
     const cached = canvasCacheGet(canvasCacheState, cacheKey);
     if (cached) return cloneCanvas(cached);
   }
 
   const mutations = options.mutations || [];
-  const rawFrames = state.animations.get(key);
-  const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
 
-  // Get the source image (HTMLImageElement stored in textures map)
+  // Lazy-load the base image and any mutation images in parallel
+  const frameIds = state.animationFrameIds.get(key);
+  if (frameIds?.length) {
+    // Animation: load all frame images
+    await ensureImagesLoaded(frameIds, state);
+  } else {
+    // Single frame: load the base image
+    await ensureImageLoaded(key, state);
+  }
+
+  // Pre-load mutation images if needed
+  if (mutations.length > 0) {
+    await ensureMutationImagesLoaded(key, mutations, state);
+  }
+
+  // Get the source image
+  const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
   let sourceImg: unknown;
-  if (rawFrames?.length) {
-    sourceImg = rawFrames[idx % rawFrames.length];
+  if (frameIds?.length) {
+    // Resolve animation frames from loaded textures
+    const frames = frameIds
+      .map((fid) => state.textures.get(fid))
+      .filter(Boolean);
+    sourceImg = frames.length > 0 ? frames[idx % frames.length] : null;
   } else {
     sourceImg = state.textures.get(key);
   }
@@ -485,7 +520,7 @@ export function spriteToCanvas(
   // Convert source to canvas
   let baseCanvas = toCanvasElement(sourceImg);
 
-  // Apply mutations if any
+  // Apply mutations if any (sync — all images already loaded above)
   if (mutations.length > 0) {
     baseCanvas = applyMutationsToCanvas(baseCanvas, key, mutations, state.textures, state.spriteMeta);
   }
@@ -539,7 +574,6 @@ export function showSprite(
   if (!state.app || !state.ctors) {
     throw new Error("MGSprite.show() requires PIXI (not available - use toCanvas() instead)");
   }
-  // PIXI-based show is no longer supported without the game's PIXI instance
   throw new Error("MGSprite.show() is not supported in API-only mode");
 }
 
@@ -549,7 +583,8 @@ export function showSprite(
 
 export function clearSprites(state: SpriteState): void {
   for (const obj of Array.from(state.live)) {
-    (obj as any).__mgDestroy?.();
+    const destroyFn = (obj as Record<string, unknown>).__mgDestroy;
+    if (typeof destroyFn === "function") destroyFn.call(obj);
   }
 }
 

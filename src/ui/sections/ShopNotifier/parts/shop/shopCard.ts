@@ -187,20 +187,23 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
         const container = element("div", { className: "shop-item-icon" });
 
         if (row.spriteId) {
-          // Use MGSprite to render the sprite
-          const canvas = MGSprite.toCanvas(row.spriteId);
-          if (canvas) {
-            canvas.style.maxWidth = "32px";
-            canvas.style.maxHeight = "32px";
-            canvas.style.width = "auto";
-            canvas.style.height = "auto";
-            canvas.style.imageRendering = "auto";
-            canvas.style.display = "block";
-            container.appendChild(canvas);
-          } else {
-            // Fallback to emoji if sprite fails
+          // Use MGSprite to render the sprite (async)
+          MGSprite.toCanvas(row.spriteId).then((canvas) => {
+            if (canvas) {
+              canvas.style.maxWidth = "32px";
+              canvas.style.maxHeight = "32px";
+              canvas.style.width = "auto";
+              canvas.style.height = "auto";
+              canvas.style.imageRendering = "auto";
+              canvas.style.display = "block";
+              container.appendChild(canvas);
+            } else {
+              // Fallback to emoji if sprite fails
+              container.textContent = ITEM_EMOJI[shopType];
+            }
+          }).catch(() => {
             container.textContent = ITEM_EMOJI[shopType];
-          }
+          });
         } else {
           // Fallback to emoji if no spriteId
           container.textContent = ITEM_EMOJI[shopType];

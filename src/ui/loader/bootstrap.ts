@@ -165,60 +165,17 @@ export async function initModules(loader: LoaderController): Promise<void> {
 
 export async function initSpriteWarmup(loader: LoaderController): Promise<void> {
   try {
-    // MGSprite is already initialized in initModules(), just resolve sprites and warm cache silently
+    // MGSprite is already initialized in initModules() (metadata only, no image downloads)
     if (!MGSprite.isReady()) {
       await MGSprite.init();
     }
 
-    // Resolve sprite IDs now that MGSprite is ready
+    // Resolve sprite IDs now that MGSprite catalog is ready
     MGData.resolveSprites();
 
-    const spriteIds: string[] = [];
-
-    const plantsData = MGData.get("plants") as Record<string, any> | null;
-    if (plantsData) {
-      for (const plant of Object.values(plantsData)) {
-        if (plant?.seed?.spriteId) spriteIds.push(plant.seed.spriteId);
-        if (plant?.plant?.spriteId) spriteIds.push(plant.plant.spriteId);
-        if (plant?.crop?.spriteId) spriteIds.push(plant.crop.spriteId);
-      }
-    }
-
-    const petsData = MGData.get("pets") as Record<string, any> | null;
-    if (petsData) {
-      for (const pet of Object.values(petsData)) {
-        if ((pet as any)?.spriteId) spriteIds.push((pet as any).spriteId);
-      }
-    }
-
-    // Add sprites for shop items (used in ShopNotifier section)
-    const itemsData = MGData.get("items") as Record<string, any> | null;
-    if (itemsData) {
-      for (const item of Object.values(itemsData)) {
-        if ((item as any)?.spriteId) spriteIds.push((item as any).spriteId);
-      }
-    }
-
-    const eggsData = MGData.get("eggs") as Record<string, any> | null;
-    if (eggsData) {
-      for (const egg of Object.values(eggsData)) {
-        if ((egg as any)?.spriteId) spriteIds.push((egg as any).spriteId);
-      }
-    }
-
-    const decorData = MGData.get("decor") as Record<string, any> | null;
-    if (decorData) {
-      for (const decor of Object.values(decorData)) {
-        if ((decor as any)?.spriteId) spriteIds.push((decor as any).spriteId);
-      }
-    }
-
-    const uniqueIds = [...new Set(spriteIds)];
-    if (uniqueIds.length > 0) {
-      await MGSprite.warmup(uniqueIds, () => { }, 5);
-    }
+    // Images are lazy-loaded on demand by toCanvas() — no warmup needed
   } catch (err) {
-    console.warn("[Bootstrap] Sprite warmup failed", err);
+    console.warn("[Bootstrap] Sprite init failed", err);
   }
 }
 

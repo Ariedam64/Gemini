@@ -38,7 +38,7 @@ export interface SpeciesButtonOptions {
  * @param options - Button configuration
  * @returns Configured button element
  */
-export function createSpeciesButton(options: SpeciesButtonOptions): HTMLButtonElement {
+export async function createSpeciesButton(options: SpeciesButtonOptions): Promise<HTMLButtonElement> {
     const { species, itemCount, isFavorited, isMobile, onClick } = options;
 
     const btn = element('button', {
@@ -49,7 +49,7 @@ export function createSpeciesButton(options: SpeciesButtonOptions): HTMLButtonEl
     btn.dataset.species = species;
 
     // Add sprite/fallback
-    btn.appendChild(createSpriteElement(species, isMobile));
+    btn.appendChild(await createSpriteElement(species, isMobile));
 
     // Add heart icon
     btn.appendChild(createHeartIcon(isFavorited));
@@ -75,14 +75,14 @@ export function createSpeciesButton(options: SpeciesButtonOptions): HTMLButtonEl
  * Create sprite element for a species
  * Falls back to first letter if sprite unavailable
  */
-function createSpriteElement(species: string, isMobile: boolean): HTMLElement {
+async function createSpriteElement(species: string, isMobile: boolean): Promise<HTMLElement> {
     try {
         if (!MGSprite.isReady() || !MGSprite.has('plant', species)) {
             return createFallbackSprite(species);
         }
 
         const scale = isMobile ? CONFIG.SPRITE_SCALE_MOBILE : CONFIG.SPRITE_SCALE_DESKTOP;
-        const canvas = MGSprite.toCanvas('plant', species, { scale });
+        const canvas = await MGSprite.toCanvas('plant', species, { scale });
         canvas.className = 'gemini-qol-bulkFavorite-sprite';
         return canvas;
     } catch (error) {

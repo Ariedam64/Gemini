@@ -87,7 +87,7 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
  * Get sprite element for a crop or egg
  * Returns actual canvas DOM element (not HTML string) to preserve rendered content
  */
-function getSpriteElement(type: 'egg' | 'plant', species: string | null): HTMLElement {
+async function getSpriteElement(type: 'egg' | 'plant', species: string | null): Promise<HTMLElement> {
     const category = type === 'egg' ? 'pet' : 'plant';
     const wrapper = el('span', 'sprite-wrapper');
     if (!species) return wrapper; // Return empty wrapper if no species (no placeholder)
@@ -101,7 +101,7 @@ function getSpriteElement(type: 'egg' | 'plant', species: string | null): HTMLEl
 
     try {
         if (MGSprite.isReady() && MGSprite.has(category, targetSpecies)) {
-            const canvas = MGSprite.toCanvas(category, targetSpecies, { scale: 0.3 });
+            const canvas = await MGSprite.toCanvas(category, targetSpecies, { scale: 0.3 });
             canvas.style.height = '16px';
             canvas.style.width = 'auto';
             canvas.style.imageRendering = 'pixelated';
@@ -116,7 +116,7 @@ function getSpriteElement(type: 'egg' | 'plant', species: string | null): HTMLEl
  * Get stacked sprite elements for showing multiple items (e.g., ALL PLANTS row)
  * Returns actual canvas DOM elements to preserve rendered content
  */
-function getStackedSpritesElement(type: 'egg' | 'plant', items: { species?: string; eggId?: string }[]): HTMLElement {
+async function getStackedSpritesElement(type: 'egg' | 'plant', items: { species?: string; eggId?: string }[]): Promise<HTMLElement> {
     const wrapper = el('span', 'stacked-sprites');
     // Remove inline styles - handled by CSS
 
@@ -154,7 +154,7 @@ function getStackedSpritesElement(type: 'egg' | 'plant', items: { species?: stri
 
         try {
             if (MGSprite.isReady() && spriteAsset && MGSprite.has(category, spriteAsset)) {
-                const canvas = MGSprite.toCanvas(category, spriteAsset, { scale: 0.2 });
+                const canvas = await MGSprite.toCanvas(category, spriteAsset, { scale: 0.2 });
                 canvas.style.height = '14px';
                 canvas.style.width = 'auto';
                 canvas.style.imageRendering = 'pixelated';
@@ -389,7 +389,7 @@ export const growthPanel: FeaturePanelDefinition = {
         };
     },
 
-    renderPetSlot: (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string) => {
+    renderPetSlot: async (pet: UnifiedPet, team: PetTeam, container: HTMLElement, viewType?: string) => {
 
         const garden = Globals.myGarden.get();
         const now = Date.now();
@@ -436,14 +436,14 @@ export const growthPanel: FeaturePanelDefinition = {
             const speedIncrease = Math.round((eggBoost.hourlyReduction / 60) * 100);
             boostItems.push({
                 text: `+${speedIncrease}%`,
-                sprite: getSpriteElement('egg', 'UncommonEgg')
+                sprite: await getSpriteElement('egg', 'UncommonEgg')
             });
         }
         if (showPlantBoost) {
             const speedIncrease = Math.round((plantBoost.hourlyReduction / 60) * 100);
             boostItems.push({
                 text: `+${speedIncrease}%`,
-                sprite: getSpriteElement('plant', 'Carrot')
+                sprite: await getSpriteElement('plant', 'Carrot')
             });
         }
 
@@ -468,7 +468,7 @@ export const growthPanel: FeaturePanelDefinition = {
             wrapper.appendChild(buildStatRow(
                 'NEXT EGG',
                 eggMult,
-                getSpriteElement('egg', eggNext.name),
+                await getSpriteElement('egg', eggNext.name),
                 eggPercent,
                 'stat__progress-fill--egg'
             ));
@@ -483,7 +483,7 @@ export const growthPanel: FeaturePanelDefinition = {
             wrapper.appendChild(buildStatRow(
                 'NEXT PLANT',
                 plantMult,
-                getSpriteElement('plant', cropNext.name),
+                await getSpriteElement('plant', cropNext.name),
                 cropPercent,
                 'stat__progress-fill--plant'
             ));
@@ -497,7 +497,7 @@ export const growthPanel: FeaturePanelDefinition = {
             wrapper.appendChild(buildStatRow(
                 'ALL EGGS',
                 `${growingEggs.length} total`,
-                getStackedSpritesElement('egg', growingEggs),
+                await getStackedSpritesElement('egg', growingEggs),
                 allEggPercent,
                 'stat__progress-fill--egg'
             ));
@@ -508,7 +508,7 @@ export const growthPanel: FeaturePanelDefinition = {
             wrapper.appendChild(buildStatRow(
                 'ALL PLANTS',
                 `${growingCrops.length} total`,
-                getStackedSpritesElement('plant', growingCrops),
+                await getStackedSpritesElement('plant', growingCrops),
                 allCropPercent,
                 'stat__progress-fill--plant'
             ));

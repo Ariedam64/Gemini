@@ -60,12 +60,12 @@ function getAbilityColor(abilityId: string): AbilityColorInfo {
  * Uses UI sprite "JournalStamp" with pet sprite on top
  * Colored ability badges for logged abilities, "???" for unknown
  */
-function createAbilityStampEntry(
+async function createAbilityStampEntry(
   speciesId: string,
   abilityId: string,
   isLogged: boolean,
   isSmallScreen: boolean
-): HTMLElement {
+): Promise<HTMLElement> {
   // Get log date for tooltip (matching JournalStamp.tsx)
   const logDate = isLogged ? getAbilityLogDate(speciesId, abilityId) : undefined;
 
@@ -175,7 +175,7 @@ function createAbilityStampEntry(
   // Add pet sprite using EXACT game implementation (JournalStamp.tsx)
   try {
     // CRITICAL: Game uses canvasScale = 0.7 for pets (see JournalStamp.tsx line 45)
-    const canvas = MGSprite.toCanvas('pet', speciesId, {
+    const canvas = await MGSprite.toCanvas('pet', speciesId, {
       scale: 0.7,  // EXACT match to game's canvasScale for ItemType.Pet
       boundsMode: 'padded'  // Prevents squishing
     });
@@ -295,17 +295,17 @@ function createAbilityStampEntry(
  * Create ability stamp entries to append directly to variant grid
  * Returns array of stamp entries that match game's structure
  */
-export function createAbilityStampEntries(
+export async function createAbilityStampEntries(
   progress: AbilityProgress,
   speciesId: string,
   isSmallScreen: boolean
-): HTMLElement[] {
+): Promise<HTMLElement[]> {
   // Combine logged and missing abilities in sorted order
   const allAbilityIds = [...progress.logged, ...progress.missing];
 
   // Create stamp entries for all abilities
-  return allAbilityIds.map((abilityId) => {
+  return await Promise.all(allAbilityIds.map((abilityId) => {
     const isLogged = progress.logged.includes(abilityId);
     return createAbilityStampEntry(speciesId, abilityId, isLogged, isSmallScreen);
-  });
+  }));
 }

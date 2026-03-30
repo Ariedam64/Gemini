@@ -46,14 +46,14 @@ function show(a: string, b?: string | ShowOptions, c?: ShowOptions): PixiSprite 
 }
 
 /**
- * Convert a sprite to a canvas element
+ * Convert a sprite to a canvas element (async — lazy loads image on demand)
  *
  * @example
- * const canvas = MGSprite.toCanvas("plants", "Carrot", { mutations: ["Gold"] });
+ * const canvas = await MGSprite.toCanvas("plants", "Carrot", { mutations: ["Gold"] });
  */
-function toCanvas(category: string, asset: string, options?: ToCanvasOptions): HTMLCanvasElement;
-function toCanvas(asset: string, options?: ToCanvasOptions): HTMLCanvasElement;
-function toCanvas(a: string, b?: string | ToCanvasOptions, c?: ToCanvasOptions): HTMLCanvasElement {
+function toCanvas(category: string, asset: string, options?: ToCanvasOptions): Promise<HTMLCanvasElement>;
+function toCanvas(asset: string, options?: ToCanvasOptions): Promise<HTMLCanvasElement>;
+function toCanvas(a: string, b?: string | ToCanvasOptions, c?: ToCanvasOptions): Promise<HTMLCanvasElement> {
   if (typeof b === "string") {
     return spriteToCanvas(
       getState(), getCacheState(), getCacheConfig(), a, b, c || {},
@@ -88,16 +88,16 @@ function attachProvider(fn: () => PixiContainer): boolean {
 }
 
 /**
- * Check if a sprite exists
+ * Check if a sprite exists in the catalog (does NOT require image to be loaded)
  */
 function has(category: string, asset: string): boolean;
 function has(asset: string): boolean;
 function has(a: string, b?: string): boolean {
   const state = getState();
   const key = typeof b === "string"
-    ? resolveKey(a, b, state.textures, state.animations)
-    : resolveKey(null, a, state.textures, state.animations);
-  return state.textures.has(key) || state.animations.has(key);
+    ? resolveKey(a, b, state.catalogKeys, state.animationFrameIds)
+    : resolveKey(null, a, state.catalogKeys, state.animationFrameIds);
+  return state.catalogKeys.has(key) || state.animationFrameIds.has(key);
 }
 
 /**

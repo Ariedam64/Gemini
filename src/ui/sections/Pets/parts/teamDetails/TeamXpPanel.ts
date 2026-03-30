@@ -132,7 +132,7 @@ export class TeamXpPanel {
     /**
      * Update pets display with sprites and stat cards
      */
-    private updatePets(pets: TeamPetXpData[]): void {
+    private async updatePets(pets: TeamPetXpData[]): Promise<void> {
         if (!this.petsContainer) return;
 
         // Clear existing
@@ -140,7 +140,7 @@ export class TeamXpPanel {
 
         // Render each pet as a card with sprite
         for (const pet of pets) {
-            const petCard = this.buildPetCard(pet);
+            const petCard = await this.buildPetCard(pet);
             this.petsContainer.appendChild(petCard);
         }
     }
@@ -148,7 +148,7 @@ export class TeamXpPanel {
     /**
      * Build individual pet card with sprite and stats
      */
-    private buildPetCard(pet: TeamPetXpData): HTMLElement {
+    private async buildPetCard(pet: TeamPetXpData): Promise<HTMLElement> {
         const card = document.createElement('div');
         card.className = 'xp-pet-card';
 
@@ -169,7 +169,7 @@ export class TeamXpPanel {
 
             // Check if sprite exists before rendering
             if (MGSprite.has('pet', pet.species)) {
-                const spriteCanvas = MGSprite.toCanvas('pet', pet.species, {
+                const spriteCanvas = await MGSprite.toCanvas('pet', pet.species, {
                     mutations,
                     scale: 1,
                     boundsMode: 'padded'

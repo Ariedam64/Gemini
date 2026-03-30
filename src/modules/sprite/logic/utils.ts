@@ -28,20 +28,25 @@ export function makeKey(category: string | null, asset: string): string {
   return `sprite/${cat}/${a}`;
 }
 
+/** Anything with a .has() method (Map, Set, etc.) */
+interface HasCheck {
+  has(key: string): boolean;
+}
+
 export function resolveKey(
   category: string | null,
   asset: string,
-  textures: Map<string, unknown>,
-  animations: Map<string, unknown[]>
+  primary: HasCheck,
+  secondary: HasCheck,
 ): string {
   const k1 = makeKey(category, asset);
-  if (textures.has(k1) || animations.has(k1)) return k1;
+  if (primary.has(k1) || secondary.has(k1)) return k1;
 
   const a = String(asset || "").trim();
-  if (textures.has(a) || animations.has(a)) return a;
+  if (primary.has(a) || secondary.has(a)) return a;
 
   const k3 = normalizeKey(a);
-  if (textures.has(k3) || animations.has(k3)) return k3;
+  if (primary.has(k3) || secondary.has(k3)) return k3;
 
   return k1;
 }

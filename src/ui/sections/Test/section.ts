@@ -63,9 +63,9 @@ export class TestSection extends BaseSection {
 
     if (row.spriteId) {
       const spriteId = row.spriteId;
-      requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
         try {
-          const canvas = MGSprite.toCanvas(spriteId, { scale: 1 });
+          const canvas = await MGSprite.toCanvas(spriteId, { scale: 1 });
           canvas.style.maxWidth = "32px";
           canvas.style.maxHeight = "32px";
           canvas.style.objectFit = "contain";

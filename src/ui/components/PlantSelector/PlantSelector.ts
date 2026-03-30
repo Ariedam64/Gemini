@@ -89,11 +89,11 @@ export function PlantSelector(options: PlantSelectorOptions): PlantSelectorHandl
   /**
    * Load sprite into container
    */
-  function loadSpriteIntoContainer(spriteId: string, container: HTMLElement): void {
+  async function loadSpriteIntoContainer(spriteId: string, container: HTMLElement): Promise<void> {
     if (!MGSprite.isReady()) return;
 
     try {
-      const canvas = MGSprite.toCanvas(spriteId, {
+      const canvas = await MGSprite.toCanvas(spriteId, {
         boundsMode: "padded",
       });
 

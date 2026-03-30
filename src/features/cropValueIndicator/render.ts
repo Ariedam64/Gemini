@@ -102,7 +102,7 @@ interface CropTooltip {
   priceElement?: HTMLElement;
 }
 
-function createPriceElement(price: number): HTMLElement {
+async function createPriceElement(price: number): Promise<HTMLElement> {
   const root = document.createElement('div');
   root.className = 'gemini-qol-cropPrice';
 
@@ -126,7 +126,7 @@ function createPriceElement(price: number): HTMLElement {
 
   // Render the coin sprite on the canvas
   try {
-    const coinCanvas = MGSprite.toCanvas('ui', 'Coin');
+    const coinCanvas = await MGSprite.toCanvas('ui', 'Coin');
     if (coinCanvas && canvas.parentElement) {
       // Scale the coin sprite to fit the canvas
       const ctx = canvas.getContext('2d');
@@ -342,7 +342,7 @@ function scheduleRender(): void {
   });
 }
 
-function injectPriceToTooltip(tooltip: CropTooltip): void {
+async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
   // Check if already injected
   if (tooltip.element.querySelector('.gemini-qol-cropPrice')) {
     return;
@@ -391,7 +391,7 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
     }
 
     // Inject price element at the end of the info container
-    const priceEl = createPriceElement(price);
+    const priceEl = await createPriceElement(price);
     infoContainer.appendChild(priceEl);
     tracker.add(() => priceEl.remove());
 

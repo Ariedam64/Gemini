@@ -179,13 +179,16 @@ export function createItemsTable(
         // Icon
         const iconContainer = element("div", { className: "shop-item-icon" });
         if (row.spriteId) {
-          const canvas = MGSprite.toCanvas(row.spriteId);
-          if (canvas) {
-            canvas.className = "shop-item-sprite";
-            iconContainer.appendChild(canvas);
-          } else {
+          MGSprite.toCanvas(row.spriteId).then((canvas) => {
+            if (canvas) {
+              canvas.className = "shop-item-sprite";
+              iconContainer.appendChild(canvas);
+            } else {
+              iconContainer.textContent = ITEM_EMOJI[row.shopType];
+            }
+          }).catch(() => {
             iconContainer.textContent = ITEM_EMOJI[row.shopType];
-          }
+          });
         } else {
           iconContainer.textContent = ITEM_EMOJI[row.shopType];
         }

@@ -223,13 +223,13 @@ export function createCustomSoundModal(options: CustomSoundModalOptions): Custom
     }
   }
 
-  function buildTitleContent(): HTMLElement {
+  async function buildTitleContent(): Promise<HTMLElement> {
     const title = element("span", { className: "custom-sound-modal-title" });
 
     let hasVisual = false;
     if (options.spriteId) {
       try {
-        const canvas = MGSprite.toCanvas(options.spriteId);
+        const canvas = await MGSprite.toCanvas(options.spriteId);
         if (canvas) {
           const visual = element("span", { className: "custom-sound-modal-title-icon" });
           canvas.className = "custom-sound-modal-title-sprite";
@@ -419,7 +419,7 @@ export function createCustomSoundModal(options: CustomSoundModalOptions): Custom
   modal.root.classList.add("custom-sound-modal");
   const titleEl = modal.root.querySelector<HTMLElement>(".modal-title");
   if (titleEl) {
-    titleEl.replaceChildren(buildTitleContent());
+    buildTitleContent().then((content) => titleEl.replaceChildren(content));
   }
 
   return {

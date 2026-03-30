@@ -1,5 +1,5 @@
 // src/modules/sprite/logic/catalog.ts
-// Load sprite catalog and images from MG API
+// Load sprite catalog metadata from MG API (lazy image loading)
 
 import { log } from "./utils";
 
@@ -49,10 +49,11 @@ export type SpriteMetaMap = Map<string, SpriteMeta>;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface CatalogResult {
-  images: Map<string, HTMLImageElement>;
+  catalogKeys: Set<string>;
   meta: SpriteMetaMap;
   animationFrameIds: Map<string, string[]>;
   categoryIndex: Map<string, Set<string>>;
+  pngUrlResolver: (id: string) => string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,10 +80,45 @@ function spritePngUrl(id: string): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Image Loading
+// HTTP helpers (GM_xmlhttpRequest with native fetch fallback)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function loadImageGM(url: string): Promise<HTMLImageElement> {
+function fetchJsonGM<T>(url: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    if (typeof GM_xmlhttpRequest === "undefined") {
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) reject(new Error(`HTTP ${res.status} for ${url}`));
+          else return res.json();
+        })
+        .then((data) => resolve(data as T))
+        .catch(reject);
+      return;
+    }
+
+    GM_xmlhttpRequest({
+      method: "GET",
+      url,
+      responseType: "json",
+      onload(response) {
+        if (response.status < 200 || response.status >= 300) {
+          reject(new Error(`HTTP ${response.status} for ${url}`));
+          return;
+        }
+        resolve(response.response as T);
+      },
+      onerror() {
+        reject(new Error(`Network error: ${url}`));
+      },
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Image Loading (exported for lazy loader)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function loadImageGM(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     if (typeof GM_xmlhttpRequest === "undefined") {
       const img = new Image();
@@ -122,41 +158,8 @@ function loadImageGM(url: string): Promise<HTMLImageElement> {
   });
 }
 
-async function loadImagesBatched(
-  entries: { id: string; url: string }[],
-  batchSize: number,
-): Promise<Map<string, HTMLImageElement>> {
-  const results = new Map<string, HTMLImageElement>();
-  const total = entries.length;
-  let loaded = 0;
-
-  for (let i = 0; i < total; i += batchSize) {
-    const batch = entries.slice(i, i + batchSize);
-    const settled = await Promise.allSettled(
-      batch.map(async (entry) => {
-        const img = await loadImageGM(entry.url);
-        return { id: entry.id, img };
-      })
-    );
-
-    for (const result of settled) {
-      if (result.status === "fulfilled") {
-        results.set(result.value.id, result.value.img);
-        loaded++;
-      }
-    }
-
-    if (i + batchSize < total) {
-      await new Promise((r) => setTimeout(r, 0));
-    }
-  }
-
-  log(`loaded ${loaded}/${total} sprite images`);
-  return results;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Catalog Loading
+// Catalog Loading (metadata only — no image downloads)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildCategoryIndex(ids: string[]): Map<string, Set<string>> {
@@ -184,19 +187,14 @@ function extractMeta(entry: CatalogFrameEntry): SpriteMeta {
 }
 
 export async function loadCatalogFromApi(): Promise<CatalogResult> {
-  log("fetching sprite catalog from API (full)...");
+  log("fetching sprite catalog from API...");
 
-  const response = await fetch(SPRITE_DATA_URL);
-  if (!response.ok) {
-    throw new Error(`[MGSprite] Sprite catalog fetch failed: ${response.status}`);
-  }
-
-  const raw = await response.json() as {
+  const raw = await fetchJsonGM<{
     baseUrl: string;
     count: number;
     categories?: { cat: string; items: CatalogEntry[] }[];
     items?: CatalogEntry[];
-  };
+  }>(SPRITE_DATA_URL);
 
   // full=1 returns { categories: [{ cat, items }] }, flat=1 returns { items: [] }
   const catalog: CatalogEntry[] = raw.items
@@ -205,53 +203,56 @@ export async function loadCatalogFromApi(): Promise<CatalogResult> {
   log(`catalog received: ${catalog.length} entries`);
 
   // Build idCategory → apiCategory mapping from categories data
-  // A single API category (e.g. "mutations") can contain multiple ID prefixes
-  // (e.g. "sprite/mutation/..." AND "sprite/mutation-overlay/...")
+  // Prefer exact matches (idCat === apiCat) over first-seen to avoid
+  // cross-category contamination (e.g. "animations" cat containing "sprite/ui/..." entries)
   if (raw.categories) {
     idCatToApiCat = new Map();
     for (const category of raw.categories) {
       for (const item of category.items ?? []) {
         if (!item.id) continue;
         const m = /^sprite\/([^/]+)\//.exec(item.id);
-        if (m && !idCatToApiCat.has(m[1])) {
-          idCatToApiCat.set(m[1], category.cat);
+        if (!m) continue;
+        const idCat = m[1];
+        const existing = idCatToApiCat.get(idCat);
+        if (!existing || idCat === category.cat) {
+          idCatToApiCat.set(idCat, category.cat);
         }
       }
     }
     log(`category mapping:`, Object.fromEntries(idCatToApiCat));
   }
 
+  // Yield to main thread after heavy JSON parse to avoid game freeze
+  await new Promise((r) => setTimeout(r, 0));
+
   const frameEntries = catalog.filter((e): e is CatalogFrameEntry => e.type === "frame");
   const animEntries = catalog.filter((e): e is CatalogAnimationEntry => e.type === "animation");
 
   // Extract metadata from frame entries
   const meta: SpriteMetaMap = new Map();
+  const catalogKeys = new Set<string>();
   for (const entry of frameEntries) {
     meta.set(entry.id, extractMeta(entry));
+    catalogKeys.add(entry.id);
   }
 
-  // Load images
-  const imageLoadList = frameEntries.map((entry) => ({
-    id: entry.id,
-    url: spritePngUrl(entry.id),
-  }));
-  const images = await loadImagesBatched(imageLoadList, 30);
-
-  log(`loaded ${images.size} images, ${meta.size} metadata entries`);
-
-  // Build animations
+  // Build animation frame ID lists (no image loading)
   const animationFrameIds = new Map<string, string[]>();
   for (const anim of animEntries) {
     if (anim.frames.length >= 2) {
       animationFrameIds.set(anim.id, anim.frames);
+      catalogKeys.add(anim.id);
     }
   }
 
-  // Build category index
-  const allIds = [...images.keys(), ...animationFrameIds.keys()];
+  // Yield again before building category index
+  await new Promise((r) => setTimeout(r, 0));
+
+  // Build category index from all known IDs
+  const allIds = [...catalogKeys];
   const categoryIndex = buildCategoryIndex(allIds);
 
-  log(`indexed ${categoryIndex.size} categories, ${animationFrameIds.size} animations`);
+  log(`indexed ${categoryIndex.size} categories, ${animationFrameIds.size} animations, ${catalogKeys.size} total keys`);
 
-  return { images, meta, animationFrameIds, categoryIndex };
+  return { catalogKeys, meta, animationFrameIds, categoryIndex, pngUrlResolver: spritePngUrl };
 }

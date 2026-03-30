@@ -41,7 +41,7 @@ function lockSvg(locked: boolean): SVGElement {
 
 /* ─────────────────────────── Sprite Rendering ─────────────────────────── */
 
-function renderEggSprite(eggId: string, container: HTMLElement, size: number): void {
+async function renderEggSprite(eggId: string, container: HTMLElement, size: number): Promise<void> {
     if (!MGSprite.isReady()) {
         container.appendChild(spritePlaceholder(size));
         return;
@@ -56,7 +56,7 @@ function renderEggSprite(eggId: string, container: HTMLElement, size: number): v
             return;
         }
 
-        const canvas = MGSprite.toCanvas(spriteId, {
+        const canvas = await MGSprite.toCanvas(spriteId, {
             boundsMode: "padded",
         } as Parameters<typeof MGSprite.toCanvas>[1]);
 

@@ -148,12 +148,12 @@ export class BasePetCard {
         this.root.classList.toggle('base-pet-card--centered', centered);
     }
 
-    private renderSprite(container: HTMLElement): void {
+    private async renderSprite(container: HTMLElement): Promise<void> {
         container.innerHTML = '';
         try {
             const mutations = (this.pet.mutations || []) as MutationName[];
             if (MGSprite.has('pet', this.pet.petSpecies)) {
-                const canvas = MGSprite.toCanvas('pet', this.pet.petSpecies, {
+                const canvas = await MGSprite.toCanvas('pet', this.pet.petSpecies, {
                     mutations,
                     scale: 1,
                     boundsMode: 'padded'

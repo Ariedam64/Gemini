@@ -97,6 +97,16 @@ export interface SpriteState {
   overlay: PixiContainer | null;
 
   categoryIndex: Map<string, Set<string>> | null;
+
+  // Lazy loading state
+  /** All known sprite IDs from the catalog (populated at init, before images are loaded) */
+  catalogKeys: Set<string>;
+  /** Animation frame ID lists (animId → frameIds[]) for lazy resolution */
+  animationFrameIds: Map<string, string[]>;
+  /** In-flight image load promises for deduplication */
+  loadingPromises: Map<string, Promise<HTMLImageElement | null>>;
+  /** URL resolver function (set during catalog init) */
+  spritePngUrlResolver: ((id: string) => string) | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

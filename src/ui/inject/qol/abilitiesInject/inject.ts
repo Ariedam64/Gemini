@@ -487,7 +487,7 @@ function updateCollectedCount(loggedAbilitiesCount: number, totalAbilitiesCount:
 /**
  * Inject abilities by appending stamps directly to variant grid
  */
-function injectAbilities(variantGrid: HTMLElement, speciesId: string): void {
+async function injectAbilities(variantGrid: HTMLElement, speciesId: string): Promise<void> {
   try {
     // Set re-entrancy guard
     isInjecting = true;
@@ -503,7 +503,7 @@ function injectAbilities(variantGrid: HTMLElement, speciesId: string): void {
     }
 
     // Create ability stamp entries
-    const stampEntries = createAbilityStampEntries(progress, speciesId, isSmallScreen());
+    const stampEntries = await createAbilityStampEntries(progress, speciesId, isSmallScreen());
 
     // Append each stamp directly to the variant grid
     // This makes them part of the same grid layout as variant stamps

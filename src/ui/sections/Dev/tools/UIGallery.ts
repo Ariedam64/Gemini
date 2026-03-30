@@ -86,10 +86,10 @@ export function UIGallery(): HTMLElement {
     let currentCat = 'plants';
     let currentAsset = 'Carrot';
     const activeMutations = new Set<string>();
-    const updatePreview = () => {
+    const updatePreview = async () => {
         previewArea.innerHTML = '';
         try {
-            const canvas = MGSprite.toCanvas(currentCat, currentAsset, {
+            const canvas = await MGSprite.toCanvas(currentCat, currentAsset, {
                 mutations: Array.from(activeMutations) as any,
                 scale: 1.5
             });
@@ -155,7 +155,7 @@ export function UIGallery(): HTMLElement {
     // Handle drops from ComponentPalette
     const canvasEl = positioningCanvas.root.querySelector('.positioning-canvas') as HTMLElement;
     if (canvasEl) {
-        canvasEl.addEventListener('canvas-drop', (e: Event) => {
+        canvasEl.addEventListener('canvas-drop', async (e: Event) => {
             const customEvent = e as CustomEvent;
             const { x, y, dataTransfer } = customEvent.detail;
 
@@ -166,7 +166,7 @@ export function UIGallery(): HTMLElement {
                     const uniqueId = `${item.id}-${Date.now()}`;
 
                     // Create the component element
-                    const content = createComponent(item);
+                    const content = await createComponent(item);
                     if (content) {
                         const canvasItem = positioningCanvas.addItem(uniqueId, item.type, item.label, content);
                         // Position at drop location
@@ -188,7 +188,7 @@ export function UIGallery(): HTMLElement {
     const paletteSection = createSection('Component Palette', 'Drag components into the Card Builder above');
 
     // Helper to add component (handles Sprite specially)
-    const addComponentToCanvas = (item: ComponentItem) => {
+    const addComponentToCanvas = async (item: ComponentItem) => {
         const uniqueId = `${item.id}-${Date.now()}`;
 
         // For Sprite type, pass empty placeholder - PositioningCanvas handles dropdown UI
@@ -197,7 +197,7 @@ export function UIGallery(): HTMLElement {
             // PositioningCanvas will detect Sprite type and add dropdown controls
             positioningCanvas.addItem(uniqueId, 'Sprite', 'Sprite', placeholder, { width: 160, height: 120 });
         } else {
-            const content = createComponent(item);
+            const content = await createComponent(item);
             if (content) {
                 positioningCanvas.addItem(uniqueId, item.type, item.label, content);
             }

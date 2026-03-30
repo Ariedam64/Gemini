@@ -1,5 +1,5 @@
 // src/modules/sprite/logic/init.ts
-// Initialization logic for sprite system
+// Initialization logic for sprite system (metadata-only, lazy image loading)
 
 import { state } from "../state";
 import { log } from "./utils";
@@ -9,7 +9,7 @@ let _initPromise: Promise<boolean> | null = null;
 
 /**
  * Initialize the sprite system
- * Loads sprite images from MG API (no PIXI dependency)
+ * Loads catalog metadata from MG API (no image downloads — images are lazy-loaded on demand)
  */
 export async function initSpriteSystem(): Promise<boolean> {
   if (state.ready) return true;
@@ -19,29 +19,19 @@ export async function initSpriteSystem(): Promise<boolean> {
     const startAt = performance.now();
     log("init start");
 
-    const { images, meta, animationFrameIds, categoryIndex } = await loadCatalogFromApi();
+    const { catalogKeys, meta, animationFrameIds, categoryIndex, pngUrlResolver } = await loadCatalogFromApi();
 
-    // Store images in the textures map (PixiTexture = any, so HTMLImageElement fits)
-    state.textures = images as Map<string, unknown> as typeof state.textures;
+    // Store catalog metadata (no images downloaded yet)
+    state.catalogKeys = catalogKeys;
     state.spriteMeta = meta;
-
-    // Build animations map from frame IDs
-    state.animations = new Map();
-    for (const [animId, frameIds] of animationFrameIds) {
-      const frames = frameIds
-        .map((fid) => images.get(fid))
-        .filter(Boolean) as HTMLImageElement[];
-      if (frames.length >= 2) {
-        state.animations.set(animId, frames as unknown[] as typeof frames);
-      }
-    }
-
+    state.animationFrameIds = animationFrameIds;
     state.categoryIndex = categoryIndex;
+    state.spritePngUrlResolver = pngUrlResolver;
 
     log(
       "catalog loaded",
-      "images", state.textures.size,
-      "animations", state.animations.size,
+      "keys", state.catalogKeys.size,
+      "animations", state.animationFrameIds.size,
       "categories", state.categoryIndex?.size ?? 0,
     );
 

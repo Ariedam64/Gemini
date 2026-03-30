@@ -38,10 +38,10 @@ export interface AlertOverlayHandle {
 /**
  * Create an item row element
  */
-function createItemRow(
+async function createItemRow(
   item: AvailableItem,
   onBuyAll?: (item: AvailableItem) => void
-): HTMLDivElement {
+): Promise<HTMLDivElement> {
   const row = element("div", { className: "alert-item-row" }) as HTMLDivElement;
 
   // Sprite column
@@ -49,7 +49,7 @@ function createItemRow(
 
   if (item.spriteId) {
     try {
-      const canvas = MGSprite.toCanvas(item.spriteId, { scale: 0.35 });
+      const canvas = await MGSprite.toCanvas(item.spriteId, { scale: 0.35 });
       if (canvas) {
         spriteCol.appendChild(canvas);
       } else {
@@ -214,14 +214,14 @@ export function createAlertOverlay(options: AlertOverlayOptions): AlertOverlayHa
   root.appendChild(listContainer);
 
   // Initial render
-  const updateItems = (newItems: AvailableItem[]) => {
+  const updateItems = async (newItems: AvailableItem[]) => {
     listContainer.replaceChildren();
 
     if (newItems.length === 0) {
       listContainer.appendChild(createEmptyState());
     } else {
       for (const item of newItems) {
-        const row = createItemRow(item, onBuyAll);
+        const row = await createItemRow(item, onBuyAll);
         listContainer.appendChild(row);
       }
     }

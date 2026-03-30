@@ -61,7 +61,7 @@ const AVAILABLE_COMPONENTS: ComponentItem[] = [
     { id: 'sprite-generic', type: 'Sprite', label: 'Sprite', config: { category: null, assetId: null } },
 ];
 
-export function createComponent(item: ComponentItem): HTMLElement | null {
+export async function createComponent(item: ComponentItem): Promise<HTMLElement | null> {
     try {
         switch (item.type) {
             case 'Badge': {
@@ -112,7 +112,7 @@ export function createComponent(item: ComponentItem): HTMLElement | null {
                 // Only render if sprite system is ready AND we have valid config
                 if (item.config.category && item.config.assetId && MGSprite.isReady()) {
                     try {
-                        const canvas = MGSprite.toCanvas(item.config.category, item.config.assetId, {
+                        const canvas = await MGSprite.toCanvas(item.config.category, item.config.assetId, {
                             mutations: item.config.mutations || [],
                             scale: 1.5
                         });
@@ -188,15 +188,16 @@ export function ComponentPalette(opts: ComponentPaletteOptions = {}): HTMLElemen
         };
 
         // Preview
-        const preview = createComponent({ ...item, config: { ...item.config } });
-        if (preview) {
-            preview.style.pointerEvents = 'none';
-            preview.style.transform = 'scale(0.85)';
-            preview.style.maxWidth = '100%';
-            preview.style.maxHeight = '40px';
-            preview.style.overflow = 'hidden';
-            wrapper.appendChild(preview);
-        }
+        createComponent({ ...item, config: { ...item.config } }).then((preview) => {
+            if (preview) {
+                preview.style.pointerEvents = 'none';
+                preview.style.transform = 'scale(0.85)';
+                preview.style.maxWidth = '100%';
+                preview.style.maxHeight = '40px';
+                preview.style.overflow = 'hidden';
+                wrapper.appendChild(preview);
+            }
+        });
 
         // Label
         const label = element('small', {

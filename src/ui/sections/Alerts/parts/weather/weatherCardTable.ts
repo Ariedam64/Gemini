@@ -155,15 +155,13 @@ export function createWeatherTable(
 
         // Icon/Sprite
         const iconContainer = element("div", { className: "weather-item-icon" });
-        if (row.spriteId) {
-          const canvas = MGSprite.toCanvas(row.spriteId);
-          if (canvas) {
+        if (row.spriteId && MGSprite.has(row.spriteId)) {
+          MGSprite.toCanvas(row.spriteId).then((canvas) => {
             canvas.className = "weather-item-sprite";
             iconContainer.appendChild(canvas);
-          } else {
-            // Fallback emoji based on weather type
+          }).catch(() => {
             iconContainer.textContent = getWeatherEmoji(row.weatherId);
-          }
+          });
         } else {
           iconContainer.textContent = getWeatherEmoji(row.weatherId);
         }

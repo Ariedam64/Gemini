@@ -15,12 +15,34 @@ export async function fetchGameData(): Promise<void> {
 
   console.log("[MGData] Fetching game data from API...");
 
-  const response = await fetch(API_URL);
-  if (!response.ok) {
-    throw new Error(`[MGData] API request failed: ${response.status} ${response.statusText}`);
-  }
+  const raw = await new Promise<Record<string, unknown>>((resolve, reject) => {
+    if (typeof GM_xmlhttpRequest === "undefined") {
+      fetch(API_URL)
+        .then((res) => {
+          if (!res.ok) reject(new Error(`[MGData] API request failed: ${res.status}`));
+          else return res.json();
+        })
+        .then((data) => resolve(data as Record<string, unknown>))
+        .catch(reject);
+      return;
+    }
 
-  const raw = await response.json() as Record<string, unknown>;
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: API_URL,
+      responseType: "json",
+      onload(response) {
+        if (response.status < 200 || response.status >= 300) {
+          reject(new Error(`[MGData] API request failed: ${response.status}`));
+          return;
+        }
+        resolve(response.response as Record<string, unknown>);
+      },
+      onerror() {
+        reject(new Error(`[MGData] Network error`));
+      },
+    });
+  });
 
   // Map API keys to internal DataKey names
   for (const [apiKey, internalKey] of Object.entries(API_KEY_MAP) as [ApiResponseKey, DataKey][]) {

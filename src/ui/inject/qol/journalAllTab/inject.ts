@@ -247,7 +247,7 @@ function createAllTabButton(): HTMLButtonElement {
  * Create a species row matching game's OverviewPageEntry styling
  * Uses MGSprite.toCanvas() for actual sprite rendering
  */
-function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLElement {
+async function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): Promise<HTMLElement> {
     const row = document.createElement('div');
     row.style.cssText = `
         display: grid;
@@ -292,19 +292,19 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
                 }
 
                 // Try multiple variations
-                const tryCanvas = (cat: string, asset: string) => {
+                const tryCanvas = async (cat: string, asset: string) => {
                     try {
                         if (MGSprite.has(cat, asset)) {
-                            return MGSprite.toCanvas(cat, asset, { scale: 0.5 });
+                            return await MGSprite.toCanvas(cat, asset, { scale: 0.5 });
                         }
                     } catch { }
                     return null;
                 };
 
-                const canvas = tryCanvas(spriteCategory, loadAsset) ||
-                    (type === 'crop' ? tryCanvas('tallplant', loadAsset) : null) ||
-                    tryCanvas(spriteCategory, loadAsset.toLowerCase()) ||
-                    (type === 'crop' ? tryCanvas('tallplant', loadAsset.toLowerCase()) : null);
+                const canvas = await tryCanvas(spriteCategory, loadAsset) ||
+                    (type === 'crop' ? await tryCanvas('tallplant', loadAsset) : null) ||
+                    await tryCanvas(spriteCategory, loadAsset.toLowerCase()) ||
+                    (type === 'crop' ? await tryCanvas('tallplant', loadAsset.toLowerCase()) : null);
 
                 if (canvas) {
                     canvas.style.cssText = 'max-width: 46px; max-height: 46px; display: block;';
@@ -471,7 +471,7 @@ function navigateToSpeciesPage(speciesId: string, type: 'crop' | 'pet'): void {
 /**
  * Create a category section (Crops or Pets) with header and species entries
  */
-function createCategorySection(title: string, species: SpeciesProgress[], type: 'crop' | 'pet'): HTMLElement {
+async function createCategorySection(title: string, species: SpeciesProgress[], type: 'crop' | 'pet'): Promise<HTMLElement> {
     const section = document.createElement('div');
     section.style.cssText = 'margin-bottom: 16px;';
 
@@ -517,7 +517,7 @@ function createCategorySection(title: string, species: SpeciesProgress[], type: 
     list.style.cssText = 'display: flex; flex-direction: column; gap: 12px; padding: 0 4px;';
 
     for (const sp of species) {
-        list.appendChild(createSpeciesRow(sp, type));
+        list.appendChild(await createSpeciesRow(sp, type));
     }
 
     section.append(header, list);
@@ -528,7 +528,7 @@ function createCategorySection(title: string, species: SpeciesProgress[], type: 
  * Create the complete All tab content with both Crops and Pets sections
  * Includes filter/sort controls and game-style scrollbar
  */
-function createAllTabContent(): HTMLElement {
+async function createAllTabContent(): Promise<HTMLElement> {
     const journal = MGJournal.getMyJournal();
     const cropsProgress = MGJournal.calculateProduceProgress(journal);
     const petsProgress = MGJournal.calculatePetProgress(journal);
@@ -649,12 +649,12 @@ function createAllTabContent(): HTMLElement {
 
     // Add Crops section (only if has items after filtering)
     if (filteredCrops.length > 0) {
-        scrollArea.appendChild(createCategorySection('Crops', filteredCrops, 'crop'));
+        scrollArea.appendChild(await createCategorySection('Crops', filteredCrops, 'crop'));
     }
 
     // Add Pets section (only if has items after filtering)
     if (filteredPets.length > 0) {
-        scrollArea.appendChild(createCategorySection('Pets', filteredPets, 'pet'));
+        scrollArea.appendChild(await createCategorySection('Pets', filteredPets, 'pet'));
     }
 
     // Show message if no results
@@ -765,20 +765,20 @@ function injectScrollbarStyles(): void {
 /**
  * Refresh the All tab content (called when filter/sort changes)
  */
-function refreshAllTabContent(): void {
+async function refreshAllTabContent(): Promise<void> {
     const overlay = document.querySelector(`.${OVERLAY_CLASS}`);
     if (!overlay) return;
 
     // Clear and rebuild content
     while (overlay.firstChild) overlay.firstChild.remove();
-    overlay.appendChild(createAllTabContent());
+    overlay.appendChild(await createAllTabContent());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tab Activation - Using Overlay Approach
 // ─────────────────────────────────────────────────────────────────────────────
 
-function activateAllTab(): void {
+async function activateAllTab(): Promise<void> {
     if (allTabActive) return;
     allTabActive = true;
 
@@ -837,7 +837,7 @@ function activateAllTab(): void {
         contentTracker.add(() => { contentWrapper.style.position = ''; });
     }
 
-    overlay.appendChild(createAllTabContent());
+    overlay.appendChild(await createAllTabContent());
     contentWrapper.appendChild(overlay);
     contentTracker.add(() => overlay.remove());
 

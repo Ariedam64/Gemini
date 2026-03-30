@@ -228,7 +228,7 @@ export class AbilityLogsCardPart {
         this.handleScroll();
     }
 
-    private handleScroll(): void {
+    private async handleScroll(): Promise<void> {
         if (!this.listContainer || !this.innerContent) return;
 
         const scrollTop = this.listContainer.scrollTop;
@@ -263,7 +263,7 @@ export class AbilityLogsCardPart {
         // Render visible items
         for (let i = startIndex; i < endIndex; i++) {
             const log = this.filteredLogs[i];
-            const logCard = this.createLogItemCard(log);
+            const logCard = await this.createLogItemCard(log);
             this.innerContent.appendChild(logCard);
         }
 
@@ -277,7 +277,7 @@ export class AbilityLogsCardPart {
         }
     }
 
-    private createLogItemCard(log: AbilityLogDisplay): HTMLDivElement {
+    private async createLogItemCard(log: AbilityLogDisplay): Promise<HTMLDivElement> {
         const logItem = element("div", {
             className: "ability-log-item",
             style: "background: var(--soft); border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; transition: all 0.2s ease;"
@@ -299,7 +299,7 @@ export class AbilityLogsCardPart {
         }) as HTMLDivElement;
 
         try {
-            const canvas = MGSprite.toCanvas("pet", log.petSpecies);
+            const canvas = await MGSprite.toCanvas("pet", log.petSpecies);
             if (canvas) {
                 canvas.style.width = "100%";
                 canvas.style.height = "100%";

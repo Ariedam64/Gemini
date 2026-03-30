@@ -367,7 +367,7 @@ export function PositioningCanvas(opts: PositioningCanvasOptions = {}): Position
             };
 
             // Render sprite preview - use imported MGSprite like Sprite Explorer
-            const renderSprite = () => {
+            const renderSprite = async () => {
                 content.innerHTML = '';
                 const cat = categorySelect.value;
                 const asset = assetSelect.value;
@@ -379,7 +379,7 @@ export function PositioningCanvas(opts: PositioningCanvasOptions = {}): Position
                 }
 
                 try {
-                    const canvas = MGSprite.toCanvas(cat, asset, {
+                    const canvas = await MGSprite.toCanvas(cat, asset, {
                         mutations: mut ? [mut] as any : [],
                         scale: 2
                     });

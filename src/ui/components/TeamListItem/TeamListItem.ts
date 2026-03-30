@@ -135,7 +135,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
     });
 
     // Function to re-render all pet sprites when myPets changes
-    function renderSprites(): void {
+    async function renderSprites(): Promise<void> {
         const myPets = Globals.myPets.get();
         spritesContainer.innerHTML = "";
 
@@ -173,7 +173,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                 if (pet) {
                     try {
                         // Render pet sprite using MGSprite
-                        const cachedCanvas = MGSprite.toCanvas("pet", pet.petSpecies, {
+                        const cachedCanvas = await MGSprite.toCanvas("pet", pet.petSpecies, {
                             mutations: pet.mutations as any,
                             scale: 1,
                         });
@@ -225,7 +225,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
 
                     // Subscribe to myPets changes to update this specific slot when pet data arrives
                     let slotUpdateDone = false;
-                    const unsubscribeSlotUpdate = Globals.myPets.subscribe(() => {
+                    const unsubscribeSlotUpdate = Globals.myPets.subscribe(async () => {
                         if (slotUpdateDone) return;
 
                         const updatedMyPets = Globals.myPets.get();
@@ -240,7 +240,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                                 spriteSlot.innerHTML = "";
 
                                 // Render pet sprite
-                                const cachedCanvas = MGSprite.toCanvas("pet", foundPet.petSpecies, {
+                                const cachedCanvas = await MGSprite.toCanvas("pet", foundPet.petSpecies, {
                                     mutations: foundPet.mutations as any,
                                     scale: 1,
                                 });

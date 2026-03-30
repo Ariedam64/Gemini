@@ -129,12 +129,12 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         });
     }
 
-    private renderContent(): void {
+    private async renderContent(): Promise<void> {
         if (!this.sectionElement) return;
         this.sectionElement.innerHTML = '';
 
         this.sectionElement.appendChild(this.createMasterToggle());
-        this.sectionElement.appendChild(this.createMutationsCard());
+        this.sectionElement.appendChild(await this.createMutationsCard());
         this.sectionElement.appendChild(this.createProduceCard());
         this.sectionElement.appendChild(this.createPetsCard());
     }
@@ -162,32 +162,32 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         );
     }
 
-    private createMutationsCard(): HTMLDivElement {
+    private async createMutationsCard(): Promise<HTMLDivElement> {
         const container = element("div", { className: "u-col" }) as HTMLDivElement;
 
         // Row 1: Rainbow & Gold (2 columns preferred)
         const row1 = element("div", { className: "mut-row" }) as HTMLDivElement;
-        row1.appendChild(this.createMutationButton(MUTATION_DATA[0])); // Rainbow
-        row1.appendChild(this.createMutationButton(MUTATION_DATA[1])); // Gold
+        row1.appendChild(await this.createMutationButton(MUTATION_DATA[0])); // Rainbow
+        row1.appendChild(await this.createMutationButton(MUTATION_DATA[1])); // Gold
         container.appendChild(row1);
 
         // Row 2: Wet, Chilled, Frozen (3 columns preferred)
         const row2 = element("div", { className: "mut-row" }) as HTMLDivElement;
-        row2.appendChild(this.createMutationButton(MUTATION_DATA[2])); // Wet
-        row2.appendChild(this.createMutationButton(MUTATION_DATA[3])); // Chilled
-        row2.appendChild(this.createMutationButton(MUTATION_DATA[4])); // Frozen
+        row2.appendChild(await this.createMutationButton(MUTATION_DATA[2])); // Wet
+        row2.appendChild(await this.createMutationButton(MUTATION_DATA[3])); // Chilled
+        row2.appendChild(await this.createMutationButton(MUTATION_DATA[4])); // Frozen
         container.appendChild(row2);
 
         // Row 3: Dawn mutations (2 columns preferred)
         const row3 = element("div", { className: "mut-row" }) as HTMLDivElement;
-        row3.appendChild(this.createMutationButton(MUTATION_DATA[5])); // Dawnlit
-        row3.appendChild(this.createMutationButton(MUTATION_DATA[6])); // Dawncharged
+        row3.appendChild(await this.createMutationButton(MUTATION_DATA[5])); // Dawnlit
+        row3.appendChild(await this.createMutationButton(MUTATION_DATA[6])); // Dawncharged
         container.appendChild(row3);
 
         // Row 4: Amber mutations (2 columns preferred)
         const row4 = element("div", { className: "mut-row" }) as HTMLDivElement;
-        row4.appendChild(this.createMutationButton(MUTATION_DATA[7])); // Ambershine
-        row4.appendChild(this.createMutationButton(MUTATION_DATA[8])); // Ambercharged
+        row4.appendChild(await this.createMutationButton(MUTATION_DATA[7])); // Ambershine
+        row4.appendChild(await this.createMutationButton(MUTATION_DATA[8])); // Ambercharged
         container.appendChild(row4);
 
         return Card(
@@ -198,7 +198,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         );
     }
 
-    private createMutationButton(data: typeof MUTATION_DATA[0]): HTMLDivElement {
+    private async createMutationButton(data: typeof MUTATION_DATA[0]): Promise<HTMLDivElement> {
         let isActive = getStore().get().favoriteMutations.includes(data.id);
 
         // Build CSS classes for mutation button
@@ -217,7 +217,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         // Add left sprite (Sunflower with mutation)
         try {
             if (MGSprite.isReady()) {
-                const canvas = MGSprite.toCanvas('plant', 'Sunflower', { mutations: [data.id as any], scale: 0.16 });
+                const canvas = await MGSprite.toCanvas('plant', 'Sunflower', { mutations: [data.id as any], scale: 0.16 });
                 canvas.style.width = '28px'; canvas.style.height = '28px'; canvas.style.objectFit = 'contain';
                 leftSprite.appendChild(canvas);
             }
@@ -236,7 +236,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
             const rightSprite = element("div", { style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" }) as HTMLDivElement;
             try {
                 if (MGSprite.isReady()) {
-                    const canvas = MGSprite.toCanvas('pet', 'Capybara', { mutations: [data.id as any], scale: 0.16 });
+                    const canvas = await MGSprite.toCanvas('pet', 'Capybara', { mutations: [data.id as any], scale: 0.16 });
                     canvas.style.width = '28px'; canvas.style.height = '28px'; canvas.style.objectFit = 'contain';
                     rightSprite.appendChild(canvas);
                 }
@@ -380,7 +380,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
         };
 
         // Create sprite renderer
-        const createSpriteCell = (itemId: string): Node => {
+        const createSpriteCell = async (itemId: string): Promise<Node> => {
             const wrapper = element("div", {
                 style: "width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: color-mix(in oklab, var(--bg) 5%, transparent); border-radius: 6px;"
             }) as HTMLDivElement;
@@ -398,7 +398,7 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                         if (itemId === 'OrangeTulip') loadAsset = 'Tulip';
                     }
 
-                    const canvas = MGSprite.toCanvas(loadCategory, loadAsset, { scale: 0.5 });
+                    const canvas = await MGSprite.toCanvas(loadCategory, loadAsset, { scale: 0.5 });
                     canvas.style.width = '28px';
                     canvas.style.height = '28px';
                     canvas.style.objectFit = 'contain';
@@ -425,13 +425,15 @@ export class AutoFavoriteSettingsSection extends BaseSection {
                         style: "display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;"
                     }) as HTMLDivElement;
 
-                    const sprite = createSpriteCell(row.id);
-
                     const nameLabel = element("span", {
                         style: "font-weight: 500; color: var(--fg); white-space: nowrap;"
                     }, row.name);
 
-                    container.append(sprite, nameLabel);
+                    createSpriteCell(row.id).then((sprite) => {
+                        container.prepend(sprite);
+                    });
+
+                    container.append(nameLabel);
                     return container;
                 }
             },

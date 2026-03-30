@@ -308,7 +308,7 @@ export class TeamCardExpansionHandler {
         }
     }
 
-    private renderGrowthSummaryBar(container: HTMLElement, pets: any[], teamId: string): void {
+    private async renderGrowthSummaryBar(container: HTMLElement, pets: any[], teamId: string): Promise<void> {
         const state = this.expandedTeams.get(teamId);
         const viewType = state?.growthViewType || 'plant';
         const garden = Globals.myGarden.get();
@@ -444,7 +444,7 @@ export class TeamCardExpansionHandler {
             const spriteEl = element('div', { className: 'growth-next-sprite' });
             try {
                 if (MGSprite.isReady() && MGSprite.has(category, species)) {
-                    const canvas = MGSprite.toCanvas(category, species, { scale: 0.3 });
+                    const canvas = await MGSprite.toCanvas(category, species, { scale: 0.3 });
                     canvas.style.height = '20px';
                     canvas.style.width = 'auto';
                     canvas.style.imageRendering = 'pixelated';
@@ -478,7 +478,7 @@ export class TeamCardExpansionHandler {
 
         try {
             if (MGSprite.isReady() && MGSprite.has(toggleCategory, toggleId)) {
-                toggleSprite = MGSprite.toCanvas(toggleCategory, toggleId, { scale: 0.35 });
+                toggleSprite = await MGSprite.toCanvas(toggleCategory, toggleId, { scale: 0.35 });
             }
         } catch (e) {
             // Use null sprite, ArcadeButton handles fallback
@@ -578,7 +578,7 @@ export class TeamCardExpansionHandler {
         } else {
             const category = viewType === 'egg' ? 'pet' : 'plant';
 
-            items.forEach(item => {
+            items.forEach(async (item) => {
                 const id = item.tileIndex;
                 // CropInfo has species, EggWithTile has eggId
                 let species = viewType === 'egg' ? (item as EggWithTile).eggId : (item as any).species;
@@ -595,7 +595,7 @@ export class TeamCardExpansionHandler {
                 const spriteContainer = element('span', { className: 'dropdown-sprite' });
                 try {
                     if (MGSprite.isReady() && MGSprite.has(category, species)) {
-                        const canvas = MGSprite.toCanvas(category, species, { scale: 0.3 });
+                        const canvas = await MGSprite.toCanvas(category, species, { scale: 0.3 });
                         canvas.style.height = '16px';
                         canvas.style.width = 'auto';
                         canvas.style.imageRendering = 'pixelated';

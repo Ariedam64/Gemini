@@ -142,7 +142,7 @@ export function SpritePicker(opts: SpritePickerOptions = {}): SpritePickerHandle
     };
 
     // Render preview
-    const renderPreview = () => {
+    const renderPreview = async () => {
         previewArea.innerHTML = '';
 
         if (!currentCategory || !currentAsset) {
@@ -156,7 +156,7 @@ export function SpritePicker(opts: SpritePickerOptions = {}): SpritePickerHandle
         }
 
         try {
-            const canvas = MGSprite.toCanvas(currentCategory, currentAsset, {
+            const canvas = await MGSprite.toCanvas(currentCategory, currentAsset, {
                 mutations: currentMutations as any,
                 scale: 2
             });

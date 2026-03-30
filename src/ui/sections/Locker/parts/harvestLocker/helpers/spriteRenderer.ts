@@ -21,11 +21,11 @@ export interface SpriteOptions {
  * Render a plant sprite into a container
  * Uses crop spriteId from MGData
  */
-export function renderPlantSprite(
+export async function renderPlantSprite(
     species: string,
     container: HTMLElement,
     options: SpriteOptions
-): void {
+): Promise<void> {
     const { size, mutations } = options;
 
     if (!MGSprite.isReady()) {
@@ -43,7 +43,7 @@ export function renderPlantSprite(
             return;
         }
 
-        const canvas = MGSprite.toCanvas(spriteId, {
+        const canvas = await MGSprite.toCanvas(spriteId, {
             mutations: mutations && mutations.length > 0 ? mutations : undefined,
             boundsMode: "padded",
         } as Parameters<typeof MGSprite.toCanvas>[1]);
@@ -66,11 +66,11 @@ export function renderPlantSprite(
  * Render a mutation sprite into a container
  * Uses UI mutation sprites from MGSprite catalog (sprite/ui/MutationGold, etc.)
  */
-export function renderMutationSprite(
+export async function renderMutationSprite(
     mutationId: string,
     container: HTMLElement,
     size: number
-): void {
+): Promise<void> {
     if (!MGSprite.isReady()) {
         container.appendChild(createMutationPlaceholder(mutationId, size));
         return;
@@ -91,7 +91,7 @@ export function renderMutationSprite(
             return;
         }
 
-        const canvas = MGSprite.toCanvas(spriteKey);
+        const canvas = await MGSprite.toCanvas(spriteKey);
         if (canvas) {
             applyCanvasStyles(canvas, size);
             container.appendChild(canvas);

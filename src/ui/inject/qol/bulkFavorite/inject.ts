@@ -184,10 +184,10 @@ async function handleToggle(species: string): Promise<void> {
 // Button Creation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function createButton(group: ProduceGroup, mobile: boolean): HTMLButtonElement {
+async function createButton(group: ProduceGroup, mobile: boolean): Promise<HTMLButtonElement> {
     const { species, itemIds, allFavorited } = group;
 
-    return createSpeciesButton({
+    return await createSpeciesButton({
         species,
         itemCount: itemIds.length,
         isFavorited: allFavorited,
@@ -248,7 +248,7 @@ function renderUI(): void {
     }
 }
 
-function renderDesktopUI(groups: ProduceGroup[]): void {
+async function renderDesktopUI(groups: ProduceGroup[]): Promise<void> {
     if (!sidebar) return;
     sidebar.innerHTML = '';
     if (groups.length === 0) {
@@ -257,12 +257,12 @@ function renderDesktopUI(groups: ProduceGroup[]): void {
     }
     sidebar.style.display = 'flex';
     for (const group of groups) {
-        sidebar.appendChild(createButton(group, false));
+        sidebar.appendChild(await createButton(group, false));
     }
     console.log(`🎯 [BulkFavorite] Desktop: Rendered ${groups.length} produce types`);
 }
 
-function renderMobileUI(groups: ProduceGroup[]): void {
+async function renderMobileUI(groups: ProduceGroup[]): Promise<void> {
     if (!topRow || !bottomRow) return;
     topRow.innerHTML = '';
     bottomRow.innerHTML = '';
@@ -278,13 +278,13 @@ function renderMobileUI(groups: ProduceGroup[]): void {
     const bottomGroups = groups.slice(CONFIG.MOBILE_MAX_BUTTONS_PER_ROW);
 
     for (const group of topGroups) {
-        topRow.appendChild(createButton(group, true));
+        topRow.appendChild(await createButton(group, true));
     }
 
     if (bottomGroups.length > 0) {
         bottomRow.style.display = 'flex';
         for (const group of bottomGroups) {
-            bottomRow.appendChild(createButton(group, true));
+            bottomRow.appendChild(await createButton(group, true));
         }
     } else {
         bottomRow.style.display = 'none';

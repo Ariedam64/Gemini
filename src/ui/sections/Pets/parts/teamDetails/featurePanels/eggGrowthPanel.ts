@@ -68,7 +68,7 @@ class EggGrowthTimerPanel {
         `;
     }
 
-    private updateTimers(timers: GrowthTimer[]): void {
+    private async updateTimers(timers: GrowthTimer[]): Promise<void> {
         if (!this.listContainer) return;
 
         if (timers.length === 0) {
@@ -82,10 +82,11 @@ class EggGrowthTimerPanel {
         // Show up to 8 timers (fit in card)
         const toShow = sorted.slice(0, 8);
 
-        this.listContainer.innerHTML = toShow.map(timer => this.renderTimer(timer)).join('');
+        const renderedTimers = await Promise.all(toShow.map(timer => this.renderTimer(timer)));
+        this.listContainer.innerHTML = renderedTimers.join('');
     }
 
-    private renderTimer(timer: GrowthTimer): string {
+    private async renderTimer(timer: GrowthTimer): Promise<string> {
         const countdown = this.formatDuration(timer.remainingMs);
         const completionTime = this.formatCompletionTime(timer.adjustedMaturedAt);
         const boost = timer.activeBoosts[0];
@@ -93,7 +94,7 @@ class EggGrowthTimerPanel {
             `⚡ -${boost.minutesPerProc}min/proc` : '';
 
         // Render sprite via MGSprite
-        const spriteHtml = this.getSpriteHtml(timer.species as string);
+        const spriteHtml = await this.getSpriteHtml(timer.species as string);
 
         return `
             <div class="timer-item">
@@ -142,11 +143,11 @@ class EggGrowthTimerPanel {
         }
     }
 
-    private getSpriteHtml(species: string): string {
+    private async getSpriteHtml(species: string): Promise<string> {
         // Use MGSprite.toCanvas() or emoji fallback
         try {
             if (MGSprite.has('pet', species)) {
-                const canvas = MGSprite.toCanvas('pet', species, { scale: 0.5 });
+                const canvas = await MGSprite.toCanvas('pet', species, { scale: 0.5 });
                 canvas.style.height = '24px';
                 canvas.style.width = 'auto';
                 canvas.style.objectFit = 'contain';
