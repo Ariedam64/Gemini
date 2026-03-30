@@ -4,7 +4,7 @@
 export { MGAutoFavorite, AutoFavorite } from "./autoFavorite";
 export { MGJournal } from "./journal";
 export type { SpeciesProgress, CategoryProgress, JournalProgress, RawJournal } from "./journal";
-export { MGBulkFavorite, BulkFavorite } from "./bulkFavorite";
+
 export { MGAchievements } from "./achievements";
 export { MGAntiAfk } from "./antiAfk";
 export { MGPetTeam } from "./petTeam";

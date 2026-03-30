@@ -15,8 +15,7 @@ import { MGSprite } from "../../modules/sprite";
 import { migrateStorageKeys, FEATURE_KEYS, INJECT_KEYS } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
-import { MGBulkFavorite } from "../../features/bulkFavorite";
-import { BulkFavoriteInject } from "../inject/qol/bulkFavorite";
+
 import { MGJournal } from "../../features/journal";
 import { MGXPTracker } from "../../features/xpTracker";
 import { MGCropValueIndicator } from "../../features/cropValueIndicator";
@@ -197,7 +196,7 @@ export function initFeatures(loader: LoaderController): void {
   const features = [
     { name: "AntiAfk", init: MGAntiAfk.init.bind(MGAntiAfk) },
     { name: "PetTeam", init: MGPetTeam.init.bind(MGPetTeam) },
-    { name: "BulkFavorite", init: MGBulkFavorite.init.bind(MGBulkFavorite) },
+
     { name: "XPTracker", init: MGXPTracker.init.bind(MGXPTracker) },
     { name: "CropValueIndicator", init: MGCropValueIndicator.init.bind(MGCropValueIndicator) },
     { name: "CropSizeIndicator", init: MGCropSizeIndicator.init.bind(MGCropSizeIndicator) },
@@ -235,14 +234,6 @@ export function initFeatures(loader: LoaderController): void {
     const registry = getRegistry();
 
     // Register all QOL injections
-    registry.register({
-      id: 'bulkFavoriteInject',
-      name: 'Bulk Favorite Inject',
-      description: 'Quick favorite/unfavorite multiple mutations',
-      injection: BulkFavoriteInject,
-      storageKey: FEATURE_KEYS.BULK_FAVORITE,
-      defaultEnabled: false,
-    });
 
     registry.register({
       id: 'cropValueIndicator',

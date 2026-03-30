@@ -62,8 +62,7 @@ export const FEATURE_KEYS = {
     AUTO_FAVORITE_UI: 'feature:autoFavorite:ui',
     /** Journal checker feature config */
     JOURNAL_CHECKER: 'feature:journalChecker:config',
-    /** Bulk favorite feature config */
-    BULK_FAVORITE: 'feature:bulkFavorite:config',
+
     /** Achievements feature data */
     ACHIEVEMENTS: 'feature:achievements:data',
     /** Stats tracker feature data */

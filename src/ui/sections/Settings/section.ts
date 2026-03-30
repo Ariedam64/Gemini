@@ -73,13 +73,13 @@ interface FeatureConfig {
   pets: { enabled: boolean };
   autoFavorite: { enabled: boolean };
   locker: { enabled: boolean };
-  trackers: { enabled: boolean };
+
   alerts: { enabled: boolean };
   avatar: { enabled: boolean };
   room: { enabled: boolean };
 
   // In-Game Enhancements
-  bulkFavorite: { enabled: boolean };
+
   cropSizeIndicator: { enabled: boolean };
   eggProbabilityIndicator: { enabled: boolean };
   cropValueIndicator: { enabled: boolean };
@@ -90,12 +90,12 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   pets: { enabled: true },
   autoFavorite: { enabled: true },
   locker: { enabled: true },
-  trackers: { enabled: true },
+
   alerts: { enabled: true },
   avatar: { enabled: true },
   room: { enabled: true },
   // In-Game Enhancements - default to disabled
-  bulkFavorite: { enabled: false },
+
   cropSizeIndicator: { enabled: false },
   eggProbabilityIndicator: { enabled: false },
   cropValueIndicator: { enabled: true }, // Enabled for testing
@@ -221,11 +221,11 @@ export class SettingsSection extends BaseSection {
       pets: { ...DEFAULT_FEATURE_CONFIG.pets, ...stored.pets },
       autoFavorite: { ...DEFAULT_FEATURE_CONFIG.autoFavorite, ...stored.autoFavorite },
       locker: { ...DEFAULT_FEATURE_CONFIG.locker, ...stored.locker },
-      trackers: { ...DEFAULT_FEATURE_CONFIG.trackers, ...stored.trackers },
+
       alerts: { ...DEFAULT_FEATURE_CONFIG.alerts, ...stored.alerts },
       avatar: { ...DEFAULT_FEATURE_CONFIG.avatar, ...stored.avatar },
       room: { ...DEFAULT_FEATURE_CONFIG.room, ...stored.room },
-      bulkFavorite: { ...DEFAULT_FEATURE_CONFIG.bulkFavorite, ...stored.bulkFavorite },
+
       cropSizeIndicator: { ...DEFAULT_FEATURE_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
       eggProbabilityIndicator: { ...DEFAULT_FEATURE_CONFIG.eggProbabilityIndicator, ...stored.eggProbabilityIndicator },
       cropValueIndicator: { ...DEFAULT_FEATURE_CONFIG.cropValueIndicator, ...stored.cropValueIndicator },
@@ -325,15 +325,6 @@ export class SettingsSection extends BaseSection {
             this.saveFeatureConfig();
           },
           "Configure crop, egg, and decor blockers"
-        ),
-        createSectionRow(
-          "Trackers",
-          this.featureConfig.trackers.enabled,
-          (v: boolean) => {
-            this.featureConfig.trackers.enabled = v;
-            this.saveFeatureConfig();
-          },
-          "Resource and progress tracking"
         ),
         createSectionRow(
           "Alerts",

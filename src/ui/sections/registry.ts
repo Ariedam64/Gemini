@@ -6,7 +6,7 @@ import { SettingsSection } from "./Settings";
 import { TestSection } from "./Test";
 import { AutoFavoriteSettingsSection } from "./AutoFavoriteSettings";
 import { PetsSection } from "./Pets";
-import { TrackersSection } from "./Trackers";
+
 import { AlertsSection } from "./Alerts";
 import { DevSection } from "./Dev";
 import { AvatarSection } from "./Avatar";
@@ -48,7 +48,7 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
     new AutoFavoriteSettingsSection(),
     getAlertsSection(),
     new PetsSection(deps),
-    new TrackersSection(deps),
+
     new AvatarSection(),
     new RoomSection(deps),
     getLockerSection(),
