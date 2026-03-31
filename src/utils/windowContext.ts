@@ -86,3 +86,33 @@ export function dispatchCustomEventAll<T = any>(type: string, detail?: T): void 
 export function isInIframe(win: Window & typeof globalThis = pageWin): boolean {
   try { return win.top !== win; } catch { return true; }
 }
+
+export type ContextDiagnostics = {
+  hasUnsafeWindow: boolean;
+  hasWrappedJSObject: boolean;
+  isIsolatedContext: boolean;
+  pageWindowIsSandbox: boolean;
+  hasJotaiAtomCache: boolean;
+  hasReactDevtoolsHook: boolean;
+};
+
+export function getContextDiagnostics(): ContextDiagnostics {
+  const hasUnsafeWindow = typeof unsafeWindow !== "undefined" && !!unsafeWindow;
+  const wrapped = (window as any).wrappedJSObject;
+  const hasWrappedJSObject = !!wrapped && wrapped !== window;
+
+  let hasJotaiAtomCache = false;
+  let hasReactDevtoolsHook = false;
+
+  try { hasJotaiAtomCache = !!(pageWin as any).jotaiAtomCache?.cache; } catch { }
+  try { hasReactDevtoolsHook = !!(pageWin as any).__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch { }
+
+  return {
+    hasUnsafeWindow,
+    hasWrappedJSObject,
+    isIsolatedContext,
+    pageWindowIsSandbox: pageWin === sandboxWin,
+    hasJotaiAtomCache,
+    hasReactDevtoolsHook,
+  };
+}

@@ -3,7 +3,6 @@
  */
 
 export const settingsCss = `
-@layer settings-section {
   /* Theme color picker grid */
   .settings-theme-grid {
     display: grid;
@@ -42,5 +41,4 @@ export const settingsCss = `
     align-items: stretch;
     width: 100%;
   }
-}
 `;

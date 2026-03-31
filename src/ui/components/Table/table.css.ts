@@ -101,6 +101,7 @@ export const tableCss = `
   overflow:auto;
   overflow-y:auto;
   overflow-x:auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-gutter:stable;
   min-height:0; /* key so scrolling does not jump */
 }

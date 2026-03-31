@@ -48,6 +48,7 @@ export default defineConfig(({ mode }) => ({
                 ],
                 'run-at': 'document-start',
                 'inject-into': 'page',
+                'sandbox': 'raw',
                 license: false as any,
                 grant: [
                     'GM_xmlhttpRequest',
@@ -55,7 +56,8 @@ export default defineConfig(({ mode }) => ({
                     'GM_getValue',
                     'GM_setValue',
                     'GM_openInTab',
-                    'GM_registerMenuCommand'
+                    'GM_registerMenuCommand',
+                    'unsafeWindow'
                 ],
                 resource: {
                     ICON: 'https://imgur.com/a/nf1ZKbp'

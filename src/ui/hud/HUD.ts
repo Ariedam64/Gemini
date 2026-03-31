@@ -15,8 +15,10 @@ const DEFAULT_HOST_STYLES: Partial<CSSStyleDeclaration> = {
   position: "fixed",
   top: "0",
   right: "0",
+  // width/height are set dynamically in setHudOpen — keeping them absent when
+  // closed eliminates the compositing layer that would otherwise overlap the game canvas
   zIndex: "2147483647",
-  pointerEvents: "auto",
+  pointerEvents: "none",
   fontFamily:
     'system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif',
   fontSize: "13px",
@@ -118,6 +120,16 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   // ===== 1. Host + Shadow + CSS Injection =====
   const { host, shadow } = attachHost(hostId);
 
+  // Prevent touch/click events that originate inside the shadow DOM from bubbling
+  // past the host element into the game's document-level handlers.  Without this,
+  // rapid taps on the HUD are re-targeted to the host in light DOM and reach the
+  // game's own listeners, which can trigger its navigation / page-refresh logic.
+  const stopBubble = (e: Event) => e.stopPropagation();
+  host.addEventListener("click", stopBubble);
+  host.addEventListener("touchstart", stopBubble, { passive: true });
+  host.addEventListener("touchend", stopBubble, { passive: true });
+  host.addEventListener("touchmove", stopBubble, { passive: true });
+
   // Inject all styles in batches with yields to avoid blocking
   const styleInjections: [string, string][] = [
     [variablesCss, "variables"],
@@ -178,6 +190,21 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     const wasOpen = panel.classList.contains("open");
     panel.classList.toggle("open", isOpen);
     panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+
+    const hostEl = host as HTMLElement;
+    if (isOpen) {
+      // Give the host real dimensions so iOS can hit-test into the shadow DOM.
+      // Use the same --w var the resize handler sets, falling back to the default.
+      hostEl.style.width = "var(--w, 480px)";
+      hostEl.style.height = "100dvh";
+      hostEl.style.pointerEvents = "auto";
+    } else {
+      // Remove dimensions so the host contributes no compositing layer to the
+      // game canvas while the HUD is hidden.
+      hostEl.style.width = "";
+      hostEl.style.height = "";
+      hostEl.style.pointerEvents = "none";
+    }
 
     if (isOpen !== wasOpen) {
       dispatchHudOpenEvent(isOpen);
@@ -347,6 +374,10 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     resizeHandler.destroy();
     pageWindow.removeEventListener("resize", handleResize);
     host.removeEventListener("gemini:layout-resize", handleLayoutResize);
+    host.removeEventListener("click", stopBubble);
+    host.removeEventListener("touchstart", stopBubble);
+    host.removeEventListener("touchend", stopBubble);
+    host.removeEventListener("touchmove", stopBubble);
   }
 
   // ===== 10. Return HUD Instance =====

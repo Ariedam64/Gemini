@@ -1,5 +1,4 @@
 export const utilitiesCss = `
-@layer utilities {
   /* Generic utilities, without component styling */
 
   /* Accessibility */
@@ -62,5 +61,4 @@ export const utilitiesCss = `
       color-mix(in oklab, var(--soft) 60%, transparent) 100%
     );
   }
-}
 `;

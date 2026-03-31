@@ -3,7 +3,6 @@
  * Extracted from base.css.ts for better organization
  */
 export const hudCss = `
-@layer hud {
   /* Root container */
   .gemini-wrapper {
     position: relative;
@@ -31,11 +30,14 @@ export const hudCss = `
                 border-color .28s ease, box-shadow .28s ease;
     overflow: hidden;
     pointer-events: auto;
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+    touch-action: pan-y;
+    /* backdrop-filter only while open — an off-screen panel with backdrop-filter
+       still creates a compositor layer that competes with the game's WebGL canvas */
   }
   .gemini-panel.open {
     transform: translateX(0);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
   }
 
   /* ---- Resizer (desktop only) ---- */
@@ -61,6 +63,8 @@ export const hudCss = `
     align-items: center;
     gap: 14px;
     padding: 12px max(12px, var(--inset-l)) 12px max(12px, var(--inset-r));
+    /* Fallback for browsers without color-mix(in oklab) support (iOS < 16.2) */
+    background-color: rgba(10,12,18,0.55);
     background-color: color-mix(in oklab, var(--bg) 92%, transparent);
     transition: background-color .28s ease, border-color .28s ease;
   }
@@ -71,7 +75,10 @@ export const hudCss = `
     inline-size: 34px;
     block-size: 34px;
     border-radius: 999px;
+    /* Fallback for browsers without color-mix(in oklab) support (iOS < 16.2) */
+    border: 1px solid rgba(148,163,184,0.45);
     border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    background: rgba(255,255,255,0.1);
     background: linear-gradient(
       180deg,
       color-mix(in oklab, var(--soft) 85%, transparent) 0%,
@@ -122,6 +129,7 @@ export const hudCss = `
     overflow: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     height: calc(100dvh - var(--tab-h));
     scrollbar-gutter: stable;
   }
@@ -132,5 +140,25 @@ export const hudCss = `
     background: var(--muted);
     border-radius: 8px;
   }
-}
+
+  /* ---- Async section loading placeholder ---- */
+  .gemini-section-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 120px;
+    opacity: 0.4;
+  }
+  .gemini-section-loading::after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: gemini-spin 0.8s linear infinite;
+  }
+  @keyframes gemini-spin {
+    to { transform: rotate(360deg); }
+  }
 `;

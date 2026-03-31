@@ -12,7 +12,10 @@ import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
+import { MGEnvironment } from "../../modules/environment";
 import { migrateStorageKeys, FEATURE_KEYS, INJECT_KEYS } from "../../utils/storage";
+import { getContextDiagnostics, pageWindow } from "../../utils/windowContext";
+import { forceRecaptureStore } from "../../atoms/core/bridge";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
 import { MGBulkFavorite } from "../../features/bulkFavorite";
@@ -34,6 +37,15 @@ import { MGSkinChanger } from "../../features/skinChanger";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
 import { StorageValueIndicatorInject } from "../inject/qol/storageValueIndicator";
+
+type GameSignals = {
+  hasBody: boolean;
+  hasAppRoot: boolean;
+  hasRoomConnection: boolean;
+  hasJotaiCache: boolean;
+  hasPixi: boolean;
+  ready: boolean;
+};
 
 export function initWebSocketCapture(loader: LoaderController): () => void {
   loader.logStep("WebSocket", "Capturing WebSocket...");
@@ -106,6 +118,105 @@ function yieldToMain(): Promise<void> {
   });
 }
 
+async function waitForGameSignals(
+  opts: { timeoutMs?: number; intervalMs?: number } = {}
+): Promise<GameSignals> {
+  const timeoutMs = opts.timeoutMs ?? 20000;
+  const intervalMs = opts.intervalMs ?? 200;
+  const startTime = Date.now();
+
+  let last: GameSignals = {
+    hasBody: false,
+    hasAppRoot: false,
+    hasRoomConnection: false,
+    hasJotaiCache: false,
+    hasPixi: false,
+    ready: false,
+  };
+
+  while (Date.now() - startTime < timeoutMs) {
+    const hasBody = !!document.body;
+    const hasAppRoot = !!document.getElementById("App");
+    const hasRoomConnection = !!(pageWindow as any).MagicCircle_RoomConnection;
+    const hasJotaiCache = !!(pageWindow as any).jotaiAtomCache?.cache;
+    const hasPixi = !!(pageWindow as any).PIXI;
+
+    const ready = hasBody && (hasRoomConnection || hasJotaiCache || hasPixi || hasAppRoot);
+
+    last = {
+      hasBody,
+      hasAppRoot,
+      hasRoomConnection,
+      hasJotaiCache,
+      hasPixi,
+      ready,
+    };
+
+    if (ready) return last;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  return last;
+}
+
+export type CompatibilityInfo = {
+  isMobile: boolean;
+  isIOS: boolean;
+  isSafari: boolean;
+};
+
+export async function initCompatibility(loader: LoaderController): Promise<CompatibilityInfo> {
+  let isMobile = false;
+  let isIOS = false;
+  let isSafari = false;
+
+  try {
+    MGEnvironment.init();
+    const env = MGEnvironment.detect();
+    isMobile = env.platform === "mobile";
+    isIOS = env.os === "ios";
+    isSafari = env.browser === "Safari";
+
+    loader.logStep(
+      "Compat:Env",
+      `Env ${env.os}/${env.browser} (${env.platform})`,
+      "info"
+    );
+  } catch {
+    loader.logStep("Compat:Env", "Env detection failed", "error");
+  }
+
+  const ctx = getContextDiagnostics();
+  loader.logStep(
+    "Compat:Ctx",
+    `Ctx ${ctx.pageWindowIsSandbox ? "sandbox" : "page"}; unsafeWindow ${ctx.hasUnsafeWindow ? "yes" : "no"}`,
+    "info"
+  );
+
+  if (isIOS || isMobile) {
+    loader.logStep("Compat:Wait", "Waiting for game readiness (mobile)...", "info");
+    const signals = await waitForGameSignals();
+    loader.logStep(
+      "Compat:Wait",
+      signals.ready
+        ? "Game signals detected"
+        : "Game signals not detected yet (continuing)",
+      signals.ready ? "success" : "error"
+    );
+  }
+
+  if (isIOS) {
+    const recapture = await forceRecaptureStore({ timeoutMs: 8000, intervalMs: 150 });
+    loader.logStep(
+      "Compat:Store",
+      recapture.ok ? `Store captured (${recapture.via})` : "Store not captured yet",
+      recapture.ok ? "success" : "error"
+    );
+  }
+
+  return { isMobile, isIOS, isSafari };
+}
+
 export async function initHUD(loader: LoaderController): Promise<Hud> {
   loader.logStep("HUD", "Loading HUD preferences...");
 
@@ -146,22 +257,41 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
   return hud;
 }
 
-export async function initModules(loader: LoaderController): Promise<void> {
+export async function initModules(
+  loader: LoaderController,
+  opts: { timeoutMs?: number; logEach?: boolean } = {}
+): Promise<void> {
   loader.setSubtitle("Activating Gemini modules...");
 
   let loadedCount = 0;
   let totalCount = 0;
+  const logEach = !!opts.logEach;
 
   await initAllModules((progress) => {
     if (progress.status === "start") {
       totalCount++;
+      if (logEach) {
+        loader.logStep(`Module:${progress.name}`, `Starting ${progress.name}...`, "info");
+      }
     } else if (progress.status === "success") {
       loadedCount++;
       loader.logStep("Modules", `Loading modules... (${loadedCount}/${totalCount})`);
+      if (logEach) {
+        loader.logStep(`Module:${progress.name}`, `${progress.name} ready`, "success");
+      }
     } else if (progress.status === "error") {
+      const message =
+        progress.error instanceof Error
+          ? progress.error.message
+          : progress.error
+            ? String(progress.error)
+            : "unknown error";
       loader.logStep("Modules", `Loading modules... (${loadedCount}/${totalCount}) - ${progress.name} failed`, "error");
+      if (logEach) {
+        loader.logStep(`Module:${progress.name}`, `${progress.name} failed (${message})`, "error");
+      }
     }
-  });
+  }, { timeoutMs: opts.timeoutMs });
 
   loader.logStep("Modules", `All modules loaded (${totalCount}/${totalCount})`, "success");
 }

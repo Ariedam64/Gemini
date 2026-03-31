@@ -1,6 +1,5 @@
 // ui/components/Log/log.css.ts
 export const logCss = `
-@layer components {
   .log{
     display:block;
     border:1px solid var(--border);
@@ -17,6 +16,7 @@ export const logCss = `
     block-size: 100%;
     max-block-size: 100%;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 10px 12px 14px; /* extra bottom padding to avoid last-line clipping */
     background: color-mix(in oklab, var(--bg) 88%, transparent);
     scrollbar-gutter: stable;
@@ -78,5 +78,4 @@ export const logCss = `
   .tok-num{  color: color-mix(in oklab, #a78bfa 78%, var(--fg)); }
   .tok-comm{ color: color-mix(in oklab, var(--fg) 65%, #9ca3af); font-style: italic; }
   .tok-lit{  color: color-mix(in oklab, #f472b6 78%, var(--fg)); }
-}
 `;

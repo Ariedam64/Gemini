@@ -141,6 +141,7 @@ export const modalCss = `
   .modal-body {
     padding: 20px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     flex: 1;
     scrollbar-gutter: stable;
   }

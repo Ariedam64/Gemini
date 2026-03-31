@@ -15,13 +15,12 @@ import { MGJournal } from '../../features/journal';
 import { getVariantLetterStyle } from './letterStyles';
 import type { Unsubscribe } from '../../globals/core/types';
 import { resolveSpeciesId } from '../../ui/inject/qol/_shared/names';
+import { findCropTooltipInfos, findCropTooltipInfosFromNode } from '../../ui/inject/qol/_shared/cropTooltips';
 
 // -----------------------------------------------------------------------------
 // Selectors (same as crop value indicator uses)
 // -----------------------------------------------------------------------------
 
-const CROP_CONTAINER_CLASS_MATURE = 'css-qnqsp4';
-const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
 const MISSING_VARIANTS_CLASS = 'gemini-qol-missingVariants';
 
 // -----------------------------------------------------------------------------
@@ -230,46 +229,19 @@ function createMissingVariantsRow(speciesId: string): HTMLElement | null {
 
 interface CropTooltip {
   element: HTMLElement;
+  root: HTMLElement;
+  nameEl: HTMLElement;
+  speciesId: string | null;
 }
 
 function findCropTooltips(): CropTooltip[] {
-  const tooltips: CropTooltip[] = [];
-
-  // Find all mature crop containers (with mutations/scale)
-  const matureCropContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_MATURE}`
-  );
-
-  for (const container of matureCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
-    // Skip if inside a pet button
-    if (container.closest('button.chakra-button')) continue;
-    tooltips.push({ element: container });
-  }
-
-  // Find all growth crop containers (timer/info panels)
-  const growthCropContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_GROWTH}`
-  );
-
-  for (const container of growthCropContainers) {
-    if (!container.offsetParent) continue;
-    if (container.closest('button.chakra-button')) continue;
-
-    // More robust McFlex detection: find ANY McFlex that contains a p.chakra-text
-    // and doesn't look like an empty/loading state
-    const potentialContainers = container.querySelectorAll<HTMLElement>('.McFlex');
-    for (const flex of potentialContainers) {
-      const nameEl = flex.querySelector('p.chakra-text');
-      if (nameEl && nameEl.textContent && !nameEl.textContent.includes('%')) {
-        tooltips.push({ element: flex });
-        break; // Found the primary info container for this tooltip
-      }
-    }
-  }
-
-  return tooltips;
+  const tooltips = findCropTooltipInfos();
+  return tooltips.map((tooltip) => ({
+    element: tooltip.infoContainer,
+    root: tooltip.root,
+    nameEl: tooltip.nameEl,
+    speciesId: tooltip.speciesId,
+  }));
 }
 
 function injectMissingVariantsToTooltip(tooltip: CropTooltip): void {
@@ -280,15 +252,11 @@ function injectMissingVariantsToTooltip(tooltip: CropTooltip): void {
 
   try {
     // Find the name element to extract species
-    const nameEl = tooltip.element.querySelector('p.chakra-text');
-    if (!nameEl) return;
-
-    // Determine where to append (the McFlex containing the name)
-    const infoContainer = nameEl.closest('.McFlex') as HTMLElement | null;
-    if (!infoContainer) return;
+    const nameEl = tooltip.nameEl;
+    const infoContainer = tooltip.element;
 
     // Get species from currentTile data or resolve from DOM name
-    let speciesId: string | null = null;
+    let speciesId: string | null = tooltip.speciesId ?? null;
 
     const tile = getCurrentTile().get();
     const plant = tile.plant;
@@ -346,49 +314,15 @@ function startObservingTooltips(): void {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Check mature crop containers
-            if (node.classList.contains(CROP_CONTAINER_CLASS_MATURE)) {
-              if (!node.closest('button.chakra-button')) {
-                injectMissingVariantsToTooltip({ element: node });
-              }
+            const tooltips = findCropTooltipInfosFromNode(node);
+            for (const tooltip of tooltips) {
+              injectMissingVariantsToTooltip({
+                element: tooltip.infoContainer,
+                root: tooltip.root,
+                nameEl: tooltip.nameEl,
+                speciesId: tooltip.speciesId,
+              });
             }
-
-            const matureCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_MATURE}`
-            );
-            matureCropContainers.forEach((container) => {
-              if (!container.closest('button.chakra-button')) {
-                injectMissingVariantsToTooltip({ element: container });
-              }
-            });
-
-            // Check growth crop containers
-            if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
-              if (!node.closest('button.chakra-button')) {
-                const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text')) {
-                    injectMissingVariantsToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            }
-
-            const growthCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_GROWTH}`
-            );
-            growthCropContainers.forEach((container) => {
-              if (!container.closest('button.chakra-button')) {
-                const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text')) {
-                    injectMissingVariantsToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            });
           }
         });
       }

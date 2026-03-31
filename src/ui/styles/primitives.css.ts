@@ -4,7 +4,6 @@
  */
 
 export const primitivesCss = `
-@layer primitives {
   /* Section container */
   .gemini-section { display: block; }
 
@@ -99,5 +98,4 @@ export const primitivesCss = `
       min-width: 0;
     }
   }
-}
 `;

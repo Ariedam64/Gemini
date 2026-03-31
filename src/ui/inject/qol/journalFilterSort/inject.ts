@@ -31,6 +31,97 @@ let tracker = createCleanupTracker();
 let initialized = false;
 let state: FilterSortState = { filter: 'all', sort: 'default' };
 const CONTROLS_CLASS = 'gemini-journal-filterSort';
+const LABEL_CLASS = `${CONTROLS_CLASS}__label`;
+const LABEL_SORT_CLASS = `${CONTROLS_CLASS}__label--sort`;
+const SELECT_CLASS = `${CONTROLS_CLASS}__select`;
+const MODAL_CLASS = 'gemini-journal-modal';
+let stylesInjected = false;
+
+const FILTER_SORT_STYLES = `
+    .${CONTROLS_CLASS} {
+        display: flex;
+        gap: 8px;
+        padding: 6px 0;
+        margin: 6px 0;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .${LABEL_CLASS} {
+        color: #A88A6B;
+        font-size: 11px;
+    }
+
+    .${LABEL_SORT_CLASS} {
+        margin-left: 8px;
+    }
+
+    .${SELECT_CLASS} {
+        background: #D4C8B8;
+        color: #3D3325;
+        border: 1px solid #8B7355;
+        border-radius: 4px;
+        padding: 3px 6px;
+        font-size: 10px;
+        cursor: pointer;
+        max-width: 45vw;
+    }
+
+    @media (max-width: 520px) {
+        .${CONTROLS_CLASS} {
+            gap: 6px;
+            justify-content: flex-start;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .${LABEL_SORT_CLASS} {
+            margin-left: 0;
+        }
+
+        .${LABEL_CLASS} {
+            width: 100%;
+        }
+
+        .${SELECT_CLASS} {
+            flex: 1 1 auto;
+            width: 100%;
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .${SELECT_CLASS} {
+            font-size: 9px;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .${MODAL_CLASS} {
+            max-width: calc(100vw - 16px) !important;
+            width: calc(100vw - 16px) !important;
+            left: 8px !important;
+            right: 8px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+    }
+`;
+
+function ensureStyles(): void {
+    if (stylesInjected) return;
+
+    const style = document.createElement('style');
+    style.id = 'gemini-journal-filterSort-styles';
+    style.textContent = FILTER_SORT_STYLES;
+    document.head.appendChild(style);
+
+    tracker.add(() => style.remove());
+    stylesInjected = true;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Detection - Game DOM Structure Aware
@@ -81,37 +172,20 @@ function findSpeciesEntries(): HTMLElement[] {
 function createControlsContainer(): HTMLElement {
     const container = document.createElement('div');
     container.className = CONTROLS_CLASS;
-    container.style.cssText = `
-        display: flex;
-        gap: 8px;
-        padding: 6px 0;
-        margin: 6px 0;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-    `;
 
     // Filter dropdown
     const filterLabel = document.createElement('span');
     filterLabel.textContent = 'Filter:';
-    filterLabel.style.cssText = 'color: #A88A6B; font-size: 11px;';
+    filterLabel.className = LABEL_CLASS;
 
     const filterSelect = document.createElement('select');
+    filterSelect.className = SELECT_CLASS;
     for (const [value, label] of [['all', 'All'], ['missing', 'Missing'], ['collected', 'Complete']]) {
         const opt = document.createElement('option');
         opt.value = value;
         opt.textContent = label;
         filterSelect.appendChild(opt);
     }
-    filterSelect.style.cssText = `
-        background: #D4C8B8;
-        color: #3D3325;
-        border: 1px solid #8B7355;
-        border-radius: 4px;
-        padding: 3px 6px;
-        font-size: 10px;
-        cursor: pointer;
-    `;
     filterSelect.value = state.filter;
     filterSelect.onchange = () => {
         state.filter = filterSelect.value as FilterMode;
@@ -121,16 +195,16 @@ function createControlsContainer(): HTMLElement {
     // Sort dropdown
     const sortLabel = document.createElement('span');
     sortLabel.textContent = 'Sort:';
-    sortLabel.style.cssText = 'color: #A88A6B; font-size: 11px; margin-left: 8px;';
+    sortLabel.className = `${LABEL_CLASS} ${LABEL_SORT_CLASS}`;
 
     const sortSelect = document.createElement('select');
+    sortSelect.className = SELECT_CLASS;
     for (const [value, label] of [['default', 'Default'], ['alphabetical', 'A-Z'], ['progress', 'By Progress']]) {
         const opt = document.createElement('option');
         opt.value = value;
         opt.textContent = label;
         sortSelect.appendChild(opt);
     }
-    sortSelect.style.cssText = filterSelect.style.cssText;
     sortSelect.value = state.sort;
     sortSelect.onchange = () => {
         state.sort = sortSelect.value as SortMode;
@@ -237,6 +311,12 @@ function injectControls(): void {
         return;
     }
 
+    const modal = findJournalModal();
+    if (modal) {
+        modal.classList.add(MODAL_CLASS);
+        tracker.add(() => modal.classList.remove(MODAL_CLASS));
+    }
+
     const header = findOverviewHeader();
     if (!header) {
         return;
@@ -333,6 +413,7 @@ function stopObserving(): void {
     tracker.run();
     tracker.clear();
     tracker = createCleanupTracker();
+    stylesInjected = false;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,6 +423,7 @@ function stopObserving(): void {
 export function init(): void {
     if (initialized) return;
     initialized = true;
+    ensureStyles();
     startObserving();
     console.log('[JournalFilterSort] Initialized');
 }

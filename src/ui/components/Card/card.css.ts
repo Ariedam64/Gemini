@@ -1,6 +1,5 @@
 // ui/components/Card/card.css.ts
 export const cardCss = `
-@layer components {
   /* ===== Card (base) ===== */
   .card{
     border:1px solid var(--border);
@@ -170,6 +169,4 @@ export const cardCss = `
     border-left-width: var(--card-accent-w, 4px);
     border-left-color: var(--low);
   }
-}
-  
 `;

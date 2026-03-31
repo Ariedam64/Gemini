@@ -551,6 +551,65 @@ export function getCapturedInfo(): {
   };
 }
 
+export type RecaptureResult = {
+  ok: boolean;
+  via: CaptureVia;
+  polyfill: boolean;
+  error: unknown;
+};
+
+/**
+ * Force a re-capture attempt if we only have a polyfill store.
+ * Useful for late-loading environments (e.g., iOS Safari).
+ */
+export async function forceRecaptureStore(
+  opts: { timeoutMs?: number; intervalMs?: number } = {}
+): Promise<RecaptureResult> {
+  const g = getGlobal();
+
+  if (g.baseStore && !g.baseStore.__polyfill) {
+    const info = getCapturedInfo();
+    return { ok: true, via: info.via, polyfill: info.polyfill, error: info.error };
+  }
+
+  const timeoutMs = opts.timeoutMs ?? 8000;
+  const intervalMs = opts.intervalMs ?? 100;
+  const startTime = Date.now();
+  let lastError: unknown = null;
+
+  while (Date.now() - startTime < timeoutMs) {
+    const viaFiber = findStoreViaFiber();
+    if (viaFiber) {
+      g.baseStore = viaFiber;
+      g.lastCapturedVia = "fiber";
+      g.captureError = null;
+      g.mirror = undefined;
+      notifyReadyOnce();
+      return { ok: true, via: "fiber", polyfill: false, error: null };
+    }
+
+    try {
+      const viaWrite = await captureViaWritePatch(1500);
+      if (viaWrite && !viaWrite.__polyfill) {
+        g.baseStore = viaWrite;
+        g.lastCapturedVia = "write";
+        g.captureError = null;
+        g.mirror = undefined;
+        notifyReadyOnce();
+        return { ok: true, via: "write", polyfill: false, error: null };
+      }
+    } catch (err) {
+      lastError = err;
+    }
+
+    await sleep(intervalMs);
+  }
+
+  if (lastError) g.captureError = lastError;
+  const info = getCapturedInfo();
+  return { ok: !info.polyfill, via: info.via, polyfill: info.polyfill, error: info.error };
+}
+
 /* ================================= Mirror ================================= */
 
 async function createMirror(): Promise<MirrorAPI> {

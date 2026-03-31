@@ -8,7 +8,6 @@
  */
 
 export const fontsCss = `
-@layer fonts {
   /* The game loads Greycliff CF - we inherit it when available */
   /* This fallback stack ensures graceful degradation */
   
@@ -31,7 +30,6 @@ export const fontsCss = `
   .text-sm2 { font-size: 18px; }
   .text-md { font-size: 20px; }
   .text-lg { font-size: 24px; }
-}
 `;
 
 /**

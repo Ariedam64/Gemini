@@ -1,6 +1,5 @@
 // ui/components/ColorPicker/colorPicker.css.ts
 export const colorPickerCss = `
-@layer components {
   .color-picker{
     --cp-checkerboard: repeating-conic-gradient(#ebeef5 0 25%, transparent 0 50%) 0 0 / 12px 12px;
   }
@@ -220,6 +219,5 @@ export const colorPickerCss = `
   .color-picker--mobile .color-picker__preview{
     pointer-events:auto;
   }
-}
 `;
 

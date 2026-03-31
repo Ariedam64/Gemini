@@ -13,13 +13,11 @@ import { calculateCropSellPrice } from '../../modules/calculators/logic/crop';
 import { getCurrentTile } from '../../globals/variables/currentTile';
 import { MGSprite } from '../../modules/sprite';
 import type { Unsubscribe } from '../../globals/core/types';
+import { findCropTooltipInfos, findCropTooltipInfosFromNode } from '../../ui/inject/qol/_shared/cropTooltips';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Selectors (update these if game UI structure changes)
 // ─────────────────────────────────────────────────────────────────────────────
-
-const CROP_CONTAINER_CLASS_MATURE = 'css-qnqsp4';
-const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -98,8 +96,10 @@ function ensureStyles(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface CropTooltip {
-  element: HTMLElement;
-  priceElement?: HTMLElement;
+  root: HTMLElement;
+  infoContainer: HTMLElement;
+  nameEl: HTMLElement;
+  speciesId: string | null;
 }
 
 function createPriceElement(price: number): HTMLElement {
@@ -160,7 +160,7 @@ function extractMutations(el: HTMLElement): string[] {
   const mutations: string[] = [];
 
   // Look for spans with mutation names
-  const spans = el.querySelectorAll('span.chakra-text');
+  const spans = el.querySelectorAll('span.chakra-text, div.chakra-text');
 
   for (const span of spans) {
     const text = span.textContent?.trim();
@@ -187,7 +187,7 @@ function extractMutations(el: HTMLElement): string[] {
  * Looks for text like "0.50 kg" in <p> elements
  */
 function extractTargetScale(el: HTMLElement): number {
-  const paragraphs = el.querySelectorAll('p.chakra-text');
+  const paragraphs = el.querySelectorAll('p.chakra-text, span.chakra-text, div.chakra-text, p, span, div');
 
   for (const p of paragraphs) {
     const text = p.textContent?.trim();
@@ -205,46 +205,13 @@ function extractTargetScale(el: HTMLElement): number {
 }
 
 function findCropTooltips(): CropTooltip[] {
-  const tooltips: CropTooltip[] = [];
-
-  // Find all mature crop containers (with mutations/scale)
-  const matureCropContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_MATURE}`
-  );
-
-  for (const container of matureCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
-
-    // Skip if inside a pet button
-    if (container.closest('button.chakra-button')) continue;
-
-    tooltips.push({ element: container });
-  }
-
-  // Find all growth crop containers (timer/info panels)
-  const growthCropContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_GROWTH}`
-  );
-
-  for (const container of growthCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
-
-    // Skip if inside a pet button
-    if (container.closest('button.chakra-button')) continue;
-
-    // Find the timer container (last McFlex with paragraphs)
-    const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-    if (mcFlexes.length > 0) {
-      const timerContainer = mcFlexes[mcFlexes.length - 1]; // Last McFlex is the timer/info
-      if (timerContainer.querySelector('p.chakra-text')) {
-        tooltips.push({ element: timerContainer });
-      }
-    }
-  }
-
-  return tooltips;
+  const tooltips = findCropTooltipInfos();
+  return tooltips.map((tooltip) => ({
+    root: tooltip.root,
+    infoContainer: tooltip.infoContainer,
+    nameEl: tooltip.nameEl,
+    speciesId: tooltip.speciesId,
+  }));
 }
 
 function updateTooltipPrice(infoContainer: HTMLElement): void {
@@ -344,28 +311,21 @@ function scheduleRender(): void {
 
 function injectPriceToTooltip(tooltip: CropTooltip): void {
   // Check if already injected
-  if (tooltip.element.querySelector('.gemini-qol-cropPrice')) {
+  if (tooltip.infoContainer.querySelector('.gemini-qol-cropPrice')) {
     return;
   }
 
   try {
     // Find the crop info container (McFlex that contains the name)
-    const nameEl = tooltip.element.querySelector('p.chakra-text');
-    if (!nameEl) {
-      return;
-    }
-
-    const infoContainer = nameEl.closest('.McFlex') as HTMLElement | null;
-    if (!infoContainer) {
-      return;
-    }
+    const nameEl = tooltip.nameEl;
+    const infoContainer = tooltip.infoContainer;
 
     // Get price from currentTile data (accurate and fast)
     const tile = getCurrentTile().get();
     const plant = tile.plant;
 
     let price = 0;
-    let speciesId: string | null = null;
+    let speciesId: string | null = tooltip.speciesId ?? null;
 
     if (plant && plant.currentSlotIndex !== null) {
       const currentSlot = plant.slots[plant.currentSlotIndex];
@@ -423,51 +383,15 @@ function startObservingTooltips(): void {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Check if this node is a mature crop container
-            if (node.classList.contains(CROP_CONTAINER_CLASS_MATURE)) {
-              if (!node.closest('button.chakra-button')) {
-                injectPriceToTooltip({ element: node });
-              }
+            const tooltips = findCropTooltipInfosFromNode(node);
+            for (const tooltip of tooltips) {
+              injectPriceToTooltip({
+                root: tooltip.root,
+                infoContainer: tooltip.infoContainer,
+                nameEl: tooltip.nameEl,
+                speciesId: tooltip.speciesId,
+              });
             }
-
-            // Also check children for mature crop containers
-            const matureCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_MATURE}`
-            );
-            matureCropContainers.forEach((container) => {
-              if (!container.closest('button.chakra-button')) {
-                injectPriceToTooltip({ element: container });
-              }
-            });
-
-            // Check if this node is a growth crop container
-            if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
-              if (!node.closest('button.chakra-button')) {
-                const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-                    injectPriceToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            }
-
-            // Also check children for growth crop containers
-            const growthCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_GROWTH}`
-            );
-            growthCropContainers.forEach((container) => {
-              if (!container.closest('button.chakra-button')) {
-                const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-                    injectPriceToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            });
           }
         });
       }

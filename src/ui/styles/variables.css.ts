@@ -1,5 +1,4 @@
 export const variablesCss = `
-@layer tokens {
   /* --- Animatable properties --- */
   @property --bg{        syntax:'<color>';inherits:true;initial-value:rgba(10,12,18,.6)}
   @property --fg{        syntax:'<color>';inherits:true;initial-value:#e5e7eb}
@@ -110,5 +109,4 @@ export const variablesCss = `
   @media (max-width: 360px){
     :host{ --tab-h:48px; }
   }
-}
 `;

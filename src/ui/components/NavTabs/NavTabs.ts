@@ -65,6 +65,26 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
   // Container with arrows
   const wrapper = element("div", { className: "lg-tabs-wrapper" }, btnLeft, tabsRow, btnRight) as HTMLDivElement;
   const root = wrapper;
+  const raf =
+    typeof requestAnimationFrame !== "undefined"
+      ? requestAnimationFrame
+      : (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16);
+
+  let pendingChangeId: string | null = null;
+  let changeHandle: number | null = null;
+
+  function scheduleOnChange(id: string) {
+    pendingChangeId = id;
+    if (changeHandle !== null) return;
+
+    changeHandle = raf(() => {
+      changeHandle = null;
+      const nextId = pendingChangeId;
+      pendingChangeId = null;
+      if (!nextId) return;
+      onChange(nextId);
+    });
+  }
 
   // Touch swipe tracking
   let touchStartX = 0;
@@ -224,7 +244,7 @@ export function createNavTabs(tabs: TabDef[], initial: string, onChange: (id: st
     active = id;
     btns.forEach(b => b.classList.toggle("active", (b as HTMLButtonElement).dataset.target === id));
     movePillTo(id);
-    onChange(id);
+    scheduleOnChange(id);
   }
 
   btns.forEach(b => b.addEventListener("click", () => activate((b as HTMLButtonElement).dataset.target!)));

@@ -27,6 +27,142 @@ let allTabActive = false;
 let lastAllTabClickTime = 0; // For click debouncing
 const ALL_TAB_CLASS = 'gemini-journal-allTab';
 const OVERLAY_CLASS = 'gemini-journal-allOverlay';
+const CONTENT_CLASS = 'gemini-journal-allContent';
+const CONTROLS_CLASS = 'gemini-journal-allControls';
+const LABEL_CLASS = 'gemini-journal-allLabel';
+const LABEL_SORT_CLASS = 'gemini-journal-allLabel--sort';
+const SELECT_CLASS = 'gemini-journal-allSelect';
+const ROW_CLASS = 'gemini-journal-allRow';
+const PROGRESS_CLASS = 'gemini-journal-allProgress';
+const MODAL_CLASS = 'gemini-journal-modal';
+let stylesInjected = false;
+
+const ALL_TAB_STYLES = `
+    .${OVERLAY_CLASS} {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .${CONTENT_CLASS} {
+        padding: 12px 16px;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+    }
+
+    .${CONTROLS_CLASS} {
+        display: flex;
+        gap: 12px;
+        padding: 6px 0;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .${LABEL_CLASS} {
+        color: #A88A6B;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    .${LABEL_SORT_CLASS} {
+        margin-left: 8px;
+    }
+
+    .${SELECT_CLASS} {
+        background: #D4C8B8;
+        color: #3D3325;
+        border: 1px solid #8B7355;
+        border-radius: 4px;
+        padding: 3px 8px;
+        font-size: 10px;
+        cursor: pointer;
+        max-width: 45vw;
+    }
+
+    .${ROW_CLASS} {
+        display: grid;
+        grid-template-columns: minmax(36px, 50px) 1fr;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .${PROGRESS_CLASS} {
+        position: relative;
+        background: #D4C4A8;
+        border-radius: 5px;
+        padding: 6px 12px;
+        overflow: hidden;
+        flex: 1;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 520px) {
+        .${CONTENT_CLASS} {
+            padding: 10px 10px;
+        }
+
+        .${CONTROLS_CLASS} {
+            gap: 6px;
+            justify-content: flex-start;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .${LABEL_SORT_CLASS} {
+            margin-left: 0;
+        }
+
+        .${SELECT_CLASS} {
+            flex: 1 1 auto;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .${ROW_CLASS} {
+            grid-template-columns: minmax(28px, 44px) 1fr !important;
+        }
+
+        .${PROGRESS_CLASS} {
+            padding: 4px 8px !important;
+        }
+
+        .${CONTENT_CLASS} .gemini-journal-scrollbar {
+            padding-right: 0;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .${MODAL_CLASS} {
+            max-width: calc(100vw - 16px) !important;
+            width: calc(100vw - 16px) !important;
+            left: 8px !important;
+            right: 8px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+    }
+`;
+
+function ensureStyles(): void {
+    if (stylesInjected) return;
+
+    const style = document.createElement('style');
+    style.id = 'gemini-journal-allTab-styles';
+    style.textContent = ALL_TAB_STYLES;
+    document.head.appendChild(style);
+
+    buttonTracker.add(() => style.remove());
+    stylesInjected = true;
+}
 
 // Filter/Sort state
 type FilterMode = 'all' | 'missing' | 'complete';
@@ -247,13 +383,7 @@ function createAllTabButton(): HTMLButtonElement {
  */
 function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLElement {
     const row = document.createElement('div');
-    row.style.cssText = `
-        display: grid;
-        grid-template-columns: minmax(36px, 50px) 1fr;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-    `;
+    row.className = ROW_CLASS;
 
     // Sprite container - responsive sizing to match game journal
     const spriteContainer = document.createElement('div');
@@ -357,16 +487,7 @@ function createSpeciesRow(species: SpeciesProgress, type: 'crop' | 'pet'): HTMLE
 
     // Progress bar container (matching game)
     const progressContainer = document.createElement('div');
-    progressContainer.style.cssText = `
-        position: relative;
-        background: #D4C4A8;
-        border-radius: 5px;
-        padding: 6px 12px;
-        overflow: hidden;
-        flex: 1;
-        min-width: 0;
-        max-width: 100%;
-    `;
+    progressContainer.className = PROGRESS_CLASS;
 
     // Progress fill
     const fill = document.createElement('div');
@@ -533,14 +654,7 @@ function createAllTabContent(): HTMLElement {
     const petsProgress = MGJournal.calculatePetProgress(journal);
 
     const container = document.createElement('div');
-    container.className = 'gemini-journal-allContent';
-    container.style.cssText = `
-        padding: 12px 16px;
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    `;
+    container.className = CONTENT_CLASS;
 
     // Header matching game style
     const headerSection = document.createElement('div');
@@ -572,22 +686,15 @@ function createAllTabContent(): HTMLElement {
 
     // Filter/Sort Controls
     const controlsContainer = document.createElement('div');
-    controlsContainer.style.cssText = `
-        display: flex;
-        gap: 12px;
-        padding: 6px 0;
-        margin-bottom: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-    `;
+    controlsContainer.className = CONTROLS_CLASS;
 
     // Filter dropdown
     const filterLabel = document.createElement('span');
     filterLabel.textContent = 'Filter:';
-    filterLabel.style.cssText = 'color: #A88A6B; font-size: 11px; font-weight: bold;';
+    filterLabel.className = LABEL_CLASS;
 
     const filterSelect = document.createElement('select');
+    filterSelect.className = SELECT_CLASS;
     for (const [value, label] of [['all', 'All'], ['missing', 'Missing'], ['complete', 'Complete']]) {
         const opt = document.createElement('option');
         opt.value = value;
@@ -595,15 +702,6 @@ function createAllTabContent(): HTMLElement {
         filterSelect.appendChild(opt);
     }
     filterSelect.value = filterMode;
-    filterSelect.style.cssText = `
-        background: #D4C8B8;
-        color: #3D3325;
-        border: 1px solid #8B7355;
-        border-radius: 4px;
-        padding: 3px 8px;
-        font-size: 10px;
-        cursor: pointer;
-    `;
     filterSelect.onchange = () => {
         filterMode = filterSelect.value as FilterMode;
         refreshAllTabContent();
@@ -612,9 +710,10 @@ function createAllTabContent(): HTMLElement {
     // Sort dropdown
     const sortLabel = document.createElement('span');
     sortLabel.textContent = 'Sort:';
-    sortLabel.style.cssText = 'color: #A88A6B; font-size: 11px; font-weight: bold; margin-left: 8px;';
+    sortLabel.className = `${LABEL_CLASS} ${LABEL_SORT_CLASS}`;
 
     const sortSelect = document.createElement('select');
+    sortSelect.className = SELECT_CLASS;
     for (const [value, label] of [['default', 'Default'], ['az', 'A-Z'], ['progress', 'By Progress']]) {
         const opt = document.createElement('option');
         opt.value = value;
@@ -622,7 +721,6 @@ function createAllTabContent(): HTMLElement {
         sortSelect.appendChild(opt);
     }
     sortSelect.value = sortMode;
-    sortSelect.style.cssText = filterSelect.style.cssText;
     sortSelect.onchange = () => {
         sortMode = sortSelect.value as SortMode;
         refreshAllTabContent();
@@ -916,6 +1014,12 @@ function injectAllTab(): void {
     // Check if already injected
     if (tabContainer.querySelector(`.${ALL_TAB_CLASS}`)) return;
 
+    const modal = findJournalModal();
+    if (modal) {
+        modal.classList.add(MODAL_CLASS);
+        buttonTracker.add(() => modal.classList.remove(MODAL_CLASS));
+    }
+
     const { crops, pets } = findTabButtons();
     if (!crops) {
         return;
@@ -1017,6 +1121,7 @@ function stopObserving(): void {
     buttonTracker.clear();
     contentTracker = createCleanupTracker();
     buttonTracker = createCleanupTracker();
+    stylesInjected = false;
 
     // Reset module-level state
     allTabActive = false;
@@ -1030,6 +1135,7 @@ function stopObserving(): void {
 export function init(): void {
     if (initialized) return;
     initialized = true;
+    ensureStyles();
     startObserving();
     console.log('[JournalAllTab] Initialized');
 }

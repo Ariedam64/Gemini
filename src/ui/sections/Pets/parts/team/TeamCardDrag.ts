@@ -10,7 +10,7 @@
  */
 
 import { MGPetTeam } from "../../../../../features/petTeam";
-import { acquireScrollLock, type ScrollLockRelease } from "../../../../../utils/scrollLock";
+import { acquireScrollLock, type ScrollLockRelease } from "../../../../utils/scrollLock";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -117,7 +117,7 @@ export class TeamCardDragHandler {
 
         const touchActionPrev = itemEl.style.touchAction;
         itemEl.style.touchAction = "none";
-        const releaseScrollLock = acquireScrollLock();
+        const releaseScrollLock = acquireScrollLock(itemEl);
 
         this.dragState = {
             itemEl,

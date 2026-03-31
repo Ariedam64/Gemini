@@ -11,6 +11,7 @@ export const avatarStyles = `
         padding: var(--spacing-sm);
         height: 100%;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .avatar-main-layout {
@@ -60,6 +61,7 @@ export const avatarStyles = `
         gap: var(--spacing-sm);
         max-height: 300px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         padding: var(--spacing-xs);
         scrollbar-width: thin;
     }

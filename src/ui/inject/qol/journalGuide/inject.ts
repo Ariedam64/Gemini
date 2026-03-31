@@ -33,6 +33,7 @@ let tabTracker = createCleanupTracker();
 let contentTracker = createCleanupTracker();
 let initialized = false;
 let guideTabActive = false;
+const MODAL_CLASS = 'gemini-journal-modal';
 
 // Badge diffing
 const activeBadges = new Map<string, { element: HTMLElement; badgeKey: string }>();
@@ -406,6 +407,12 @@ function injectGuideTab(): void {
 
     // Check if already injected
     if (container.querySelector('.gemini-qol-journalGuide-tab')) return;
+
+    const modal = findJournalModal();
+    if (modal) {
+        modal.classList.add(MODAL_CLASS);
+        tabTracker.add(() => modal.classList.remove(MODAL_CLASS));
+    }
 
     const { pets } = findTabButtons();
     if (!pets) return;

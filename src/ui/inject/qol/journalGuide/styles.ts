@@ -129,6 +129,17 @@ const CSS = `
     }
 }
 
+@media (max-width: 520px) {
+    .gemini-journal-modal {
+        max-width: calc(100vw - 16px) !important;
+        width: calc(100vw - 16px) !important;
+        left: 8px !important;
+        right: 8px !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+}
+
 /* ─── Reduced Motion Support ─── */
 
 @media (prefers-reduced-motion: reduce) {

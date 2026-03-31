@@ -40,6 +40,7 @@ import { MGAudio } from "./audio";
 import { MGCosmetic } from "./cosmetic";
 import { MGShopActions } from "./shopActions";
 import { MGRiveLoader } from "./riveLoader";
+import { waitWithTimeout } from "./utils/helpers";
 
 export type ModuleInitProgress = {
   name: string;
@@ -47,9 +48,15 @@ export type ModuleInitProgress = {
   error?: unknown;
 };
 
+export type ModuleInitOptions = {
+  timeoutMs?: number;
+};
+
 export async function initAllModules(
-  onProgress?: (progress: ModuleInitProgress) => void
+  onProgress?: (progress: ModuleInitProgress) => void,
+  options: ModuleInitOptions = {}
 ): Promise<void> {
+  const timeoutMs = options.timeoutMs;
   const tasks = [
     { name: "Data", init: () => MGData.init() },
     { name: "CustomModal", init: () => MGCustomModal.init() },
@@ -66,7 +73,11 @@ export async function initAllModules(
     tasks.map(async (entry) => {
       onProgress?.({ status: "start", name: entry.name });
       try {
-        await entry.init();
+        if (timeoutMs) {
+          await waitWithTimeout(entry.init(), timeoutMs, `${entry.name} init`);
+        } else {
+          await entry.init();
+        }
         onProgress?.({ status: "success", name: entry.name });
       } catch (e) {
         console.error(`[${entry.name}] failed`, e);

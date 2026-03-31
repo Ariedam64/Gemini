@@ -10,6 +10,8 @@ export const navTabsCss = `
   align-items: center;
   gap: 20px;
   padding: 12px 12px;
+  /* Fallback for browsers without color-mix(in oklab) support (iOS < 16.2) */
+  background-color: rgba(10,12,18,0.55);
   background-color: color-mix(in oklab, var(--bg) 92%, transparent);
   transition: background-color .28s ease, border-color .28s ease;
 }
@@ -42,8 +44,10 @@ export const navTabsCss = `
 
   box-shadow: 0 4px 12px color-mix(in oklab, var(--shadow) 32%, transparent);
 
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   transition: background-color .28s ease, color .28s ease;
   scroll-behavior: smooth;
 }
@@ -55,7 +59,10 @@ export const navTabsCss = `
   flex: 0 0 32px;
   height: 32px;
   border-radius: 8px;
+  /* Fallback for browsers without color-mix(in oklab) support (iOS < 16.2) */
+  border: 1px solid rgba(148,163,184,0.35);
   border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  background: rgba(255,255,255,0.08);
   background: linear-gradient(180deg,
     color-mix(in oklab, var(--soft) 75%, transparent) 0%,
     color-mix(in oklab, var(--soft) 65%, transparent) 100%
@@ -69,6 +76,7 @@ export const navTabsCss = `
 
   transition: all .2s cubic-bezier(.2,.8,.2,1);
   opacity: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   box-shadow: 0 2px 6px color-mix(in oklab, var(--shadow) 12%, transparent);
 }
 
@@ -172,10 +180,7 @@ export const navTabsCss = `
   .lg-tabs{
     border-radius: 14px;
     padding: 4px;
-    /* Enable native touch scrolling behavior with momentum */
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    /* Improve touch responsiveness */
+    /* touch-action and -webkit-overflow-scrolling already in base rule */
     touch-action: pan-x;
   }
   .lg-tab{

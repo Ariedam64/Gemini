@@ -106,6 +106,7 @@ export const tileGridOverlayCss = `
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tile-grid-selector__grid {

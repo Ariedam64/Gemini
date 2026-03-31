@@ -221,8 +221,9 @@ export function Modal(options: ModalOptions): ModalHandle {
   function syncViewportBounds(): void {
     if (!root) return;
     const rect = root.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    // Use visualViewport on iOS so the modal shrinks correctly when the keyboard opens
+    const vw = window.visualViewport?.width ?? window.innerWidth;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
     const needsOffset =
       Math.abs(rect.left) > 1 ||
       Math.abs(rect.top) > 1 ||
@@ -311,9 +312,11 @@ export function Modal(options: ModalOptions): ModalHandle {
   container.appendChild(modalRoot);
   requestAnimationFrame(syncViewportBounds);
   const handleViewportResize = () => syncViewportBounds();
-  window.addEventListener("resize", handleViewportResize);
+  window.addEventListener("resize", handleViewportResize, { passive: true });
+  window.visualViewport?.addEventListener("resize", handleViewportResize, { passive: true });
   viewportCleanup = () => {
     window.removeEventListener("resize", handleViewportResize);
+    window.visualViewport?.removeEventListener("resize", handleViewportResize);
   };
 
   // Wait for next frame before adding open class (for animation)

@@ -43,14 +43,17 @@ export class TileGridOverlay {
     private isDragging = false;
     private dragSelectMode: 'select' | 'deselect' | null = null;
 
+    // Bound handler for proper cleanup
+    private onDocumentPointerUp = (): void => {
+        this.isDragging = false;
+        this.dragSelectMode = null;
+    };
+
     constructor(options: TileGridOptions = {}) {
         this.options = options;
 
-        // Global pointerup to stop dragging
-        document.addEventListener('pointerup', () => {
-            this.isDragging = false;
-            this.dragSelectMode = null;
-        });
+        // Global pointerup to stop dragging (passive: safe, no preventDefault needed)
+        document.addEventListener('pointerup', this.onDocumentPointerUp, { passive: true });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -99,6 +102,7 @@ export class TileGridOverlay {
     }
 
     destroy(): void {
+        document.removeEventListener('pointerup', this.onDocumentPointerUp);
         if (this.dropdown?.parentElement) {
             this.dropdown.parentElement.removeChild(this.dropdown);
         }
@@ -328,6 +332,7 @@ export class TileGridOverlay {
         }
 
         // Drag-to-select: pointerdown starts drag, pointerenter toggles while dragging
+        // passive: false required so e.preventDefault() suppresses iOS scroll/selection
         tileEl.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             this.isDragging = true;
@@ -338,7 +343,7 @@ export class TileGridOverlay {
             toggleTileSelection(tile.localIndex.toString());
             this.renderGrids();
             this.options.onChange?.();
-        });
+        }, { passive: false });
 
         tileEl.addEventListener('pointerenter', () => {
             if (!this.isDragging || !this.dragSelectMode) return;

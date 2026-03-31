@@ -88,9 +88,15 @@ export abstract class BaseSection {
       const result = this.build(container);
 
       if (result instanceof Promise) {
-        result.catch((error) => {
-          console.error(`[Gemini] Error building section ${this.id}:`, error);
-        });
+        const loading = document.createElement('div');
+        loading.className = 'gemini-section-loading';
+        container.appendChild(loading);
+        result
+          .then(() => loading.remove())
+          .catch((error) => {
+            loading.remove();
+            console.error(`[Gemini] Error building section ${this.id}:`, error);
+          });
       }
     }
 

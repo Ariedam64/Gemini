@@ -1,5 +1,6 @@
 export { createLoader, type LoaderController } from "./loader";
 export {
+  initCompatibility,
   initWebSocketCapture,
   initAtoms,
   initReactiveGlobals,

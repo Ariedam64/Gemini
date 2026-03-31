@@ -13,56 +13,87 @@ import { calculateCropSize } from '../../modules/calculators/logic/crop';
 import { getCurrentTile } from '../../globals/variables/currentTile';
 import { MGData } from '../../modules/data';
 import type { Unsubscribe } from '../../globals/core/types';
+import { findCropTooltipInfos, findCropTooltipInfosFromNode } from '../../ui/inject/qol/_shared/cropTooltips';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Selectors (update these if game UI structure changes)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CROP_CONTAINER_CLASS_MATURE = 'css-qnqsp4';
 const WEIGHT_LABEL_CLASS = 'css-1cdcuw7'; // The kg/weight label element
-const TOOLTIP_SELECTOR = '[role="tooltip"]'; // Popper.js tooltip element
+const SIZE_BADGE_CLASS = 'gemini-qol-cropSize';
+const TOOLTIP_SELECTOR = '[role="tooltip"], .chakra-tooltip, [data-popper-placement]';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
 
 let tracker = createCleanupTracker();
+let stylesInjected = false;
 let initialized = false;
 let plantInfoUnsubscribe: Unsubscribe | null = null;
 let lastRenderedSize: number | null = null;
 let rafHandle: number | null = null;
 
+const CROP_SIZE_STYLES = `
+  .${SIZE_BADGE_CLASS} {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #A88A6B;
+    font-weight: 700;
+  }
+
+  @media (max-width: 768px) {
+    .${SIZE_BADGE_CLASS} {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+  }
+`;
+
+function ensureStyles(): void {
+  if (stylesInjected) return;
+
+  const style = document.createElement('style');
+  style.id = 'gemini-qol-cropSize-styles';
+  style.textContent = CROP_SIZE_STYLES;
+  document.head.appendChild(style);
+
+  tracker.add(() => style.remove());
+  stylesInjected = true;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Crop Size Update Logic
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface MaturedCropTooltip {
-  element: HTMLElement;
-  weightElement?: HTMLElement;
-}
+function findWeightElement(container: HTMLElement): HTMLElement | null {
+  const byClass = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
+  if (byClass) return byClass;
 
-function findMatureCropTooltips(): MaturedCropTooltip[] {
-  const tooltips: MaturedCropTooltip[] = [];
-
-  const matureCropContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_MATURE}`
-  );
-
-  for (const container of matureCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
-
-    // Skip if inside a pet button
-    if (container.closest('button.chakra-button')) continue;
-
-    // Find the weight label element by class
-    const weightElement = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
-    if (weightElement) {
-      tooltips.push({ element: container, weightElement });
+  const textNodes = container.querySelectorAll<HTMLElement>('p.chakra-text, span.chakra-text, div.chakra-text, p, span, div');
+  for (const node of textNodes) {
+    const text = node.textContent?.trim() ?? '';
+    if (/^\\d+(?:\\.\\d+)?\\s*kg$/i.test(text)) {
+      return node;
     }
   }
 
-  return tooltips;
+  return null;
+}
+
+function ensureSizeBadge(infoContainer: HTMLElement, size: number): void {
+  let badge = infoContainer.querySelector<HTMLElement>(`.${SIZE_BADGE_CLASS}`);
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.className = SIZE_BADGE_CLASS;
+    infoContainer.appendChild(badge);
+    tracker.add(() => badge?.remove());
+  }
+  badge.textContent = `${size}%`;
 }
 
 function calculateCurrentSize(): number {
@@ -81,36 +112,35 @@ function calculateCurrentSize(): number {
 }
 
 function doUpdateSize(size: number, currentSlot: any): void {
-  // Update all visible crop size displays
-  const allMatureContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_MATURE}`
-  );
+  const tooltips = findCropTooltipInfos();
+  let updatedCount = 0;
 
-  for (const container of allMatureContainers) {
-    if (!container.offsetParent) continue;
-    if (container.closest('button.chakra-button')) continue;
+  for (const tooltip of tooltips) {
+    const weightElement =
+      findWeightElement(tooltip.root) ||
+      findWeightElement(tooltip.infoContainer);
 
-    // Find the weight label element by class
-    const weightElement = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
     if (weightElement) {
-      // Replace the content - keep the SVG icon if it exists
       const svg = weightElement.querySelector('svg');
-      const sizeText = `${size}%`;
-      weightElement.textContent = sizeText;
+      weightElement.textContent = `${size}%`;
       if (svg) {
         weightElement.appendChild(svg);
       }
+      updatedCount += 1;
+    } else {
+      ensureSizeBadge(tooltip.infoContainer, size);
+      updatedCount += 1;
     }
   }
 
   // Also update tooltips when plant data changes
   updateTooltipContent();
 
-  console.log(`[CropSizeIndicator.render] 🔄 Updated all sizes:`, {
+  console.log(`[CropSizeIndicator.render] Updated all sizes:`, {
     species: currentSlot.species,
     scale: currentSlot.targetScale,
     size,
-    count: allMatureContainers.length,
+    count: updatedCount,
   });
 }
 
@@ -172,7 +202,8 @@ function updateTooltipContent(): void {
   const calculatedWeight = calculateCropWeight(currentSlot.species, currentSlot.targetScale);
 
   for (const tooltip of tooltips) {
-    if (!tooltip.offsetParent) continue; // Skip hidden tooltips
+    const style = window.getComputedStyle(tooltip);
+    if (style.display === 'none' || style.visibility === 'hidden') continue;
 
     const text = tooltip.textContent?.trim();
     if (text && text.startsWith('Size:')) {
@@ -185,44 +216,25 @@ function updateTooltipContent(): void {
 }
 
 function updateCropSizes(): void {
-  // Find all mature crop tooltips and update their size displays
-  const existing = findMatureCropTooltips();
-  for (const crop of existing) {
-    if (!crop.weightElement) continue;
+  try {
+    const tile = getCurrentTile().get();
+    const plant = tile.plant;
 
-    try {
-      // Get size from currentTile data
-      const tile = getCurrentTile().get();
-      const plant = tile.plant;
-
-      if (plant && plant.currentSlotIndex !== null) {
-        const currentSlot = plant.slots[plant.currentSlotIndex];
-        if (currentSlot) {
-          const size = calculateCropSize(currentSlot.species, currentSlot.targetScale);
-
-          // Update the weight element - show size with percent
-          const svg = crop.weightElement.querySelector('svg');
-          crop.weightElement.textContent = `${size}%`;
-          if (svg) {
-            crop.weightElement.appendChild(svg);
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('[CropSizeIndicator.render] Failed to update size:', err);
+    if (!plant || plant.currentSlotIndex === null) {
+      return;
     }
-  }
 
-  // Also update any visible tooltips
-  updateTooltipContent();
+    const currentSlot = plant.slots[plant.currentSlotIndex];
+    if (!currentSlot) return;
+
+    const size = calculateCropSize(currentSlot.species, currentSlot.targetScale);
+    doUpdateSize(size, currentSlot);
+  } catch (err) {
+    console.warn('[CropSizeIndicator.render] Failed to update size:', err);
+  }
 }
 
 function restoreCropWeights(): void {
-  // Restore crop labels and tooltips to original weight display
-  const allMatureContainers = document.querySelectorAll<HTMLElement>(
-    `.${CROP_CONTAINER_CLASS_MATURE}`
-  );
-
   const tile = getCurrentTile().get();
   const plant = tile.plant;
 
@@ -235,29 +247,32 @@ function restoreCropWeights(): void {
 
   const weight = calculateCropWeight(currentSlot.species, currentSlot.targetScale);
 
-  // Restore crop labels
-  for (const container of allMatureContainers) {
-    if (!container.offsetParent) continue;
-    if (container.closest('button.chakra-button')) continue;
+  const tooltips = findCropTooltipInfos();
+  for (const tooltip of tooltips) {
+    const weightElement =
+      findWeightElement(tooltip.root) ||
+      findWeightElement(tooltip.infoContainer);
 
-    const weightElement = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
-    if (weightElement) {
+    if (weightElement && weight) {
       const svg = weightElement.querySelector('svg');
       weightElement.textContent = weight;
       if (svg) {
         weightElement.appendChild(svg);
       }
     }
+
+    const badge = tooltip.infoContainer.querySelector<HTMLElement>(`.${SIZE_BADGE_CLASS}`);
+    if (badge) {
+      badge.remove();
+    }
   }
 
   // Restore tooltips
-  const tooltips = document.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR);
-  for (const tooltip of tooltips) {
-    if (!tooltip.offsetParent) continue;
-
+  const tooltipNodes = document.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR);
+  for (const tooltip of tooltipNodes) {
     const text = tooltip.textContent?.trim();
     // If it's a size tooltip we modified, restore it to weight
-    if (text && !text.includes('kg')) {
+    if (text && !text.includes('kg') && weight) {
       tooltip.textContent = weight;
     }
   }
@@ -284,37 +299,21 @@ function startObservingTooltips(): void {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Check if this node is a tooltip
-            if (node.hasAttribute('role') && node.getAttribute('role') === 'tooltip') {
-              const text = node.textContent?.trim();
-              if (text && text.startsWith('Size:')) {
-                updateTooltipContent();
-              }
-            }
-
-            // Check if this node is a mature crop container
-            if (node.classList.contains(CROP_CONTAINER_CLASS_MATURE)) {
-              if (!node.closest('button.chakra-button')) {
-                updateCropSizes();
-              }
-            }
-
-            // Also check children for mature crop containers
-            const matureCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_MATURE}`
-            );
-            if (matureCropContainers.length > 0) {
+            const cropTooltips = findCropTooltipInfosFromNode(node);
+            if (cropTooltips.length > 0) {
               updateCropSizes();
             }
 
-            // Check children for tooltips
-            const tooltips = node.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR);
-            tooltips.forEach((tooltip) => {
+            const tooltipNodes = node.matches(TOOLTIP_SELECTOR)
+              ? [node]
+              : Array.from(node.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR));
+
+            for (const tooltip of tooltipNodes) {
               const text = tooltip.textContent?.trim();
               if (text && text.startsWith('Size:')) {
                 updateTooltipContent();
               }
-            });
+            }
           }
         });
       }
@@ -348,6 +347,7 @@ export const render = {
 
     initialized = true;
 
+    ensureStyles();
     startObservingTooltips();
 
     console.log('✅ [CropSizeIndicator.render] Initialized');
@@ -382,6 +382,7 @@ export const render = {
 
     // Reset tracker for next init
     tracker = createCleanupTracker();
+    stylesInjected = false;
     lastRenderedSize = null;
 
     console.log('🛑 [CropSizeIndicator.render] Destroyed');
