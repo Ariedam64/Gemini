@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/core/extractors/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/core/game/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/assets/sprites/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/services/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/api/routes/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/core/parsers/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/core/websocket/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/src/api/**)",
+      "Read(//c/Users/Romann/Desktop/Codage/MG API/**)"
+    ]
+  }
+}
