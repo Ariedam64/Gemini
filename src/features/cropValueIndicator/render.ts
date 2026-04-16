@@ -212,10 +212,16 @@ function findCropTooltips(): CropTooltip[] {
     `.${CROP_CONTAINER_CLASS_MATURE}`
   );
 
+  console.log(`[CropValueIndicator.debug] Found ${matureCropContainers.length} mature containers, ${document.querySelectorAll(`.${CROP_CONTAINER_CLASS_GROWTH}`).length} growth containers`);
+
   for (const container of matureCropContainers) {
     // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
     const rect = container.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) continue;
+    console.log(`[CropValueIndicator.debug] Mature container rect: ${rect.width}x${rect.height}, offsetParent: ${container.offsetParent?.tagName ?? 'null'}`);
+    if (rect.width === 0 && rect.height === 0) {
+      console.log(`[CropValueIndicator.debug] Skipping mature container (zero size)`);
+      continue;
+    }
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
@@ -231,7 +237,11 @@ function findCropTooltips(): CropTooltip[] {
   for (const container of growthCropContainers) {
     // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
     const rect = container.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) continue;
+    console.log(`[CropValueIndicator.debug] Growth container rect: ${rect.width}x${rect.height}, offsetParent: ${container.offsetParent?.tagName ?? 'null'}`);
+    if (rect.width === 0 && rect.height === 0) {
+      console.log(`[CropValueIndicator.debug] Skipping growth container (zero size)`);
+      continue;
+    }
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
@@ -246,6 +256,7 @@ function findCropTooltips(): CropTooltip[] {
     }
   }
 
+  console.log(`[CropValueIndicator.debug] findCropTooltips → ${tooltips.length} visible tooltips`);
   return tooltips;
 }
 
@@ -348,13 +359,17 @@ function scheduleRender(): void {
 async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
   // Check if already injected
   if (tooltip.element.querySelector('.gemini-qol-cropPrice')) {
+    console.log(`[CropValueIndicator.debug] Already injected, skipping`);
     return;
   }
+
+  console.log(`[CropValueIndicator.debug] injectPriceToTooltip called`, tooltip.element.className);
 
   try {
     // Find the crop info container (McFlex that contains the name)
     const nameEl = tooltip.element.querySelector('p.chakra-text');
     if (!nameEl) {
+      console.log(`[CropValueIndicator.debug] No p.chakra-text found in`, tooltip.element.className);
       return;
     }
 
@@ -409,14 +424,18 @@ async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function startObservingTooltips(): void {
+  console.log(`[CropValueIndicator.debug] startObservingTooltips called`);
+
   // Inject prices for existing crops
   const existing = findCropTooltips();
+  console.log(`[CropValueIndicator.debug] Existing tooltips at init: ${existing.length}`);
   for (const crop of existing) {
     injectPriceToTooltip(crop);
   }
 
   // Subscribe to plant info changes to update tooltip prices
   plantInfoUnsubscribe = getCurrentTile().subscribePlantInfo(() => {
+    console.log(`[CropValueIndicator.debug] subscribePlantInfo fired → scheduleRender`);
     scheduleRender();
   });
 
@@ -428,6 +447,7 @@ function startObservingTooltips(): void {
           if (node instanceof HTMLElement) {
             // Check if this node is a mature crop container
             if (node.classList.contains(CROP_CONTAINER_CLASS_MATURE)) {
+              console.log(`[CropValueIndicator.debug] MutationObserver: mature container added`, node.className);
               if (!node.closest('button.chakra-button')) {
                 injectPriceToTooltip({ element: node });
               }

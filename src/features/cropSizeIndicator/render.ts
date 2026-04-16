@@ -48,21 +48,29 @@ function findMatureCropTooltips(): MaturedCropTooltip[] {
     `.${CROP_CONTAINER_CLASS_MATURE}`
   );
 
+  console.log(`[CropSizeIndicator.debug] Found ${matureCropContainers.length} mature containers`);
+
   for (const container of matureCropContainers) {
     // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
     const rect = container.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) continue;
+    console.log(`[CropSizeIndicator.debug] Container rect: ${rect.width}x${rect.height}, offsetParent: ${container.offsetParent?.tagName ?? 'null'}`);
+    if (rect.width === 0 && rect.height === 0) {
+      console.log(`[CropSizeIndicator.debug] Skipping container (zero size)`);
+      continue;
+    }
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
 
     // Find the weight label element by class
     const weightElement = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
+    console.log(`[CropSizeIndicator.debug] Weight element (${WEIGHT_LABEL_CLASS}): ${weightElement ? 'found' : 'NOT FOUND'}`);
     if (weightElement) {
       tooltips.push({ element: container, weightElement });
     }
   }
 
+  console.log(`[CropSizeIndicator.debug] findMatureCropTooltips → ${tooltips.length} visible tooltips`);
   return tooltips;
 }
 
@@ -275,11 +283,14 @@ function restoreCropWeights(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function startObservingTooltips(): void {
+  console.log(`[CropSizeIndicator.debug] startObservingTooltips called`);
+
   // Update sizes for existing crops
   updateCropSizes();
 
   // Subscribe to plant info changes to update tooltip sizes
   plantInfoUnsubscribe = getCurrentTile().subscribePlantInfo(() => {
+    console.log(`[CropSizeIndicator.debug] subscribePlantInfo fired → scheduleRender`);
     scheduleRender();
   });
 
