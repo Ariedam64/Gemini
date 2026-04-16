@@ -8,7 +8,7 @@ type Options = {
   ariaLabel?: string; // default "Open Gemini"
 };
 
-const DEFAULT_ICON = "https://i.imgur.com/IMkhMur.png";
+const DEFAULT_ICON = "https://i.imgur.com/k5WuC32.png";
 
 export function startInjectGamePanelButton(opts: Options) {
   let iconUrl = opts.iconUrl || DEFAULT_ICON;
