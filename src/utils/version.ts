@@ -6,8 +6,8 @@
  * - startVersionChecker(): polls for updates, calls callback on each result
  */
 
-const REMOTE_SCRIPT_URL =
-  "https://raw.githubusercontent.com/Ariedam64/Gemini/main/dist/gemini.user.js";
+const RELEASES_API_URL =
+  "https://api.github.com/repos/Ariedam64/Gemini/releases/latest";
 
 const CHECK_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -28,12 +28,16 @@ export function fetchRemoteVersion(): Promise<string | null> {
     try {
       GM_xmlhttpRequest({
         method: "GET",
-        url: REMOTE_SCRIPT_URL,
+        url: RELEASES_API_URL,
+        headers: { Accept: "application/vnd.github+json" },
         timeout: 10000,
         onload(response) {
           try {
-            const match = response.responseText.match(/@version\s+([\d.]+)/);
-            resolve(match ? match[1] : null);
+            const data = JSON.parse(response.responseText) as { tag_name?: string };
+            const tag = data.tag_name ?? null;
+            if (!tag) { resolve(null); return; }
+            // Strip leading 'v' if present (e.g. "v1.0.2" → "1.0.2")
+            resolve(tag.replace(/^v/, ""));
           } catch {
             resolve(null);
           }

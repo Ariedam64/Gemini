@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => ({
                 connect: ['i.imgur.com',
                           'magicgarden.gg',
                           'mg-api.ariedam.fr',
-                          'raw.githubusercontent.com'
+                          'api.github.com'
                 ]
             },
             build: {
