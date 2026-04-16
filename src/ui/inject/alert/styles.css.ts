@@ -309,11 +309,11 @@ export const alertOverlayCss = `
   @keyframes alertOverlayFadeIn {
     from {
       opacity: 0;
-      transform: translateY(-8px);
+      transform: translateY(calc(-50% - 8px));
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(-50%);
     }
   }
 
