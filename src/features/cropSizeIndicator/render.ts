@@ -300,6 +300,11 @@ function startObservingTooltips(): void {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
+            // DEBUG: log all significant new nodes to find mobile crop container class
+            if (node.className && typeof node.className === 'string' && node.className.length > 0) {
+              console.log(`[CropSizeIndicator.debug] New node: <${node.tagName.toLowerCase()} class="${node.className}"> children=${node.children.length}`);
+            }
+
             // Check if this node is a tooltip
             if (node.hasAttribute('role') && node.getAttribute('role') === 'tooltip') {
               const text = node.textContent?.trim();
