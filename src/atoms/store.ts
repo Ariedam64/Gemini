@@ -2,7 +2,7 @@
 // Store facade: select / set / subscribe
 // All access to Jotai atoms goes through this facade
 
-import { getMirror } from "./core/bridge";
+import { getMirror, getCapturedInfo } from "./core/bridge";
 import { getAtomByLabel } from "./core/lookup";
 import type { Unsubscribe } from "./types";
 
@@ -59,6 +59,13 @@ export const Store = {
         // Ignore callback errors
       }
     });
+  },
+
+  /**
+   * Get info about how the Jotai store was captured (fiber/write/polyfill)
+   */
+  getCapturedInfo() {
+    return getCapturedInfo();
   },
 
   /**

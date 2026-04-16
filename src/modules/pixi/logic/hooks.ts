@@ -91,15 +91,25 @@ function captureOnce(): boolean {
 
   Function.prototype.bind = function (thisArg: any, ...args: any[]) {
     const bound = origBind.call(this, thisArg, ...args);
-    try {
-      if (!state.engine && looksLikeEngine(thisArg)) {
-        // Restore original bind immediately
-        Function.prototype.bind = origBind;
-        state._bindPatched = false;
+    // Fast-path: only run the expensive looksLikeEngine check for objects that
+    // have the distinctive top-level shape of the game engine. This avoids
+    // thousands of unnecessary property-lookups per second on Firefox (SpiderMonkey
+    // cannot JIT-optimize intercepted native prototype methods like Chrome/V8 can).
+    if (!state.engine
+        && thisArg !== null
+        && typeof thisArg === "object"
+        && thisArg.app !== undefined
+        && thisArg.systems !== undefined) {
+      try {
+        if (looksLikeEngine(thisArg)) {
+          // Restore original bind immediately
+          Function.prototype.bind = origBind;
+          state._bindPatched = false;
 
-        onEngineCapture(thisArg);
-      }
-    } catch {}
+          onEngineCapture(thisArg);
+        }
+      } catch {}
+    }
     return bound;
   };
 
@@ -110,15 +120,95 @@ function captureOnce(): boolean {
 captureOnce();
 
 /**
- * Wait for engine capture with timeout
+ * Try to find an already-running engine by scanning the page's global scope.
+ * Useful when the game started before our bind patch was installed (e.g. Firefox timing).
+ */
+function findEngineInGlobals(): GameEngine | null {
+  const win = pageWindow as any;
+  // Walk top-level window properties looking for a live QuinoaEngine instance
+  try {
+    for (const key of Object.keys(win)) {
+      try {
+        const val = win[key];
+        if (looksLikeEngine(val)) return val as GameEngine;
+      } catch { /* skip inaccessible */ }
+    }
+  } catch { /* permission error */ }
+  return null;
+}
+
+/**
+ * Try to find an engine via React fiber tree (same approach as the Jotai bridge).
+ */
+function findEngineViaFiber(): GameEngine | null {
+  try {
+    const hook: any = (pageWindow as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (!hook?.renderers?.size) return null;
+
+    for (const [rid] of hook.renderers) {
+      const roots = hook.getFiberRoots?.(rid);
+      if (!roots) continue;
+
+      for (const root of roots) {
+        const seen = new Set<any>();
+        const stack = [root.current];
+
+        while (stack.length) {
+          const f = stack.pop();
+          if (!f || seen.has(f)) continue;
+          seen.add(f);
+
+          try {
+            // Check memoizedState chain for an engine instance
+            let s = f?.memoizedState;
+            let n = 0;
+            while (s && n++ < 15) {
+              if (looksLikeEngine(s?.memoizedState)) return s.memoizedState as GameEngine;
+              if (looksLikeEngine(s?.queue?.dispatch)) return s.queue.dispatch as GameEngine;
+              // Direct ref or state value
+              const val = s?.memoizedState ?? s?.baseState;
+              if (val && typeof val === "object" && looksLikeEngine(val)) return val as GameEngine;
+              s = s.next;
+            }
+          } catch { /* skip */ }
+
+          if (f.child) stack.push(f.child);
+          if (f.sibling) stack.push(f.sibling);
+        }
+      }
+    }
+  } catch { /* skip */ }
+  return null;
+}
+
+/**
+ * Wait for engine capture with timeout.
+ * Always restores Function.prototype.bind on exit (success or timeout).
  */
 async function waitForCapture(timeoutMs = 15000): Promise<boolean> {
   const t0 = performance.now();
-  while (performance.now() - t0 < timeoutMs) {
-    if (state.engine) return true;
-    captureOnce();
-    await sleep(50);
+
+  try {
+    while (performance.now() - t0 < timeoutMs) {
+      if (state.engine) return true;
+
+      // Try passive fallbacks that don't rely on bind interception
+      const found = findEngineInGlobals() ?? findEngineViaFiber();
+      if (found) {
+        onEngineCapture(found);
+        return true;
+      }
+
+      await sleep(200);
+    }
+  } finally {
+    // Always restore bind — whether we succeeded or timed out
+    if (state._bindPatched) {
+      Function.prototype.bind = origBind;
+      state._bindPatched = false;
+    }
   }
+
   throw new Error("MGPixiHooks: engine capture timeout");
 }
 

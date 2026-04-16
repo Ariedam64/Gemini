@@ -56,6 +56,7 @@ export type JotaiStore = {
   set: (atom: any, value: any) => void | Promise<void>;
   sub: (atom: any, cb: () => void) => Unsubscribe;
   __polyfill?: boolean;
+  __upgrade?: (native: JotaiStore) => void;
 };
 
 type Listener<T> = (value: T, prev: T) => void;
@@ -250,11 +251,12 @@ function findStoreInObject(obj: any, depth = 0, seen = new WeakSet()): JotaiStor
  * 2. useStore hook state (memoizedState)
  * 3. Any object with get/set/sub signature
  */
-function findStoreViaFiber(): JotaiStore | null {
+function findStoreViaFiber(debug = false): JotaiStore | null {
   const g = getGlobal();
   const hook: any = (pageWindow as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
   if (!hook?.renderers?.size) {
+    if (debug) console.log("[FiberDebug] No renderers found on hook");
     return null;
   }
 
@@ -265,8 +267,13 @@ function findStoreViaFiber(): JotaiStore | null {
     if (roots) totalRoots += roots.size || 0;
   }
   if (totalRoots === 0) {
+    if (debug) console.log(`[FiberDebug] ${hook.renderers.size} renderer(s) but 0 fiber roots`);
     return null;
   }
+  if (debug) console.log(`[FiberDebug] ${hook.renderers.size} renderer(s), ${totalRoots} root(s) — scanning...`);
+
+  let fiberCount = 0;
+  let nearMiss = 0;
 
   for (const [rid] of hook.renderers) {
     const roots = hook.getFiberRoots?.(rid);
@@ -280,13 +287,41 @@ function findStoreViaFiber(): JotaiStore | null {
         const f = stack.pop();
         if (!f || seen.has(f)) continue;
         seen.add(f);
+        fiberCount++;
 
-        // 1. Check pendingProps.value (Provider pattern)
+        // 1. Check pendingProps — Jotai v1 uses .value, v2 uses .store
         try {
-          const v = f?.pendingProps?.value;
-          if (isJotaiStore(v)) {
-            g.lastCapturedVia = "fiber";
-            return v;
+          const props = f?.pendingProps;
+          if (props && typeof props === "object") {
+            // Check direct store prop (Jotai v2 Provider)
+            for (const key of ["store", "value", "s"]) {
+              const v = props[key];
+              if (isJotaiStore(v)) {
+                if (debug) console.log(`[FiberDebug] Found store via props.${key} at fiber #${fiberCount}`, v);
+                g.lastCapturedVia = "fiber";
+                return v;
+              }
+            }
+            // Deep search props for store-like objects
+            const storeInProps = findStoreInObject(props);
+            if (storeInProps) {
+              if (debug) console.log(`[FiberDebug] Found store via deep props search at fiber #${fiberCount}`, storeInProps);
+              g.lastCapturedVia = "fiber";
+              return storeInProps;
+            }
+            // Near-miss logging
+            for (const key of Object.keys(props)) {
+              try {
+                const v = props[key];
+                if (v && typeof v === "object" && typeof v.get === "function" && typeof v.set === "function") {
+                  nearMiss++;
+                  if (debug) {
+                    const keys = Object.keys(v).slice(0, 8);
+                    console.log(`[FiberDebug] Near-miss props.${key} at fiber #${fiberCount}: [${keys}]`);
+                  }
+                }
+              } catch { /* skip */ }
+            }
           }
         } catch {
           // Ignore access errors
@@ -298,15 +333,15 @@ function findStoreViaFiber(): JotaiStore | null {
           let stateCount = 0;
           while (state && stateCount < 15) {
             stateCount++;
-            // Check the state itself
             const storeInState = findStoreInObject(state);
             if (storeInState) {
+              if (debug) console.log(`[FiberDebug] Found store via memoizedState at fiber #${fiberCount}`, storeInState);
               g.lastCapturedVia = "fiber";
               return storeInState;
             }
-            // Check memoizedState property
             const storeInMemo = findStoreInObject(state.memoizedState);
             if (storeInMemo) {
+              if (debug) console.log(`[FiberDebug] Found store via memoizedState.memoizedState at fiber #${fiberCount}`, storeInMemo);
               g.lastCapturedVia = "fiber";
               return storeInMemo;
             }
@@ -321,6 +356,7 @@ function findStoreViaFiber(): JotaiStore | null {
           if (f?.stateNode) {
             const storeInNode = findStoreInObject(f.stateNode);
             if (storeInNode) {
+              if (debug) console.log(`[FiberDebug] Found store via stateNode at fiber #${fiberCount}`, storeInNode);
               g.lastCapturedVia = "fiber";
               return storeInNode;
             }
@@ -336,7 +372,47 @@ function findStoreViaFiber(): JotaiStore | null {
     }
   }
 
+  if (debug) console.log(`[FiberDebug] Scanned ${fiberCount} fibers, ${nearMiss} near-misses — no store in fiber tree`);
+
+  // Last resort: scan window globals for a store-like object
+  if (debug) console.log("[FiberDebug] Scanning window globals...");
+  const win = pageWindow as any;
+  const globalKeys = ["__jotaiStore", "__JOTAI_DEFAULT_STORE__", "jotaiStore", "store"];
+  for (const key of globalKeys) {
+    try {
+      if (isJotaiStore(win[key])) {
+        if (debug) console.log(`[FiberDebug] Found store on window.${key}!`);
+        g.lastCapturedVia = "fiber";
+        return win[key];
+      }
+    } catch { /* skip */ }
+  }
+
+  // Try to find the store by matching capturedGet — if we already have get/set
+  // from write-patch, search window for an object where .get === capturedGet
+  if (g.baseStore && !g.baseStore.__polyfill) {
+    const ourGet = g.baseStore.get;
+    try {
+      for (const key of Object.keys(win)) {
+        try {
+          const val = win[key];
+          if (val && typeof val === "object" && val.get === ourGet && typeof val.sub === "function") {
+            if (debug) console.log(`[FiberDebug] Found matching store on window.${key}!`);
+            g.lastCapturedVia = "fiber";
+            return val as JotaiStore;
+          }
+        } catch { /* skip inaccessible */ }
+      }
+    } catch { /* permission error */ }
+    if (debug) console.log("[FiberDebug] No matching store found on window globals");
+  }
+
   return null;
+}
+
+/** Exposed for console debugging */
+export function debugFiberCapture(): JotaiStore | null {
+  return findStoreViaFiber(true);
 }
 
 /* ======================== Capture via Write Patch ======================== */
@@ -424,38 +500,104 @@ async function captureViaWritePatch(timeoutMs = 5000): Promise<JotaiStore> {
   // Success: create mini-store from captured get/set
   g.lastCapturedVia = "write";
 
-  return {
-    get: (atom: any) => capturedGet(atom),
-    set: (atom: any, value: any) => capturedSet(atom, value),
-    sub: (atom: any, cb: () => void) => {
-      // No official sub API here, use polling
-      let last: any;
+  // ── Shared polling for "write" mode ──
+  // Instead of N separate setIntervals (one per subscription), use a SINGLE
+  // interval that checks all subscribed atoms each tick. This reduces Firefox
+  // overhead from ~100 callbacks/s (10 subs × 100ms each) to ~5 callbacks/s
+  // (1 interval at 200ms checking all atoms in one pass).
+  type PollEntry = { last: unknown; callbacks: Set<() => void> };
+  const polled = new Map<unknown, PollEntry>();
+  let pollId: ReturnType<typeof setInterval> | null = null;
+
+  function pollTick(): void {
+    for (const [atom, entry] of polled) {
+      let curr: unknown;
       try {
-        last = capturedGet(atom);
+        curr = capturedGet(atom);
       } catch {
-        // Ignore initial get errors
+        continue;
       }
-
-      const id = setInterval(() => {
-        let curr: any;
-        try {
-          curr = capturedGet(atom);
-        } catch {
-          return;
+      if (curr !== entry.last) {
+        entry.last = curr;
+        for (const cb of entry.callbacks) {
+          try { cb(); } catch { /* ignore */ }
         }
+      }
+    }
+  }
 
-        if (curr !== last) {
-          last = curr;
-          try {
-            cb();
-          } catch {
-            // Ignore callback errors
+  function ensurePolling(): void {
+    if (pollId === null && polled.size > 0) {
+      pollId = setInterval(pollTick, 200);
+    }
+  }
+
+  function maybeStopPolling(): void {
+    if (polled.size === 0 && pollId !== null) {
+      clearInterval(pollId);
+      pollId = null;
+    }
+  }
+
+  // ── Fiber upgrade support ──
+  // Start with polling, then seamlessly migrate to native Jotai subscriptions
+  // when React fiber roots become available (typically 1-3s after page load).
+  let fiberStore: JotaiStore | null = null;
+
+  function upgradeToFiber(native: JotaiStore): void {
+    fiberStore = native;
+
+    // Migrate all existing polled atoms to native subscriptions
+    for (const [atom, entry] of polled) {
+      native.sub(atom, () => {
+        let curr: unknown;
+        try { curr = native.get(atom); } catch { return; }
+        if (curr !== entry.last) {
+          entry.last = curr;
+          for (const cb of entry.callbacks) {
+            try { cb(); } catch { /* ignore */ }
           }
         }
-      }, 100);
+      });
+    }
 
-      return () => clearInterval(id);
+    // Stop polling — native subs handle everything now
+    if (pollId !== null) {
+      clearInterval(pollId);
+      pollId = null;
+    }
+
+    g.lastCapturedVia = "fiber";
+    console.log(`[Atoms] Upgraded to fiber (native Jotai sub) — polling stopped, ${polled.size} atom(s) migrated`);
+  }
+
+  return {
+    get: (atom: any) => fiberStore ? fiberStore.get(atom) : capturedGet(atom),
+    set: (atom: any, value: any) => fiberStore ? fiberStore.set(atom, value) : capturedSet(atom, value),
+    sub: (atom: any, cb: () => void) => {
+      // If already upgraded to fiber, use native sub directly
+      if (fiberStore) {
+        return fiberStore.sub(atom, cb);
+      }
+
+      // Otherwise use polling (will be migrated when fiber is found)
+      let entry = polled.get(atom);
+      if (!entry) {
+        let last: unknown;
+        try { last = capturedGet(atom); } catch { /* ignore */ }
+        entry = { last, callbacks: new Set() };
+        polled.set(atom, entry);
+      }
+      entry.callbacks.add(cb);
+      ensurePolling();
+
+      return () => {
+        entry!.callbacks.delete(cb);
+        if (entry!.callbacks.size === 0) polled.delete(atom);
+        maybeStopPolling();
+      };
     },
+    __upgrade: upgradeToFiber,
   };
 }
 
@@ -521,6 +663,27 @@ export async function ensureStore(): Promise<JotaiStore> {
       const viaWrite = await captureViaWritePatch(5000);
       g.baseStore = viaWrite;
       if (!viaWrite.__polyfill) notifyReadyOnce();
+
+      // Background: try to upgrade to fiber for native subscriptions.
+      // React fiber roots may not be available yet during early capture,
+      // but they typically appear 1-3s after page load. Once found, the
+      // upgrade replaces polling with native Jotai sub (zero overhead).
+      if ((viaWrite as any).__upgrade) {
+        (async () => {
+          // Wait a moment for React to mount
+          await sleep(1500);
+          for (let attempt = 0; attempt < 15; attempt++) {
+            const native = findStoreViaFiber();
+            if (native) {
+              (viaWrite as any).__upgrade(native);
+              return;
+            }
+            await sleep(1000);
+          }
+          console.log("[Atoms] Fiber upgrade failed after 15 attempts — staying on polling");
+        })();
+      }
+
       return viaWrite;
     } catch (e) {
       g.captureError = e;

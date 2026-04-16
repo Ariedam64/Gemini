@@ -200,6 +200,24 @@ function startObservingTooltips(): void {
     scheduleRender();
   });
 
+  // Debounced mutation handler — coalesces rapid DOM changes into a single
+  // rAF pass to avoid stalling Firefox with synchronous observer callbacks.
+  let pendingRAF = false;
+  let needsCropSizeUpdate = false;
+  let needsTooltipUpdate = false;
+
+  function processPending(): void {
+    pendingRAF = false;
+    if (needsCropSizeUpdate) {
+      needsCropSizeUpdate = false;
+      updateCropSizes();
+    }
+    if (needsTooltipUpdate) {
+      needsTooltipUpdate = false;
+      updateTooltipContent();
+    }
+  }
+
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
@@ -208,32 +226,36 @@ function startObservingTooltips(): void {
             // Weight label added directly
             if (node.tagName === 'P' && node.classList.contains(WEIGHT_LABEL_CLASS)) {
               if (!node.closest('button.chakra-button')) {
-                updateCropSizes();
+                needsCropSizeUpdate = true;
               }
             }
 
             // Weight label added inside a subtree
             const weightEls = node.querySelectorAll<HTMLElement>(`p.${WEIGHT_LABEL_CLASS}`);
             if (weightEls.length > 0) {
-              updateCropSizes();
+              needsCropSizeUpdate = true;
             }
 
             // Popper.js tooltip with Size: text
             if (node.hasAttribute('role') && node.getAttribute('role') === 'tooltip') {
               const text = node.textContent?.trim();
               if (text && text.startsWith('Size:')) {
-                updateTooltipContent();
+                needsTooltipUpdate = true;
               }
             }
 
             const tooltips = node.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR);
             tooltips.forEach((tooltip) => {
               const text = tooltip.textContent?.trim();
-              if (text && text.startsWith('Size:')) updateTooltipContent();
+              if (text && text.startsWith('Size:')) needsTooltipUpdate = true;
             });
           }
         });
       }
+    }
+    if ((needsCropSizeUpdate || needsTooltipUpdate) && !pendingRAF) {
+      pendingRAF = true;
+      requestAnimationFrame(processPending);
     }
   });
 

@@ -111,4 +111,18 @@ export const variablesCss = `
     :host{ --tab-h:48px; }
   }
 }
+
+/* Firefox: backdrop-filter over a WebGL canvas costs ~90fps.
+   Disable blur globally and compensate with a more opaque background.
+   @-moz-document is Firefox-only (ignored by other engines). */
+@-moz-document url-prefix() {
+  :host {
+    --glass-blur: 0px;
+    --bg: rgba(10, 12, 18, 0.97);
+  }
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
 `;

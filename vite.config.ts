@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
             userscript: {
                 name: 'Gemini',
                 namespace: 'Gemini',
-                version: '1.0.2',
+                version: '1.0.0',
                 match: [
                     'https://1227719606223765687.discordsays.com/*',
                     'https://magiccircle.gg/r/*',
@@ -63,6 +63,7 @@ export default defineConfig(({ mode }) => ({
                 connect: ['i.imgur.com',
                           'magicgarden.gg',
                           'mg-api.ariedam.fr',
+                          'ariesmod-api.ariedam.fr',
                           'api.github.com'
                 ]
             },

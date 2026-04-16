@@ -23,37 +23,49 @@ let sharedObserver: MutationObserver | null = null;
 function ensureSharedObserver(): void {
   if (sharedObserver) return;
 
+  // Debounced via rAF — collects all mutations within a frame and processes
+  // them once, instead of running querySelectorAll synchronously on every
+  // individual mutation callback (devastating on Firefox with 4+ observers).
+  let rafPending = false;
+  let pendingAdded: Element[] = [];
+  let pendingRemoved: Element[] = [];
+
+  function flushPending(): void {
+    rafPending = false;
+    const added = pendingAdded;
+    const removed = pendingRemoved;
+    pendingAdded = [];
+    pendingRemoved = [];
+
+    for (const node of added) {
+      for (const entry of addedListeners) {
+        if (node.matches(entry.selector)) entry.callback(node);
+        const children = node.querySelectorAll(entry.selector);
+        for (const child of children) entry.callback(child);
+      }
+    }
+
+    for (const node of removed) {
+      for (const entry of removedListeners) {
+        if (node.matches(entry.selector)) entry.callback(node);
+        const children = node.querySelectorAll(entry.selector);
+        for (const child of children) entry.callback(child);
+      }
+    }
+  }
+
   sharedObserver = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      // ── Added nodes ──
       for (const node of mutation.addedNodes) {
-        if (!(node instanceof Element)) continue;
-
-        for (const entry of addedListeners) {
-          if (node.matches(entry.selector)) {
-            entry.callback(node);
-          }
-          const children = node.querySelectorAll(entry.selector);
-          for (const child of children) {
-            entry.callback(child);
-          }
-        }
+        if (node instanceof Element) pendingAdded.push(node);
       }
-
-      // ── Removed nodes ──
       for (const node of mutation.removedNodes) {
-        if (!(node instanceof Element)) continue;
-
-        for (const entry of removedListeners) {
-          if (node.matches(entry.selector)) {
-            entry.callback(node);
-          }
-          const children = node.querySelectorAll(entry.selector);
-          for (const child of children) {
-            entry.callback(child);
-          }
-        }
+        if (node instanceof Element) pendingRemoved.push(node);
       }
+    }
+    if (!rafPending && (pendingAdded.length > 0 || pendingRemoved.length > 0)) {
+      rafPending = true;
+      requestAnimationFrame(flushPending);
     }
   });
 

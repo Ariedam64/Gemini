@@ -13,10 +13,14 @@ import {
   startAlertInjector,
 } from "./ui/loader";
 import { migrateStorageKeys } from "./utils/storage";
+import { installPerfDebug } from "./utils/perfDebug";
 
 import { installReactDevToolsHook } from "./atoms/core/bridge";
 
 // Early setup (Literal Synchronous Entry Point)
+installPerfDebug();
+
+// Early setup
 installReactDevToolsHook();
 
 (async function () {

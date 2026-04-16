@@ -344,58 +344,78 @@ function startObservingTooltips(): void {
     scheduleRender();
   });
 
+  // Debounced mutation handler — coalesces rapid DOM changes into a single
+  // rAF pass. This prevents Firefox from stalling on the dozens of
+  // synchronous MutationObserver callbacks React triggers per render cycle.
+  let pendingRAF = false;
+  let pendingNodes: HTMLElement[] = [];
+
+  function processPendingNodes(): void {
+    pendingRAF = false;
+    const nodes = pendingNodes;
+    pendingNodes = [];
+
+    for (const node of nodes) {
+      // Weight label added directly → its McFlex parent is the injection point
+      if (node.tagName === 'P' && node.classList.contains(WEIGHT_LABEL_CLASS)) {
+        if (!node.closest('button.chakra-button')) {
+          const container = node.closest('.McFlex') as HTMLElement | null;
+          if (container) injectPriceToTooltip({ element: container });
+        }
+      }
+
+      // Weight label added inside a subtree
+      const weightEls = node.querySelectorAll<HTMLElement>(`p.${WEIGHT_LABEL_CLASS}`);
+      weightEls.forEach((weightEl) => {
+        if (!weightEl.closest('button.chakra-button')) {
+          const container = weightEl.closest('.McFlex') as HTMLElement | null;
+          if (container) injectPriceToTooltip({ element: container });
+        }
+      });
+
+      // Growth crop containers
+      if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
+        if (!node.closest('button.chakra-button')) {
+          const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
+          if (mcFlexes.length > 0) {
+            const timerContainer = mcFlexes[mcFlexes.length - 1];
+            if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
+              injectPriceToTooltip({ element: timerContainer });
+            }
+          }
+        }
+      }
+
+      const growthCropContainers = node.querySelectorAll<HTMLElement>(
+        `.${CROP_CONTAINER_CLASS_GROWTH}`
+      );
+      growthCropContainers.forEach((container) => {
+        if (!container.closest('button.chakra-button')) {
+          const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
+          if (mcFlexes.length > 0) {
+            const timerContainer = mcFlexes[mcFlexes.length - 1];
+            if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
+              injectPriceToTooltip({ element: timerContainer });
+            }
+          }
+        }
+      });
+    }
+  }
+
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            // Weight label added directly → its McFlex parent is the injection point
-            if (node.tagName === 'P' && node.classList.contains(WEIGHT_LABEL_CLASS)) {
-              if (!node.closest('button.chakra-button')) {
-                const container = node.closest('.McFlex') as HTMLElement | null;
-                if (container) injectPriceToTooltip({ element: container });
-              }
-            }
-
-            // Weight label added inside a subtree
-            const weightEls = node.querySelectorAll<HTMLElement>(`p.${WEIGHT_LABEL_CLASS}`);
-            weightEls.forEach((weightEl) => {
-              if (!weightEl.closest('button.chakra-button')) {
-                const container = weightEl.closest('.McFlex') as HTMLElement | null;
-                if (container) injectPriceToTooltip({ element: container });
-              }
-            });
-
-            // Growth crop containers
-            if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
-              if (!node.closest('button.chakra-button')) {
-                const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-                    injectPriceToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            }
-
-            const growthCropContainers = node.querySelectorAll<HTMLElement>(
-              `.${CROP_CONTAINER_CLASS_GROWTH}`
-            );
-            growthCropContainers.forEach((container) => {
-              if (!container.closest('button.chakra-button')) {
-                const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-                if (mcFlexes.length > 0) {
-                  const timerContainer = mcFlexes[mcFlexes.length - 1];
-                  if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-                    injectPriceToTooltip({ element: timerContainer });
-                  }
-                }
-              }
-            });
+            pendingNodes.push(node);
           }
         });
       }
+    }
+    if (pendingNodes.length > 0 && !pendingRAF) {
+      pendingRAF = true;
+      requestAnimationFrame(processPendingNodes);
     }
   });
 

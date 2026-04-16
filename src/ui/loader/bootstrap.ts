@@ -121,13 +121,13 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
     onThemeChange: (name) => saveHudStateValue("theme", name),
 
     buildSections: (deps) =>
-      buildSections({
-        applyTheme: deps.applyTheme,
-        initialTheme: deps.initialTheme,
-        getCurrentTheme: deps.getCurrentTheme,
-        setHUDWidth: deps.setHUDWidth,
-        setHUDOpen: deps.setHUDOpen,
-      }),
+        buildSections({
+          applyTheme: deps.applyTheme,
+          initialTheme: deps.initialTheme,
+          getCurrentTheme: deps.getCurrentTheme,
+          setHUDWidth: deps.setHUDWidth,
+          setHUDOpen: deps.setHUDOpen,
+        }),
 
     initialTab: state.activeTab,
     onTabChange: (id) => saveHudStateValue("activeTab", id),

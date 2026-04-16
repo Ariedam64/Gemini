@@ -11,9 +11,10 @@ import { outfitToArray } from "./internal";
 
 // State
 let currentOverride: { avatar: string[]; color?: string } | null = null;
-let monitorInterval: any = null;
+let monitorInterval: ReturnType<typeof setInterval> | null = null;
 let mutationObserver: MutationObserver | null = null;
 let styleElement: HTMLStyleElement | null = null;
+let pendingProcess: ReturnType<typeof setTimeout> | null = null;
 
 function getCosmeticURL(filename: string): string {
     return getAssetBaseUrl() + filename;
@@ -48,6 +49,10 @@ export async function render(outfit: AvatarOutfit): Promise<boolean> {
 export async function clearOverride(): Promise<boolean> {
     currentOverride = null;
 
+    if (pendingProcess !== null) {
+        clearTimeout(pendingProcess);
+        pendingProcess = null;
+    }
     if (monitorInterval) {
         clearInterval(monitorInterval);
         monitorInterval = null;
@@ -164,8 +169,11 @@ function startMonitor(avatar: string[]) {
                     overlay.appendChild(img);
                 });
 
-                if (window.getComputedStyle(container).position === "static") {
-                    (container as HTMLElement).style.position = "relative";
+                // Avoid getComputedStyle (forces layout recalc — very slow on Firefox).
+                // Setting position only when no inline value is sufficient here.
+                const containerStyle = (container as HTMLElement).style;
+                if (!containerStyle.position) {
+                    containerStyle.position = "relative";
                 }
 
                 container.appendChild(overlay);
@@ -185,8 +193,14 @@ function startMonitor(avatar: string[]) {
     monitorInterval = setInterval(process, 500);
 
     // MutationObserver for instant response to DOM changes
+    // Debounced: only one pending timeout at a time — prevents stacking 100+ timeouts
+    // when React emits many mutations in a single render cycle
     mutationObserver = new MutationObserver(() => {
-        setTimeout(process, 10); // Slight delay to let React finish
+        if (pendingProcess !== null) return;
+        pendingProcess = setTimeout(() => {
+            pendingProcess = null;
+            process();
+        }, 50); // 50ms debounce — prevents stacking during React batch re-renders
     });
 
     // Scope to game viewport if possible (reduces unnecessary callbacks)

@@ -13,7 +13,6 @@
  */
 
 import { pageWindow } from "../utils/windowContext";
-import { pushWSLog } from "../ui/sections/Dev/tools/WSLogger";
 
 export type BestWsResult = {
   ws: WebSocket | null;
@@ -66,14 +65,6 @@ function track(ws: WebSocket, debug: boolean) {
     if (debug) console.log("[WS] captured socket closed", ws.url);
   });
 
-  ws.addEventListener("message", (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      pushWSLog("in", data.type || "unknown", data);
-    } catch {
-      pushWSLog("in", "raw", e.data);
-    }
-  });
 
   // If already open when we attach listeners.
   if (ws.readyState === WS_OPEN) markOpen();
@@ -217,11 +208,6 @@ export function sendToServer(message: unknown, win: any = pageWindow): SendResul
   if (payload == null) {
     return { ok: false, reason: "error", error: new Error("Cannot stringify message") };
   }
-
-  try {
-    const data = JSON.parse(payload);
-    pushWSLog("out", data.type || "unknown", data);
-  } catch { }
 
   try {
     ws.send(payload);

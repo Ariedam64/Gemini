@@ -24,7 +24,7 @@ const DEFAULT_HOST_STYLES: Partial<CSSStyleDeclaration> = {
   lineHeight: "1.35",
 };
 
-function attachHost(id = "gemini-root"): {
+function attachHost(id = "gemini-root", appendToDOM = true): {
   host: HTMLDivElement;
   shadow: ShadowRoot;
 } {
@@ -32,7 +32,12 @@ function attachHost(id = "gemini-root"): {
   host.id = id;
   Object.assign(host.style, DEFAULT_HOST_STYLES);
 
-  (document.body || document.documentElement).appendChild(host);
+  // On Firefox, attaching the Shadow DOM host to the DOM immediately causes
+  // massive perf overhead (~100fps drop) even when the HUD is hidden.
+  // If the HUD starts closed, defer DOM attachment until it's opened.
+  if (appendToDOM) {
+    (document.body || document.documentElement).appendChild(host);
+  }
   const shadow = host.attachShadow({ mode: "open" });
 
   return { host, shadow };
@@ -116,44 +121,48 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   } = opts;
 
   // ===== 1. Host + Shadow + CSS Injection =====
-  const { host, shadow } = attachHost(hostId);
+  const { host, shadow } = attachHost(hostId, !!initialOpen);
 
-  // Inject all styles in batches with yields to avoid blocking
-  const styleInjections: [string, string][] = [
-    [variablesCss, "variables"],
-    [primitivesCss, "primitives"],
-    [utilitiesCss, "utilities"],
-    [hudCss, "hud"],
-    [cardCss, "card"],
-    [badgeCss, "badge"],
-    [buttonCss, "button"],
-    [checkboxCss, "checkbox"],
-    [inputCss, "input"],
-    [labelCss, "label"],
-    [navTabsCss, "navTabs"],
-    [searchBarCss, "searchBar"],
-    [selectCss, "select"],
-    [switchCss, "switch"],
-    [tableCss, "table"],
-    [teamListItemCss, "teamListItem"],
-    [timeRangePickerCss, "timeRangePicker"],
-    [tooltipCss, "tooltip"],
-    [sliderCss, "slider"],
-    [reorderableListCss, "reorderableList"],
-    [colorPickerCss, "colorPicker"],
-    [logCss, "log"],
-    [segmentedControlCss, "segmentedControl"],
-    [soundPickerCss, "soundPicker"],
-    [settingsCss, "settings"],
-    [teamCardCss, "teamCard"],
-  ];
+  // Firefox perf: use adoptedStyleSheets instead of <style> DOM elements.
+  // Shadow DOM <style> elements force Firefox to recalculate styles every frame.
+  // adoptedStyleSheets uses CSSStyleSheet objects which are processed more
+  // efficiently — no DOM nodes, shared/cached by the browser engine.
+  const allCss = [
+    variablesCss,
+    primitivesCss,
+    utilitiesCss,
+    hudCss,
+    cardCss,
+    badgeCss,
+    buttonCss,
+    checkboxCss,
+    inputCss,
+    labelCss,
+    navTabsCss,
+    searchBarCss,
+    selectCss,
+    switchCss,
+    tableCss,
+    teamListItemCss,
+    timeRangePickerCss,
+    tooltipCss,
+    sliderCss,
+    reorderableListCss,
+    colorPickerCss,
+    logCss,
+    segmentedControlCss,
+    soundPickerCss,
+    settingsCss,
+    teamCardCss,
+  ].join('\n');
 
-  for (let i = 0; i < styleInjections.length; i++) {
-    const [css, id] = styleInjections[i];
-    injectStyleOnce(shadow, css, id);
-    if (i % 5 === 4) {
-      await yieldToMain();
-    }
+  if ('adoptedStyleSheets' in shadow) {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(allCss);
+    shadow.adoptedStyleSheets = [sheet];
+  } else {
+    // Fallback for older browsers
+    injectStyleOnce(shadow, allCss, "gemini-combined");
   }
 
   // ===== 2. Create DOM Structure =====
@@ -194,10 +203,46 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
     onOpenChange?.(isOpen);
   }
 
+  // Track pending close timeout so we can cancel it if re-opened quickly
+  let closeTimerId: ReturnType<typeof setTimeout> | null = null;
+  const TRANSITION_MS = 300; // slightly above CSS .28s to ensure animation completes
+
   function setHudOpen(isOpen: boolean): void {
     const wasOpen = panel.classList.contains("open");
-    panel.classList.toggle("open", isOpen);
-    panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    if (isOpen === wasOpen && (isOpen === host.isConnected)) return;
+
+    // Cancel any pending close removal
+    if (closeTimerId !== null) {
+      clearTimeout(closeTimerId);
+      closeTimerId = null;
+    }
+
+    if (isOpen) {
+      // ── Open ──
+      // 1. Attach host to DOM (if removed by previous close)
+      if (!host.isConnected) {
+        (document.body || document.documentElement).appendChild(host);
+      }
+      // 2. Force reflow so the browser registers the initial translateX(100%)
+      //    state BEFORE we add .open. Without this, the append + class add
+      //    happen in the same paint and no transition plays.
+      void host.offsetHeight;
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden", "false");
+    } else {
+      // ── Close ──
+      // 1. Remove .open to trigger the slide-out transition
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden", "true");
+      // 2. After transition ends, remove host from DOM (Firefox perf fix)
+      closeTimerId = setTimeout(() => {
+        closeTimerId = null;
+        // Only remove if still closed (user might have re-opened during transition)
+        if (!panel.classList.contains("open") && host.isConnected) {
+          host.remove();
+        }
+      }, TRANSITION_MS);
+    }
 
     if (isOpen !== wasOpen) {
       dispatchHudOpenEvent(isOpen);

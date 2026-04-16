@@ -40,6 +40,7 @@ export const GeminiAPI = {
     set: Store.set.bind(Store),
     subscribe: Store.subscribe.bind(Store),
     subscribeImmediate: Store.subscribeImmediate.bind(Store),
+    getCapturedInfo: Store.getCapturedInfo,
   },
 
   Globals,

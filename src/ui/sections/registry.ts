@@ -7,7 +7,6 @@ import { TestSection } from "./Test";
 import { PetsSection } from "./Pets";
 
 import { AlertsSection } from "./Alerts";
-import { DevSection } from "./Dev";
 import { AvatarSection } from "./Avatar";
 import { RoomSection } from "./Room";
 import { LockerSection } from "./Locker";
@@ -56,7 +55,6 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
   // Only include developer tools in non-production builds
   // This allows them to be completely stripped out during 'npm run release'
   if (import.meta.env.MODE !== 'production') {
-    sections.push(new DevSection());
     sections.push(getTestSection());
   }
 

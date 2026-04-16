@@ -200,12 +200,19 @@ export function startInjectGamePanelButton(opts: Options) {
   if (initialSuccess && mountedBtn && document.contains(mountedBtn)) {
     mountedSuccessfully = true;
     console.log("[ToolbarButton] Successfully mounted (initial)");
+    // mountOnce() already narrowed the observer to the toolbar root (obsTarget).
+    // Do NOT also attach to #App — that would observe the entire app subtree unnecessarily.
+    // Make sure we're only watching the narrow target.
+    observer.disconnect();
+    if (obsTarget) {
+      observer.observe(obsTarget, { childList: true, subtree: true });
+    }
   } else {
     console.log("[ToolbarButton] Initial mount failed, will retry via observer");
+    // Toolbar not in DOM yet — watch broadly until it appears
+    observer.observe(host, { childList: true, subtree: true });
   }
 
-  // Attach to #App initially (with subtree) to catch toolbar insertions anywhere in the tree
-  observer.observe(host, { childList: true, subtree: true });
   stopObs = () => observer.disconnect();
 
   return () => {
