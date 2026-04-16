@@ -330,8 +330,12 @@ export class TeamCardPart {
         });
         deleteTeamButton.setAttribute("data-action", "delete-team");
 
+        const isMobile = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+
         actionsContainer.appendChild(newTeamButton);
-        actionsContainer.appendChild(importButton);
+        if (!isMobile) {
+            actionsContainer.appendChild(importButton);
+        }
         actionsContainer.appendChild(deleteTeamButton);
         this.teamContent.appendChild(actionsContainer);
     }
