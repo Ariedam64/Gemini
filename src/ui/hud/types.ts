@@ -63,6 +63,7 @@ export interface HudLayoutElements {
   panel: HTMLDivElement;
   tabbar: HTMLDivElement;
   content: HTMLDivElement;
+  footer: HTMLDivElement;
   resizer: HTMLDivElement;
   closeButton: HTMLButtonElement;
   wrapper: HTMLDivElement;

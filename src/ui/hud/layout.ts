@@ -1,4 +1,5 @@
 import { element } from "../styles/helpers";
+import { createHudFooter } from "./footer";
 import { HudLayoutElements } from "./types";
 
 /**
@@ -35,6 +36,10 @@ export function createHudLayout(options: {
     title: "Resize",
   }) as HTMLDivElement;
 
+  // Footer (version info + update button)
+  const footerHandle = createHudFooter();
+  const footer = footerHandle.root;
+
   // Close button (cross) aligned to the right in the tab bar
   const closeButton = element(
     "button",
@@ -47,7 +52,7 @@ export function createHudLayout(options: {
   ) as HTMLButtonElement;
 
   // Assemble panel structure
-  panel.append(tabbar, content, resizer);
+  panel.append(tabbar, content, footer, resizer);
 
   // Wrapper for the entire HUD
   const wrapper = element("div", {
@@ -61,6 +66,7 @@ export function createHudLayout(options: {
     panel,
     tabbar,
     content,
+    footer,
     resizer,
     closeButton,
     wrapper,

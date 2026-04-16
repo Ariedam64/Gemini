@@ -62,11 +62,12 @@ export default defineConfig(({ mode }) => ({
                 },
                 connect: ['i.imgur.com',
                           'magicgarden.gg',
-                          'mg-api.ariedam.fr'
+                          'mg-api.ariedam.fr',
+                          'raw.githubusercontent.com'
                 ]
             },
             build: {
-                fileName: 'gemini-build.user.js',
+                fileName: mode === 'release' ? 'gemini.user.js' : 'gemini-build.user.js',
                 // @ts-ignore
                 cssSideEffects: (css) => {
                     if (!css) return '';

@@ -7,6 +7,7 @@ import { createNavTabs } from "../components/NavTabs/NavTabs";
 import { SectionManager } from "../sections";
 import { pageWindow } from "../../utils/windowContext";
 import { storageGet, FEATURE_KEYS, EVENTS } from "../../utils/storage";
+import { startVersionChecker } from "../../utils/version";
 
 /* ================================ Shadow DOM Host ================================ */
 
@@ -156,9 +157,30 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   }
 
   // ===== 2. Create DOM Structure =====
-  const { panel, tabbar, content, resizer, closeButton, wrapper } = createHudLayout({
+  const { panel, tabbar, content, footer, resizer, closeButton, wrapper } = createHudLayout({
     shadow,
     initialOpen,
+  });
+
+  // ===== 2b. Version Checker =====
+  // footer is a plain div (created by createHudFooter inside layout).
+  // We import createHudFooter's update logic via the footer element directly —
+  // but since layout creates the handle internally, we wire the checker here
+  // using a lightweight approach: find the handle's update method via the element.
+  // Instead, we expose it via a typed wrapper below.
+  const stopVersionChecker = startVersionChecker((info) => {
+    // Update version text + show/hide update button
+    const versionEl = footer.querySelector<HTMLElement>(".gemini-footer__version");
+    const updateBtn = footer.querySelector<HTMLElement>(".gemini-footer__update-btn");
+    if (versionEl) {
+      versionEl.textContent = info.hasUpdate && info.remote
+        ? `v${info.local} → v${info.remote}`
+        : `v${info.local}`;
+    }
+    if (updateBtn) {
+      updateBtn.style.display = info.hasUpdate ? "inline-flex" : "none";
+    }
+    footer.classList.toggle("gemini-footer--has-update", info.hasUpdate);
   });
 
   // ===== 3. Open/Close Management =====
@@ -336,6 +358,7 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
 
   // ===== 9. Cleanup =====
   function destroy(): void {
+    stopVersionChecker();
     window.removeEventListener(EVENTS.STORAGE_CHANGE, handleTabVisibilityChange);
     keyboardShortcuts.destroy();
     resizeHandler.destroy();
