@@ -49,8 +49,9 @@ function findMatureCropTooltips(): MaturedCropTooltip[] {
   );
 
   for (const container of matureCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
+    // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
+    const rect = container.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
@@ -87,7 +88,8 @@ function doUpdateSize(size: number, currentSlot: any): void {
   );
 
   for (const container of allMatureContainers) {
-    if (!container.offsetParent) continue;
+    const containerRect = container.getBoundingClientRect();
+    if (containerRect.width === 0 && containerRect.height === 0) continue;
     if (container.closest('button.chakra-button')) continue;
 
     // Find the weight label element by class
@@ -172,7 +174,8 @@ function updateTooltipContent(): void {
   const calculatedWeight = calculateCropWeight(currentSlot.species, currentSlot.targetScale);
 
   for (const tooltip of tooltips) {
-    if (!tooltip.offsetParent) continue; // Skip hidden tooltips
+    const tooltipRect = tooltip.getBoundingClientRect();
+    if (tooltipRect.width === 0 && tooltipRect.height === 0) continue; // Skip hidden tooltips
 
     const text = tooltip.textContent?.trim();
     if (text && text.startsWith('Size:')) {
@@ -237,7 +240,8 @@ function restoreCropWeights(): void {
 
   // Restore crop labels
   for (const container of allMatureContainers) {
-    if (!container.offsetParent) continue;
+    const restoreRect = container.getBoundingClientRect();
+    if (restoreRect.width === 0 && restoreRect.height === 0) continue;
     if (container.closest('button.chakra-button')) continue;
 
     const weightElement = container.querySelector<HTMLElement>(`.${WEIGHT_LABEL_CLASS}`);
@@ -253,7 +257,8 @@ function restoreCropWeights(): void {
   // Restore tooltips
   const tooltips = document.querySelectorAll<HTMLElement>(TOOLTIP_SELECTOR);
   for (const tooltip of tooltips) {
-    if (!tooltip.offsetParent) continue;
+    const restoreTooltipRect = tooltip.getBoundingClientRect();
+    if (restoreTooltipRect.width === 0 && restoreTooltipRect.height === 0) continue;
 
     const text = tooltip.textContent?.trim();
     // If it's a size tooltip we modified, restore it to weight

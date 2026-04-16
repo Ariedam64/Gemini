@@ -213,8 +213,9 @@ function findCropTooltips(): CropTooltip[] {
   );
 
   for (const container of matureCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
+    // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
+    const rect = container.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
@@ -228,8 +229,9 @@ function findCropTooltips(): CropTooltip[] {
   );
 
   for (const container of growthCropContainers) {
-    // Check if visible
-    if (!container.offsetParent) continue;
+    // Check if visible (use getBoundingClientRect to support position:fixed on mobile)
+    const rect = container.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
 
     // Skip if inside a pet button
     if (container.closest('button.chakra-button')) continue;
@@ -302,7 +304,8 @@ function doRender(price: number, currentSlot: any): void {
   const allPriceElements = document.querySelectorAll<HTMLElement>('.gemini-qol-cropPrice');
 
   for (const priceEl of allPriceElements) {
-    if (!priceEl.offsetParent) continue;
+    const priceRect = priceEl.getBoundingClientRect();
+    if (priceRect.width === 0 && priceRect.height === 0) continue;
     if (priceEl.closest('button.chakra-button')) continue;
 
     // Update the price text element
