@@ -122,40 +122,26 @@ function createEmptyState(): HTMLDivElement {
 }
 
 /**
- * Calculate overlay position relative to anchor (alert button)
+ * Calculate overlay position: vertically centered in viewport,
+ * horizontally to the left of the anchor button.
  */
 function positionOverlay(overlay: HTMLElement, anchor: HTMLElement): void {
   const anchorRect = anchor.getBoundingClientRect();
-  const overlayWidth = 340; // Max width from CSS
-  const gap = 8; // Gap between button and overlay
+  const overlayWidth = 340;
+  const gap = 8;
 
-  // Reset positioning
   overlay.style.position = "fixed";
-  overlay.style.top = "";
+  overlay.style.top = "50%";
+  overlay.style.transform = "translateY(-50%)";
   overlay.style.bottom = "";
   overlay.style.left = "";
-  overlay.style.right = "";
 
-  // Default: position below button, aligned to right edge of button
-  let top = anchorRect.bottom + gap;
-  let right = window.innerWidth - anchorRect.right;
+  // Position to the left of the anchor button
+  const rightEdge = window.innerWidth - anchorRect.left + gap;
+  overlay.style.right = `${rightEdge}px`;
 
-  // Check if overlay would overflow viewport
-  const wouldOverflowBottom = (top + 480) > window.innerHeight; // 480 = max-height
-  const wouldOverflowLeft = (anchorRect.right - overlayWidth) < gap;
-
-  // If overflow bottom, position above button instead
-  if (wouldOverflowBottom) {
-    overlay.style.bottom = `${window.innerHeight - anchorRect.top + gap}px`;
-    overlay.style.top = "auto";
-  } else {
-    overlay.style.top = `${top}px`;
-  }
-
-  // Always align to right edge of button
-  overlay.style.right = `${right}px`;
-
-  // If overlay would overflow left edge, clamp to viewport
+  // Clamp to viewport if it overflows left
+  const wouldOverflowLeft = (anchorRect.left - gap - overlayWidth) < gap;
   if (wouldOverflowLeft) {
     overlay.style.right = "auto";
     overlay.style.left = `${gap}px`;
