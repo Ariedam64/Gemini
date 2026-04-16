@@ -81,8 +81,8 @@ export function startInjectGamePanelButton(opts: Options) {
     img.alt = "MGH";
     img.style.pointerEvents = "none";
     img.style.userSelect = "none";
-    img.style.width = "76%";
-    img.style.height = "76%";
+    img.style.width = "90%";
+    img.style.height = "90%";
     img.style.objectFit = "contain";
     img.style.display = "block";
     img.style.margin = "auto";
