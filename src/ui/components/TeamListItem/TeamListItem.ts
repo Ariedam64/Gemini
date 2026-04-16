@@ -134,8 +134,12 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
         className: "team-list-item__sprites",
     });
 
+    // Cancellation token: incremented on each render, stale async renders bail out
+    let renderToken = 0;
+
     // Function to re-render all pet sprites when myPets changes
     async function renderSprites(): Promise<void> {
+        const token = ++renderToken;
         const myPets = Globals.myPets.get();
         spritesContainer.innerHTML = "";
 
@@ -178,6 +182,9 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                             scale: 1,
                         });
 
+                        // Bail out if a newer render started while we were awaiting
+                        if (token !== renderToken) return;
+
                         // Clone the canvas since MGSprite returns cached instances
                         // We need separate instances for each DOM location
                         const canvas = document.createElement("canvas");
@@ -204,6 +211,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                             spriteSlot.classList.add("team-list-item__sprite-slot--filled");
                         }
                     } catch (err) {
+                        if (token !== renderToken) return;
                         console.warn(`[TeamListItem] Failed to render sprite for pet ${pet.petSpecies}:`, err);
                         // Fallback to placeholder on error
                         const placeholder = element("div", {
@@ -227,6 +235,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                     let slotUpdateDone = false;
                     const unsubscribeSlotUpdate = Globals.myPets.subscribe(async () => {
                         if (slotUpdateDone) return;
+                        if (token !== renderToken) { unsubscribeSlotUpdate(); return; }
 
                         const updatedMyPets = Globals.myPets.get();
                         const foundPet = updatedMyPets.all.find((p) => p.id === petId);
@@ -244,6 +253,8 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                                     mutations: foundPet.mutations as any,
                                     scale: 1,
                                 });
+
+                                if (token !== renderToken) return;
 
                                 const canvas = document.createElement("canvas");
                                 canvas.width = cachedCanvas.width;
@@ -268,9 +279,8 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                                     spriteSlot.appendChild(removeOverlay);
                                     spriteSlot.classList.add("team-list-item__sprite-slot--filled");
                                 }
-
-                                console.log(`[TeamListItem] Pet ${petId} sprite updated`);
                             } catch (err) {
+                                if (token !== renderToken) return;
                                 console.warn(`[TeamListItem] Failed to render sprite for pet ${foundPet.petSpecies}:`, err);
                                 spriteSlot.innerHTML = "<div class='team-list-item__sprite-placeholder'>🐾</div>";
                             }
@@ -283,6 +293,7 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
                 spriteSlot.appendChild(plusIcon);
             }
 
+            if (token !== renderToken) return;
             spritesContainer.appendChild(spriteSlot);
         }
     }
@@ -290,10 +301,10 @@ export function TeamListItem(props: TeamListItemProps): HTMLDivElement {
     // Initial render
     renderSprites();
 
-    // Subscribe to myPets changes and re-render when they change
+    // Re-render when myPets changes, but not immediately (initial render above handles that)
     const unsubscribe = Globals.myPets.subscribe(() => {
         renderSprites();
-    });
+    }, { immediate: false });
 
     // Drag handle (hidden if hideDragHandle is true)
     if (!props.hideDragHandle) {
