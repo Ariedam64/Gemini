@@ -1,8 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build output (keep dist for userscript)
-# dist/
+# Build output
+dist/
 
 # IDE
 .idea/
