@@ -124,27 +124,33 @@ function createEmptyState(): HTMLDivElement {
 /**
  * Calculate overlay position: vertically centered in viewport,
  * horizontally to the left of the anchor button.
+ * On small screens, fills available width dynamically.
  */
 function positionOverlay(overlay: HTMLElement, anchor: HTMLElement): void {
   const anchorRect = anchor.getBoundingClientRect();
-  const overlayWidth = 340;
   const gap = 8;
+  const vw = window.innerWidth;
 
   overlay.style.position = "fixed";
   overlay.style.top = "50%";
   overlay.style.transform = "translateY(-50%)";
   overlay.style.bottom = "";
-  overlay.style.left = "";
 
-  // Position to the left of the anchor button
-  const rightEdge = window.innerWidth - anchorRect.left + gap;
-  overlay.style.right = `${rightEdge}px`;
+  // Available space to the left of the anchor
+  const availableLeft = anchorRect.left - gap;
 
-  // Clamp to viewport if it overflows left
-  const wouldOverflowLeft = (anchorRect.left - gap - overlayWidth) < gap;
-  if (wouldOverflowLeft) {
-    overlay.style.right = "auto";
-    overlay.style.left = `${gap}px`;
+  if (availableLeft < 200) {
+    // Not enough room on the left — center horizontally with margin
+    const margin = Math.max(gap, Math.min(16, vw * 0.04));
+    overlay.style.left = `${margin}px`;
+    overlay.style.right = `${margin}px`;
+    overlay.style.width = "auto";
+  } else {
+    // Enough room — position to the left of anchor, cap width to available space
+    const maxWidth = Math.min(340, availableLeft);
+    overlay.style.width = `${maxWidth}px`;
+    overlay.style.right = `${vw - anchorRect.left + gap}px`;
+    overlay.style.left = "";
   }
 }
 

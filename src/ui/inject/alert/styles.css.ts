@@ -12,6 +12,7 @@ export const alertOverlayCss = `
     position: fixed;
     width: 340px;
     max-width: calc(100vw - 16px);
+    min-width: 260px;
     max-height: min(480px, calc(100vh - 100px));
     background: var(--bg, rgba(10, 12, 18, 0.95));
     border: 1px solid var(--border, rgba(148, 163, 184, 0.3));
