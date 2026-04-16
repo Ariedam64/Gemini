@@ -22,14 +22,16 @@ export function startInjectGamePanelButton(opts: Options) {
   let obsTarget: HTMLElement | null = null;
 
   function findToolbarRoot(): HTMLElement | null {
-    // Language-independent: find a container with >= 3 button.chakra-button elements.
-    // Avoids relying on aria-label text which is translated per game language.
-    const anyBtn = document.querySelector('button.chakra-button');
-    if (!anyBtn) return null;
+    // Use data-testid anchors — language-independent and unique to the game toolbar.
+    // Climb up until we reach the container that also holds the icon buttons.
+    const anchor = document.querySelector(
+      '[data-testid="weather-status-button"], [data-testid="friend-bonus-button"]'
+    );
+    if (!anchor) return null;
 
-    let p: HTMLElement | null = anyBtn.parentElement as HTMLElement | null;
+    let p: HTMLElement | null = anchor.parentElement as HTMLElement | null;
     while (p && p !== document.body) {
-      if (p.querySelectorAll('button.chakra-button').length >= 3) return p;
+      if (p.querySelector('button.chakra-button')) return p;
       p = p.parentElement as HTMLElement | null;
     }
     return null;

@@ -60,13 +60,15 @@ export interface AlertButtonHandle {
  * Find toolbar root element (language-independent)
  */
 function findToolbarRoot(): HTMLElement | null {
-  // Use button.chakra-button count instead of aria-label text (translated per language)
-  const anyBtn = document.querySelector('button.chakra-button');
-  if (!anyBtn) return null;
+  // Use data-testid anchors — language-independent and unique to the game toolbar.
+  const anchor = document.querySelector(
+    '[data-testid="weather-status-button"], [data-testid="friend-bonus-button"]'
+  );
+  if (!anchor) return null;
 
-  let p: HTMLElement | null = anyBtn.parentElement as HTMLElement | null;
+  let p: HTMLElement | null = anchor.parentElement as HTMLElement | null;
   while (p && p !== document.body) {
-    if (p.querySelectorAll('button.chakra-button').length >= 3) return p;
+    if (p.querySelector('button.chakra-button')) return p;
     p = p.parentElement as HTMLElement | null;
   }
   return null;
