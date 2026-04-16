@@ -47,8 +47,6 @@ function injectBellStyles(): void {
   document.head.appendChild(style);
 }
 
-const KNOWN_ARIA = ["Chat", "Leaderboard", "Stats", "Open Activity Log", "Open MGH"];
-
 export interface AlertButtonHandle {
   root: HTMLButtonElement | null;
   updateBadge(count: number): void;
@@ -59,35 +57,16 @@ export interface AlertButtonHandle {
 }
 
 /**
- * Safe CSS.escape fallback
- */
-const esc = (v: string) => {
-  try {
-    // @ts-ignore
-    return typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function"
-      ? CSS.escape(v)
-      : v.replace(/"/g, '\\"');
-  } catch {
-    return v;
-  }
-};
-
-/**
- * Find toolbar root element
+ * Find toolbar root element (language-independent)
  */
 function findToolbarRoot(): HTMLElement | null {
-  const anyBtn = document.querySelector(
-    KNOWN_ARIA.map((a) => `button[aria-label="${esc(a)}"]`).join(",")
-  );
+  // Use button.chakra-button count instead of aria-label text (translated per language)
+  const anyBtn = document.querySelector('button.chakra-button');
   if (!anyBtn) return null;
 
   let p: HTMLElement | null = anyBtn.parentElement as HTMLElement | null;
   while (p && p !== document.body) {
-    const count = KNOWN_ARIA.reduce(
-      (acc, a) => acc + (p!.querySelectorAll(`button[aria-label="${esc(a)}"]`).length),
-      0
-    );
-    if (count >= 2) return p;
+    if (p.querySelectorAll('button.chakra-button').length >= 3) return p;
     p = p.parentElement as HTMLElement | null;
   }
   return null;
@@ -107,7 +86,7 @@ function getReference(root: HTMLElement): {
   refBtn: HTMLButtonElement | null;
   refWrapper: HTMLElement | null;
 } {
-  const all = Array.from(root.querySelectorAll<HTMLButtonElement>("button[aria-label]"));
+  const all = Array.from(root.querySelectorAll<HTMLButtonElement>("button.chakra-button"));
   if (!all.length) return { refBtn: null, refWrapper: null };
 
   // Exclude our alert button if already present

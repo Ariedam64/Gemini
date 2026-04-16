@@ -9,7 +9,6 @@ type Options = {
 };
 
 const DEFAULT_ICON = "https://i.imgur.com/IMkhMur.png";
-const PREFERRED_REF_ARIA = "Stats";
 
 export function startInjectGamePanelButton(opts: Options) {
   let iconUrl = opts.iconUrl || DEFAULT_ICON;
@@ -22,32 +21,15 @@ export function startInjectGamePanelButton(opts: Options) {
   let lastRoot: HTMLElement | null = null;
   let obsTarget: HTMLElement | null = null;
 
-  const KNOWN_ARIA = [
-    "Chat",
-    "Leaderboard",
-    "Stats",
-    "Open Activity Log"
-  ];
-
-  // Safe CSS.escape fallback
-  const esc = (v: string) => {
-    try {
-      // @ts-ignore
-      return (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") ? CSS.escape(v) : (v.replace(/"/g, '\\"'));
-    } catch { return v; }
-  };
-
   function findToolbarRoot(): HTMLElement | null {
-    // Find any known button, then climb up to a parent that contains >=2 known buttons
-    const anyBtn = document.querySelector(
-      KNOWN_ARIA.map(a => `button[aria-label="${esc(a)}"]`).join(",")
-    );
-    if (!anyBtn) { return null; }
+    // Language-independent: find a container with >= 3 button.chakra-button elements.
+    // Avoids relying on aria-label text which is translated per game language.
+    const anyBtn = document.querySelector('button.chakra-button');
+    if (!anyBtn) return null;
 
     let p: HTMLElement | null = anyBtn.parentElement as HTMLElement | null;
     while (p && p !== document.body) {
-      const count = KNOWN_ARIA.reduce((acc, a) => acc + (p!.querySelectorAll(`button[aria-label="${esc(a)}"]`).length), 0);
-      if (count >= 2) { return p; }
+      if (p.querySelectorAll('button.chakra-button').length >= 3) return p;
       p = p.parentElement as HTMLElement | null;
     }
     return null;
@@ -63,17 +45,16 @@ export function startInjectGamePanelButton(opts: Options) {
     refBtn: HTMLButtonElement | null;
     refWrapper: HTMLElement | null;
   } {
-    const all = Array.from(root.querySelectorAll<HTMLButtonElement>("button[aria-label]"));
+    const all = Array.from(root.querySelectorAll<HTMLButtonElement>("button.chakra-button"));
     if (!all.length) return { refBtn: null, refWrapper: null };
 
     // Exclude our button if it is already present
     const nonMGH = all.filter(b => b.dataset.mghBtn !== "true" && (b.getAttribute("aria-label") || "") !== (opts.ariaLabel || "Open MGH"));
     const list = nonMGH.length ? nonMGH : all;
 
-    // Prefer the second-to-last if possible, otherwise the last one (favor Stats when available)
-    const preferred = list.find(b => (b.getAttribute("aria-label") || "").toLowerCase() === PREFERRED_REF_ARIA.toLowerCase()) || null;
+    // Use the second-to-last button as reference (last is often our own injected button)
     const idx = list.length >= 2 ? list.length - 2 : list.length - 1;
-    const refBtn = preferred || list[idx]!;
+    const refBtn = list[idx]!;
 
     const p = refBtn.parentElement as HTMLElement | null;
     // Consider a wrapper if it's a DIV directly under root
