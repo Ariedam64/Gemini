@@ -464,7 +464,6 @@ export function startAlertInjector(): AlertInjectorHandle {
   buttonHandle = startInjectAlertButton({
     onClick: toggleOverlay,
     ariaLabel: "Alerts",
-    iconUrl: "https://i.imgur.com/pxm74V8.png",
   });
 
   // Subscribe to availability changes
