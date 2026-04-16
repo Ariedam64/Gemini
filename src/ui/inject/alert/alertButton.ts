@@ -129,8 +129,8 @@ function cloneButtonFrom(
   iconContainer.dataset.alertIcon = "true"; // Marker for targeting animation
   iconContainer.style.pointerEvents = "none";
   iconContainer.style.userSelect = "none";
-  iconContainer.style.width = "76%";
-  iconContainer.style.height = "76%";
+  iconContainer.style.width = "60%";
+  iconContainer.style.height = "60%";
   iconContainer.style.display = "flex";
   iconContainer.style.alignItems = "center";
   iconContainer.style.justifyContent = "center";
