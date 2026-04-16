@@ -1,8 +1,8 @@
 /**
  * HUD Footer - version info + update notification
  *
- * Normal state:   v1.0.1
- * Update state:   v1.0.1 → v1.0.2   [Update ↗]
+ * Normal state:   Gemini · v1.0.1
+ * Update state:   Gemini · v1.0.1 → v1.0.2   [Update ↗]
  */
 
 import { getLocalVersion, type VersionInfo } from "../../utils/version";
@@ -18,6 +18,14 @@ export interface HudFooterHandle {
 export function createHudFooter(): HudFooterHandle {
   const root = document.createElement("div");
   root.className = "gemini-footer";
+
+  const label = document.createElement("span");
+  label.className = "gemini-footer__label";
+  label.textContent = "Gemini";
+
+  const sep = document.createElement("span");
+  sep.className = "gemini-footer__sep";
+  sep.textContent = "·";
 
   const versionSpan = document.createElement("span");
   versionSpan.className = "gemini-footer__version";
@@ -39,7 +47,7 @@ export function createHudFooter(): HudFooterHandle {
     }
   });
 
-  root.append(versionSpan, updateBtn);
+  root.append(label, sep, versionSpan, updateBtn);
 
   function update(info: VersionInfo): void {
     if (info.hasUpdate && info.remote) {

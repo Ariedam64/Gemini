@@ -122,7 +122,7 @@ export const hudCss = `
     overflow: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    height: calc(100dvh - var(--tab-h) - 34px);
+    height: calc(100dvh - var(--tab-h) - 38px);
     scrollbar-gutter: stable;
   }
   .gemini-content::-webkit-scrollbar {
@@ -136,27 +136,41 @@ export const hudCss = `
   /* ---- Footer (version + update) ---- */
   .gemini-footer {
     flex-shrink: 0;
-    height: 34px;
+    height: 38px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    gap: 8px;
     padding: 0 14px;
-    border-top: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
-    background-color: color-mix(in oklab, var(--bg) 92%, transparent);
+    border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+    background-color: color-mix(in oklab, var(--bg) 96%, transparent);
     transition: background-color .28s ease, border-color .28s ease;
   }
 
+  .gemini-footer__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: color-mix(in oklab, var(--fg) 55%, transparent);
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+
+  .gemini-footer__sep {
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 20%, transparent);
+    flex-shrink: 0;
+  }
+
   .gemini-footer__version {
-    font-size: 11px;
-    color: var(--muted);
+    font-size: 12px;
+    color: color-mix(in oklab, var(--fg) 50%, transparent);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
     transition: color .2s ease;
+    flex: 1;
   }
 
   .gemini-footer--has-update .gemini-footer__version {
-    color: var(--fg);
+    color: color-mix(in oklab, var(--fg) 80%, transparent);
   }
 
   .gemini-footer__update-btn {
@@ -174,6 +188,7 @@ export const hudCss = `
     text-decoration: none;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .gemini-footer__update-btn:hover {
