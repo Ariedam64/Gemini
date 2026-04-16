@@ -1,4 +1,4 @@
-import { Store } from "../../atoms/store";
+import { subscribe as wsSubscribe, getMySlot } from "../../state";
 import { deepEqual } from "../core/reactive";
 import type {
   MyInventoryGlobal,
@@ -18,11 +18,7 @@ type MyInventorySources = {
   selectedItemIndex: number | null;
 };
 
-const atomSources = {
-  inventory: "myInventoryAtom",
-  isFull: "isMyInventoryAtMaxLengthAtom",
-  selectedItemIndex: "myValidatedSelectedItemIndexAtom",
-};
+const MAX_INVENTORY_SIZE = 100; // Game max inventory slots
 
 const initialData: MyInventoryData = {
   items: [],
@@ -159,14 +155,21 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
     favorites: new Set(),
   };
 
-  const sources: Partial<MyInventorySources> = {};
-  const sourceKeys = Object.keys(atomSources) as (keyof MyInventorySources)[];
-  const ready = new Set<keyof MyInventorySources>();
+  function readSources(): MyInventorySources {
+    const slot = getMySlot();
+    const inventory = slot?.data?.inventory ?? null;
+    const items = inventory?.items ?? [];
+    const selectedItemIndex = slot?.notAuthoritative_selectedItemIndex ?? null;
+    return {
+      inventory,
+      isFull: items.length >= MAX_INVENTORY_SIZE,
+      selectedItemIndex,
+    };
+  }
 
-  function notify(): void {
-    if (ready.size < sourceKeys.length) return;
-
-    const nextData = buildData(sources as MyInventorySources);
+  function onStateChange(): void {
+    const sources = readSources();
+    const nextData = buildData(sources);
 
     if (deepEqual(currentData, nextData)) return;
 
@@ -213,27 +216,20 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
     }
   }
 
-  async function init(): Promise<void> {
+  function init(): void {
     if (initialized) return;
 
-    const subscriptionPromises = sourceKeys.map(async (key) => {
-      const atomLabel = atomSources[key];
-
-      const unsub = await Store.subscribe(atomLabel, (value: unknown) => {
-        (sources as Record<string, unknown>)[key] = value;
-        ready.add(key);
-        notify();
-      });
-
-      unsubscribes.push(unsub);
-    });
-
-    await Promise.all(subscriptionPromises);
-    initialized = true;
-
-    if (ready.size === sourceKeys.length) {
-      currentData = buildData(sources as MyInventorySources);
+    // Read initial state
+    const sources = readSources();
+    if (sources.inventory) {
+      currentData = buildData(sources);
     }
+
+    // Subscribe to inventory + selection changes via WS
+    unsubscribes.push(wsSubscribe("inventory", onStateChange));
+    unsubscribes.push(wsSubscribe("selection", onStateChange));
+
+    initialized = true;
   }
 
   init();
@@ -245,7 +241,7 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
     subscribe(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
@@ -253,7 +249,7 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
     subscribeStable(callback: (value: MyInventoryData, prev: MyInventoryData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
@@ -261,7 +257,7 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
     subscribeSelection(callback: (event: SelectedItemChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.selection.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ current: currentData.selectedItem, previous: currentData.selectedItem });
       }
       return () => listeners.selection.delete(callback);
@@ -269,7 +265,7 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
     subscribeItems(callback: (event: InventoryItemsChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.items.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ added: currentData.items, removed: [], counts: { before: 0, after: currentData.count } });
       }
       return () => listeners.items.delete(callback);
@@ -277,7 +273,7 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
 
     subscribeFavorites(callback: (event: FavoritesChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.favorites.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ added: currentData.favoritedItemIds, removed: [], current: currentData.favoritedItemIds });
       }
       return () => listeners.favorites.delete(callback);

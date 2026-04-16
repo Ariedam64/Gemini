@@ -1,3 +1,6 @@
+// gameMap reads static data (map layout + tile size) that only exists in the game engine.
+// These atoms are polled ONCE at startup and never change during gameplay.
+// This is the only global that still needs atom polling (2 atoms, one-shot).
 import { Store } from "../../atoms/store";
 import type {
   GameMapGlobal,

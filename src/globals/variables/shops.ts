@@ -1,4 +1,4 @@
-import { shopsAtom, shopPurchasesView } from "../../atoms";
+import { subscribe as wsSubscribe, getGameState, getMySlot } from "../../state";
 import { deepEqual } from "../core/reactive";
 import type {
   ShopsGlobal,
@@ -308,28 +308,37 @@ function createShopsGlobal(): ShopsGlobal {
     }
   }
 
-  async function init(): Promise<void> {
+  function readSources(): ShopsSources {
+    const gs = getGameState();
+    const slot = getMySlot();
+    return {
+      shops: (gs?.shops as RawShops) ?? null,
+      purchases: (slot?.data?.shopPurchases ?? {}) as ShopPurchases,
+    };
+  }
+
+  function onStateChange(): void {
+    const next = readSources();
+    sources.shops = next.shops;
+    sources.purchases = next.purchases;
+    ready.add("shops");
+    ready.add("purchases");
+    notify();
+  }
+
+  function init(): void {
     if (initialized) return;
 
-    const unsub1 = await shopsAtom.onChangeNow((value) => {
-      sources.shops = value;
-      ready.add("shops");
-      notify();
-    });
-    unsubscribes.push(unsub1);
-
-    const unsub2 = await shopPurchasesView.onChangeNow((value) => {
-      sources.purchases = value;
-      ready.add("purchases");
-      notify();
-    });
-    unsubscribes.push(unsub2);
-
-    initialized = true;
-
-    if (ready.size === sourceCount) {
+    // Read initial state
+    onStateChange();
+    if (initialized) {
       currentData = buildData(sources as ShopsSources);
     }
+
+    unsubscribes.push(wsSubscribe("shops", onStateChange));
+    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
+
+    initialized = true;
   }
 
   init();
@@ -350,7 +359,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribe(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && initialized) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
@@ -358,7 +367,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeStable(callback: (value: ShopsData, prev: ShopsData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && initialized) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
@@ -366,7 +375,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeSeedRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.seedRestock.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         callback({ shop: currentData.byType.seed, previousItems: [] });
       }
       return () => listeners.seedRestock.delete(callback);
@@ -374,7 +383,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeToolRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.toolRestock.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         callback({ shop: currentData.byType.tool, previousItems: [] });
       }
       return () => listeners.toolRestock.delete(callback);
@@ -382,7 +391,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeEggRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.eggRestock.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         callback({ shop: currentData.byType.egg, previousItems: [] });
       }
       return () => listeners.eggRestock.delete(callback);
@@ -390,7 +399,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeDecorRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.decorRestock.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         callback({ shop: currentData.byType.decor, previousItems: [] });
       }
       return () => listeners.decorRestock.delete(callback);
@@ -398,7 +407,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.purchase.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         for (const shop of currentData.all) {
           for (const item of shop.items) {
             if (item.purchased > 0) {
@@ -412,7 +421,7 @@ function createShopsGlobal(): ShopsGlobal {
 
     subscribeAvailability(callback: (event: ShopAvailabilityChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.availability.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && initialized) {
         for (const shop of currentData.all) {
           for (const item of shop.items) {
             callback({ shopType: shop.type, itemId: item.id, wasAvailable: item.isAvailable, isAvailable: item.isAvailable });

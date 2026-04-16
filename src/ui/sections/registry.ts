@@ -3,7 +3,6 @@ import type { SectionsDeps } from "./core/Types";
 
 // Concrete sections
 import { SettingsSection } from "./Settings";
-import { TestSection } from "./Test";
 import { PetsSection } from "./Pets";
 
 import { AlertsSection } from "./Alerts";
@@ -11,16 +10,8 @@ import { AvatarSection } from "./Avatar";
 import { RoomSection } from "./Room";
 import { LockerSection } from "./Locker";
 
-let testSectionInstance: TestSection | null = null;
 let alertsSectionInstance: AlertsSection | null = null;
 let lockerSectionInstance: LockerSection | null = null;
-
-function getTestSection(): TestSection {
-  if (!testSectionInstance) {
-    testSectionInstance = new TestSection();
-  }
-  return testSectionInstance;
-}
 
 function getAlertsSection(): AlertsSection {
   if (!alertsSectionInstance) {
@@ -52,12 +43,6 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
   ];
 
 
-  // Only include developer tools in non-production builds
-  // This allows them to be completely stripped out during 'npm run release'
-  if (import.meta.env.MODE !== 'production') {
-    sections.push(getTestSection());
-  }
-
   return sections;
 }
 
@@ -67,13 +52,11 @@ export function buildSections(deps: SectionsDeps): BaseSection[] {
 export async function preloadSections(): Promise<void> {
   const alertsSection = getAlertsSection();
   const lockerSection = getLockerSection();
-  const testSection = getTestSection();
 
   // Preload in parallel
   await Promise.all([
     alertsSection.preload(),
     lockerSection.preload(),
-    testSection.preload(),
   ]);
 }
 

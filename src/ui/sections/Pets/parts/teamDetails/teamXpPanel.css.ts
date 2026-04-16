@@ -78,7 +78,7 @@ export const teamXpPanelCss = `
 }
 
 .xp-panel__rate-label {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -90,7 +90,7 @@ export const teamXpPanelCss = `
 
 .xp-panel__rate-plus,
 .xp-panel__rate-equals {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 12px;
 }
 
@@ -302,12 +302,12 @@ export const teamXpPanelCss = `
 }
 
 .xp-str__separator {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 11px;
 }
 
 .xp-str__max {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 11px;
     text-shadow: 
         -1px -1px 0 rgba(0, 0, 0, 0.8),
@@ -392,12 +392,12 @@ export const teamXpPanelCss = `
 }
 
 .xp-strength__separator {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 13px;
 }
 
 .xp-strength__max {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 13px;
     font-weight: 600;
 }
@@ -419,7 +419,7 @@ export const teamXpPanelCss = `
 
 .xp-progress-row__feeds {
     font-size: 12px;
-    color: var(--muted);
+    color: var(--fg-muted);
     white-space: nowrap;
 }
 
@@ -500,7 +500,7 @@ export const teamXpPanelCss = `
 }
 
 .xp-inactive {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-style: italic;
     font-size: 11px;
     margin-left: 4px;

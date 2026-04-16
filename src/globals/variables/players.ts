@@ -1,9 +1,4 @@
-import {
-  statePlayersView,
-  stateHostPlayerIdView,
-  stateUserSlotsView,
-} from "../../atoms";
-import { Store } from "../../atoms/store";
+import { subscribe as wsSubscribe, getRoomState, getGameState, getMySlotIndex } from "../../state";
 import { deepEqual } from "../core/reactive";
 import type {
   PlayersGlobal,
@@ -246,14 +241,19 @@ function createPlayersGlobal(): PlayersGlobal {
     host: new Set(),
   };
 
-  const sources: Partial<PlayersSources> = {};
-  const ready = new Set<keyof PlayersSources>();
-  const sourceCount = 4;
+  function readSources(): PlayersSources {
+    const room = getRoomState();
+    const game = getGameState();
+    return {
+      players: (room?.players ?? []) as unknown as RawPlayer[],
+      hostPlayerId: room?.hostPlayerId ?? "",
+      userSlots: (game?.userSlots ?? []) as (RawUserSlot | null)[],
+      myUserSlotIndex: getMySlotIndex(),
+    };
+  }
 
-  function notify(): void {
-    if (ready.size < sourceCount) return;
-
-    const nextData = buildData(sources as PlayersSources);
+  function onStateChange(): void {
+    const nextData = buildData(readSources());
 
     if (deepEqual(currentData, nextData)) return;
 
@@ -299,42 +299,21 @@ function createPlayersGlobal(): PlayersGlobal {
     }
   }
 
-  async function init(): Promise<void> {
+  function init(): void {
     if (initialized) return;
 
-    const unsub1 = await statePlayersView.onChangeNow((value) => {
-      sources.players = value as RawPlayer[];
-      ready.add("players");
-      notify();
-    });
-    unsubscribes.push(unsub1);
+    // Read initial state
+    const sources = readSources();
+    if (sources.players.length > 0) {
+      currentData = buildData(sources);
+    }
 
-    const unsub2 = await stateHostPlayerIdView.onChangeNow((value) => {
-      sources.hostPlayerId = value;
-      ready.add("hostPlayerId");
-      notify();
-    });
-    unsubscribes.push(unsub2);
-
-    const unsub3 = await stateUserSlotsView.onChangeNow((value) => {
-      sources.userSlots = value as (RawUserSlot | null)[];
-      ready.add("userSlots");
-      notify();
-    });
-    unsubscribes.push(unsub3);
-
-    const unsub4 = await Store.subscribe("myUserSlotIdxAtom", (value: unknown) => {
-      sources.myUserSlotIndex = value as number | null;
-      ready.add("myUserSlotIndex");
-      notify();
-    });
-    unsubscribes.push(unsub4);
+    // Subscribe to player + room changes via WS
+    unsubscribes.push(wsSubscribe("players", onStateChange));
+    unsubscribes.push(wsSubscribe("room", onStateChange));
+    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
 
     initialized = true;
-
-    if (ready.size === sourceCount) {
-      currentData = buildData(sources as PlayersSources);
-    }
   }
 
   init();
@@ -346,7 +325,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
     subscribe(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
@@ -354,7 +333,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
     subscribeStable(callback: (value: PlayersData, prev: PlayersData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceCount) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
@@ -362,7 +341,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
     subscribeJoinLeave(callback: (event: PlayerJoinLeaveEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.joinLeave.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         for (const player of currentData.all) {
           callback({ player, type: "join" });
         }
@@ -372,7 +351,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
     subscribeConnection(callback: (event: PlayerConnectionChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.connection.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         for (const player of currentData.all) {
           callback({ player, isConnected: player.isConnected });
         }
@@ -382,7 +361,7 @@ function createPlayersGlobal(): PlayersGlobal {
 
     subscribeHost(callback: (event: HostChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.host.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceCount) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ current: currentData.host, previous: currentData.host });
       }
       return () => listeners.host.delete(callback);

@@ -88,7 +88,7 @@ export const segmentedControlCss = `
 .sg-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .sg-btn:focus-visible {

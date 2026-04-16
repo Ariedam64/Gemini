@@ -23,6 +23,7 @@ export const variablesCss = `
     --soft:rgba(229,231,235,.05);
     --accent:#60a5fa;
     --border:rgba(148,163,184,.2);
+    --fg-muted: color-mix(in oklab, var(--fg) 45%, transparent);
     --shadow:rgba(0,0,0,.45);
     --tab-bg:#fff;
     --tab-fg:#0f172a;
@@ -113,16 +114,20 @@ export const variablesCss = `
 }
 
 /* Firefox: backdrop-filter over a WebGL canvas costs ~90fps.
-   Disable blur globally and compensate with a more opaque background.
-   @-moz-document is Firefox-only (ignored by other engines). */
-@-moz-document url-prefix() {
-  :host {
-    --glass-blur: 0px;
-    --bg: rgba(10, 12, 18, 0.97);
-  }
-  *, *::before, *::after {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
+   Disable blur globally and compensate with more opaque backgrounds.
+   Without blur the frosted-glass effect is gone, so --soft/--muted/--border
+   need higher opacity to keep cards/inputs/sections visually distinct.
+   Detected via .firefox class set on the host element in Hud.ts
+   (@-moz-document is deprecated and ignored inside adoptedStyleSheets). */
+:host(.firefox) {
+  --glass-blur: 0px;
+  --bg: rgba(10, 12, 18, 0.97);
+  --soft: rgba(229, 231, 235, 0.13);
+  --muted: rgba(229, 231, 235, 0.18);
+  --border: rgba(148, 163, 184, 0.35);
+}
+:host(.firefox) *, :host(.firefox) *::before, :host(.firefox) *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 `;

@@ -170,7 +170,7 @@ export const basePetCardCss = `
     font-weight: 700;
 }
 
-.base-str__label { color: var(--muted); }
+.base-str__label { color: var(--fg-muted); }
 .base-str__current { 
     color: var(--pill-to); 
     font-weight: 800; 
@@ -181,7 +181,7 @@ export const basePetCardCss = `
         1px 1px 0 rgba(0, 0, 0, 0.8);
 }
 .base-str__max { 
-    color: var(--muted); 
+    color: var(--fg-muted); 
     text-shadow: 
         -1px -1px 0 rgba(0, 0, 0, 0.8),
         1px -1px 0 rgba(0, 0, 0, 0.8),

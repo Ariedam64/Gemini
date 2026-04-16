@@ -454,27 +454,30 @@ export class TeamCardPart {
             this.options.setHUDOpen(false);
         }
 
-        const unsubscribeSelection = Globals.myInventory.subscribeSelection((event) => {
-            if (event.current && event.current.item) {
-                const selectedPet = event.current.item as any;
+        // Listen for selection via atom polling (the custom modal sets
+        // mySelectedItemIdAtom locally, not via WS — so we need the atom here).
+        const unsubscribeSelection = await Store.subscribe("mySelectedItemIdAtom", (value: unknown) => {
+            if (!value) return;
+            const selectedId = value as string;
+            const selectedPet = availablePets.find((p) => p.id === selectedId);
+            if (!selectedPet) return;
 
-                const newPetIds = [...team.petIds];
-                newPetIds[slotIndex] = selectedPet.id;
-                MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
+            const newPetIds = [...team.petIds];
+            newPetIds[slotIndex] = selectedPet.id;
+            MGPetTeam.updateTeam(teamId, { petIds: newPetIds as any });
+            this.options.onTeamsUpdated?.();
+
+            Store.set("mySelectedItemIdAtom", null);
+
+            MGCustomModal.close().then(() => {
+                const currentEnv = MGEnvironment.detect();
+                const shouldReopenHUD = currentEnv.platform === "mobile" || currentEnv.viewportWidth < 768;
+                if (shouldReopenHUD && this.options.setHUDOpen) {
+                    this.options.setHUDOpen(true);
+                }
+                this.render();
                 this.options.onTeamsUpdated?.();
-
-                Store.set("mySelectedItemIdAtom", null);
-
-                MGCustomModal.close().then(() => {
-                    const currentEnv = MGEnvironment.detect();
-                    const shouldReopenHUD = currentEnv.platform === "mobile" || currentEnv.viewportWidth < 768;
-                    if (shouldReopenHUD && this.options.setHUDOpen) {
-                        this.options.setHUDOpen(true);
-                    }
-                    this.render();
-                    this.options.onTeamsUpdated?.();
-                });
-            }
+            });
         });
 
         await MGCustomModal.show("inventory", {

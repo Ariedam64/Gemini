@@ -1,4 +1,4 @@
-﻿import { Store } from "../../atoms/store";
+﻿import { subscribe as wsSubscribe, getGameState } from "../../state";
 import type {
   WeatherGlobal,
   WeatherData,
@@ -8,7 +8,7 @@ import type {
 } from "../core/types";
 import { MGData } from "../../modules";
 
-// Atom returns just the weather ID (string) or null when it's Sunny
+// Weather comes as a string ID or null (Sunny) from the game state
 type WeatherId = string | null;
 
 function buildData(weatherId: string | null): WeatherData {
@@ -91,11 +91,23 @@ function createWeatherGlobal(): WeatherGlobal {
     }
   }
 
-  async function init(): Promise<void> {
+  function init(): void {
     if (initialized) return;
 
-    unsubscribe = await Store.subscribe("weatherAtom", (value: unknown) => {
-      notify(value as WeatherId);
+    // Read initial weather from WS state
+    const gs = getGameState();
+    if (gs?.weather) {
+      const w = gs.weather as { type?: string } | string | null;
+      const id = typeof w === "string" ? w : (w as { type?: string })?.type ?? null;
+      notify(id);
+    }
+
+    // Subscribe to weather channel — fires on every WS patch that touches weather
+    unsubscribe = wsSubscribe("weather", () => {
+      const gs2 = getGameState();
+      const w = gs2?.weather as { type?: string } | string | null;
+      const id = typeof w === "string" ? w : (w as { type?: string })?.type ?? null;
+      notify(id);
     });
 
     initialized = true;

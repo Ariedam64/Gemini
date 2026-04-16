@@ -13,6 +13,7 @@
  */
 
 import { pageWindow } from "../utils/windowContext";
+import { handleMessage as handleWSStateMessage, setMyPlayerId } from "../state";
 
 export type BestWsResult = {
   ws: WebSocket | null;
@@ -57,6 +58,13 @@ function track(ws: WebSocket, debug: boolean) {
   const markOpen = () => {
     state.latestOpen = ws;
     if (debug) console.log("[WS] captured socket opened", ws.url);
+
+    // Extract playerId from WS URL query params and set on state engine
+    try {
+      const url = new URL(ws.url);
+      const pid = url.searchParams.get("playerId")?.replace(/^"|"$/g, "");
+      if (pid) setMyPlayerId(pid);
+    } catch { /* not a valid URL — skip */ }
   };
 
   ws.addEventListener("open", markOpen);
@@ -65,6 +73,19 @@ function track(ws: WebSocket, debug: boolean) {
     if (debug) console.log("[WS] captured socket closed", ws.url);
   });
 
+  // Forward incoming messages to the WS state engine (zero-polling state updates).
+  // Only parse messages that look like Welcome or PartialState to avoid wasting
+  // CPU on pings, pongs, and other high-frequency non-state messages.
+  ws.addEventListener("message", (e) => {
+    const raw = e.data;
+    if (typeof raw !== "string") return;
+    // Fast pre-check: only parse if the message contains a state-related type
+    if (raw.charCodeAt(1) !== 34) return; // first char after { must be " (key start)
+    if (!raw.startsWith('{"type":"Welcome"') && !raw.startsWith('{"type":"PartialState"')) return;
+    try {
+      handleWSStateMessage(JSON.parse(raw));
+    } catch { /* parse error — skip */ }
+  });
 
   // If already open when we attach listeners.
   if (ws.readyState === WS_OPEN) markOpen();

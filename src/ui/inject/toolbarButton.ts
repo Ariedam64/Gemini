@@ -19,7 +19,6 @@ export function startInjectGamePanelButton(opts: Options) {
   let stopObs: (() => void) | null = null;
   let isMounting = false;
   let lastRoot: HTMLElement | null = null;
-  let obsTarget: HTMLElement | null = null;
 
   function findToolbarRoot(): HTMLElement | null {
     // Use data-testid anchors — language-independent and unique to the game toolbar.
@@ -37,10 +36,6 @@ export function startInjectGamePanelButton(opts: Options) {
     return null;
   }
 
-  function findAnchorForObserver(root: HTMLElement | null): HTMLElement | null {
-    // Without relying on #qws-notifier-slot, observe the toolbar root itself
-    return root;
-  }
   // no manual wrapper/button creation: we always clone from existing nodes
 
   function getReference(root: HTMLElement): {
@@ -138,14 +133,6 @@ export function startInjectGamePanelButton(opts: Options) {
         changed = true;
       }
 
-      // Ensure we observe only the anchor container for future changes
-      const target = findAnchorForObserver(root);
-      if (target && target !== obsTarget) {
-        try { observer.disconnect(); } catch { }
-        obsTarget = target;
-        observer.observe(obsTarget, { childList: true, subtree: true });
-      }
-
       // If already mounted and placed correctly, report no changes
       return changed;
     } finally {
@@ -200,20 +187,37 @@ export function startInjectGamePanelButton(opts: Options) {
   if (initialSuccess && mountedBtn && document.contains(mountedBtn)) {
     mountedSuccessfully = true;
     console.log("[ToolbarButton] Successfully mounted (initial)");
-    // mountOnce() already narrowed the observer to the toolbar root (obsTarget).
-    // Do NOT also attach to #App — that would observe the entire app subtree unnecessarily.
-    // Make sure we're only watching the narrow target.
-    observer.disconnect();
-    if (obsTarget) {
-      observer.observe(obsTarget, { childList: true, subtree: true });
-    }
-  } else {
-    console.log("[ToolbarButton] Initial mount failed, will retry via observer");
-    // Toolbar not in DOM yet — watch broadly until it appears
-    observer.observe(host, { childList: true, subtree: true });
   }
 
-  stopObs = () => observer.disconnect();
+  // Always observe #App broadly. Narrowing to obsTarget causes the observer to
+  // watch a detached node when the game fully re-renders the toolbar (React
+  // unmount/remount), so the button is never re-injected.
+  observer.observe(host, { childList: true, subtree: true });
+
+  // Polling fallback: MutationObserver can miss removals when the observed
+  // subtree is replaced entirely. Poll every 2s to detect & recover.
+  const pollingId = window.setInterval(() => {
+    if (mountedBtn && !document.contains(mountedBtn)) {
+      console.warn("[ToolbarButton] Detected missing button (polling), remounting");
+      mountedSuccessfully = false;
+      mountedBtn = null;
+      mountedWrap = null;
+      mountOnce();
+      if (mountedBtn && document.contains(mountedBtn)) {
+        mountedSuccessfully = true;
+      }
+    } else if (!mountedBtn) {
+      mountOnce();
+      if (mountedBtn && document.contains(mountedBtn)) {
+        mountedSuccessfully = true;
+      }
+    }
+  }, 2000);
+
+  stopObs = () => {
+    observer.disconnect();
+    clearInterval(pollingId);
+  };
 
   return () => {
     try { stopObs?.(); } catch { }

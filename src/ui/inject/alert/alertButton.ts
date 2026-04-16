@@ -75,13 +75,6 @@ function findToolbarRoot(): HTMLElement | null {
 }
 
 /**
- * Find anchor element for observer
- */
-function findAnchorForObserver(root: HTMLElement | null): HTMLElement | null {
-  return root;
-}
-
-/**
  * Get reference button for cloning styles
  */
 function getReference(root: HTMLElement): {
@@ -187,7 +180,6 @@ export function startInjectAlertButton(opts: AlertButtonOptions): AlertButtonHan
   let stopObs: (() => void) | null = null;
   let isMounting = false;
   let lastRoot: HTMLElement | null = null;
-  let obsTarget: HTMLElement | null = null;
   let ringingInterval: number | null = null;
 
   function mountOnce(): boolean {
@@ -263,16 +255,6 @@ export function startInjectAlertButton(opts: AlertButtonOptions): AlertButtonHan
         changed = true;
       }
 
-      // Observe anchor container for future changes
-      const target = findAnchorForObserver(root);
-      if (target && target !== obsTarget) {
-        try {
-          observer.disconnect();
-        } catch {}
-        obsTarget = target;
-        observer.observe(obsTarget, { childList: true, subtree: true });
-      }
-
       return changed;
     } finally {
       isMounting = false;
@@ -326,10 +308,35 @@ export function startInjectAlertButton(opts: AlertButtonOptions): AlertButtonHan
     mountedSuccessfully = true;
   }
 
-  // Attach to #App with subtree to catch toolbar insertions
-  // This will aggressively retry until button is mounted
+  // Always observe #App broadly. Narrowing to the toolbar root causes the
+  // observer to watch a detached node when the game fully re-renders the
+  // toolbar (React unmount/remount), so the button is never re-injected.
   observer.observe(host, { childList: true, subtree: true });
-  stopObs = () => observer.disconnect();
+
+  // Polling fallback: MutationObserver can miss removals when the observed
+  // subtree is replaced entirely. Poll every 2s to detect & recover.
+  const pollingId = window.setInterval(() => {
+    if (mountedBtn && !document.contains(mountedBtn)) {
+      mountedSuccessfully = false;
+      mountedBtn = null;
+      mountedBadge = null;
+      mountedWrap = null;
+      mountOnce();
+      if (mountedBtn && document.contains(mountedBtn)) {
+        mountedSuccessfully = true;
+      }
+    } else if (!mountedBtn) {
+      mountOnce();
+      if (mountedBtn && document.contains(mountedBtn)) {
+        mountedSuccessfully = true;
+      }
+    }
+  }, 2000);
+
+  stopObs = () => {
+    observer.disconnect();
+    clearInterval(pollingId);
+  };
 
   return {
     get root() {

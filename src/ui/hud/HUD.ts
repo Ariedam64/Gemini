@@ -32,6 +32,12 @@ function attachHost(id = "gemini-root", appendToDOM = true): {
   host.id = id;
   Object.assign(host.style, DEFAULT_HOST_STYLES);
 
+  // Tag Firefox so CSS can target :host(.firefox) instead of @-moz-document
+  // (which is deprecated and ignored inside adoptedStyleSheets).
+  if (/Firefox/i.test(navigator.userAgent)) {
+    host.classList.add("firefox");
+  }
+
   // On Firefox, attaching the Shadow DOM host to the DOM immediately causes
   // massive perf overhead (~100fps drop) even when the HUD is hidden.
   // If the HUD starts closed, defer DOM attachment until it's opened.

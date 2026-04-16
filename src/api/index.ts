@@ -1,5 +1,6 @@
 import { pageWindow } from "../utils/windowContext";
 import { Store } from "../atoms/store";
+import { WSState } from "../state";
 import { Globals, getGlobals, initGlobals, destroyGlobals } from "../globals";
 import * as WebSocketAPI from "../websocket/api";
 import {
@@ -141,6 +142,8 @@ export const GeminiAPI = {
     throwSnowball: WebSocketAPI.throwSnowball,
     checkFriendBonus: WebSocketAPI.checkFriendBonus,
   },
+
+  WSState,
 
   _internal: {
     getGlobals,

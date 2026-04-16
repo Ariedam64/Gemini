@@ -528,7 +528,7 @@ async function captureViaWritePatch(timeoutMs = 5000): Promise<JotaiStore> {
 
   function ensurePolling(): void {
     if (pollId === null && polled.size > 0) {
-      pollId = setInterval(pollTick, 200);
+      pollId = setInterval(pollTick, 100);
     }
   }
 
@@ -663,26 +663,6 @@ export async function ensureStore(): Promise<JotaiStore> {
       const viaWrite = await captureViaWritePatch(5000);
       g.baseStore = viaWrite;
       if (!viaWrite.__polyfill) notifyReadyOnce();
-
-      // Background: try to upgrade to fiber for native subscriptions.
-      // React fiber roots may not be available yet during early capture,
-      // but they typically appear 1-3s after page load. Once found, the
-      // upgrade replaces polling with native Jotai sub (zero overhead).
-      if ((viaWrite as any).__upgrade) {
-        (async () => {
-          // Wait a moment for React to mount
-          await sleep(1500);
-          for (let attempt = 0; attempt < 15; attempt++) {
-            const native = findStoreViaFiber();
-            if (native) {
-              (viaWrite as any).__upgrade(native);
-              return;
-            }
-            await sleep(1000);
-          }
-          console.log("[Atoms] Fiber upgrade failed after 15 attempts — staying on polling");
-        })();
-      }
 
       return viaWrite;
     } catch (e) {

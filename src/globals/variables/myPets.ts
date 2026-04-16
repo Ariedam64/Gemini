@@ -1,4 +1,4 @@
-import { Store } from "../../atoms/store";
+import { subscribe as wsSubscribe, getMySlot } from "../../state";
 import { deepEqual } from "../core/reactive";
 import { getMyGarden } from "./myGarden";
 import { storageGet, storageSet, KEYS } from "../../utils/storage";
@@ -433,7 +433,7 @@ function createMyPetsGlobal(): MyPetsGlobal {
     maxStrength: new Set(),
   };
 
-  const sources: Partial<MyPetsSources> = {};
+  let sources: Partial<MyPetsSources> = {};
   const sourceKeys = Object.keys(atomSources) as (keyof MyPetsSources)[];
   const ready = new Set<keyof MyPetsSources>();
 
@@ -512,31 +512,53 @@ function createMyPetsGlobal(): MyPetsGlobal {
 
   }
 
-  async function init(): Promise<void> {
+  function readSources(): MyPetsSources {
+    const slot = getMySlot();
+    const data = slot?.data;
+    const inventory = (data?.inventory?.items ?? []).filter(
+      (i: { itemType: string }) => i.itemType === "Pet"
+    ) as PetInventoryItem[];
+    const hutchStorage = (data?.inventory?.storages ?? []).find(
+      (s: { id?: string; decorId?: string }) => s.id === "PetHutch" || s.decorId === "PetHutch"
+    );
+    const hutchAllItems = (hutchStorage as { items?: unknown[] })?.items ?? [];
+    const hutchItems = (hutchAllItems as { itemType: string }[]).filter(
+      (i) => i.itemType === "Pet"
+    ) as unknown as PetInventoryItem[];
+    const active = (data?.petSlots ?? []) as PetSlot[];
+    const slotInfos = (slot?.petSlotInfos ?? {}) as Record<string, PetSlotInfo>;
+    const numHutchItems = (hutchStorage as { items?: unknown[] })?.items?.length ?? 0;
+    const activityLogs = (data?.activityLogs ?? []) as ActivityLogEntry[];
+
+    return { inventory, hutch: hutchItems, active, slotInfos, myNumPetHutchItems: numHutchItems, activityLogs };
+  }
+
+  function onStateChange(): void {
+    sources = readSources();
+    for (const key of sourceKeys) ready.add(key);
+    notify();
+  }
+
+  function init(): void {
     if (initialized) return;
 
     // Load persisted ability logs from storage
     abilityLogsStorage = loadAbilityLogs();
     console.log(`[myPets] Loaded ${abilityLogsStorage.length} ability logs from storage`);
 
-    const subscriptionPromises = sourceKeys.map(async (key) => {
-      const atomLabel = atomSources[key];
-
-      const unsub = await Store.subscribe(atomLabel, (value: unknown) => {
-        (sources as Record<string, unknown>)[key] = value;
-        ready.add(key);
-        notify();
-      });
-
-      unsubscribes.push(unsub);
-    });
-
-    await Promise.all(subscriptionPromises);
-    initialized = true;
-
+    // Read initial state
+    sources = readSources();
+    for (const key of sourceKeys) ready.add(key);
     if (ready.size === sourceKeys.length) {
       currentData = buildData(sources as MyPetsSources);
     }
+
+    // Subscribe to pet-related changes via WS
+    unsubscribes.push(wsSubscribe("pets", onStateChange));
+    unsubscribes.push(wsSubscribe("inventory", onStateChange));
+    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
+
+    initialized = true;
   }
 
   init();

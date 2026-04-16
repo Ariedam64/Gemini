@@ -29,13 +29,13 @@ export const teamCardCss = `
 }
 
 .team-card__disabled-message {
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 14px;
     margin-bottom: 12px;
 }
 
 .team-card__empty-state {
-    color: var(--muted);
+    color: var(--fg-muted);
     text-align: center;
     font-size: 14px;
 }
@@ -71,7 +71,7 @@ export const teamCardCss = `
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 6px;
-    color: var(--muted);
+    color: var(--fg-muted);
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;

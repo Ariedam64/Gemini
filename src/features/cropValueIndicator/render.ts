@@ -323,7 +323,8 @@ async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
     }
 
     const priceEl = await createPriceElement(price);
-    tooltip.element.appendChild(priceEl);
+    // Insert after the tooltip element (not inside) to avoid flex row layout issues
+    tooltip.element.insertAdjacentElement('afterend', priceEl);
     tracker.add(() => priceEl.remove());
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);

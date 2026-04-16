@@ -67,7 +67,7 @@ export function createExistingRuleSelector(
 
         if (existingRules.length === 0) {
             const empty = element("div", {
-                style: "padding: 20px; text-align: center; color: var(--muted); font-size: 14px;",
+                style: "padding: 20px; text-align: center; color: var(--fg-muted); font-size: 14px;",
             }, "No overall rules available");
             container.appendChild(empty);
         } else {

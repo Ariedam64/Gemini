@@ -30,7 +30,7 @@ export const featureCardCss = `
     border-radius: 8px;
     font-size: 11px;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--fg-muted);
     text-align: center;
 }
 
@@ -80,7 +80,7 @@ export const featureCardCss = `
 
 .timer-completion {
     flex: 1;
-    color: var(--muted);
+    color: var(--fg-muted);
     font-size: 11px;
 }
 
@@ -94,7 +94,7 @@ export const featureCardCss = `
 .empty-state {
     text-align: center;
     padding: 24px;
-    color: var(--muted);
+    color: var(--fg-muted);
     font-style: italic;
     font-size: 12px;
 }

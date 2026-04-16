@@ -6,8 +6,7 @@
  * @module globals/variables/myGarden/lifecycle
  */
 
-import { gardenView } from "../../../atoms";
-import { Store } from "../../../atoms/store";
+import { subscribe as wsSubscribe, getMySlot, getMySlotIndex } from "../../../state";
 import { getGameMap } from "../gameMap";
 import { deepEqual } from "../../core/reactive";
 import type {
@@ -163,28 +162,29 @@ export function createMyGardenGlobal(): MyGardenGlobal {
     }
   }
 
-  async function init(): Promise<void> {
+  function onStateChange(): void {
+    const slot = getMySlot();
+    sources.garden = (slot?.data?.garden ?? null) as GardenSources["garden"];
+    sources.mySlotIndex = getMySlotIndex();
+    ready.add("garden");
+    ready.add("mySlotIndex");
+    notify();
+  }
+
+  function init(): void {
     if (initialized) return;
 
-    const unsub1 = await gardenView.onChangeNow((value) => {
-      sources.garden = value;
-      ready.add("garden");
-      notify();
-    });
-    unsubscribes.push(unsub1);
-
-    const unsub2 = await Store.subscribe("myUserSlotIdxAtom", (value: unknown) => {
-      sources.mySlotIndex = value as number | null;
-      ready.add("mySlotIndex");
-      notify();
-    });
-    unsubscribes.push(unsub2);
-
-    initialized = true;
-
+    // Read initial state
+    onStateChange();
     if (ready.size === sourceCount) {
       currentData = buildData(sources as GardenSources, getGameMap);
     }
+
+    // Subscribe to garden changes via WS
+    unsubscribes.push(wsSubscribe("garden", onStateChange));
+    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
+
+    initialized = true;
   }
 
   init();

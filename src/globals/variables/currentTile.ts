@@ -1,5 +1,15 @@
+import {
+  subscribe as wsSubscribe,
+  getMySlot,
+  getMyPlayerId,
+  getGameState,
+  getRoomState,
+  getSelectedGrowSlotIndex,
+  setSelectedGrowSlotIndex,
+} from "../../state";
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
+import { getGameMap } from "./gameMap";
 import type {
   CurrentTileGlobalWithSubscriptions,
   CurrentTileData,
@@ -29,17 +39,6 @@ type CurrentTileSources = {
   gardenName: GardenPlayer | null;
   sortedSlotIndices: number[];
   currentGrowSlotIndex: number | null;
-};
-
-const atomSources = {
-  currentGardenTile: "myCurrentGardenTileAtom",
-  globalTileIndex: "myCurrentGlobalTileIndexAtom",
-  gardenObject: "myCurrentGardenObjectAtom",
-  isMature: "isGardenObjectMatureAtom",
-  isInMyGarden: "isInMyGardenAtom",
-  gardenName: "currentGardenPlayer",
-  sortedSlotIndices: "myCurrentSortedGrowSlotIndicesAtom",
-  currentGrowSlotIndex: "mySelectedSlotIdAtom",
 };
 
 const initialData: CurrentTileData = {
@@ -113,7 +112,7 @@ function buildPlantInfo(sources: CurrentTileSources): PlantInfo | null {
   return {
     species: plant.species,
     slots: plant.slots ?? [],
-    currentSlotIndex: sources.currentGrowSlotIndex,
+    currentSlotIndex: sources.currentGrowSlotIndex ?? (sorted.length > 0 ? sorted[0] : null),
     sortedSlotIndices: sorted,
     nextHarvestSlotIndex: sorted.length > 0 ? sorted[0] : null,
   };
@@ -195,92 +194,154 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
     garden: new Set(),
   };
 
-  const sources: Partial<CurrentTileSources> = {};
-  const sourceKeys = Object.keys(atomSources) as (keyof CurrentTileSources)[];
-  const ready = new Set<keyof CurrentTileSources>();
   let notifyScheduled = false;
+  // Real-time position from atom polling (game engine updates this every frame,
+  // WS only sends at tile boundaries). Prefer this over WS slot.position.
+  let localPosition: { x: number; y: number } | null = null;
+
+  function readSources(): CurrentTileSources {
+    const slot = getMySlot();
+    // Prefer real-time position from atom (frame-accurate) over WS position (tile-boundary)
+    const pos = localPosition ?? slot?.position ?? null;
+    const mapData = getGameMap()?.get();
+    const gameState = getGameState();
+    const myPid = getMyPlayerId();
+
+    let globalTileIndex: number | null = null;
+    if (pos && mapData) {
+      globalTileIndex = mapData.xyToGlobal(pos.x, pos.y);
+    }
+
+    let currentGardenTile: CurrentTileSources["currentGardenTile"] = null;
+    if (globalTileIndex !== null && mapData) {
+      const ownerSlotIdx = mapData.getTileOwner(globalTileIndex);
+      if (ownerSlotIdx !== null) {
+        const isDirt = mapData.isDirtTile(globalTileIndex);
+        const isBoardwalk = mapData.isBoardwalkTile(globalTileIndex);
+        if (isDirt || isBoardwalk) {
+          const slotData = mapData.userSlots[ownerSlotIdx];
+          const tiles = isDirt ? slotData?.dirtTiles : slotData?.boardwalkTiles;
+          const localTile = tiles?.find((t) => t.globalIndex === globalTileIndex);
+          currentGardenTile = {
+            tileType: isDirt ? "Dirt" : "Boardwalk",
+            userSlotIdx: ownerSlotIdx,
+            localTileIndex: localTile?.localIndex ?? 0,
+          };
+        }
+      }
+    }
+
+    let gardenObject: GardenTileObject | null = null;
+    if (currentGardenTile && gameState?.userSlots) {
+      const ownerSlot = gameState.userSlots[currentGardenTile.userSlotIdx];
+      const garden = ownerSlot?.data?.garden;
+      if (garden) {
+        const tileKey = String(currentGardenTile.localTileIndex);
+        gardenObject = (currentGardenTile.tileType === "Dirt"
+          ? garden.tileObjects?.[tileKey]
+          : garden.boardwalkTileObjects?.[tileKey]) as GardenTileObject ?? null;
+      }
+    }
+
+    let isMature = false;
+    if (gardenObject) {
+      if (gardenObject.objectType === "decor") {
+        isMature = true;
+      } else if ("maturedAt" in gardenObject) {
+        isMature = (gameState?.currentTime ?? Date.now()) >= (gardenObject as { maturedAt: number }).maturedAt;
+      }
+    }
+
+    const isInMyGarden = currentGardenTile !== null && myPid !== null
+      ? (() => {
+          const ownerSlot = gameState?.userSlots?.[currentGardenTile.userSlotIdx];
+          return ownerSlot?.playerId === myPid || ownerSlot?.databaseUserId === myPid;
+        })()
+      : false;
+
+    let gardenName: GardenPlayer | null = null;
+    if (currentGardenTile) {
+      const ownerSlot = gameState?.userSlots?.[currentGardenTile.userSlotIdx];
+      if (ownerSlot) {
+        const roomPlayer = getRoomState()?.players?.find(
+          (p) => p.id === ownerSlot.playerId || p.databaseUserId === ownerSlot.databaseUserId
+        );
+        if (roomPlayer) gardenName = roomPlayer as unknown as GardenPlayer;
+      }
+    }
+
+    let sortedSlotIndices: number[] = [];
+    if (gardenObject?.objectType === "plant") {
+      const slots = (gardenObject as PlantTileObject).slots ?? [];
+      sortedSlotIndices = slots
+        .map((s, i) => ({ i, endTime: s.endTime }))
+        .sort((a, b) => a.endTime - b.endTime)
+        .map((s) => s.i);
+    }
+
+    return {
+      currentGardenTile, globalTileIndex, gardenObject, isMature,
+      isInMyGarden, gardenName, sortedSlotIndices,
+      currentGrowSlotIndex: getSelectedGrowSlotIndex(),
+    };
+  }
 
   function flush(): void {
     notifyScheduled = false;
-    if (ready.size < sourceKeys.length) return;
-
-    const nextData = buildData(sources as CurrentTileSources);
-
+    const nextData = buildData(readSources());
     if (deepEqual(currentData, nextData)) return;
 
     previousData = currentData;
     currentData = nextData;
-
     if (!initialized) return;
 
-    for (const cb of listeners.all) {
-      cb(currentData, previousData);
-    }
+    for (const cb of listeners.all) cb(currentData, previousData);
 
     if (getStableKey(previousData) !== getStableKey(currentData)) {
-      for (const cb of listeners.stable) {
-        cb(currentData, previousData);
-      }
+      for (const cb of listeners.stable) cb(currentData, previousData);
     }
-
     if (isObjectChanged(previousData.object, currentData.object)) {
-      const event: ObjectChange = {
-        current: currentData.object,
-        previous: previousData.object,
-      };
-      for (const cb of listeners.object) {
-        cb(event);
-      }
+      for (const cb of listeners.object) cb({ current: currentData.object, previous: previousData.object });
     }
-
     if (isPlantInfoChanged(previousData.plant, currentData.plant)) {
-      const event: PlantInfoChange = {
-        current: currentData.plant,
-        previous: previousData.plant,
-      };
-      for (const cb of listeners.plantInfo) {
-        cb(event);
-      }
+      for (const cb of listeners.plantInfo) cb({ current: currentData.plant, previous: previousData.plant });
     }
-
     if (isGardenChanged(previousData.garden, currentData.garden)) {
-      const event: GardenChange = {
-        current: currentData.garden,
-        previous: previousData.garden,
-      };
-      for (const cb of listeners.garden) {
-        cb(event);
-      }
+      for (const cb of listeners.garden) cb({ current: currentData.garden, previous: previousData.garden });
     }
   }
 
-  function notify(): void {
-    if (notifyScheduled) return;
-    notifyScheduled = true;
-    queueMicrotask(flush);
+  function scheduleFlush(): void {
+    // Flush synchronously — the tile calculation is lightweight (O(1) map lookups)
+    // and deferring via microtask adds perceptible latency when moving between plants.
+    flush();
   }
 
-  async function init(): Promise<void> {
+  function init(): void {
     if (initialized) return;
+    const sources = readSources();
+    if (sources.globalTileIndex !== null) currentData = buildData(sources);
 
-    const subscriptionPromises = sourceKeys.map(async (key) => {
-      const atomLabel = atomSources[key];
+    unsubscribes.push(wsSubscribe("position", scheduleFlush));
+    unsubscribes.push(wsSubscribe("garden", scheduleFlush));
+    unsubscribes.push(wsSubscribe("mySlot", scheduleFlush));
+    unsubscribes.push(wsSubscribe("selection", scheduleFlush));
+    unsubscribes.push(wsSubscribe("players", scheduleFlush));
 
-      const unsub = await Store.subscribe(atomLabel, (value: unknown) => {
-        (sources as Record<string, unknown>)[key] = value;
-        ready.add(key);
-        notify();
-      });
+    // Poll these 2 atoms — they're updated by the game engine in real-time
+    // but only sent via WS at tile boundaries (position) or on click (slot).
+    // 2 atoms polled at 200ms = negligible overhead.
+    Store.subscribe("positionAtom", (value: unknown) => {
+      localPosition = value as { x: number; y: number } | null;
+      scheduleFlush();
+    }).then((unsub) => unsubscribes.push(unsub));
 
-      unsubscribes.push(unsub);
-    });
+    Store.subscribe("mySelectedSlotIdAtom", (value: unknown) => {
+      setSelectedGrowSlotIndex(value as number | null);
+      scheduleFlush();
+    }).then((unsub) => unsubscribes.push(unsub));
 
-    await Promise.all(subscriptionPromises);
     initialized = true;
-
-    if (ready.size === sourceKeys.length) {
-      currentData = buildData(sources as CurrentTileSources);
-    }
   }
 
   init();
@@ -292,7 +353,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     subscribe(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.all.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.all.delete(callback);
@@ -300,7 +361,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     subscribeStable(callback: (value: CurrentTileData, prev: CurrentTileData) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.stable.add(callback);
-      if (options?.immediate !== false && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate !== false && initialized && currentData !== initialData) {
         callback(currentData, currentData);
       }
       return () => listeners.stable.delete(callback);
@@ -308,7 +369,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     subscribeObject(callback: (event: ObjectChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.object.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ current: currentData.object, previous: currentData.object });
       }
       return () => listeners.object.delete(callback);
@@ -316,7 +377,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     subscribePlantInfo(callback: (event: PlantInfoChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.plantInfo.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ current: currentData.plant, previous: currentData.plant });
       }
       return () => listeners.plantInfo.delete(callback);
@@ -324,7 +385,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     subscribeGarden(callback: (event: GardenChange) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.garden.add(callback);
-      if (options?.immediate && initialized && ready.size === sourceKeys.length) {
+      if (options?.immediate && initialized && currentData !== initialData) {
         callback({ current: currentData.garden, previous: currentData.garden });
       }
       return () => listeners.garden.delete(callback);

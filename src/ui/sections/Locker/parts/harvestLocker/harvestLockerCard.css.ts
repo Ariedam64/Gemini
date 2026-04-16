@@ -34,7 +34,7 @@ export const harvestLockerCardCss = `
 }
 
 .harvest-locker-card__message {
-    color: var(--muted);
+    color: var(--fg-muted);
 }
 
 .harvest-locker-card__empty {

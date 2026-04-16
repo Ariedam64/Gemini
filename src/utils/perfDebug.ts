@@ -484,6 +484,124 @@ async function diagnose(): Promise<void> {
   console.log('[PerfDebug] Tip: close the Gemini HUD (Ctrl+Shift+U) then run __geminiPerf.profile(8000) to test without Shadow DOM.');
 }
 
+// ─── State Comparison (atoms vs WS) ───────────────────────────────────────────
+
+async function compareState(): Promise<void> {
+  const gemini = (pageWindow as any).Gemini;
+  if (!gemini) {
+    console.warn('[PerfDebug] Gemini API not found');
+    return;
+  }
+
+  const Store = gemini.Store;
+  const WSState = gemini.WSState;
+
+  if (!Store || !WSState) {
+    console.warn('[PerfDebug] Store or WSState not available');
+    return;
+  }
+
+  console.group('[PerfDebug] State Comparison: Atoms (polled) vs WS (real-time)');
+
+  const diffs: string[] = [];
+
+  function compare(label: string, atomVal: unknown, wsVal: unknown): void {
+    const atomStr = JSON.stringify(atomVal);
+    const wsStr = JSON.stringify(wsVal);
+    if (atomStr === wsStr) {
+      console.log(`  ✅ ${label} — match`);
+    } else {
+      console.log(`  ❌ ${label} — DIFF`);
+      console.log(`     Atom:`, atomVal);
+      console.log(`     WS  :`, wsVal);
+      diffs.push(label);
+    }
+  }
+
+  try {
+    // Weather
+    const atomWeather = await Store.select('weatherAtom');
+    const wsWeather = WSState.getGameState()?.weather ?? null;
+    compare('weather', atomWeather, wsWeather);
+  } catch (e) { console.log('  ⚠️ weather: error', e); }
+
+  try {
+    // My inventory
+    const atomInv = await Store.select('myInventoryAtom');
+    const wsSlot = WSState.getMySlot();
+    const wsInv = wsSlot?.data?.inventory ?? null;
+    compare('inventory.items.length', atomInv?.items?.length, wsInv?.items?.length);
+    compare('inventory.favoritedItemIds', atomInv?.favoritedItemIds, wsInv?.favoritedItemIds);
+  } catch (e) { console.log('  ⚠️ inventory: error', e); }
+
+  try {
+    // Coins
+    const atomData = await Store.select('myDataAtom') as Record<string, unknown> | null;
+    const wsSlot = WSState.getMySlot();
+    compare('coins', atomData?.coinsCount, wsSlot?.data?.coinsCount);
+  } catch (e) { console.log('  ⚠️ coins: error', e); }
+
+  try {
+    // Selected item index
+    const atomIdx = await Store.select('myValidatedSelectedItemIndexAtom');
+    const wsSlot = WSState.getMySlot();
+    const wsIdx = wsSlot?.notAuthoritative_selectedItemIndex ?? null;
+    compare('selectedItemIndex', atomIdx, wsIdx);
+  } catch (e) { console.log('  ⚠️ selectedItemIndex: error', e); }
+
+  try {
+    // Garden
+    const atomGarden = await Store.select('myDataAtom') as Record<string, unknown> | null;
+    const wsSlot = WSState.getMySlot();
+    const atomTiles = Object.keys((atomGarden as any)?.garden?.tileObjects ?? {}).length;
+    const wsTiles = Object.keys(wsSlot?.data?.garden?.tileObjects ?? {}).length;
+    compare('garden.tileObjects count', atomTiles, wsTiles);
+  } catch (e) { console.log('  ⚠️ garden: error', e); }
+
+  try {
+    // Pet slots
+    const atomPets = await Store.select('myPrimitivePetSlotsAtom') as unknown[];
+    const wsSlot = WSState.getMySlot();
+    const wsPets = wsSlot?.data?.petSlots ?? [];
+    compare('petSlots.length', atomPets?.length, wsPets.length);
+  } catch (e) { console.log('  ⚠️ petSlots: error', e); }
+
+  try {
+    // Shops
+    const atomShops = await Store.select('stateShopsView') as Record<string, unknown> | null;
+    const wsShops = WSState.getGameState()?.shops ?? null;
+    for (const shopType of ['seed', 'tool', 'egg', 'decor']) {
+      const atomShop = (atomShops as any)?.[shopType];
+      const wsShop = (wsShops as any)?.[shopType];
+      compare(`shops.${shopType}.inventory.length`, atomShop?.inventory?.length, wsShop?.inventory?.length);
+      compare(`shops.${shopType}.secondsUntilRestock`, atomShop?.secondsUntilRestock, wsShop?.secondsUntilRestock);
+    }
+  } catch (e) { console.log('  ⚠️ shops: error', e); }
+
+  try {
+    // Position
+    const atomPos = await Store.select('positionAtom') as { x: number; y: number } | null;
+    const wsSlot = WSState.getMySlot();
+    const wsPos = wsSlot?.position ?? null;
+    compare('position', atomPos, wsPos);
+  } catch (e) { console.log('  ⚠️ position: error', e); }
+
+  try {
+    // Player slot index
+    const atomIdx = await Store.select('myUserSlotIdxAtom');
+    const wsIdx = WSState.getMySlotIndex();
+    compare('mySlotIndex', atomIdx, wsIdx);
+  } catch (e) { console.log('  ⚠️ mySlotIndex: error', e); }
+
+  if (diffs.length === 0) {
+    console.log('\n  🎉 All values match! WS state is in sync with atoms.');
+  } else {
+    console.log(`\n  ⚠️ ${diffs.length} difference(s) found: ${diffs.join(', ')}`);
+  }
+
+  console.groupEnd();
+}
+
 // ─── Install ──────────────────────────────────────────────────────────────────
 
 export function installPerfDebug(): void {
@@ -505,6 +623,7 @@ export function installPerfDebug(): void {
     resumeIntervals: resumeAllIntervals,
     observers: reportObservers,
     killObservers: disconnectAllObservers,
+    compareState,
     trackIntervals,
     stopTrackIntervals,
   });
