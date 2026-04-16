@@ -139,6 +139,7 @@ export const hudCss = `
     height: 38px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 0 14px;
     border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
@@ -166,7 +167,6 @@ export const hudCss = `
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
     transition: color .2s ease;
-    flex: 1;
   }
 
   .gemini-footer--has-update .gemini-footer__version {
