@@ -240,9 +240,26 @@ export function startInjectAlertButton(opts: AlertButtonOptions): AlertButtonHan
         changed = true;
       }
 
-      // Append wrapper as last child in toolbar
+      // Insert before the Gemini HUD button so alert appears above it.
+      // Fall back to appending if Gemini button isn't injected yet.
+      const geminiAnchor = (
+        root.querySelector('[data-mgh-wrapper="true"]') ??
+        root.querySelector('[data-mgh-btn="true"]')
+      ) as HTMLElement | null;
+
       if (mountedWrap && mountedWrap.parentElement !== root) {
-        root.appendChild(mountedWrap);
+        if (geminiAnchor && geminiAnchor.parentElement === root) {
+          root.insertBefore(mountedWrap, geminiAnchor);
+        } else {
+          root.appendChild(mountedWrap);
+        }
+        changed = true;
+      } else if (!mountedWrap && mountedBtn && mountedBtn.parentElement !== root) {
+        if (geminiAnchor && geminiAnchor.parentElement === root) {
+          root.insertBefore(mountedBtn, geminiAnchor);
+        } else {
+          root.appendChild(mountedBtn);
+        }
         changed = true;
       }
 
