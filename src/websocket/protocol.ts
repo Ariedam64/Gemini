@@ -98,6 +98,7 @@ export const ClientToServerMessageType = {
   MovePetSlot: "MovePetSlot",
   NamePet: "NamePet",
   SellPet: "SellPet",
+  UpgradePetHutch: "UpgradePetHutch",
 
   // Seasonal / misc
   ThrowSnowball: "ThrowSnowball",

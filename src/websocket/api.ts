@@ -261,6 +261,10 @@ export function sellPet(itemId: string, win: unknown = pageWindow): SendResult {
   return send(T.SellPet, { scope: "Quinoa", itemId }, win as typeof pageWindow);
 }
 
+export function upgradePetHutch(win: unknown = pageWindow): SendResult {
+  return send(T.UpgradePetHutch, { scope: "Quinoa" }, win as typeof pageWindow);
+}
+
 // -----------------------------
 // Seasonal / misc
 // -----------------------------
