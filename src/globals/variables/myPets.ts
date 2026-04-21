@@ -47,6 +47,8 @@ const atomSources = {
   active: "myPrimitivePetSlotsAtom",
   slotInfos: "myPetSlotInfosAtom",
   myNumPetHutchItems: "myNumPetHutchItemsAtom",
+  // Same atom as `hutch` — both populated together in readSources(). Kept as a
+  // separate entry so MyPetsSources stays self-documenting.
   hutchCapacityLevel: "myPetHutchPetItemsAtom",
   activityLogs: "myDataAtom",
 };
