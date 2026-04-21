@@ -106,6 +106,7 @@ export type PetInventoryItem = {
   mutations: string[];
   targetScale: number;
   abilities: string[];
+  sourceEggId: string;
 };
 
 export type DecorInventoryItem = {
@@ -152,6 +153,7 @@ export type PetSlot = {
   mutations: string[];
   targetScale: number;
   abilities: string[];
+  sourceEggId: string | null;
 };
 
 export type PetSlotInfo = {
