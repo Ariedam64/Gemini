@@ -204,3 +204,83 @@ export function calculateStrengthProgress(
   if (maxStrength <= 0) return 1;
   return Math.min(1, currentStrength / maxStrength);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dust value (sell price in Magic Dust)
+// Source: function mg in QuinoaView-ClnqnHhW.js
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RARITY_DUST_MULT: Record<string, number> = {
+  Common: 1,
+  Uncommon: 2,
+  Rare: 5,
+  Legendary: 10,
+  Mythic: 50,
+  Divine: 50,
+  Celestial: 50,
+};
+
+function getHatchChanceDustMult(chancePct: number): number {
+  if (chancePct >= 51) return 1;
+  if (chancePct >= 11) return 2;
+  return 5;
+}
+
+function getMutationDustMult(mutations: readonly string[]): number {
+  if (mutations.includes("Rainbow")) return 50;
+  if (mutations.includes("Gold")) return 25;
+  return 1;
+}
+
+export interface PetDustValueInput {
+  petSpecies: string;
+  sourceEggId: string | null;
+  xp: number;
+  targetScale: number;
+  mutations: readonly string[];
+}
+
+/**
+ * Compute the Magic Dust value a pet would sell for.
+ *
+ * Formula: floor(100 * rarityMult * hatchMult * mutationMult * scaleMult)
+ *   rarityMult    – from pet species rarity in MGData
+ *   hatchMult     – from pet's hatch chance in its source egg
+ *   mutationMult  – Rainbow=50, Gold=25, else 1
+ *   scaleMult     – (currentStrength * targetScale) / maxStrength
+ *
+ * Returns 0 if pet data is missing.
+ */
+export function calculatePetDustValue(pet: PetDustValueInput): number {
+  const petsData = MGData.get("pets") as Record<string, { rarity?: string }> | null;
+  const eggsData = MGData.get("eggs") as Record<
+    string,
+    { faunaSpawnWeights?: Record<string, number> }
+  > | null;
+
+  const rarity = petsData?.[pet.petSpecies]?.rarity;
+  const rarityMult = (rarity ? RARITY_DUST_MULT[rarity] : undefined) ?? 1;
+
+  let chancePct = 100;
+  const weights = pet.sourceEggId
+    ? eggsData?.[pet.sourceEggId]?.faunaSpawnWeights
+    : undefined;
+  if (weights) {
+    const total = Object.values(weights).reduce<number>(
+      (sum, weight) => sum + (weight ?? 0),
+      0
+    );
+    const thisWeight = weights[pet.petSpecies] ?? 0;
+    chancePct = total > 0 ? (thisWeight / total) * 100 : 100;
+  }
+  const chanceMult = getHatchChanceDustMult(chancePct);
+
+  const mutationMult = getMutationDustMult(pet.mutations);
+
+  const maxStrength = calculateMaxStrength(pet.petSpecies, pet.targetScale);
+  if (maxStrength <= 0) return 0;
+  const currentStrength = calculateCurrentStrength(pet.petSpecies, pet.xp, maxStrength);
+  const scaleMult = (currentStrength * pet.targetScale) / maxStrength;
+
+  return Math.floor(100 * rarityMult * chanceMult * mutationMult * scaleMult);
+}
