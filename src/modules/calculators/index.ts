@@ -14,6 +14,7 @@
 export * from './logic/crop';
 export * from './logic/pet';
 export * from './logic/mutation';
+export * from './logic/petHutch';
 // Note: xp and feed are exported as namespaces only (via MGCalculators.xp/feed)
 // to avoid naming conflicts with pet.ts functions
 
@@ -36,7 +37,13 @@ import {
   isPetMature,
   calculateStrengthPerHour,
   getPetData,
+  calculatePetDustValue,
 } from './logic/pet';
+
+import {
+  calculateHutchCapacity,
+  getNextHutchUpgrade,
+} from './logic/petHutch';
 
 import {
   calculateMutationMultiplier,
@@ -78,6 +85,13 @@ export const MGCalculators = {
     isMature: isPetMature,
     calculateStrengthPerHour: calculateStrengthPerHour,
     getData: getPetData,
+    calculateDustValue: calculatePetDustValue,
+  },
+
+  // ─── Pet Hutch Calculators ───
+  petHutch: {
+    calculateCapacity: calculateHutchCapacity,
+    getNextUpgrade: getNextHutchUpgrade,
   },
 
   // ─── Mutation Calculators ───
