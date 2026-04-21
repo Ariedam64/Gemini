@@ -330,6 +330,7 @@ export type Player = {
 
   // Économie
   coins: number;
+  magicDust: number;
   inventory: unknown;
   shopPurchases: unknown;
 

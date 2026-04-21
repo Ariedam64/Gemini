@@ -34,6 +34,7 @@ type RawUserSlot = {
   data: {
     schemaVersion: number;
     coinsCount: number;
+    magicDustCount: number;
     inventory: unknown;
     garden: unknown;
     petSlots: unknown[];
@@ -106,6 +107,7 @@ function buildPlayer(
 
     // Économie
     coins: slotData?.coinsCount ?? 0,
+    magicDust: slotData?.magicDustCount ?? 0,
     inventory: slotData?.inventory ?? null,
     shopPurchases: slotData?.shopPurchases ?? null,
 
