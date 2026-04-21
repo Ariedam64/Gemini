@@ -24,7 +24,12 @@ import {
   calculateMaxStrength,
   calculateCurrentStrength,
   isPetMature,
+  calculatePetDustValue,
 } from "../../modules/calculators/logic/pet";
+import {
+  calculateHutchCapacity,
+  getNextHutchUpgrade,
+} from "../../modules/calculators/logic/petHutch";
 
 type MyPetsSources = {
   inventory: PetInventoryItem[];
@@ -32,6 +37,7 @@ type MyPetsSources = {
   active: PetSlot[];
   slotInfos: Record<string, PetSlotInfo>;
   myNumPetHutchItems: number;
+  hutchCapacityLevel: number;
   activityLogs: ActivityLogEntry[];
 };
 
@@ -41,6 +47,7 @@ const atomSources = {
   active: "myPrimitivePetSlotsAtom",
   slotInfos: "myPetSlotInfosAtom",
   myNumPetHutchItems: "myNumPetHutchItemsAtom",
+  hutchCapacityLevel: "myPetHutchPetItemsAtom",
   activityLogs: "myDataAtom",
 };
 
@@ -55,6 +62,14 @@ function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutc
   const petData = pets?.[item.petSpecies];
   const coinsToFullyReplenishHunger = petData?.coinsToFullyReplenishHunger ?? 1;
   const hungerPercent = (item.hunger / coinsToFullyReplenishHunger) * 100;
+
+  const dustValue = calculatePetDustValue({
+    petSpecies: item.petSpecies,
+    sourceEggId: item.sourceEggId,
+    xp: item.xp,
+    targetScale: item.targetScale,
+    mutations: item.mutations,
+  });
 
   return {
     id: item.id,
@@ -73,6 +88,8 @@ function fromInventoryItem(item: PetInventoryItem, location: "inventory" | "hutc
     currentStrength,
     maxStrength,
     isMature,
+    sourceEggId: item.sourceEggId,
+    dustValue,
   };
 }
 
@@ -92,6 +109,14 @@ function fromPrimitiveSlot(slot: PetSlot, slotInfos: Record<string, PetSlotInfo>
   const coinsToFullyReplenishHunger = petData?.coinsToFullyReplenishHunger ?? 1;
   const hungerPercent = (slot.hunger / coinsToFullyReplenishHunger) * 100;
 
+  const dustValue = calculatePetDustValue({
+    petSpecies: slot.petSpecies,
+    sourceEggId: slot.sourceEggId,
+    xp: slot.xp,
+    targetScale: slot.targetScale,
+    mutations: slot.mutations,
+  });
+
   return {
     id: slot.id,
     petSpecies: slot.petSpecies,
@@ -109,6 +134,8 @@ function fromPrimitiveSlot(slot: PetSlot, slotInfos: Record<string, PetSlotInfo>
     currentStrength,
     maxStrength,
     isMature,
+    sourceEggId: slot.sourceEggId,
+    dustValue,
   };
 }
 
@@ -254,7 +281,9 @@ function buildData(sources: MyPetsSources): MyPetsData {
   const gardenData = myGarden.get();
   const hasHutch = gardenData.decors.all.some((decor) => decor.decorId === "PetHutch");
   const currentItems = sources.myNumPetHutchItems ?? 0;
-  const maxItems = 25;
+  const capacityLevel = sources.hutchCapacityLevel ?? 0;
+  const maxItems = calculateHutchCapacity(capacityLevel);
+  const nextUpgrade = getNextHutchUpgrade(capacityLevel);
 
   return {
     all,
@@ -273,6 +302,8 @@ function buildData(sources: MyPetsSources): MyPetsData {
       hasHutch,
       currentItems,
       maxItems,
+      capacityLevel,
+      nextUpgrade,
     },
     abilityLogs: [...abilityLogsStorage],
   };
@@ -282,7 +313,13 @@ const initialData: MyPetsData = {
   all: [],
   byLocation: { inventory: [], hutch: [], active: [] },
   counts: { inventory: 0, hutch: 0, active: 0, total: 0 },
-  hutch: { hasHutch: false, currentItems: 0, maxItems: 25 },
+  hutch: {
+    hasHutch: false,
+    currentItems: 0,
+    maxItems: 25,
+    capacityLevel: 0,
+    nextUpgrade: null,
+  },
   abilityLogs: [],
 };
 
@@ -528,9 +565,19 @@ function createMyPetsGlobal(): MyPetsGlobal {
     const active = (data?.petSlots ?? []) as PetSlot[];
     const slotInfos = (slot?.petSlotInfos ?? {}) as Record<string, PetSlotInfo>;
     const numHutchItems = (hutchStorage as { items?: unknown[] })?.items?.length ?? 0;
+    const hutchCapacityLevel =
+      (hutchStorage as { capacityLevel?: number })?.capacityLevel ?? 0;
     const activityLogs = (data?.activityLogs ?? []) as ActivityLogEntry[];
 
-    return { inventory, hutch: hutchItems, active, slotInfos, myNumPetHutchItems: numHutchItems, activityLogs };
+    return {
+      inventory,
+      hutch: hutchItems,
+      active,
+      slotInfos,
+      myNumPetHutchItems: numHutchItems,
+      hutchCapacityLevel,
+      activityLogs,
+    };
   }
 
   function onStateChange(): void {

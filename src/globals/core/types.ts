@@ -114,6 +114,8 @@ export type UnifiedPet = {
   currentStrength: number;
   maxStrength: number;
   isMature: boolean;
+  sourceEggId: string | null;
+  dustValue: number;
 };
 
 export type MyPetsData = {
@@ -133,6 +135,12 @@ export type MyPetsData = {
     hasHutch: boolean;
     currentItems: number;
     maxItems: number;
+    capacityLevel: number;
+    nextUpgrade: {
+      targetLevel: number;
+      dustCost: number;
+      capacityAfter: number;
+    } | null;
   };
   abilityLogs: AbilityLog[];
 };
