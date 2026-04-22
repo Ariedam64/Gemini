@@ -26,6 +26,8 @@ import { MGAriesAPI } from "../../features/ariesAPI";
 import { MGHarvestLocker } from "../../features/harvestLocker";
 import { MGEggLocker } from "../../features/eggLocker";
 import { MGDecorLocker } from "../../features/decorLocker";
+import { MGAutoStockSeedSilo } from "../../features/autoStockSeedSilo";
+import { MGAutoStockDecorShed } from "../../features/autoStockDecorShed";
 import { getRegistry } from "../inject/core/registry";
 import { startAlertInjector } from "../inject/alert";
 
@@ -205,6 +207,8 @@ export function initFeatures(loader: LoaderController): void {
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
     { name: "EggLocker", init: MGEggLocker.init.bind(MGEggLocker) },
     { name: "DecorLocker", init: MGDecorLocker.init.bind(MGDecorLocker) },
+    { name: "AutoStockSeedSilo", init: MGAutoStockSeedSilo.init.bind(MGAutoStockSeedSilo) },
+    { name: "AutoStockDecorShed", init: MGAutoStockDecorShed.init.bind(MGAutoStockDecorShed) },
   ];
 
   let initializedCount = 0;
@@ -250,6 +254,32 @@ export function initFeatures(loader: LoaderController): void {
     });
 
     // EggLockerInject and DecorLockerInject are now managed directly by their features
+
+    registry.register({
+      id: 'autoStockSeedSilo',
+      name: 'Auto-Stock Seed Silo',
+      description: 'Whenever a seed in your inventory matches a species already in the silo, move it in automatically.',
+      injection: {
+        init: MGAutoStockSeedSilo.init.bind(MGAutoStockSeedSilo),
+        destroy: MGAutoStockSeedSilo.destroy.bind(MGAutoStockSeedSilo),
+        isEnabled: MGAutoStockSeedSilo.isEnabled.bind(MGAutoStockSeedSilo),
+      },
+      storageKey: FEATURE_KEYS.AUTO_STOCK_SEED_SILO,
+      defaultEnabled: false,
+    });
+
+    registry.register({
+      id: 'autoStockDecorShed',
+      name: 'Auto-Stock Decor Shed',
+      description: 'Whenever a decor in your inventory matches a decor already in the shed, move it in automatically.',
+      injection: {
+        init: MGAutoStockDecorShed.init.bind(MGAutoStockDecorShed),
+        destroy: MGAutoStockDecorShed.destroy.bind(MGAutoStockDecorShed),
+        isEnabled: MGAutoStockDecorShed.isEnabled.bind(MGAutoStockDecorShed),
+      },
+      storageKey: FEATURE_KEYS.AUTO_STOCK_DECOR_SHED,
+      defaultEnabled: false,
+    });
 
     // Initialize all enabled injections
     registry.initAll();

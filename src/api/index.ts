@@ -34,6 +34,8 @@ import { MGAriesAPI } from "../features/ariesAPI";
 import { MGHarvestLocker } from "../features/harvestLocker";
 import { MGEggLocker } from "../features/eggLocker";
 import { MGDecorLocker } from "../features/decorLocker";
+import { MGAutoStockSeedSilo } from "../features/autoStockSeedSilo";
+import { MGAutoStockDecorShed } from "../features/autoStockDecorShed";
 import { MGPets, MGTracker } from "../features";
 
 export const GeminiAPI = {
@@ -80,6 +82,8 @@ export const GeminiAPI = {
     HarvestLocker: MGHarvestLocker,
     EggLocker: MGEggLocker,
     DecorLocker: MGDecorLocker,
+    AutoStockSeedSilo: MGAutoStockSeedSilo,
+    AutoStockDecorShed: MGAutoStockDecorShed,
   },
 
   Utils: {
