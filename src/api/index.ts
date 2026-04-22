@@ -3,6 +3,7 @@ import { Store } from "../atoms/store";
 import { WSState } from "../state";
 import { Globals, getGlobals, initGlobals, destroyGlobals } from "../globals";
 import * as WebSocketAPI from "../websocket/api";
+import { getNextFreeStorageIndex } from "../utils/gameStorage";
 import {
   MGVersion,
   MGAssets,
@@ -79,6 +80,10 @@ export const GeminiAPI = {
     HarvestLocker: MGHarvestLocker,
     EggLocker: MGEggLocker,
     DecorLocker: MGDecorLocker,
+  },
+
+  Utils: {
+    getNextFreeStorageIndex,
   },
 
   WebSocket: {
