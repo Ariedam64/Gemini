@@ -253,7 +253,7 @@ export type GameMapGlobal = {
 // MY INVENTORY GLOBAL
 // =============================================================================
 
-import type { InventoryItem } from "../../atoms/types";
+import type { InventoryItem, ItemStorage } from "../../atoms/types";
 
 export type SelectedItem = {
   index: number;
@@ -262,6 +262,7 @@ export type SelectedItem = {
 
 export type MyInventoryData = {
   items: InventoryItem[];
+  storages: ItemStorage[];
   favoritedItemIds: string[];
   count: number;
   isFull: boolean;

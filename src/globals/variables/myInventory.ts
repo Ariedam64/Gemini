@@ -10,18 +10,20 @@ import type {
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
-import type { Inventory, InventoryItem } from "../../atoms/types";
+import type { Inventory, InventoryItem, ItemStorage } from "../../atoms/types";
 
 type MyInventorySources = {
   inventory: Inventory | null;
   isFull: boolean;
   selectedItemIndex: number | null;
+  storages: ItemStorage[];
 };
 
 const MAX_INVENTORY_SIZE = 100; // Game max inventory slots
 
 const initialData: MyInventoryData = {
   items: [],
+  storages: [],
   favoritedItemIds: [],
   count: 0,
   isFull: false,
@@ -44,6 +46,7 @@ function buildData(sources: MyInventorySources): MyInventoryData {
 
   return {
     items,
+    storages: sources.storages ?? [],
     favoritedItemIds,
     count: items.length,
     isFull: sources.isFull ?? false,
@@ -71,8 +74,22 @@ function getStableKey(data: MyInventoryData): string {
     return JSON.stringify(item);
   });
 
+  const storageKeys = data.storages.map((s) => {
+    const id = (s as { id?: string; decorId?: string }).id ?? (s as { decorId?: string }).decorId ?? "unknown";
+    const itemSig = (s.items ?? [])
+      .map((it) => {
+        if ("species" in it && it.itemType === "Seed") return `S:${it.species}:${it.quantity}`;
+        if ("decorId" in it && it.itemType === "Decor") return `D:${it.decorId}:${it.quantity}`;
+        if ("id" in it) return `P:${it.id}`;
+        return "?";
+      })
+      .join(",");
+    return `${id}[${itemSig}]`;
+  });
+
   return JSON.stringify({
     itemKeys,
+    storageKeys,
     favoritedItemIds: data.favoritedItemIds,
     isFull: data.isFull,
     selectedItemIndex: data.selectedItem?.index ?? null,
@@ -160,10 +177,12 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
     const inventory = slot?.data?.inventory ?? null;
     const items = inventory?.items ?? [];
     const selectedItemIndex = slot?.notAuthoritative_selectedItemIndex ?? null;
+    const storages = (inventory?.storages ?? []) as ItemStorage[];
     return {
       inventory,
       isFull: items.length >= MAX_INVENTORY_SIZE,
       selectedItemIndex,
+      storages,
     };
   }
 
