@@ -9,7 +9,6 @@
 
 import { getMyInventory } from "../../../globals";
 import { putItemInStorage } from "../../../websocket/api";
-import { getNextFreeStorageIndex } from "../../../utils/gameStorage";
 import { STORAGE_ID } from "../types";
 import type { InventoryItem, ItemStorage } from "../../../atoms/types";
 import type { MyInventoryData } from "../../../globals/core/types";
@@ -31,20 +30,22 @@ function runScan(data: MyInventoryData): void {
   const silo = findSilo(data.storages);
   if (!silo) return;
 
-  const presentSpecies = new Set<string>();
-  for (const item of silo.items ?? []) {
-    if ("species" in item && item.itemType === "Seed") {
-      presentSpecies.add(item.species);
+  // Map species → index of the existing stack (server stacks by target index).
+  const speciesToIndex = new Map<string, number>();
+  silo.items.forEach((siloItem, index) => {
+    if ("species" in siloItem && siloItem.itemType === "Seed") {
+      if (!speciesToIndex.has(siloItem.species)) {
+        speciesToIndex.set(siloItem.species, index);
+      }
     }
-  }
-  if (presentSpecies.size === 0) return;
-
-  const toIndex = getNextFreeStorageIndex(silo);
+  });
+  if (speciesToIndex.size === 0) return;
 
   for (const item of data.items) {
     if (!isSeedItem(item)) continue;
-    if (!presentSpecies.has(item.species)) continue;
-    putItemInStorage(item.species, STORAGE_ID, toIndex);
+    const targetIndex = speciesToIndex.get(item.species);
+    if (targetIndex === undefined) continue;
+    putItemInStorage(item.species, STORAGE_ID, targetIndex);
   }
 }
 

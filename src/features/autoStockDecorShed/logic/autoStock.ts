@@ -7,7 +7,6 @@
 
 import { getMyInventory } from "../../../globals";
 import { putItemInStorage } from "../../../websocket/api";
-import { getNextFreeStorageIndex } from "../../../utils/gameStorage";
 import { STORAGE_ID } from "../types";
 import type { InventoryItem, ItemStorage } from "../../../atoms/types";
 import type { MyInventoryData } from "../../../globals/core/types";
@@ -29,20 +28,22 @@ function runScan(data: MyInventoryData): void {
   const shed = findShed(data.storages);
   if (!shed) return;
 
-  const presentDecors = new Set<string>();
-  for (const item of shed.items ?? []) {
-    if ("decorId" in item && item.itemType === "Decor") {
-      presentDecors.add(item.decorId);
+  // Map decorId → index of the existing stack (server stacks by target index).
+  const decorToIndex = new Map<string, number>();
+  shed.items.forEach((shedItem, index) => {
+    if ("decorId" in shedItem && shedItem.itemType === "Decor") {
+      if (!decorToIndex.has(shedItem.decorId)) {
+        decorToIndex.set(shedItem.decorId, index);
+      }
     }
-  }
-  if (presentDecors.size === 0) return;
-
-  const toIndex = getNextFreeStorageIndex(shed);
+  });
+  if (decorToIndex.size === 0) return;
 
   for (const item of data.items) {
     if (!isDecorItem(item)) continue;
-    if (!presentDecors.has(item.decorId)) continue;
-    putItemInStorage(item.decorId, STORAGE_ID, toIndex);
+    const targetIndex = decorToIndex.get(item.decorId);
+    if (targetIndex === undefined) continue;
+    putItemInStorage(item.decorId, STORAGE_ID, targetIndex);
   }
 }
 
