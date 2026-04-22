@@ -257,8 +257,8 @@ export function initFeatures(loader: LoaderController): void {
 
     registry.register({
       id: 'autoStockSeedSilo',
-      name: 'Auto-Stock Seed Silo',
-      description: 'Whenever a seed in your inventory matches a species already in the silo, move it in automatically.',
+      name: 'Seed Silo',
+      description: 'Auto-stores matching seeds into the silo.',
       injection: {
         init: MGAutoStockSeedSilo.init.bind(MGAutoStockSeedSilo),
         destroy: MGAutoStockSeedSilo.destroy.bind(MGAutoStockSeedSilo),
@@ -270,8 +270,8 @@ export function initFeatures(loader: LoaderController): void {
 
     registry.register({
       id: 'autoStockDecorShed',
-      name: 'Auto-Stock Decor Shed',
-      description: 'Whenever a decor in your inventory matches a decor already in the shed, move it in automatically.',
+      name: 'Decor Shed',
+      description: 'Auto-stores matching decors into the shed.',
       injection: {
         init: MGAutoStockDecorShed.init.bind(MGAutoStockDecorShed),
         destroy: MGAutoStockDecorShed.destroy.bind(MGAutoStockDecorShed),
