@@ -25,15 +25,17 @@ Two reactive QoL features, ported from the `mgafk-android` companion app:
 
 ## Algorithm (identical for both features, just different targets)
 
-**Trigger:** subscribe to `mySlot` WS bus (same pattern as `myPets`). Fires on every relevant atom change — which is what the Android reference relies on.
+**Data source:** `Globals.myInventory` — extended to expose `storages` (see below). Features subscribe via `myInventory.subscribeStable(...)` — no direct atom access from feature code.
 
-**Per fire:**
-1. Read `slot.data.inventory` via `getMySlot()`.
-2. Find the target storage in `inventory.storages` by matching `storage.decorId === "SeedSilo"` (or `"DecorShed"`). Skip silently if not found.
+**Trigger:** any inventory change (items or storages).
+
+**Per fire (and once immediately on `init()` for current state):**
+1. Read `data.storages` from `myInventory`.
+2. Find the target storage by matching `storage.decorId === "SeedSilo"` (or `"DecorShed"`) — fall back to `storage.id` for safety (same dual-match as `myPets.readSources`). Skip silently if not found.
 3. Build a set of already-present keys from that storage's items:
    - SeedSilo → set of `species` for items where `itemType === "Seed"`.
    - DecorShed → set of `decorId` for items where `itemType === "Decor"`.
-4. Scan inventory items. For each item whose key is in the set:
+4. Scan `data.items` (inventory). For each item whose key is in the set:
    - Call `WebSocketAPI.putItemInStorage(itemId, storageId, toStorageIndex, quantity?)`
    - `itemId = species` for seeds, `itemId = decorId` for decors (matches the Android send).
    - `storageId = "SeedSilo"` or `"DecorShed"`.
@@ -42,7 +44,23 @@ Two reactive QoL features, ported from the `mgafk-android` companion app:
 
 **No debounce, no dedup.** A burst of picks will fire multiple WS messages. This matches Android.
 
+### Immediate-on-enable behavior
+
+- `init()` runs one full scan pass synchronously on the current `myInventory` snapshot before registering the subscription. That handles the case where the user enables the feature while already holding matching items.
+- Same on mod startup if the feature was persisted as `enabled: true`.
+- `setEnabled(true)` calls `destroy()` then `init()` — so it re-runs the immediate scan too.
+
 ## Gemini integration
+
+### Extend `myInventory` global to expose `storages`
+
+`myInventory.readSources()` already reads `slot.data.inventory` in full — we just don't expose `storages` in the output. Two small additions:
+
+- `MyInventoryData.storages: ItemStorage[]` (type defined in `src/atoms/types.ts`, already imported in the file).
+- Populate it in `buildData()` from `inventory?.storages ?? []`.
+- Include storages in `getStableKey()` so `subscribeStable` fires when storages change (not just items). Key = `storages.map(s => \`${s.id}:${s.items.length}:${s.capacityLevel ?? 0}\`)` — length + capacityLevel is enough to detect meaningful shape changes.
+
+No other globals are touched. `initialData.storages = []`.
 
 ### Feature files (standard `src/features/<name>/` pattern)
 
@@ -58,9 +76,11 @@ src/features/autoStockSeedSilo/
 Same structure for `src/features/autoStockDecorShed/`.
 
 **Implementation details:**
-- `init()` — idempotent; if `config.enabled === false`, return early. Otherwise subscribe to WS bus (`"inventory"` and `"mySlot"`) and run the scan immediately for current state.
+- `init()` — idempotent; if `config.enabled === false`, return early. Otherwise:
+  1. Run one immediate scan against `myInventory.get()`.
+  2. Subscribe with `myInventory.subscribeStable(onChange)` where `onChange` re-runs the scan.
 - `destroy()` — unsubscribe, reset internal state.
-- `setEnabled(on: boolean)` — persist config, call `destroy()` then `init()` to pick up the change.
+- `setEnabled(on: boolean)` — persist config, call `destroy()` then `init()` to pick up the change (which re-runs the immediate scan if turning on).
 - `isEnabled()` — returns `loadConfig().enabled`.
 
 ### Registration in `InjectionRegistry`
@@ -110,6 +130,8 @@ Toggles via UI ↔ API stay in sync because both route through the feature's `se
 | `src/api/index.ts` | expose both features |
 | `src/ui/loader/bootstrap.ts` | initialize features + register with InjectionRegistry |
 | `src/utils/storage.ts` | add `FEATURE_KEYS.AUTO_STOCK_SEED_SILO` and `.AUTO_STOCK_DECOR_SHED` |
+| `src/globals/variables/myInventory.ts` | expose `storages` in `MyInventoryData` |
+| `src/globals/core/types.ts` | add `storages: ItemStorage[]` to `MyInventoryData` |
 
 ## Verification
 
