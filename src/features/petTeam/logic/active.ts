@@ -103,7 +103,6 @@ export function activateTeam(team: PetTeam): void {
     const currentPetIds = currentActivePets.map((p) => p.id).sort();
 
     if (JSON.stringify(targetPetIds) === JSON.stringify(currentPetIds)) {
-        console.log('[PetTeam] Team already active');
         return;
     }
 
@@ -118,7 +117,6 @@ export function activateTeam(team: PetTeam): void {
 
     // Update active team ID
     setActiveTeamId(team.id);
-    console.log('[PetTeam] Team activated successfully');
 }
 
 function swapTeamPetByPet(
@@ -130,25 +128,19 @@ function swapTeamPetByPet(
     let hutchSpaceRemaining = initialHutchSpace;
     let placementTileOffset = 0;
 
-    console.log(`[PetTeam] Starting swap with ${initialHutchSpace} hutch spaces available`);
-
     // Process each slot (0, 1, 2) sequentially
     for (let slotIndex = 0; slotIndex < MAX_PETS_PER_TEAM; slotIndex++) {
         const targetPetId = targetPetIds[slotIndex];
         const currentPetAtSlot = currentActivePets[slotIndex] ?? null;
 
-        console.log(`[PetTeam] Slot ${slotIndex}: current=${currentPetAtSlot?.id.slice(0, 8) ?? 'empty'}, target=${targetPetId.slice(0, 8) || 'empty'}, hutchSpace=${hutchSpaceRemaining}`);
-
         // Case 1: Same pet, skip
         if (currentPetAtSlot?.id === targetPetId) {
-            console.log(`[PetTeam] Slot ${slotIndex}: Same pet, skipping`);
             continue;
         }
 
         // Case 2: Target slot empty, remove active pet
         if (targetPetId === EMPTY_SLOT && currentPetAtSlot) {
             const storeInHutch = hutchSpaceRemaining > 0;
-            console.log(`[PetTeam] Slot ${slotIndex}: Removing pet, storeInHutch=${storeInHutch}`);
             removePetFromActive(currentPetAtSlot.id, storeInHutch);
             if (storeInHutch) hutchSpaceRemaining--;
             continue;
@@ -158,8 +150,6 @@ function swapTeamPetByPet(
         if (!currentPetAtSlot && targetPetId !== EMPTY_SLOT) {
             const targetPet = currentState.all.find((p) => p.id === targetPetId);
             const isFromHutch = targetPet?.location === 'hutch';
-
-            console.log(`[PetTeam] Slot ${slotIndex}: Adding pet, fromHutch=${isFromHutch}`);
 
             if (isFromHutch) {
                 hutchSpaceRemaining++; // Retrieve from hutch frees a space
@@ -183,7 +173,6 @@ function swapTeamPetByPet(
             }
 
             const storeInHutch = hutchSpaceRemaining > 0;
-            console.log(`[PetTeam] Slot ${slotIndex}: Swapping pets, fromHutch=${isFromHutch}, storeInHutch=${storeInHutch}`);
 
             swapPets(currentPetAtSlot.id, targetPetId, currentState, storeInHutch);
 
@@ -193,8 +182,6 @@ function swapTeamPetByPet(
             continue;
         }
     }
-
-    console.log(`[PetTeam] Swap complete, ${hutchSpaceRemaining} hutch spaces remaining`);
 }
 
 function removePetFromActive(activePetId: string, hasHutchSpace: boolean): void {
@@ -224,10 +211,7 @@ function getMyGardenDirtTile(tileOffset: number): { position: { x: number; y: nu
 
 function addPetToActive(targetPetId: string, currentState: MyPetsData, tileOffset: number): void {
     const pet = currentState.all.find((p) => p.id === targetPetId);
-    if (!pet) {
-        console.warn(`[PetTeam] Pet ${targetPetId} not found`);
-        return;
-    }
+    if (!pet) return;
 
     // Retrieve from hutch if needed
     if (pet.location === 'hutch') {
@@ -246,10 +230,7 @@ function swapPets(
     hasHutchSpace: boolean
 ): void {
     const targetPet = currentState.all.find((p) => p.id === targetPetId);
-    if (!targetPet) {
-        console.warn(`[PetTeam] Pet ${targetPetId} not found`);
-        return;
-    }
+    if (!targetPet) return;
 
     // Retrieve from hutch if needed
     if (targetPet.location === 'hutch') {
