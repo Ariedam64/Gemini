@@ -32,8 +32,14 @@ const initialData: MyInventoryData = {
 
 function buildData(sources: MyInventorySources): MyInventoryData {
   const inventory = sources.inventory;
-  const items = inventory?.items ?? [];
-  const favoritedItemIds = inventory?.favoritedItemIds ?? [];
+  // Snapshot: game engine mutates these arrays in place, so we must clone
+  // deeply enough that change detection (deepEqual / stable key) is reliable.
+  const items = (inventory?.items ?? []).map((it) => ({ ...it })) as InventoryItem[];
+  const favoritedItemIds = [...(inventory?.favoritedItemIds ?? [])];
+  const storages = (sources.storages ?? []).map((s) => ({
+    ...s,
+    items: (s.items ?? []).map((it) => ({ ...it })) as InventoryItem[],
+  })) as ItemStorage[];
   const selectedIndex = sources.selectedItemIndex;
 
   let selectedItem: SelectedItem = null;
@@ -46,7 +52,7 @@ function buildData(sources: MyInventorySources): MyInventoryData {
 
   return {
     items,
-    storages: sources.storages ?? [],
+    storages,
     favoritedItemIds,
     count: items.length,
     isFull: sources.isFull ?? false,
@@ -244,9 +250,11 @@ function createMyInventoryGlobal(): MyInventoryGlobal {
       currentData = buildData(sources);
     }
 
-    // Subscribe to inventory + selection changes via WS
+    // Subscribe to inventory + selection changes via WS.
+    // Also subscribe to mySlot as a safety net (storages live under slot.data.inventory).
     unsubscribes.push(wsSubscribe("inventory", onStateChange));
     unsubscribes.push(wsSubscribe("selection", onStateChange));
+    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
 
     initialized = true;
   }

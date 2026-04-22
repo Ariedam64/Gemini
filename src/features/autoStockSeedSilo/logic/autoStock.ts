@@ -61,7 +61,6 @@ export function startAutoStock(): void {
   // Immediate scan against current snapshot (covers enable-while-holding-items).
   runScan(myInventory.get());
 
-  // Subscribe to further changes.
   unsubscribe = myInventory.subscribeStable((data) => {
     runScan(data);
   });

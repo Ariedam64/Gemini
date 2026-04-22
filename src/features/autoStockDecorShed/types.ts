@@ -1,13 +1,6 @@
 /**
- * AutoStockDecorShed types and configuration
+ * AutoStockDecorShed — shared constants.
+ * Toggle state is managed entirely by the InjectionRegistry.
  */
-
-export interface AutoStockDecorShedConfig {
-  enabled: boolean;
-}
-
-export const DEFAULT_CONFIG: AutoStockDecorShedConfig = {
-  enabled: false,
-};
 
 export const STORAGE_ID = "DecorShed";

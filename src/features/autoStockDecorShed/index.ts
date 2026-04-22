@@ -1,45 +1,33 @@
 /**
  * AutoStockDecorShed feature — public façade.
+ *
+ * Toggle state is owned by the InjectionRegistry (single source of truth).
  */
 
-import { loadConfig, saveConfig } from "./state";
 import { startAutoStock, stopAutoStock } from "./logic/autoStock";
+import { getRegistry } from "../../ui/inject/core/registry";
 
+const REGISTRY_ID = "autoStockDecorShed";
 let initialized = false;
 
 function init(): void {
   if (initialized) return;
-  const config = loadConfig();
-  if (!config.enabled) {
-    console.log("[AutoStockDecorShed] Disabled");
-    return;
-  }
   initialized = true;
   startAutoStock();
-  console.log("[AutoStockDecorShed] Initialized");
 }
 
 function destroy(): void {
   if (!initialized) return;
   stopAutoStock();
   initialized = false;
-  console.log("[AutoStockDecorShed] Destroyed");
 }
 
 function isEnabled(): boolean {
-  return loadConfig().enabled;
+  return getRegistry().isEnabled(REGISTRY_ID);
 }
 
 function setEnabled(enabled: boolean): void {
-  const config = loadConfig();
-  config.enabled = enabled;
-  saveConfig(config);
-
-  if (enabled && !initialized) {
-    init();
-  } else if (!enabled && initialized) {
-    destroy();
-  }
+  getRegistry().setEnabled(REGISTRY_ID, enabled);
 }
 
 export const MGAutoStockDecorShed = {
@@ -48,5 +36,3 @@ export const MGAutoStockDecorShed = {
   isEnabled,
   setEnabled,
 };
-
-export type { AutoStockDecorShedConfig } from "./types";

@@ -1,13 +1,6 @@
 /**
- * AutoStockSeedSilo types and configuration
+ * AutoStockSeedSilo — shared constants.
+ * Toggle state is managed entirely by the InjectionRegistry.
  */
-
-export interface AutoStockSeedSiloConfig {
-  enabled: boolean;
-}
-
-export const DEFAULT_CONFIG: AutoStockSeedSiloConfig = {
-  enabled: false,
-};
 
 export const STORAGE_ID = "SeedSilo";

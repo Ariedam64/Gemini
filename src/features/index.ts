@@ -46,9 +46,7 @@ export type { EggLockerConfig } from "./eggLocker";
 export { MGDecorLocker } from "./decorLocker";
 export type { DecorLockerConfig } from "./decorLocker";
 export { MGAutoStockSeedSilo } from "./autoStockSeedSilo";
-export type { AutoStockSeedSiloConfig } from "./autoStockSeedSilo";
 export { MGAutoStockDecorShed } from "./autoStockDecorShed";
-export type { AutoStockDecorShedConfig } from "./autoStockDecorShed";
 
 // Legacy namespaced exports
 import { StatsTracker, getStatsTracker, destroyStatsTracker } from "./tracker/stats";

@@ -207,8 +207,7 @@ export function initFeatures(loader: LoaderController): void {
     { name: "HarvestLocker", init: MGHarvestLocker.init.bind(MGHarvestLocker) },
     { name: "EggLocker", init: MGEggLocker.init.bind(MGEggLocker) },
     { name: "DecorLocker", init: MGDecorLocker.init.bind(MGDecorLocker) },
-    { name: "AutoStockSeedSilo", init: MGAutoStockSeedSilo.init.bind(MGAutoStockSeedSilo) },
-    { name: "AutoStockDecorShed", init: MGAutoStockDecorShed.init.bind(MGAutoStockDecorShed) },
+    // AutoStockSeedSilo/AutoStockDecorShed are registry-driven: registry.initAll() below handles them.
   ];
 
   let initializedCount = 0;
