@@ -86,6 +86,10 @@ export const FEATURE_KEYS = {
     EGG_LOCKER: 'feature:eggLocker:config',
     /** Decor locker feature config */
     DECOR_LOCKER: 'feature:decorLocker:config',
+    /** Auto-stock seed silo feature config */
+    AUTO_STOCK_SEED_SILO: 'feature:autoStockSeedSilo:config',
+    /** Auto-stock decor shed feature config */
+    AUTO_STOCK_DECOR_SHED: 'feature:autoStockDecorShed:config',
 } as const;
 
 /** Keys for UI injections (per ui/inject.md) */
