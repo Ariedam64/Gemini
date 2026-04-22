@@ -35,11 +35,12 @@ Two reactive QoL features, ported from the `mgafk-android` companion app:
 3. Build a set of already-present keys from that storage's items:
    - SeedSilo → set of `species` for items where `itemType === "Seed"`.
    - DecorShed → set of `decorId` for items where `itemType === "Decor"`.
-4. Scan `data.items` (inventory). For each item whose key is in the set:
+4. Compute `toStorageIndex = getNextFreeStorageIndex(storage)` once (shared util, see below).
+5. Scan `data.items` (inventory). For each item whose key is in the set:
    - Call `WebSocketAPI.putItemInStorage(itemId, storageId, toStorageIndex, quantity?)`
    - `itemId = species` for seeds, `itemId = decorId` for decors (matches the Android send).
    - `storageId = "SeedSilo"` or `"DecorShed"`.
-   - `toStorageIndex = currentStorageItemCount` (any valid index — server merges stacks).
+   - `toStorageIndex` = value computed in step 4 (server merges stacks, so any valid index works).
    - No `quantity` (move all — server default).
 
 **No debounce, no dedup.** A burst of picks will fire multiple WS messages. This matches Android.
@@ -51,6 +52,41 @@ Two reactive QoL features, ported from the `mgafk-android` companion app:
 - `setEnabled(true)` calls `destroy()` then `init()` — so it re-runs the immediate scan too.
 
 ## Gemini integration
+
+### New util: `getNextFreeStorageIndex`
+
+**New file:** `src/utils/gameStorage.ts`
+
+```typescript
+import type { ItemStorage } from "../atoms/types";
+
+/**
+ * Get the next free index in a game storage (SeedSilo, DecorShed, PetHutch, ...).
+ *
+ * Game storages are contiguous — items fill from index 0 upward, no gaps — so
+ * the count of existing items is also the index of the next empty slot.
+ */
+export function getNextFreeStorageIndex(storage: ItemStorage): number {
+  return storage.items.length;
+}
+```
+
+Respects the dependency-leaf rule (imports only a type). Reusable by any code that needs to target a fresh slot in a game storage (future: hutch swaps, decor shed managers, bulk moves, etc.).
+
+**Public API exposure** via a new `Utils` namespace on `window.Gemini`:
+```ts
+// src/api/index.ts
+import { getNextFreeStorageIndex } from "../utils/gameStorage";
+
+export const GeminiAPI = {
+  // ...existing namespaces...
+  Utils: {
+    getNextFreeStorageIndex,
+  },
+};
+```
+
+The `Utils` namespace is new — first entry. Reserved for pure, stateless helpers that query or transform game data shapes.
 
 ### Extend `myInventory` global to expose `storages`
 
@@ -132,6 +168,8 @@ Toggles via UI ↔ API stay in sync because both route through the feature's `se
 | `src/utils/storage.ts` | add `FEATURE_KEYS.AUTO_STOCK_SEED_SILO` and `.AUTO_STOCK_DECOR_SHED` |
 | `src/globals/variables/myInventory.ts` | expose `storages` in `MyInventoryData` |
 | `src/globals/core/types.ts` | add `storages: ItemStorage[]` to `MyInventoryData` |
+| `src/utils/gameStorage.ts` | **new** — `getNextFreeStorageIndex(storage)` helper |
+| `src/api/index.ts` | new `Utils` namespace exposing `getNextFreeStorageIndex` |
 
 ## Verification
 
