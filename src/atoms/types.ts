@@ -230,6 +230,8 @@ export type Shops = {
   egg: Shop;
   tool: Shop;
   decor: Shop;
+  /** Available only while the Dawn weather is active. Holds a heterogeneous mix of seeds and eggs. */
+  dawn?: Shop;
 };
 
 export type ShopPurchase = {

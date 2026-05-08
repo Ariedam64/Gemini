@@ -1,7 +1,7 @@
 // src/modules/shopActions/types.ts
 // Type definitions for shop actions
 
-export type ShopType = "seed" | "egg" | "decor" | "tool";
+export type ShopType = "seed" | "egg" | "decor" | "tool" | "dawn";
 
 export interface PurchaseResult {
   ok: boolean;

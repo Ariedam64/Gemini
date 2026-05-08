@@ -19,17 +19,24 @@ type ShopsSources = {
   purchases: ShopPurchases;
 };
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor"];
+const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
 
-function getItemId(rawItem: ShopInventoryItem, shopType: ShopType): string {
-  switch (shopType) {
-    case "seed":
+/**
+ * Resolve a stable item id from the raw shop inventory entry.
+ *
+ * Resolution is driven by `itemType` rather than the parent shop, because the
+ * Dawn shop holds a heterogeneous mix of items (Seed + Egg) and we need each
+ * row to carry the correct id field.
+ */
+function getItemId(rawItem: ShopInventoryItem): string {
+  switch (rawItem.itemType) {
+    case "Seed":
       return rawItem.species ?? rawItem.itemType;
-    case "tool":
+    case "Tool":
       return rawItem.toolId ?? rawItem.itemType;
-    case "egg":
+    case "Egg":
       return rawItem.eggId ?? rawItem.itemType;
-    case "decor":
+    case "Decor":
       return rawItem.decorId ?? rawItem.itemType;
     default:
       return rawItem.itemType;
@@ -38,10 +45,9 @@ function getItemId(rawItem: ShopInventoryItem, shopType: ShopType): string {
 
 function buildShopItem(
   rawItem: ShopInventoryItem,
-  shopType: ShopType,
   purchases: Record<string, number>
 ): ShopItem {
-  const id = getItemId(rawItem, shopType);
+  const id = getItemId(rawItem);
   const purchased = purchases[id] ?? 0;
   const remaining = Math.max(0, rawItem.initialStock - purchased);
 
@@ -74,7 +80,7 @@ function buildShop(
 
   const shopPurchase: ShopPurchase | undefined = purchases[type];
   const shopPurchasesRecord = shopPurchase?.purchases ?? {};
-  const items = (rawShop.inventory ?? []).map((item) => buildShopItem(item, type, shopPurchasesRecord));
+  const items = (rawShop.inventory ?? []).map((item) => buildShopItem(item, shopPurchasesRecord));
   const availableCount = items.filter((item) => item.isAvailable).length;
 
   const secondsUntilRestock = rawShop.secondsUntilRestock ?? 0;
@@ -103,6 +109,7 @@ function buildData(sources: ShopsSources): ShopsData {
     tool: shops[1],
     egg: shops[2],
     decor: shops[3],
+    dawn: shops[4],
   };
 
   const shopsWithRestock = shops.filter((s) => s.restockAt !== null);
@@ -139,6 +146,7 @@ const initialData: ShopsData = {
     tool: { type: "tool", items: [], availableCount: 0, totalCount: 0, secondsUntilRestock: 0, restockAt: null },
     egg: { type: "egg", items: [], availableCount: 0, totalCount: 0, secondsUntilRestock: 0, restockAt: null },
     decor: { type: "decor", items: [], availableCount: 0, totalCount: 0, secondsUntilRestock: 0, restockAt: null },
+    dawn: { type: "dawn", items: [], availableCount: 0, totalCount: 0, secondsUntilRestock: 0, restockAt: null },
   },
   nextRestock: null,
 };
@@ -227,6 +235,7 @@ type ListenerSets = {
   toolRestock: Set<(event: ShopRestockEvent) => void>;
   eggRestock: Set<(event: ShopRestockEvent) => void>;
   decorRestock: Set<(event: ShopRestockEvent) => void>;
+  dawnRestock: Set<(event: ShopRestockEvent) => void>;
   purchase: Set<(event: ShopPurchaseEvent) => void>;
   availability: Set<(event: ShopAvailabilityChange) => void>;
 };
@@ -244,6 +253,7 @@ function createShopsGlobal(): ShopsGlobal {
     toolRestock: new Set(),
     eggRestock: new Set(),
     decorRestock: new Set(),
+    dawnRestock: new Set(),
     purchase: new Set(),
     availability: new Set(),
   };
@@ -279,6 +289,7 @@ function createShopsGlobal(): ShopsGlobal {
       tool: listeners.toolRestock,
       egg: listeners.eggRestock,
       decor: listeners.decorRestock,
+      dawn: listeners.dawnRestock,
     };
 
     for (const shopType of SHOP_TYPES) {
@@ -405,6 +416,14 @@ function createShopsGlobal(): ShopsGlobal {
       return () => listeners.decorRestock.delete(callback);
     },
 
+    subscribeDawnRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe {
+      listeners.dawnRestock.add(callback);
+      if (options?.immediate && initialized && initialized) {
+        callback({ shop: currentData.byType.dawn, previousItems: [] });
+      }
+      return () => listeners.dawnRestock.delete(callback);
+    },
+
     subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.purchase.add(callback);
       if (options?.immediate && initialized && initialized) {
@@ -442,6 +461,7 @@ function createShopsGlobal(): ShopsGlobal {
       listeners.toolRestock.clear();
       listeners.eggRestock.clear();
       listeners.decorRestock.clear();
+      listeners.dawnRestock.clear();
       listeners.purchase.clear();
       listeners.availability.clear();
       initialized = false;

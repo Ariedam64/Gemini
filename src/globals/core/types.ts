@@ -398,7 +398,7 @@ export type PlayersGlobal = {
 // SHOPS GLOBAL
 // =============================================================================
 
-export type ShopType = "seed" | "tool" | "egg" | "decor";
+export type ShopType = "seed" | "tool" | "egg" | "decor" | "dawn";
 
 export type ShopItem = {
   id: string;
@@ -461,6 +461,7 @@ export type ShopsGlobal = {
   subscribeToolRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeEggRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeDecorRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  subscribeDawnRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
 
   subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeAvailability(callback: (event: ShopAvailabilityChange) => void, options?: SubscribeOptions): Unsubscribe;

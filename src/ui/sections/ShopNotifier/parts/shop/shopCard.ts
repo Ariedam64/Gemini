@@ -27,29 +27,31 @@ const SHOP_LABELS: Record<ShopType, string> = {
   tool: "Tools",
   egg: "Eggs",
   decor: "Decor",
+  dawn: "Dawn",
 };
 
-const ITEM_EMOJI: Record<ShopType, string> = {
+const ITEM_EMOJI: Record<string, string> = {
+  Seed: "🌱",
+  Tool: "🔧",
+  Egg: "🥚",
+  Decor: "🎨",
+};
+
+const SHOP_FALLBACK_EMOJI: Record<ShopType, string> = {
   seed: "🌱",
   tool: "🔧",
   egg: "🥚",
   decor: "🎨",
+  dawn: "🌅",
 };
 
-// MGData category mapping per shop type
-const DATA_CATEGORY: Record<ShopType, string> = {
-  seed: "plants",
-  tool: "items",
-  egg: "eggs",
-  decor: "decor",
-};
-
-// Sub-key for seed sprite (seeds are stored under plants.seed)
-const DATA_SUBKEY: Record<ShopType, string | null> = {
-  seed: "seed",
-  tool: null,
-  egg: null,
-  decor: null,
+// MGData category mapping per item type. Resolution via itemType lets the Dawn
+// shop (seeds + eggs) share the same lookup logic as homogeneous shops.
+const DATA_CATEGORY_BY_ITEM_TYPE: Record<string, { category: string; subKey: string | null }> = {
+  Seed: { category: "plants", subKey: "seed" },
+  Tool: { category: "items", subKey: null },
+  Egg: { category: "eggs", subKey: null },
+  Decor: { category: "decor", subKey: null },
 };
 
 // Rarity order for sorting (from lowest to highest)
@@ -71,86 +73,49 @@ interface ShopItemRow extends ShopItem {
   isTracked: boolean;
 }
 
-/**
- * Get spriteId from MGData for a shop item
- */
-function getSpriteId(itemId: string, shopType: ShopType): string | null {
+function resolveTarget(itemId: string, itemType: string): Record<string, unknown> | null {
+  const mapping = DATA_CATEGORY_BY_ITEM_TYPE[itemType];
+  if (!mapping) return null;
+
+  const dataCategory = MGData.get(mapping.category as any);
+  if (!dataCategory || typeof dataCategory !== "object") return null;
+
+  const itemData = (dataCategory as any)[itemId];
+  if (!itemData || typeof itemData !== "object") return null;
+
+  const target = mapping.subKey ? itemData[mapping.subKey] : itemData;
+  return target && typeof target === "object" ? target : null;
+}
+
+function getSpriteId(itemId: string, itemType: string): string | null {
   try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return null;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return null;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    return target?.spriteId ?? null;
+    return (resolveTarget(itemId, itemType)?.spriteId as string | undefined) ?? null;
   } catch (error) {
     console.warn(`[ShopNotifier] Failed to get spriteId for ${itemId}:`, error);
     return null;
   }
 }
 
-/**
- * Get rarity from MGData for a shop item
- * Returns null if rarity is not found (Badge component will handle the fallback)
- */
-function getRarity(itemId: string, shopType: ShopType): string | null {
+function getRarity(itemId: string, itemType: string): string | null {
   try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return null;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return null;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    const rarity = target?.rarity;
+    const rarity = resolveTarget(itemId, itemType)?.rarity;
     return rarity ? String(rarity).toLowerCase() : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-/**
- * Get item name from MGData for a shop item
- */
-function getItemName(itemId: string, shopType: ShopType): string {
+function getItemName(itemId: string, itemType: string): string {
   try {
-    const category = DATA_CATEGORY[shopType];
-    const dataCategory = MGData.get(category as any);
-
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return itemId;
-    }
-
-    const itemData = (dataCategory as any)[itemId];
-    if (!itemData) {
-      return itemId;
-    }
-
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey ? itemData[subKey] : itemData;
-
-    return target?.name ?? itemId;
+    return (resolveTarget(itemId, itemType)?.name as string | undefined) ?? itemId;
   } catch (error) {
     console.warn(`[ShopNotifier] Failed to get name for ${itemId}:`, error);
     return itemId;
   }
+}
+
+function getEmoji(itemType: string, shopType: ShopType): string {
+  return ITEM_EMOJI[itemType] ?? SHOP_FALLBACK_EMOJI[shopType];
 }
 
 function getTrackedIdSet(shopType: ShopType): Set<string> {
@@ -164,9 +129,9 @@ function buildRows(shop: Shop, shopType: ShopType): ShopItemRow[] {
 
   return shop.items.map((item) => ({
     ...item,
-    rarity: getRarity(item.id, shopType),
-    spriteId: getSpriteId(item.id, shopType),
-    itemName: getItemName(item.id, shopType),
+    rarity: getRarity(item.id, item.itemType),
+    spriteId: getSpriteId(item.id, item.itemType),
+    itemName: getItemName(item.id, item.itemType),
     isTracked: trackedIds.has(item.id),
   }));
 }
@@ -185,6 +150,7 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
       sortable: false,
       render: (row) => {
         const container = element("div", { className: "shop-item-icon" });
+        const fallbackEmoji = getEmoji(row.itemType, shopType);
 
         if (row.spriteId) {
           // Use MGSprite to render the sprite (async)
@@ -198,15 +164,13 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
               canvas.style.display = "block";
               container.appendChild(canvas);
             } else {
-              // Fallback to emoji if sprite fails
-              container.textContent = ITEM_EMOJI[shopType];
+              container.textContent = fallbackEmoji;
             }
           }).catch(() => {
-            container.textContent = ITEM_EMOJI[shopType];
+            container.textContent = fallbackEmoji;
           });
         } else {
-          // Fallback to emoji if no spriteId
-          container.textContent = ITEM_EMOJI[shopType];
+          container.textContent = fallbackEmoji;
         }
 
         return container;

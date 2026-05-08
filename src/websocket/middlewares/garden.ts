@@ -29,26 +29,11 @@ middleware(ClientToServerMessageType.SellAllCrops, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.PurchaseSeed, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Garden] PurchaseSeed"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
-middleware(ClientToServerMessageType.PurchaseEgg, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Garden] PurchaseEgg"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
-middleware(ClientToServerMessageType.PurchaseTool, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Garden] PurchaseTool"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
-middleware(ClientToServerMessageType.PurchaseDecor, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Garden] PurchaseDecor"); }
+middleware(ClientToServerMessageType.PurchaseShopItem, (msg, ctx) => {
+  if (ctx.debug) {
+    const shop = (msg as { shop?: unknown }).shop;
+    console.log("[MW][Garden] PurchaseShopItem", { shop });
+  }
   const shouldBlock = false;
   return shouldBlock ? false : true;
 });

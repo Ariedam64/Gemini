@@ -165,20 +165,40 @@ export function sellAllCrops(win: unknown = pageWindow): SendResult {
   return send(T.SellAllCrops, { scope: "Quinoa" }, win as typeof pageWindow);
 }
 
-export function purchaseDecor(decorId: string, win: unknown = pageWindow): SendResult {
-  return send(T.PurchaseDecor, { scope: "Quinoa", decorId }, win as typeof pageWindow);
-}
+export type ShopId = "seed" | "tool" | "egg" | "decor" | "dawn";
 
-export function purchaseEgg(eggId: string, win: unknown = pageWindow): SendResult {
-  return send(T.PurchaseEgg, { scope: "Quinoa", eggId }, win as typeof pageWindow);
-}
+export type PurchaseItemPayload =
+  | { itemType: "Seed"; species: string }
+  | { itemType: "Tool"; toolId: string }
+  | { itemType: "Egg"; eggId: string }
+  | { itemType: "Decor"; decorId: string };
 
-export function purchaseTool(toolId: string, win: unknown = pageWindow): SendResult {
-  return send(T.PurchaseTool, { scope: "Quinoa", toolId }, win as typeof pageWindow);
+export function purchaseShopItem(shop: ShopId, item: PurchaseItemPayload, win: unknown = pageWindow): SendResult {
+  return send(T.PurchaseShopItem, { scope: "Quinoa", shop, item }, win as typeof pageWindow);
 }
 
 export function purchaseSeed(species: string, win: unknown = pageWindow): SendResult {
-  return send(T.PurchaseSeed, { scope: "Quinoa", species }, win as typeof pageWindow);
+  return purchaseShopItem("seed", { itemType: "Seed", species }, win);
+}
+
+export function purchaseTool(toolId: string, win: unknown = pageWindow): SendResult {
+  return purchaseShopItem("tool", { itemType: "Tool", toolId }, win);
+}
+
+export function purchaseEgg(eggId: string, win: unknown = pageWindow): SendResult {
+  return purchaseShopItem("egg", { itemType: "Egg", eggId }, win);
+}
+
+export function purchaseDecor(decorId: string, win: unknown = pageWindow): SendResult {
+  return purchaseShopItem("decor", { itemType: "Decor", decorId }, win);
+}
+
+/**
+ * Purchase an item from the Dawn shop (only available when the Dawn weather is active).
+ * Dawn shop inventory is heterogeneous: each item must declare its own itemType.
+ */
+export function purchaseDawnItem(item: PurchaseItemPayload, win: unknown = pageWindow): SendResult {
+  return purchaseShopItem("dawn", item, win);
 }
 
 export function growEgg(slot: number, eggId: string, win: unknown = pageWindow): SendResult {

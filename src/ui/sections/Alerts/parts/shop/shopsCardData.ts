@@ -16,37 +16,43 @@ export const SHOP_TYPE_LABELS: Record<ShopType, string> = {
   tool: "Tools",
   egg: "Eggs",
   decor: "Decor",
+  dawn: "Dawn",
 };
 
 /**
- * Emoji icons for shop types
+ * Emoji icons for shop types (fallback when sprite is unavailable)
  */
 export const ITEM_EMOJI: Record<ShopType, string> = {
   seed: "🌱",
   tool: "🔧",
   egg: "🥚",
   decor: "🎨",
+  dawn: "🌅",
 };
 
 /**
- * MGData category mapping per shop type
+ * MGData category mapping per item type. Drives data lookups for sprite/rarity/name.
+ * Resolution is by `itemType` (not shop) so Dawn shop's heterogeneous inventory
+ * (seeds + eggs) is handled transparently.
  */
-const DATA_CATEGORY: Record<ShopType, string> = {
-  seed: "plants",
-  tool: "items",
-  egg: "eggs",
-  decor: "decor",
+const DATA_CATEGORY_BY_ITEM_TYPE: Record<string, { category: string; subKey: string | null }> = {
+  Seed: { category: "plants", subKey: "seed" },
+  Tool: { category: "items", subKey: null },
+  Egg: { category: "eggs", subKey: null },
+  Decor: { category: "decor", subKey: null },
 };
 
-/**
- * Sub-key for seed sprite (seeds are stored under plants.seed)
- */
-const DATA_SUBKEY: Record<ShopType, string | null> = {
-  seed: "seed",
-  tool: null,
-  egg: null,
-  decor: null,
-};
+function resolveItemEmoji(itemType: string, shopType: ShopType): string {
+  switch (itemType) {
+    case "Seed": return ITEM_EMOJI.seed;
+    case "Tool": return ITEM_EMOJI.tool;
+    case "Egg": return ITEM_EMOJI.egg;
+    case "Decor": return ITEM_EMOJI.decor;
+    default: return ITEM_EMOJI[shopType];
+  }
+}
+
+export { resolveItemEmoji };
 
 /**
  * Rarity order for sorting (from lowest to highest)
@@ -74,18 +80,20 @@ export interface ShopItemRow extends ShopItem {
 }
 
 /**
- * Generic helper to get field from MGData item
- * Replaces repetitive getSpriteId, getRarity, getItemName patterns
+ * Generic helper to get a field from MGData for a shop item.
+ * Resolution is driven by the inventory item's `itemType` so heterogeneous
+ * shops (Dawn) work without a per-shop branch.
  */
 function getItemDataField<T>(
   itemId: string,
-  shopType: ShopType,
+  itemType: string,
   fieldName: string
 ): T | null {
   try {
-    const category = DATA_CATEGORY[shopType] as DataKey;
-    const dataCategory = MGData.get(category);
+    const mapping = DATA_CATEGORY_BY_ITEM_TYPE[itemType];
+    if (!mapping) return null;
 
+    const dataCategory = MGData.get(mapping.category as DataKey);
     if (!dataCategory || typeof dataCategory !== "object") {
       return null;
     }
@@ -95,9 +103,8 @@ function getItemDataField<T>(
       return null;
     }
 
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey
-      ? (itemData as Record<string, unknown>)[subKey]
+    const target = mapping.subKey
+      ? (itemData as Record<string, unknown>)[mapping.subKey]
       : itemData;
 
     if (!target || typeof target !== "object") {
@@ -114,23 +121,23 @@ function getItemDataField<T>(
 /**
  * Get spriteId from MGData for a shop item
  */
-export function getSpriteId(itemId: string, shopType: ShopType): string | null {
-  return getItemDataField<string>(itemId, shopType, "spriteId");
+export function getSpriteId(itemId: string, itemType: string): string | null {
+  return getItemDataField<string>(itemId, itemType, "spriteId");
 }
 
 /**
  * Get rarity from MGData for a shop item
  */
-export function getRarity(itemId: string, shopType: ShopType): string | null {
-  const rarity = getItemDataField<string>(itemId, shopType, "rarity");
+export function getRarity(itemId: string, itemType: string): string | null {
+  const rarity = getItemDataField<string>(itemId, itemType, "rarity");
   return rarity ? String(rarity).toLowerCase() : null;
 }
 
 /**
  * Get item name from MGData for a shop item
  */
-export function getItemName(itemId: string, shopType: ShopType): string {
-  return getItemDataField<string>(itemId, shopType, "name") ?? itemId;
+export function getItemName(itemId: string, itemType: string): string {
+  return getItemDataField<string>(itemId, itemType, "name") ?? itemId;
 }
 
 /**
@@ -148,7 +155,7 @@ export function buildAllRows(shopsData: ShopsData): ShopItemRow[] {
   const trackedIds = getTrackedIdSet();
   const allRows: ShopItemRow[] = [];
 
-  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor"];
+  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
 
   for (const shopType of shopTypes) {
     const shop = shopsData.byType[shopType];
@@ -159,9 +166,9 @@ export function buildAllRows(shopsData: ShopsData): ShopItemRow[] {
       allRows.push({
         ...item,
         shopType,
-        rarity: getRarity(item.id, shopType),
-        spriteId: getSpriteId(item.id, shopType),
-        itemName: getItemName(item.id, shopType),
+        rarity: getRarity(item.id, item.itemType),
+        spriteId: getSpriteId(item.id, item.itemType),
+        itemName: getItemName(item.id, item.itemType),
         isTracked: trackedIds.has(uniqueId),
         hasCustomSound: CustomSounds.hasItemCustomSound('shop', item.id, shopType),
       });

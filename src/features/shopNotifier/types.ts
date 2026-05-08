@@ -24,6 +24,7 @@ export const DEFAULT_TRACKED_ITEMS: TrackedItemsByShop = {
   tool: [],
   egg: [],
   decor: [],
+  dawn: [],
 };
 
 export const DEFAULT_CONFIG: ShopNotifierConfig = {

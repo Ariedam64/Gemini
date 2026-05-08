@@ -12,11 +12,11 @@ import { getMyInventory } from "../../../../../globals/variables/myInventory";
 import { getMyGarden } from "../../../../../globals/variables/myGarden";
 import { element } from "../../../../styles/helpers";
 import type { ShopItemRow } from "./shopsCardData";
-import { ITEM_EMOJI, RARITY_ORDER } from "./shopsCardData";
+import { RARITY_ORDER, resolveItemEmoji } from "./shopsCardData";
 import { createCustomSoundModal } from "../../../../components/CustomSoundModal/CustomSoundModal";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
 
-const SHOP_TYPES: ShopItemRow["shopType"][] = ["seed", "tool", "egg", "decor"];
+const SHOP_TYPES: ShopItemRow["shopType"][] = ["seed", "tool", "egg", "decor", "dawn"];
 const SHOP_TYPE_SET = new Set<ShopItemRow["shopType"]>(SHOP_TYPES);
 
 function parseRowKey(rowKey: string): { shopType: ShopItemRow["shopType"]; itemId: string } | null {
@@ -178,19 +178,20 @@ export function createItemsTable(
 
         // Icon
         const iconContainer = element("div", { className: "shop-item-icon" });
+        const fallbackEmoji = resolveItemEmoji(row.itemType, row.shopType);
         if (row.spriteId) {
           MGSprite.toCanvas(row.spriteId).then((canvas) => {
             if (canvas) {
               canvas.className = "shop-item-sprite";
               iconContainer.appendChild(canvas);
             } else {
-              iconContainer.textContent = ITEM_EMOJI[row.shopType];
+              iconContainer.textContent = fallbackEmoji;
             }
           }).catch(() => {
-            iconContainer.textContent = ITEM_EMOJI[row.shopType];
+            iconContainer.textContent = fallbackEmoji;
           });
         } else {
-          iconContainer.textContent = ITEM_EMOJI[row.shopType];
+          iconContainer.textContent = fallbackEmoji;
         }
 
         // Name

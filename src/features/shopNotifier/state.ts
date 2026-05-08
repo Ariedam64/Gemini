@@ -7,7 +7,7 @@ import type { ShopType } from "../../globals/core/types";
 import { DEFAULT_CONFIG, DEFAULT_TRACKED_ITEMS, STORAGE_KEY } from "./types";
 import type { ShopNotifierConfig, TrackedItem, TrackedItemsByShop } from "./types";
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor"];
+const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
 
 function normalizeTrackedItems(items?: Partial<Record<ShopType, string[]>> | null): TrackedItemsByShop {
   return {
@@ -15,6 +15,7 @@ function normalizeTrackedItems(items?: Partial<Record<ShopType, string[]>> | nul
     tool: Array.isArray(items?.tool) ? [...items.tool] : [],
     egg: Array.isArray(items?.egg) ? [...items.egg] : [],
     decor: Array.isArray(items?.decor) ? [...items.decor] : [],
+    dawn: Array.isArray(items?.dawn) ? [...items.dawn] : [],
   };
 }
 
@@ -24,6 +25,7 @@ function cloneTrackedItems(items: TrackedItemsByShop): TrackedItemsByShop {
     tool: [...items.tool],
     egg: [...items.egg],
     decor: [...items.decor],
+    dawn: [...items.dawn],
   };
 }
 

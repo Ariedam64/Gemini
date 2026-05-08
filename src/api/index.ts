@@ -129,6 +129,8 @@ export const GeminiAPI = {
     purchaseEgg: WebSocketAPI.purchaseEgg,
     purchaseTool: WebSocketAPI.purchaseTool,
     purchaseSeed: WebSocketAPI.purchaseSeed,
+    purchaseDawnItem: WebSocketAPI.purchaseDawnItem,
+    purchaseShopItem: WebSocketAPI.purchaseShopItem,
     growEgg: WebSocketAPI.growEgg,
     plantEgg: WebSocketAPI.plantEgg,
     hatchEgg: WebSocketAPI.hatchEgg,

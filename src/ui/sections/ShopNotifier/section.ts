@@ -11,7 +11,7 @@ import { initSectionState } from "./state";
 import { createShopCard } from "./parts";
 import type { ShopType } from "../../../globals/core/types";
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor"];
+const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
 
 export class ShopNotifierSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;

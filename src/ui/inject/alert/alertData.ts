@@ -21,23 +21,15 @@ export interface AvailableItem {
 }
 
 /**
- * MGData category mapping per shop type
+ * MGData category mapping per item type. Resolution by item type lets the Dawn
+ * shop (heterogeneous: seeds + eggs) share the same lookup logic as the
+ * homogeneous shops.
  */
-const DATA_CATEGORY: Record<ShopType, string> = {
-  seed: "plants",
-  tool: "items",
-  egg: "eggs",
-  decor: "decor",
-};
-
-/**
- * Sub-key for seed sprite (seeds are stored under plants.seed)
- */
-const DATA_SUBKEY: Record<ShopType, string | null> = {
-  seed: "seed",
-  tool: null,
-  egg: null,
-  decor: null,
+const DATA_CATEGORY_BY_ITEM_TYPE: Record<string, { category: string; subKey: string | null }> = {
+  Seed: { category: "plants", subKey: "seed" },
+  Tool: { category: "items", subKey: null },
+  Egg: { category: "eggs", subKey: null },
+  Decor: { category: "decor", subKey: null },
 };
 
 /**
@@ -45,13 +37,14 @@ const DATA_SUBKEY: Record<ShopType, string | null> = {
  */
 function getItemDataField<T>(
   itemId: string,
-  shopType: ShopType,
+  itemType: string,
   fieldName: string
 ): T | null {
   try {
-    const category = DATA_CATEGORY[shopType] as DataKey;
-    const dataCategory = MGData.get(category);
+    const mapping = DATA_CATEGORY_BY_ITEM_TYPE[itemType];
+    if (!mapping) return null;
 
+    const dataCategory = MGData.get(mapping.category as DataKey);
     if (!dataCategory || typeof dataCategory !== "object") {
       return null;
     }
@@ -61,9 +54,8 @@ function getItemDataField<T>(
       return null;
     }
 
-    const subKey = DATA_SUBKEY[shopType];
-    const target = subKey
-      ? (itemData as Record<string, unknown>)[subKey]
+    const target = mapping.subKey
+      ? (itemData as Record<string, unknown>)[mapping.subKey]
       : itemData;
 
     if (!target || typeof target !== "object") {
@@ -79,15 +71,15 @@ function getItemDataField<T>(
 /**
  * Get sprite ID from MGData
  */
-function getSpriteId(itemId: string, shopType: ShopType): string | null {
-  return getItemDataField<string>(itemId, shopType, "spriteId");
+function getSpriteId(itemId: string, itemType: string): string | null {
+  return getItemDataField<string>(itemId, itemType, "spriteId");
 }
 
 /**
  * Get item name from MGData
  */
-function getItemName(itemId: string, shopType: ShopType): string {
-  return getItemDataField<string>(itemId, shopType, "name") ?? itemId;
+function getItemName(itemId: string, itemType: string): string {
+  return getItemDataField<string>(itemId, itemType, "name") ?? itemId;
 }
 
 /**
@@ -115,8 +107,8 @@ function getAvailableFromShop(shopType: ShopType, shop: Shop): AvailableItem[] {
     .map((item) => ({
       shopType,
       itemId: item.id,
-      itemName: getItemName(item.id, shopType),
-      spriteId: getSpriteId(item.id, shopType),
+      itemName: getItemName(item.id, item.itemType),
+      spriteId: getSpriteId(item.id, item.itemType),
       remaining: item.remaining,
       price: item.price,
     }));
@@ -131,7 +123,7 @@ export function getAvailableTrackedItems(): AvailableItem[] {
   const shops = getShops();
   const shopsData = shops.get();
 
-  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor"];
+  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
   const allAvailable: AvailableItem[] = [];
 
   for (const shopType of shopTypes) {

@@ -5,6 +5,7 @@ import { buySeed, buyAllSeeds } from "./logic/seed";
 import { buyEgg, buyAllEggs } from "./logic/egg";
 import { buyDecor, buyAllDecors } from "./logic/decor";
 import { buyTool, buyAllTools } from "./logic/tool";
+import { buyDawnItem, buyAllDawnItems } from "./logic/dawn";
 
 export type { PurchaseResult, BulkPurchaseResult, ShopType } from "./types";
 
@@ -111,5 +112,20 @@ export const MGShopActions = {
      * Buy all available tools of a specific ID
      */
     buyAll: buyAllTools,
+  },
+
+  /**
+   * Dawn shop actions (heterogeneous: seeds + eggs, only available during Dawn weather)
+   */
+  dawn: {
+    /**
+     * Buy a single dawn shop item by ID. The item type is resolved from the current shop snapshot.
+     */
+    buy: buyDawnItem,
+
+    /**
+     * Buy all available copies of a dawn shop item.
+     */
+    buyAll: buyAllDawnItems,
   },
 };

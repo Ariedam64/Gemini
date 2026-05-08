@@ -52,7 +52,8 @@ export function startTracking(): void {
     shops.subscribeSeedRestock((event) => handleRestock("seed", event)),
     shops.subscribeToolRestock((event) => handleRestock("tool", event)),
     shops.subscribeEggRestock((event) => handleRestock("egg", event)),
-    shops.subscribeDecorRestock((event) => handleRestock("decor", event))
+    shops.subscribeDecorRestock((event) => handleRestock("decor", event)),
+    shops.subscribeDawnRestock((event) => handleRestock("dawn", event))
   );
 }
 

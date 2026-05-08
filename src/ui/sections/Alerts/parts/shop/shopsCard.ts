@@ -210,7 +210,7 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
     const container = element("div", { className: "shops-card-filters" });
 
     // Shop type select
-    const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor"];
+    const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
     const selectOptions = [
       { value: "all", label: "All Shops" },
       ...shopTypes.map((type) => ({
