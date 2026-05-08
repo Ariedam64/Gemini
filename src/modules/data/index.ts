@@ -4,10 +4,12 @@
 import { fetchGameData } from "./logic/fetch";
 import { resolveSprites } from "./logic/sprites";
 import { getData, getAllData, hasData, waitForData, waitForAnyData } from "./logic/accessors";
+import { getShopCatalog } from "./logic/shopCatalog";
 import { state } from "./state";
 
 export type { DataKey, DataBag, AbilityColor } from "./types";
 export type { ActivityLogEntry, PetAbilityAction } from "./logic/abilityFormatter";
+export type { ShopCatalogEntry, ShopCatalogShop, ShopCatalogItemType } from "./logic/shopCatalog";
 export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction, PET_ABILITY_ACTIONS } from "./logic/abilityFormatter";
 
 /**
@@ -73,6 +75,13 @@ export const MGData = {
    * (Call after MGSprite is initialized)
    */
   resolveSprites,
+
+  /**
+   * Catalog of every purchaseable item across all shops.
+   * Each entry lists the shops it is eligible for (e.g. ["seed", "dawn"]).
+   * Items without `eligibleShops` are excluded.
+   */
+  getShopCatalog,
 
   /**
    * Cleanup (no-op, kept for API compatibility)

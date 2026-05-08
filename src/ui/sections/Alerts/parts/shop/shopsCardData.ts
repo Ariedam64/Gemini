@@ -3,8 +3,7 @@
  */
 
 import { MGData } from "../../../../../modules";
-import type { ShopType, ShopItem, ShopsData } from "../../../../../globals/core/types";
-import type { DataKey } from "../../../../../modules/data/types";
+import type { ShopType, ShopItem } from "../../../../../globals/core/types";
 import { MGShopNotifier } from "../../../../../features/shopNotifier";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
 
@@ -28,18 +27,6 @@ export const ITEM_EMOJI: Record<ShopType, string> = {
   egg: "🥚",
   decor: "🎨",
   dawn: "🌅",
-};
-
-/**
- * MGData category mapping per item type. Drives data lookups for sprite/rarity/name.
- * Resolution is by `itemType` (not shop) so Dawn shop's heterogeneous inventory
- * (seeds + eggs) is handled transparently.
- */
-const DATA_CATEGORY_BY_ITEM_TYPE: Record<string, { category: string; subKey: string | null }> = {
-  Seed: { category: "plants", subKey: "seed" },
-  Tool: { category: "items", subKey: null },
-  Egg: { category: "eggs", subKey: null },
-  Decor: { category: "decor", subKey: null },
 };
 
 function resolveItemEmoji(itemType: string, shopType: ShopType): string {
@@ -68,10 +55,15 @@ export const RARITY_ORDER: Record<string, number> = {
 };
 
 /**
- * Extended type for table rows
+ * Extended type for table rows.
+ *
+ * `shopType` is the row's "primary" shop (first of `shops`) — used for the
+ * custom sound storage key and emoji fallback. `shops` carries every shop the
+ * item is eligible for; tracking and filtering operate on this list.
  */
 export interface ShopItemRow extends ShopItem {
   shopType: ShopType;
+  shops: ShopType[];
   rarity: string | null;
   spriteId: string | null;
   itemName: string;
@@ -80,99 +72,51 @@ export interface ShopItemRow extends ShopItem {
 }
 
 /**
- * Generic helper to get a field from MGData for a shop item.
- * Resolution is driven by the inventory item's `itemType` so heterogeneous
- * shops (Dawn) work without a per-shop branch.
+ * Build a (shopType, itemId) lookup of currently-tracked items.
  */
-function getItemDataField<T>(
-  itemId: string,
-  itemType: string,
-  fieldName: string
-): T | null {
-  try {
-    const mapping = DATA_CATEGORY_BY_ITEM_TYPE[itemType];
-    if (!mapping) return null;
-
-    const dataCategory = MGData.get(mapping.category as DataKey);
-    if (!dataCategory || typeof dataCategory !== "object") {
-      return null;
-    }
-
-    const itemData = (dataCategory as Record<string, unknown>)[itemId];
-    if (!itemData || typeof itemData !== "object") {
-      return null;
-    }
-
-    const target = mapping.subKey
-      ? (itemData as Record<string, unknown>)[mapping.subKey]
-      : itemData;
-
-    if (!target || typeof target !== "object") {
-      return null;
-    }
-
-    return ((target as Record<string, unknown>)[fieldName] as T) ?? null;
-  } catch (error) {
-    console.warn(`[Alerts] Failed to get ${fieldName} for ${itemId}:`, error);
-    return null;
-  }
-}
-
-/**
- * Get spriteId from MGData for a shop item
- */
-export function getSpriteId(itemId: string, itemType: string): string | null {
-  return getItemDataField<string>(itemId, itemType, "spriteId");
-}
-
-/**
- * Get rarity from MGData for a shop item
- */
-export function getRarity(itemId: string, itemType: string): string | null {
-  const rarity = getItemDataField<string>(itemId, itemType, "rarity");
-  return rarity ? String(rarity).toLowerCase() : null;
-}
-
-/**
- * Get item name from MGData for a shop item
- */
-export function getItemName(itemId: string, itemType: string): string {
-  return getItemDataField<string>(itemId, itemType, "name") ?? itemId;
-}
-
-/**
- * Get set of tracked item IDs
- */
-export function getTrackedIdSet(): Set<string> {
+function getTrackedKeySet(): Set<string> {
   const tracked = MGShopNotifier.getTrackedItems();
   return new Set(tracked.map((item) => `${item.shopType}:${item.itemId}`));
 }
 
 /**
- * Build rows from all shops data
+ * Build rows from MGData's shop catalog (every purchaseable item, regardless
+ * of the live shop snapshot).
+ *
+ * Items eligible for multiple shops (e.g. DawnCelestial → seed + dawn) yield
+ * a single deduplicated row. The row's `shops` array carries every eligible
+ * shop so filters and tracking can target all of them at once.
  */
-export function buildAllRows(shopsData: ShopsData): ShopItemRow[] {
-  const trackedIds = getTrackedIdSet();
+export function buildAllRows(): ShopItemRow[] {
+  const trackedKeys = getTrackedKeySet();
+  const catalog = MGData.getShopCatalog();
   const allRows: ShopItemRow[] = [];
 
-  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+  for (const entry of catalog) {
+    if (entry.shops.length === 0) continue;
 
-  for (const shopType of shopTypes) {
-    const shop = shopsData.byType[shopType];
-    if (!shop) continue;
+    const shops = entry.shops as ShopType[];
+    const primary = shops[0];
+    const isTracked = shops.some((shop) => trackedKeys.has(`${shop}:${entry.id}`));
 
-    for (const item of shop.items) {
-      const uniqueId = `${shopType}:${item.id}`;
-      allRows.push({
-        ...item,
-        shopType,
-        rarity: getRarity(item.id, item.itemType),
-        spriteId: getSpriteId(item.id, item.itemType),
-        itemName: getItemName(item.id, item.itemType),
-        isTracked: trackedIds.has(uniqueId),
-        hasCustomSound: CustomSounds.hasItemCustomSound('shop', item.id, shopType),
-      });
-    }
+    allRows.push({
+      // ShopItem fields — runtime quantities are not used by the alert table
+      id: entry.id,
+      itemType: entry.itemType,
+      initialStock: 0,
+      purchased: 0,
+      remaining: 0,
+      isAvailable: false,
+      price: 0,
+      // Display fields
+      shopType: primary,
+      shops,
+      rarity: entry.rarity,
+      spriteId: entry.spriteId,
+      itemName: entry.name,
+      isTracked,
+      hasCustomSound: CustomSounds.hasItemCustomSound("shop", entry.id, primary),
+    });
   }
 
   return allRows;

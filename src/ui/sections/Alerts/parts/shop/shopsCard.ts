@@ -7,9 +7,8 @@ import { Card } from "../../../../components/Card/Card";
 import { Select, SelectHandle } from "../../../../components/Select/Select";
 import { SearchBar, SearchBarHandle } from "../../../../components/SearchBar/SearchBar";
 import { TableHandle } from "../../../../components/Table/Table";
-import { getShops } from "../../../../../globals/variables/shops";
 import { element } from "../../../../styles/helpers";
-import type { ShopType, ShopsData } from "../../../../../globals/core/types";
+import type { ShopType } from "../../../../../globals/core/types";
 import {
   buildAllRows,
   SHOP_TYPE_LABELS,
@@ -134,9 +133,6 @@ function applySelectWidth(selectRoot: HTMLElement, labels: string[]): void {
  * Create the shops card part
  */
 export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
-  const shops = getShops();
-  const shopsData = shops.get();
-
   let root: HTMLElement | null = null;
   let allRows: ShopItemRow[] = [];
   let filteredRows: ShopItemRow[] = [];
@@ -178,10 +174,10 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
     }
 
     const nextRows = allRows.filter((row) => {
-      // Shop type filter
+      // Shop type filter — show every item eligible for the selected shop
       if (
         filterState.selectedShopType !== "all" &&
-        row.shopType !== filterState.selectedShopType
+        !row.shops.includes(filterState.selectedShopType)
       ) {
         return false;
       }
@@ -259,8 +255,8 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
    * Build the card with table and filters
    */
   function buildCard(): HTMLElement {
-    // Build initial rows
-    allRows = buildAllRows(shopsData);
+    // Build initial rows from MGData's static shop catalog
+    allRows = buildAllRows();
     filteredRows = [...allRows];
 
     // Initialize change detection state
@@ -314,13 +310,12 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
   }
 
   /**
-   * Refresh when shop data changes
+   * Rebuild rows from MGData. Catalog is static after MGData load, so this is
+   * mainly a no-op safety net (e.g. if MGData is reloaded externally).
    */
   function refresh(): void {
-    const updatedShopsData = shops.get();
-    const newRows = buildAllRows(updatedShopsData);
+    const newRows = buildAllRows();
 
-    // Efficient change detection using simpler properties
     const currentRowCount = newRows.length;
     const currentShopTypes = new Set(newRows.map((r) => r.shopType));
 

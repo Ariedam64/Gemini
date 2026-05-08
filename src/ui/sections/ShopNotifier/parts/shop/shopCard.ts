@@ -1,16 +1,18 @@
 /**
- * Shop Card - Displays shop items in a sortable table with toggle switches
+ * Shop Card - Displays shop items in a sortable table with toggle switches.
+ * Rows are sourced from MGData's static shop catalog (every item with at least
+ * one entry in `eligibleShops`), so users can configure alerts even when the
+ * live shop inventory is empty (e.g. Dawn shop outside Dawn weather).
  */
 
 import { Card } from "../../../../components/Card/Card";
 import { Table, TableHandle, ColDef } from "../../../../components/Table/Table";
 import { Switch } from "../../../../components/Switch/Switch";
 import { Badge } from "../../../../components/Badge/Badge";
-import { getShops } from "../../../../../globals/variables/shops";
 import { MGData, MGSprite } from "../../../../../modules";
 import { MGShopNotifier } from "../../../../../features/shopNotifier";
 import { element } from "../../../../styles/helpers";
-import type { ShopType, Shop, ShopItem, ShopsData } from "../../../../../globals/core/types";
+import type { ShopType, ShopItem } from "../../../../../globals/core/types";
 
 export interface ShopCardPart {
   root: HTMLElement;
@@ -45,15 +47,6 @@ const SHOP_FALLBACK_EMOJI: Record<ShopType, string> = {
   dawn: "🌅",
 };
 
-// MGData category mapping per item type. Resolution via itemType lets the Dawn
-// shop (seeds + eggs) share the same lookup logic as homogeneous shops.
-const DATA_CATEGORY_BY_ITEM_TYPE: Record<string, { category: string; subKey: string | null }> = {
-  Seed: { category: "plants", subKey: "seed" },
-  Tool: { category: "items", subKey: null },
-  Egg: { category: "eggs", subKey: null },
-  Decor: { category: "decor", subKey: null },
-};
-
 // Rarity order for sorting (from lowest to highest)
 const RARITY_ORDER: Record<string, number> = {
   common: 0,
@@ -65,53 +58,12 @@ const RARITY_ORDER: Record<string, number> = {
   celestial: 6,
 };
 
-// Extended type for table rows with rarity
+// Extended type for table rows (carries all data needed for display)
 interface ShopItemRow extends ShopItem {
   rarity: string | null;
   spriteId: string | null;
   itemName: string;
   isTracked: boolean;
-}
-
-function resolveTarget(itemId: string, itemType: string): Record<string, unknown> | null {
-  const mapping = DATA_CATEGORY_BY_ITEM_TYPE[itemType];
-  if (!mapping) return null;
-
-  const dataCategory = MGData.get(mapping.category as any);
-  if (!dataCategory || typeof dataCategory !== "object") return null;
-
-  const itemData = (dataCategory as any)[itemId];
-  if (!itemData || typeof itemData !== "object") return null;
-
-  const target = mapping.subKey ? itemData[mapping.subKey] : itemData;
-  return target && typeof target === "object" ? target : null;
-}
-
-function getSpriteId(itemId: string, itemType: string): string | null {
-  try {
-    return (resolveTarget(itemId, itemType)?.spriteId as string | undefined) ?? null;
-  } catch (error) {
-    console.warn(`[ShopNotifier] Failed to get spriteId for ${itemId}:`, error);
-    return null;
-  }
-}
-
-function getRarity(itemId: string, itemType: string): string | null {
-  try {
-    const rarity = resolveTarget(itemId, itemType)?.rarity;
-    return rarity ? String(rarity).toLowerCase() : null;
-  } catch {
-    return null;
-  }
-}
-
-function getItemName(itemId: string, itemType: string): string {
-  try {
-    return (resolveTarget(itemId, itemType)?.name as string | undefined) ?? itemId;
-  } catch (error) {
-    console.warn(`[ShopNotifier] Failed to get name for ${itemId}:`, error);
-    return itemId;
-  }
 }
 
 function getEmoji(itemType: string, shopType: ShopType): string {
@@ -124,23 +76,41 @@ function getTrackedIdSet(shopType: ShopType): Set<string> {
   return new Set(ids);
 }
 
-function buildRows(shop: Shop, shopType: ShopType): ShopItemRow[] {
+/**
+ * Build rows for a shop from MGData's catalog. Items eligible for the given
+ * shop yield one row each. Live shop quantities are not used here — the table
+ * only shows display info and the tracking switch.
+ */
+function buildRows(shopType: ShopType): ShopItemRow[] {
   const trackedIds = getTrackedIdSet(shopType);
+  const catalog = MGData.getShopCatalog();
 
-  return shop.items.map((item) => ({
-    ...item,
-    rarity: getRarity(item.id, item.itemType),
-    spriteId: getSpriteId(item.id, item.itemType),
-    itemName: getItemName(item.id, item.itemType),
-    isTracked: trackedIds.has(item.id),
-  }));
+  const rows: ShopItemRow[] = [];
+  for (const entry of catalog) {
+    if (!entry.shops.includes(shopType)) continue;
+    rows.push({
+      // ShopItem fields — runtime quantities are not used by this table
+      id: entry.id,
+      itemType: entry.itemType,
+      initialStock: 0,
+      purchased: 0,
+      remaining: 0,
+      isAvailable: false,
+      price: 0,
+      // Display fields
+      rarity: entry.rarity,
+      spriteId: entry.spriteId,
+      itemName: entry.name,
+      isTracked: trackedIds.has(entry.id),
+    });
+  }
+
+  return rows;
 }
 
-function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemRow> {
-  // Convert ShopItem[] to ShopItemRow[] (add rarity, spriteId, and itemName fields)
-  const rows = buildRows(shop, shopType);
+function createItemsTable(shopType: ShopType): TableHandle<ShopItemRow> {
+  const rows = buildRows(shopType);
 
-  // Define columns separately (like in AutoFavorite section)
   const columns: ColDef<ShopItemRow>[] = [
     {
       key: "icon",
@@ -191,7 +161,6 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
       align: "left",
       sortable: true,
       sortFn: (a, b) => {
-        // Null/undefined rarities go to the end (value 999)
         const aOrder = a.rarity ? (RARITY_ORDER[a.rarity.toLowerCase()] ?? 999) : 999;
         const bOrder = b.rarity ? (RARITY_ORDER[b.rarity.toLowerCase()] ?? 999) : 999;
         return aOrder - bOrder;
@@ -247,15 +216,12 @@ function createItemsTable(shop: Shop, shopType: ShopType): TableHandle<ShopItemR
 
 export function createShopCard(options: ShopCardOptions): ShopCardPart {
   const { shopType } = options;
-  const shops = getShops();
-  const currentShop = shops.getShop(shopType);
 
   let root: HTMLElement | null = null;
   let table: TableHandle<ShopItemRow> | null = null;
-  let unsubscribe: (() => void) | null = null;
 
   function buildCard(): HTMLElement {
-    table = createItemsTable(currentShop, shopType);
+    table = createItemsTable(shopType);
 
     root = Card(
       {
@@ -276,41 +242,22 @@ export function createShopCard(options: ShopCardOptions): ShopCardPart {
     return root;
   }
 
+  /**
+   * Rebuild rows from MGData's catalog. Catalog is static after MGData load,
+   * so this is mostly a no-op safety net (e.g. if MGData is reloaded externally).
+   */
   function refresh(): void {
     if (!table) return;
-
-    const updatedShop = shops.getShop(shopType);
-    const rows = buildRows(updatedShop, shopType);
-
-    table.setData(rows);
+    table.setData(buildRows(shopType));
   }
 
   function destroy(): void {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-
     if (table) {
       table.destroy();
       table = null;
     }
-
     root = null;
   }
-
-  // Subscribe to shop changes
-  unsubscribe = shops.subscribeStable((shopsData: ShopsData) => {
-    const newShop = shopsData.byType[shopType];
-    if (newShop) {
-      // Check if data actually changed before refreshing
-      const hasChanged = JSON.stringify(currentShop.items) !== JSON.stringify(newShop.items);
-      if (hasChanged) {
-        Object.assign(currentShop, newShop);
-        refresh();
-      }
-    }
-  });
 
   return {
     root: buildCard(),

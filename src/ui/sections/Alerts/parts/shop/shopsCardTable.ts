@@ -16,16 +16,6 @@ import { RARITY_ORDER, resolveItemEmoji } from "./shopsCardData";
 import { createCustomSoundModal } from "../../../../components/CustomSoundModal/CustomSoundModal";
 import { CustomSounds } from "../../../../../modules/audio/customSounds";
 
-const SHOP_TYPES: ShopItemRow["shopType"][] = ["seed", "tool", "egg", "decor", "dawn"];
-const SHOP_TYPE_SET = new Set<ShopItemRow["shopType"]>(SHOP_TYPES);
-
-function parseRowKey(rowKey: string): { shopType: ShopItemRow["shopType"]; itemId: string } | null {
-  const [shopType, ...rest] = rowKey.split(":");
-  if (!shopType || rest.length === 0) return null;
-  if (!SHOP_TYPE_SET.has(shopType as ShopItemRow["shopType"])) return null;
-  return { shopType: shopType as ShopItemRow["shopType"], itemId: rest.join(":") };
-}
-
 const LONG_PRESS_DELAY_MS = 500;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 const SUPPRESS_ROW_CLICK_TIMEOUT_MS = 800;
@@ -63,9 +53,9 @@ export function createItemsTable(
   }
 
   function resolveRowHasCustomSound(rowKey: string): boolean {
-    const parsed = parseRowKey(rowKey);
-    if (!parsed) return false;
-    return CustomSounds.hasItemCustomSound("shop", parsed.itemId, parsed.shopType);
+    const row = rowDataByKey.get(rowKey);
+    if (!row) return false;
+    return CustomSounds.hasItemCustomSound("shop", row.id, row.shopType);
   }
 
   function findRowElement(rowKey: string): HTMLElement | null {
@@ -108,26 +98,23 @@ export function createItemsTable(
   function setRowDataMap(nextRows: ShopItemRow[]): void {
     rowDataByKey.clear();
     for (const row of nextRows) {
-      rowDataByKey.set(`${row.shopType}:${row.id}`, row);
+      rowDataByKey.set(row.id, row);
     }
   }
 
   function hasRowCustomSound(rowKey: string): boolean {
-    const parsed = parseRowKey(rowKey);
-    if (!parsed) return false;
-    return CustomSounds.hasItemCustomSound("shop", parsed.itemId, parsed.shopType);
+    const row = rowDataByKey.get(rowKey);
+    if (!row) return false;
+    return CustomSounds.hasItemCustomSound("shop", row.id, row.shopType);
   }
 
   function resetRowCustomSound(rowKey: string): void {
-    const parsed = parseRowKey(rowKey);
-    if (!parsed) return;
-    if (!CustomSounds.hasItemCustomSound("shop", parsed.itemId, parsed.shopType)) return;
-
-    CustomSounds.removeItemCustomSound("shop", parsed.itemId, parsed.shopType);
     const row = rowDataByKey.get(rowKey);
-    if (row) {
-      row.hasCustomSound = false;
-    }
+    if (!row) return;
+    if (!CustomSounds.hasItemCustomSound("shop", row.id, row.shopType)) return;
+
+    CustomSounds.removeItemCustomSound("shop", row.id, row.shopType);
+    row.hasCustomSound = false;
     updateRowCustomIndicator(rowKey, false);
     scheduleRowCustomIndicatorSync();
   }
@@ -238,8 +225,8 @@ export function createItemsTable(
       render: (row) => {
         const container = element("div", { className: "shop-item-notify" });
 
-        // Check if item is at max quantity
-        const isAtMax = isItemAtMaxQuantity(row.id, row.shopType);
+        // Tools/decor with a max quantity disable the switch on this row
+        const isAtMax = row.shops.some((shop) => isItemAtMaxQuantity(row.id, shop));
 
         const switchHandle = Switch({
           checked: row.isTracked,
@@ -247,17 +234,21 @@ export function createItemsTable(
           size: "sm",
           onChange: (checked) => {
             row.isTracked = checked;
-            if (checked) {
-              MGShopNotifier.addTrackedItem(row.shopType, row.id);
-            } else {
-              MGShopNotifier.removeTrackedItem(row.shopType, row.id);
+            // Track / untrack across every shop the item is eligible for, so
+            // the alert fires whenever it appears in any of them.
+            for (const shop of row.shops) {
+              if (checked) {
+                MGShopNotifier.addTrackedItem(shop, row.id);
+              } else {
+                MGShopNotifier.removeTrackedItem(shop, row.id);
+              }
             }
           },
         });
 
-        // Store switch handle for later updates
-        const rowKey = `${row.shopType}:${row.id}`;
-        switchHandles.set(rowKey, switchHandle);
+        // Store switch handle for later updates (keyed by row id since rows
+        // are deduplicated)
+        switchHandles.set(row.id, switchHandle);
 
         container.appendChild(switchHandle.root);
         return container;
@@ -273,12 +264,12 @@ export function createItemsTable(
     stickyHeader: true,
     zebra: true,
     compact: true,
-    getRowId: (row) => `${row.shopType}:${row.id}`,
+    getRowId: (row) => row.id,
     onSortChange: () => {
       scheduleRowCustomIndicatorSync();
     },
     onRowClick: (row, _index, event) => {
-      const rowKey = `${row.shopType}:${row.id}`;
+      const rowKey = row.id;
       if (suppressRowClickKey) {
         if (suppressRowClickKey === rowKey) {
           clearSuppressRowClickKey();
@@ -397,10 +388,11 @@ export function createItemsTable(
   scheduleRowCustomIndicatorSync();
 
   const updateDisabledStates = (filterShopType?: ShopItemRow["shopType"]) => {
-    for (const [rowKey, switchHandle] of switchHandles.entries()) {
-      const [shopType, itemId] = rowKey.split(":") as [ShopItemRow["shopType"], string];
-      if (filterShopType && shopType !== filterShopType) continue;
-      const isAtMax = isItemAtMaxQuantity(itemId, shopType);
+    for (const [rowId, switchHandle] of switchHandles.entries()) {
+      const row = rowDataByKey.get(rowId);
+      if (!row) continue;
+      if (filterShopType && !row.shops.includes(filterShopType)) continue;
+      const isAtMax = row.shops.some((shop) => isItemAtMaxQuantity(row.id, shop));
       switchHandle.setDisabled(isAtMax);
     }
   };

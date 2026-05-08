@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
             userscript: {
                 name: 'Gemini',
                 namespace: 'Gemini',
-                version: '1.0.1',
+                version: '1.0.2',
                 match: [
                     'https://1227719606223765687.discordsays.com/*',
                     'https://magiccircle.gg/r/*',
