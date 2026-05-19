@@ -1,167 +1,174 @@
 /**
  * Shop Notifier - Limited Items Tracking
  *
- * Automatically disables tracking for items that have reached their max quantity
+ * Auto-disables tracking for items that have reached their per-item cap.
+ * The cap is derived from MGData (no hardcoded data):
+ *   - `isOneTimePurchase: true`  -> cap = 1
+ *   - `maxInventoryQuantity: N`  -> cap = N
+ *
+ * Items without a cap (regular seeds/eggs/most decors) are never auto-disabled.
  */
 
-import type { ShopType, Unsubscribe } from "../../../globals/core/types";
+import type { Unsubscribe } from "../../../globals/core/types";
 import { getMyInventory } from "../../../globals/variables/myInventory";
 import { getMyGarden } from "../../../globals/variables/myGarden";
-import { removeTrackedItem, getTrackedItems } from "../state";
+import { MGData } from "../../../modules";
+import type { DataKey } from "../../../modules/data/types";
+import { getTrackedItems, removeTrackedItem } from "../state";
 
-/**
- * Items with limited quantities
- */
-const LIMITED_ITEMS: Record<string, { shopType: ShopType; maxQuantity: number }> = {
-  // Tools
-  Shovel: { shopType: "tool", maxQuantity: 1 },
-  WateringCan: { shopType: "tool", maxQuantity: 99 },
+type ItemKind = "Tool" | "Decor" | "Seed" | "Egg";
 
-  // Decor (checks both inventory + placed in garden)
-  PetHutch: { shopType: "decor", maxQuantity: 1 },
-  DecorShed: { shopType: "decor", maxQuantity: 1 },
-};
+interface ItemLimit {
+  itemType: ItemKind;
+  maxQuantity: number;
+}
 
-/**
- * Check if a tool has reached max quantity in inventory
- */
-function hasReachedMaxTool(toolId: string, maxQuantity: number, items: unknown[]): boolean {
-  const toolItem = items.find(
-    (item: unknown) =>
-      typeof item === "object" &&
-      item !== null &&
-      "toolId" in item &&
-      item.toolId === toolId
-  );
-
-  if (!toolItem) return false;
-
-  const quantity = (toolItem as { quantity?: number }).quantity ?? 0;
-  return quantity >= maxQuantity;
+interface DataSource {
+  key: DataKey;
+  itemType: ItemKind;
+  subKey?: "seed";
 }
 
 /**
- * Check if a decor has reached max quantity in inventory + garden
+ * Order matters only for ambiguity: an item id collides across categories at
+ * most by accident; first match wins.
  */
-function hasReachedMaxDecor(decorId: string, maxQuantity: number, items: unknown[]): boolean {
-  // Check inventory quantity
-  const decorItem = items.find(
-    (item: unknown) =>
-      typeof item === "object" &&
-      item !== null &&
-      "decorId" in item &&
-      item.decorId === decorId
-  );
+const DATA_SOURCES: DataSource[] = [
+  { key: "items", itemType: "Tool" },
+  { key: "decor", itemType: "Decor" },
+  { key: "plants", itemType: "Seed", subKey: "seed" },
+  { key: "eggs", itemType: "Egg" },
+];
 
-  const inventoryQuantity = decorItem ? ((decorItem as { quantity?: number }).quantity ?? 0) : 0;
-
-  // Check garden (placed decors)
-  const garden = getMyGarden();
-  const gardenData = garden.get();
-  const placedCount = gardenData.decors.all.filter(
-    (decor: unknown) =>
-      typeof decor === "object" &&
-      decor !== null &&
-      "decorId" in decor &&
-      (decor as { decorId: string }).decorId === decorId
-  ).length;
-
-  // Total = inventory + placed in garden
-  const totalQuantity = inventoryQuantity + placedCount;
-
-  return totalQuantity >= maxQuantity;
+function readFinitePositive(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
 /**
- * Check if an item has reached its max quantity
+ * Read the limit metadata for an item id directly from MGData.
+ * Returns null if MGData has no entry for it, or the item has no cap.
  */
-function hasReachedMax(itemId: string, shopType: ShopType, maxQuantity: number, items: unknown[]): boolean {
-  if (shopType === "tool") {
-    return hasReachedMaxTool(itemId, maxQuantity, items);
-  } else if (shopType === "decor") {
-    return hasReachedMaxDecor(itemId, maxQuantity, items);
+function getItemLimit(itemId: string): ItemLimit | null {
+  for (const source of DATA_SOURCES) {
+    const bag = MGData.get(source.key);
+    if (!bag || typeof bag !== "object") continue;
+
+    const raw = (bag as Record<string, unknown>)[itemId];
+    if (!raw || typeof raw !== "object") continue;
+
+    const data = source.subKey ? (raw as Record<string, unknown>)[source.subKey] : raw;
+    if (!data || typeof data !== "object") continue;
+
+    const record = data as Record<string, unknown>;
+
+    if (record.isOneTimePurchase === true) {
+      return { itemType: source.itemType, maxQuantity: 1 };
+    }
+
+    const maxStack = readFinitePositive(record.maxInventoryQuantity);
+    if (maxStack !== null) {
+      return { itemType: source.itemType, maxQuantity: maxStack };
+    }
+
+    return null;
   }
-  return false;
+  return null;
+}
+
+function getInventoryQuantity(
+  items: unknown[],
+  idKey: "toolId" | "decorId" | "seedId" | "eggId",
+  itemId: string
+): number {
+  let total = 0;
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    if (record[idKey] !== itemId) continue;
+    const qty = record.quantity;
+    total += typeof qty === "number" ? qty : 1;
+  }
+  return total;
+}
+
+function countPlacedDecor(decorId: string): number {
+  const gardenData = getMyGarden().get();
+  let count = 0;
+  for (const decor of gardenData.decors.all) {
+    if (!decor || typeof decor !== "object") continue;
+    if ((decor as { decorId?: unknown }).decorId === decorId) count++;
+  }
+  return count;
+}
+
+function getCurrentQuantity(itemId: string, itemType: ItemKind): number {
+  const inventoryItems = getMyInventory().get().items;
+  switch (itemType) {
+    case "Tool":
+      return getInventoryQuantity(inventoryItems, "toolId", itemId);
+    case "Decor":
+      return getInventoryQuantity(inventoryItems, "decorId", itemId) + countPlacedDecor(itemId);
+    case "Seed":
+      return getInventoryQuantity(inventoryItems, "seedId", itemId);
+    case "Egg":
+      return getInventoryQuantity(inventoryItems, "eggId", itemId);
+  }
 }
 
 /**
- * Check if an item is limited (has a max quantity)
+ * True if the item has reached the per-item cap defined by MGData.
+ * Items without a cap always return false.
+ *
+ * Note: the cap is intrinsic to the item, independent of which shop it is sold
+ * in. The previous API took a `shopType` for compatibility with a hardcoded
+ * table; callers no longer need to pass one.
  */
-export function isLimitedItem(itemId: string): boolean {
-  return itemId in LIMITED_ITEMS;
+export function isItemAtMaxQuantity(itemId: string): boolean {
+  const limit = getItemLimit(itemId);
+  if (!limit) return false;
+  return getCurrentQuantity(itemId, limit.itemType) >= limit.maxQuantity;
 }
 
 /**
- * Check if a limited item has reached its max quantity
- * Returns false for non-limited items
- */
-export function isItemAtMaxQuantity(itemId: string, shopType: ShopType): boolean {
-  const limitedItem = LIMITED_ITEMS[itemId];
-
-  if (!limitedItem) return false;
-  if (limitedItem.shopType !== shopType) return false;
-
-  const inventory = getMyInventory();
-  const inventoryData = inventory.get();
-
-  return hasReachedMax(itemId, shopType, limitedItem.maxQuantity, inventoryData.items);
-}
-
-/**
- * Check inventory and disable tracking for items that have reached max quantity
+ * Walk tracked items and auto-disable any that are at their cap.
  */
 function checkAndDisableMaxed(): void {
-  const inventory = getMyInventory();
-  const inventoryData = inventory.get();
-  const trackedItems = getTrackedItems();
-
-  // Check each tracked item against limited items
-  for (const tracked of trackedItems) {
-    const limitedItem = LIMITED_ITEMS[tracked.itemId];
-
-    if (!limitedItem) continue;
-
-    // Verify shop type matches
-    if (limitedItem.shopType !== tracked.shopType) continue;
-
-    // Check if item has reached max quantity
-    if (hasReachedMax(tracked.itemId, tracked.shopType, limitedItem.maxQuantity, inventoryData.items)) {
-      console.log(`[ShopNotifier] Auto-disabling tracking for ${tracked.itemId} (max quantity reached)`);
-      removeTrackedItem(tracked.shopType, tracked.itemId);
-    }
+  for (const tracked of getTrackedItems()) {
+    if (!isItemAtMaxQuantity(tracked.itemId)) continue;
+    console.log(
+      `[ShopNotifier] Auto-disabling tracking for ${tracked.itemId} (max quantity reached)`
+    );
+    removeTrackedItem(tracked.shopType, tracked.itemId);
   }
 }
 
 let started = false;
-let unsubscribe: Unsubscribe | null = null;
+let inventoryUnsub: Unsubscribe | null = null;
 
 /**
- * Start monitoring inventory for limited items
+ * Start monitoring inventory for capped items.
+ *
+ * We only listen to inventory changes:
+ *   - Tool/seed/egg caps are inventory-only.
+ *   - Decor caps count inventory + garden placements, but placing/removing a
+ *     decor always mutates inventory in the same tick (-1/+1), so the inventory
+ *     event is sufficient to re-evaluate the total.
  */
 export function startLimitedItemsMonitoring(): void {
   if (started) return;
   started = true;
 
-  const inventory = getMyInventory();
-
-  // Subscribe to inventory changes
-  unsubscribe = inventory.subscribeStable(() => {
+  inventoryUnsub = getMyInventory().subscribeStable(() => {
     checkAndDisableMaxed();
   });
 
-  // Initial check
   checkAndDisableMaxed();
 }
 
-/**
- * Stop monitoring inventory
- */
 export function stopLimitedItemsMonitoring(): void {
   if (!started) return;
   started = false;
 
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
+  inventoryUnsub?.();
+  inventoryUnsub = null;
 }

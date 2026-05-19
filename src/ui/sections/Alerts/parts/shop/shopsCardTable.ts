@@ -225,8 +225,9 @@ export function createItemsTable(
       render: (row) => {
         const container = element("div", { className: "shop-item-notify" });
 
-        // Tools/decor with a max quantity disable the switch on this row
-        const isAtMax = row.shops.some((shop) => isItemAtMaxQuantity(row.id, shop));
+        // Items with a per-item cap (one-time purchase or maxInventoryQuantity)
+        // disable the switch on this row.
+        const isAtMax = isItemAtMaxQuantity(row.id);
 
         const switchHandle = Switch({
           checked: row.isTracked,
@@ -392,7 +393,7 @@ export function createItemsTable(
       const row = rowDataByKey.get(rowId);
       if (!row) continue;
       if (filterShopType && !row.shops.includes(filterShopType)) continue;
-      const isAtMax = row.shops.some((shop) => isItemAtMaxQuantity(row.id, shop));
+      const isAtMax = isItemAtMaxQuantity(row.id);
       switchHandle.setDisabled(isAtMax);
     }
   };
