@@ -71,7 +71,6 @@ interface FeatureConfig {
 
   // In-Game Enhancements
 
-  cropSizeIndicator: { enabled: boolean };
   eggProbabilityIndicator: { enabled: boolean };
   cropValueIndicator: { enabled: boolean };
 }
@@ -86,7 +85,6 @@ const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   room: { enabled: true },
   // In-Game Enhancements - default to disabled
 
-  cropSizeIndicator: { enabled: false },
   eggProbabilityIndicator: { enabled: false },
   cropValueIndicator: { enabled: true }, // Enabled for testing
 };
@@ -208,7 +206,6 @@ export class SettingsSection extends BaseSection {
       avatar: { ...DEFAULT_FEATURE_CONFIG.avatar, ...stored.avatar },
       room: { ...DEFAULT_FEATURE_CONFIG.room, ...stored.room },
 
-      cropSizeIndicator: { ...DEFAULT_FEATURE_CONFIG.cropSizeIndicator, ...stored.cropSizeIndicator },
       eggProbabilityIndicator: { ...DEFAULT_FEATURE_CONFIG.eggProbabilityIndicator, ...stored.eggProbabilityIndicator },
       cropValueIndicator: { ...DEFAULT_FEATURE_CONFIG.cropValueIndicator, ...stored.cropValueIndicator },
     };

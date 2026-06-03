@@ -26,7 +26,6 @@ import { MGAchievements } from "../features/achievements";
 import { MGPetTeam } from "../features/petTeam";
 import { MGXPTracker } from "../features/xpTracker";
 import { MGCropValueIndicator } from "../features/cropValueIndicator";
-import { MGCropSizeIndicator } from "../features/cropSizeIndicator";
 import { MGShopNotifier } from "../features/shopNotifier";
 import { MGWeatherNotifier } from "../features/weatherNotifier";
 import { MGPetHungerNotifier } from "../features/petHungerNotifier";
@@ -74,7 +73,6 @@ export const GeminiAPI = {
     PetTeam: MGPetTeam,
     XPTracker: MGXPTracker,
     CropValueIndicator: MGCropValueIndicator,
-    CropSizeIndicator: MGCropSizeIndicator,
     ShopNotifier: MGShopNotifier,
     WeatherNotifier: MGWeatherNotifier,
     PetHungerNotifier: MGPetHungerNotifier,

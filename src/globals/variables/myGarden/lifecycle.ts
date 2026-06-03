@@ -180,9 +180,13 @@ export function createMyGardenGlobal(): MyGardenGlobal {
       currentData = buildData(sources as GardenSources, getGameMap);
     }
 
-    // Subscribe to garden changes via WS
+    // Subscribe to garden changes only. We deliberately do NOT subscribe to
+    // "mySlot": that channel also fires on every position patch (movement), and
+    // each tick re-ran buildData + a deep equality over the whole garden, which
+    // tanked FPS while moving. The "garden" channel fires on every real garden
+    // change (and on the initial Welcome), and myGarden derives solely from the
+    // garden, so this loses no updates.
     unsubscribes.push(wsSubscribe("garden", onStateChange));
-    unsubscribes.push(wsSubscribe("mySlot", onStateChange));
 
     initialized = true;
   }

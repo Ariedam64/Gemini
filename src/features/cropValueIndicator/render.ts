@@ -15,13 +15,53 @@ import { MGSprite } from '../../modules/sprite';
 import type { Unsubscribe } from '../../globals/core/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Selectors (update these if game UI structure changes)
+// Selectors
 // ─────────────────────────────────────────────────────────────────────────────
+//
+// Mature crop tooltips are matched by STRUCTURE, not by Emotion hash classes
+// (css-xxxxx). Those hashes are derived from the style and are both unstable
+// across game updates AND shared by unrelated elements — keying on them caused
+// mass false matches and froze the page. The component classes below
+// (McGrid / McFlex / Sprite / chakra-text) are stable.
+//
+// A mature crop tooltip looks like:
+//   .McGrid
+//     .McFlex > canvas            (crop image)
+//     .McFlex                     (info column)
+//       p.chakra-text             (species name)
+//       .McFlex                   (group row)  ← injection anchor
+//         .McFlex > span...       (mutations)
+//         .McFlex                 (size row)
+//           .Sprite > canvas      (size icon)
+//           p.chakra-text         (size value)
 
-// Universal anchor: same class on both desktop and mobile
-const WEIGHT_LABEL_CLASS = 'css-1cdcuw7';
-// Growth crops (still growing): keep class-based selector
+// Entry selector for the scan. `McGrid`/`McFlex` are generic layout primitives
+// used everywhere in the game UI — scanning all of them every frame froze the
+// page. This is the crop-tooltip grid's specific class: it returns only a
+// handful of elements, and we still validate the structure before injecting.
+// If a game update breaks detection, this is the first thing to refresh.
+const CROP_TOOLTIP_GRID_CLASS = 'css-1utk8e1';
+
+// Minimum delay between rescans (ms). Tooltips don't appear faster than human
+// reaction, so throttling here keeps movement smooth without visible lag.
+const RESCAN_THROTTLE_MS = 200;
+
+// Growth crops (still growing): kept as a class-based selector for now.
 const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
+
+/**
+ * Find the size-value <p> inside a crop tooltip by structure: the size row is a
+ * `.McFlex` that holds a `.Sprite` icon directly followed by a `p.chakra-text`.
+ */
+function findSizeLabel(root: HTMLElement): HTMLElement | null {
+  const rows = root.querySelectorAll<HTMLElement>('.McFlex');
+  for (const row of rows) {
+    if (!row.querySelector(':scope > .Sprite')) continue;
+    const valueEl = row.querySelector(':scope > p.chakra-text') as HTMLElement | null;
+    if (valueEl) return valueEl;
+  }
+  return null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -33,6 +73,7 @@ let initialized = false;
 let plantInfoUnsubscribe: Unsubscribe | null = null;
 let lastRenderedPrice: number | null = null;
 let rafHandle: number | null = null;
+let scanTimer: number | null = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
@@ -103,7 +144,43 @@ interface CropTooltip {
   element: HTMLElement;
 }
 
-async function createPriceElement(price: number): Promise<HTMLElement> {
+// Coin sprite is identical for every price element — load it once and reuse.
+// Loading it per-injection (awaited) is what made rapid hovering freeze the page.
+let coinCanvasPromise: Promise<HTMLCanvasElement | null> | null = null;
+
+function getCoinCanvas(): Promise<HTMLCanvasElement | null> {
+  if (!coinCanvasPromise) {
+    coinCanvasPromise = MGSprite.toCanvas('ui', 'Coin').catch((err) => {
+      console.warn('[CropValueIndicator.render] Failed to load coin sprite:', err);
+      coinCanvasPromise = null; // allow a later retry
+      return null;
+    });
+  }
+  return coinCanvasPromise;
+}
+
+function drawCoin(canvas: HTMLCanvasElement): void {
+  void getCoinCanvas().then((coinCanvas) => {
+    if (!coinCanvas || !canvas.isConnected) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const scale = Math.min(canvas.width / coinCanvas.width, canvas.height / coinCanvas.height);
+    const scaledWidth = coinCanvas.width * scale;
+    const scaledHeight = coinCanvas.height * scale;
+    const x = (canvas.width - scaledWidth) / 2;
+    const y = (canvas.height - scaledHeight) / 2;
+
+    ctx.drawImage(coinCanvas, x, y, scaledWidth, scaledHeight);
+  });
+}
+
+/**
+ * Build the price element synchronously. The coin sprite is drawn afterwards
+ * (cached), so the element can be inserted in the same tick it is created —
+ * this is what keeps the dedup guard race-free.
+ */
+function createPriceElement(price: number): HTMLElement {
   const root = document.createElement('div');
   root.className = 'gemini-qol-cropPrice';
 
@@ -122,23 +199,7 @@ async function createPriceElement(price: number): Promise<HTMLElement> {
   root.appendChild(spriteContainer);
   root.appendChild(priceText);
 
-  try {
-    const coinCanvas = await MGSprite.toCanvas('ui', 'Coin');
-    if (coinCanvas && canvas.parentElement) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const scale = Math.min(canvas.width / coinCanvas.width, canvas.height / coinCanvas.height);
-        const scaledWidth = coinCanvas.width * scale;
-        const scaledHeight = coinCanvas.height * scale;
-        const x = (canvas.width - scaledWidth) / 2;
-        const y = (canvas.height - scaledHeight) / 2;
-
-        ctx.drawImage(coinCanvas, x, y, scaledWidth, scaledHeight);
-      }
-    }
-  } catch (err) {
-    console.warn('[CropValueIndicator.render] Failed to render coin sprite:', err);
-  }
+  drawCoin(canvas);
 
   return root;
 }
@@ -193,18 +254,40 @@ function extractTargetScale(el: HTMLElement): number {
   return 1.0;
 }
 
+/**
+ * Resolve the injection anchor for a mature crop from its size-value label.
+ * The size value sits in a row alongside the mutations; anchoring on that row's
+ * parent lets us insert the price on its own line at the bottom of the info column,
+ * instead of inline next to the size.
+ */
+function resolveMatureAnchor(sizeEl: HTMLElement): HTMLElement | null {
+  const sizeRow = sizeEl.closest('.McFlex') as HTMLElement | null;
+  if (!sizeRow) return null;
+
+  const groupRow = sizeRow.parentElement as HTMLElement | null;
+  return groupRow ?? sizeRow;
+}
+
 function findCropTooltips(): CropTooltip[] {
   const tooltips: CropTooltip[] = [];
   const seen = new Set<HTMLElement>();
 
-  // Mature crops: use weight label as universal anchor (same class on mobile and desktop)
-  const weightEls = document.querySelectorAll<HTMLElement>(`p.${WEIGHT_LABEL_CLASS}`);
-  for (const weightEl of weightEls) {
-    const rect = weightEl.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) continue;
-    if (weightEl.closest('button.chakra-button')) continue;
+  // Mature crops: scoped to the crop-tooltip grid class, then validated by
+  // structure (a grid holding a crop image + a size row).
+  const grids = document.querySelectorAll<HTMLElement>(`.${CROP_TOOLTIP_GRID_CLASS}`);
+  for (const grid of grids) {
+    if (grid.closest('button.chakra-button')) continue;
 
-    const container = weightEl.closest('.McFlex') as HTMLElement | null;
+    const rect = grid.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) continue;
+
+    // Must look like a crop tooltip: a crop image canvas + a size row
+    if (!grid.querySelector(':scope .McFlex > canvas')) continue;
+
+    const sizeEl = findSizeLabel(grid);
+    if (!sizeEl) continue;
+
+    const container = resolveMatureAnchor(sizeEl);
     if (!container || seen.has(container)) continue;
     seen.add(container);
 
@@ -284,7 +367,11 @@ function scheduleRender(): void {
   });
 }
 
-async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
+function injectPriceToTooltip(tooltip: CropTooltip): void {
+  // Synchronous on purpose: guard + insertion must happen in the same tick so
+  // concurrent observer batches can't each pass the guard and double-insert.
+  // Price is inserted as the next sibling (afterend), so guard on the sibling too.
+  if (tooltip.element.nextElementSibling?.classList.contains('gemini-qol-cropPrice')) return;
   if (tooltip.element.querySelector('.gemini-qol-cropPrice')) return;
 
   try {
@@ -304,14 +391,12 @@ async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
       }
     }
 
-    // Fallback: extract from DOM if atom data not available
+    // Fallback: extract from DOM if atom data not available.
+    // The species name is the direct <p> child of the info column (the group
+    // row's parent); the size value <p> lives deeper, inside the group row.
     if (price === 0) {
-      // Look for species name in nearby p.chakra-text (not the weight label)
-      const parentEl = tooltip.element.parentElement as HTMLElement | null;
-      const searchRoot = parentEl ?? tooltip.element;
-      const nameEl = [...searchRoot.querySelectorAll('p.chakra-text')].find(
-        p => !p.classList.contains(WEIGHT_LABEL_CLASS)
-      ) as HTMLElement | undefined;
+      const infoColumn = tooltip.element.parentElement as HTMLElement | null;
+      const nameEl = infoColumn?.querySelector(':scope > p.chakra-text') as HTMLElement | null;
       if (nameEl) {
         const species = nameEl.textContent?.trim();
         if (species) {
@@ -322,10 +407,11 @@ async function injectPriceToTooltip(tooltip: CropTooltip): Promise<void> {
       }
     }
 
-    const priceEl = await createPriceElement(price);
-    // Insert after the tooltip element (not inside) to avoid flex row layout issues
+    const priceEl = createPriceElement(price);
+    // Insert after the tooltip element (not inside) to avoid flex row layout issues.
+    // Not tracked per-element (would leak a closure per injection under rapid
+    // hovering); all price elements are swept together in destroy().
     tooltip.element.insertAdjacentElement('afterend', priceEl);
-    tracker.add(() => priceEl.remove());
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);
   }
@@ -345,78 +431,26 @@ function startObservingTooltips(): void {
     scheduleRender();
   });
 
-  // Debounced mutation handler — coalesces rapid DOM changes into a single
-  // rAF pass. This prevents Firefox from stalling on the dozens of
-  // synchronous MutationObserver callbacks React triggers per render cycle.
-  let pendingRAF = false;
-  let pendingNodes: HTMLElement[] = [];
-
-  function processPendingNodes(): void {
-    pendingRAF = false;
-    const nodes = pendingNodes;
-    pendingNodes = [];
-
-    for (const node of nodes) {
-      // Weight label added directly → its McFlex parent is the injection point
-      if (node.tagName === 'P' && node.classList.contains(WEIGHT_LABEL_CLASS)) {
-        if (!node.closest('button.chakra-button')) {
-          const container = node.closest('.McFlex') as HTMLElement | null;
-          if (container) injectPriceToTooltip({ element: container });
-        }
-      }
-
-      // Weight label added inside a subtree
-      const weightEls = node.querySelectorAll<HTMLElement>(`p.${WEIGHT_LABEL_CLASS}`);
-      weightEls.forEach((weightEl) => {
-        if (!weightEl.closest('button.chakra-button')) {
-          const container = weightEl.closest('.McFlex') as HTMLElement | null;
-          if (container) injectPriceToTooltip({ element: container });
-        }
-      });
-
-      // Growth crop containers
-      if (node.classList.contains(CROP_CONTAINER_CLASS_GROWTH)) {
-        if (!node.closest('button.chakra-button')) {
-          const mcFlexes = node.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-          if (mcFlexes.length > 0) {
-            const timerContainer = mcFlexes[mcFlexes.length - 1];
-            if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-              injectPriceToTooltip({ element: timerContainer });
-            }
-          }
-        }
-      }
-
-      const growthCropContainers = node.querySelectorAll<HTMLElement>(
-        `.${CROP_CONTAINER_CLASS_GROWTH}`
-      );
-      growthCropContainers.forEach((container) => {
-        if (!container.closest('button.chakra-button')) {
-          const mcFlexes = container.querySelectorAll<HTMLElement>(':scope > .McFlex > .McFlex');
-          if (mcFlexes.length > 0) {
-            const timerContainer = mcFlexes[mcFlexes.length - 1];
-            if (timerContainer.querySelector('p.chakra-text') && !timerContainer.querySelector('.gemini-qol-cropPrice')) {
-              injectPriceToTooltip({ element: timerContainer });
-            }
-          }
-        }
-      });
+  // Throttled rescan — DOM mutations fire constantly while the player moves, so
+  // we coalesce them into at most one scan every RESCAN_THROTTLE_MS. The scan
+  // itself is scoped to the crop-tooltip grid class (few elements), so this
+  // stays cheap even during heavy movement.
+  function rescan(): void {
+    scanTimer = null;
+    const crops = findCropTooltips();
+    for (const crop of crops) {
+      injectPriceToTooltip(crop);
     }
   }
 
   const observer = new MutationObserver((mutations) => {
+    if (scanTimer !== null) return;
+
     for (const mutation of mutations) {
-      if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            pendingNodes.push(node);
-          }
-        });
+      if (mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
+        scanTimer = window.setTimeout(rescan, RESCAN_THROTTLE_MS);
+        return;
       }
-    }
-    if (pendingNodes.length > 0 && !pendingRAF) {
-      pendingRAF = true;
-      requestAnimationFrame(processPendingNodes);
     }
   });
 
@@ -460,6 +494,11 @@ export const render = {
       rafHandle = null;
     }
 
+    if (scanTimer !== null) {
+      clearTimeout(scanTimer);
+      scanTimer = null;
+    }
+
     if (plantInfoUnsubscribe) {
       plantInfoUnsubscribe();
       plantInfoUnsubscribe = null;
@@ -467,6 +506,11 @@ export const render = {
 
     tracker.run();
     tracker.clear();
+
+    // Sweep every injected price element in one pass
+    document
+      .querySelectorAll('.gemini-qol-cropPrice')
+      .forEach((el) => el.remove());
 
     tracker = createCleanupTracker();
     stylesInjected = false;
