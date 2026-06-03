@@ -332,21 +332,19 @@ function doRender(price: number): void {
   }
 }
 
+/**
+ * Price of the crop currently shown in the tooltip.
+ * currentTile.plant.currentSlotIndex now maps directly to the selected slot
+ * (see currentTile buildPlantInfo), so it points at the exact slot displayed.
+ */
 function calculateCurrentPrice(): number {
-  const tile = getCurrentTile().get();
-  const plant = tile.plant;
+  const plant = getCurrentTile().get().plant;
+  if (!plant || plant.currentSlotIndex === null) return 0;
 
-  if (!plant) return 0;
+  const slot = plant.slots[plant.currentSlotIndex];
+  if (!slot) return 0;
 
-  const currentSlot = plant.currentSlotIndex !== null ? plant.slots[plant.currentSlotIndex] : null;
-
-  if (!currentSlot) return 0;
-
-  return calculateCropSellPrice(
-    currentSlot.species,
-    currentSlot.targetScale,
-    currentSlot.mutations || []
-  );
+  return calculateCropSellPrice(slot.species, slot.targetScale, slot.mutations || []);
 }
 
 function scheduleRender(): void {
@@ -375,21 +373,8 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
   if (tooltip.element.querySelector('.gemini-qol-cropPrice')) return;
 
   try {
-    // Primary: use atom data (accurate, works on all platforms)
-    const tile = getCurrentTile().get();
-    const plant = tile.plant;
-
-    let price = 0;
-    if (plant && plant.currentSlotIndex !== null) {
-      const currentSlot = plant.slots[plant.currentSlotIndex];
-      if (currentSlot) {
-        price = calculateCropSellPrice(
-          currentSlot.species,
-          currentSlot.targetScale,
-          currentSlot.mutations || []
-        );
-      }
-    }
+    // Primary: selected slot from the game atom (the exact slot in the tooltip)
+    let price = calculateCurrentPrice();
 
     // Fallback: extract from DOM if atom data not available.
     // The species name is the direct <p> child of the info column (the group

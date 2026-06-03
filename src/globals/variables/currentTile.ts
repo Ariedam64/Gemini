@@ -107,12 +107,21 @@ function buildPlantInfo(sources: CurrentTileSources): PlantInfo | null {
   }
 
   const plant = obj as PlantTileObject;
+  const slots = plant.slots ?? [];
   const sorted = sources.sortedSlotIndices ?? [];
+
+  // The game's `mySelectedSlotIdAtom` (read into currentGrowSlotIndex) is a
+  // slotId — the stable per-slot id — NOT the slot's index in slots[]. Resolve
+  // it to a real array index so `slots[currentSlotIndex]` points at the selected
+  // crop. (null when nothing is selected or the id no longer exists.)
+  const selectedSlotId = sources.currentGrowSlotIndex;
+  const resolvedIndex =
+    selectedSlotId !== null ? slots.findIndex((slot) => slot.slotId === selectedSlotId) : -1;
 
   return {
     species: plant.species,
-    slots: plant.slots ?? [],
-    currentSlotIndex: sources.currentGrowSlotIndex ?? (sorted.length > 0 ? sorted[0] : null),
+    slots,
+    currentSlotIndex: resolvedIndex >= 0 ? resolvedIndex : null,
     sortedSlotIndices: sorted,
     nextHarvestSlotIndex: sorted.length > 0 ? sorted[0] : null,
   };

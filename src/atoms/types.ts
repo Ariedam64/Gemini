@@ -175,6 +175,13 @@ export type GrowSlot = {
   endTime: number;
   targetScale: number;
   mutations: string[];
+  // Stable per-slot identifier from the game. NOTE: this is NOT the slot's index
+  // in the slots[] array — the selected-slot atom references this id, so callers
+  // must resolve it to an index via slots.findIndex(s => s.slotId === id).
+  slotId?: number;
+  x?: number;
+  y?: number;
+  rotation?: number;
 };
 
 export type PlantTileObject = {
