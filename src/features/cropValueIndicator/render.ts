@@ -42,10 +42,6 @@ import type { Unsubscribe } from '../../globals/core/types';
 // If a game update breaks detection, this is the first thing to refresh.
 const CROP_TOOLTIP_GRID_CLASS = 'css-1utk8e1';
 
-// Minimum delay between rescans (ms). Tooltips don't appear faster than human
-// reaction, so throttling here keeps movement smooth without visible lag.
-const RESCAN_THROTTLE_MS = 200;
-
 // Growth crops (still growing): kept as a class-based selector for now.
 const CROP_CONTAINER_CLASS_GROWTH = 'css-v439q6';
 
@@ -73,7 +69,9 @@ let initialized = false;
 let plantInfoUnsubscribe: Unsubscribe | null = null;
 let lastRenderedPrice: number | null = null;
 let rafHandle: number | null = null;
-let scanTimer: number | null = null;
+// rAF handle that coalesces a burst of DOM mutations into a single rescan on
+// the next frame — instant to the eye, while still avoiding redundant scans.
+let scanRaf: number | null = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
@@ -365,41 +363,65 @@ function scheduleRender(): void {
   });
 }
 
-function injectPriceToTooltip(tooltip: CropTooltip): void {
-  // Synchronous on purpose: guard + insertion must happen in the same tick so
-  // concurrent observer batches can't each pass the guard and double-insert.
-  // Price is inserted as the next sibling (afterend), so guard on the sibling too.
-  if (tooltip.element.nextElementSibling?.classList.contains('gemini-qol-cropPrice')) return;
-  if (tooltip.element.querySelector('.gemini-qol-cropPrice')) return;
+/** Price for a tooltip: selected slot from currentTile, DOM fallback otherwise. */
+function computeTooltipPrice(anchor: HTMLElement): number {
+  let price = calculateCurrentPrice();
+  if (price > 0) return price;
 
+  // Fallback: extract from DOM. The species name is the direct <p> child of the
+  // info column (the anchor's parent); the size value <p> lives inside the anchor.
+  const infoColumn = anchor.parentElement as HTMLElement | null;
+  const nameEl = infoColumn?.querySelector(':scope > p.chakra-text') as HTMLElement | null;
+  const species = nameEl?.textContent?.trim();
+  if (species) {
+    price = calculateCropSellPrice(species, extractTargetScale(anchor), extractMutations(anchor));
+  }
+  return price;
+}
+
+/**
+ * Ensure exactly one price element sits right after the anchor, and return it.
+ * If one is already in place it is reused (text refreshed) — React reuses tooltip
+ * DOM across tiles, so creating a new one each time would pile up duplicates.
+ */
+function ensureSinglePrice(anchor: HTMLElement): HTMLElement | null {
   try {
-    // Primary: selected slot from the game atom (the exact slot in the tooltip)
-    let price = calculateCurrentPrice();
+    const price = computeTooltipPrice(anchor);
+    const next = anchor.nextElementSibling;
 
-    // Fallback: extract from DOM if atom data not available.
-    // The species name is the direct <p> child of the info column (the group
-    // row's parent); the size value <p> lives deeper, inside the group row.
-    if (price === 0) {
-      const infoColumn = tooltip.element.parentElement as HTMLElement | null;
-      const nameEl = infoColumn?.querySelector(':scope > p.chakra-text') as HTMLElement | null;
-      if (nameEl) {
-        const species = nameEl.textContent?.trim();
-        if (species) {
-          const targetScale = extractTargetScale(tooltip.element);
-          const mutations = extractMutations(tooltip.element);
-          price = calculateCropSellPrice(species, targetScale, mutations);
-        }
-      }
+    if (next instanceof HTMLElement && next.classList.contains('gemini-qol-cropPrice')) {
+      const textEl = next.querySelector('.gemini-qol-cropPrice-text') as HTMLElement | null;
+      if (textEl) textEl.textContent = price > 0 ? price.toLocaleString() : '';
+      return next;
     }
 
     const priceEl = createPriceElement(price);
-    // Insert after the tooltip element (not inside) to avoid flex row layout issues.
-    // Not tracked per-element (would leak a closure per injection under rapid
-    // hovering); all price elements are swept together in destroy().
-    tooltip.element.insertAdjacentElement('afterend', priceEl);
+    anchor.insertAdjacentElement('afterend', priceEl);
+    return priceEl;
   } catch (err) {
     console.warn('[CropValueIndicator.render] Failed to inject price:', err);
+    return null;
   }
+}
+
+/**
+ * Reconcile price elements with the crop tooltips currently on screen: place
+ * one price per crop tooltip, then remove every other .gemini-qol-cropPrice.
+ * The removal is what cleans up leftovers React keeps when it reuses a tooltip
+ * for a non-crop (decor/egg) or a different crop.
+ */
+function rescan(): void {
+  scanRaf = null;
+
+  const valid = new Set<Element>();
+  for (const tooltip of findCropTooltips()) {
+    const priceEl = ensureSinglePrice(tooltip.element);
+    if (priceEl) valid.add(priceEl);
+  }
+
+  document.querySelectorAll('.gemini-qol-cropPrice').forEach((el) => {
+    if (!valid.has(el)) el.remove();
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,33 +429,22 @@ function injectPriceToTooltip(tooltip: CropTooltip): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function startObservingTooltips(): void {
-  const existing = findCropTooltips();
-  for (const crop of existing) {
-    injectPriceToTooltip(crop);
-  }
+  rescan();
 
   plantInfoUnsubscribe = getCurrentTile().subscribePlantInfo(() => {
     scheduleRender();
   });
 
-  // Throttled rescan — DOM mutations fire constantly while the player moves, so
-  // we coalesce them into at most one scan every RESCAN_THROTTLE_MS. The scan
-  // itself is scoped to the crop-tooltip grid class (few elements), so this
-  // stays cheap even during heavy movement.
-  function rescan(): void {
-    scanTimer = null;
-    const crops = findCropTooltips();
-    for (const crop of crops) {
-      injectPriceToTooltip(crop);
-    }
-  }
-
+  // Coalesce the burst of DOM mutations React fires per render into a single
+  // rescan on the next animation frame — instant to the eye. The scan is scoped
+  // to the crop-tooltip grid class (few elements), so running it per frame stays
+  // cheap even during movement.
   const observer = new MutationObserver((mutations) => {
-    if (scanTimer !== null) return;
+    if (scanRaf !== null) return;
 
     for (const mutation of mutations) {
       if (mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
-        scanTimer = window.setTimeout(rescan, RESCAN_THROTTLE_MS);
+        scanRaf = requestAnimationFrame(rescan);
         return;
       }
     }
@@ -479,9 +490,9 @@ export const render = {
       rafHandle = null;
     }
 
-    if (scanTimer !== null) {
-      clearTimeout(scanTimer);
-      scanTimer = null;
+    if (scanRaf !== null) {
+      cancelAnimationFrame(scanRaf);
+      scanRaf = null;
     }
 
     if (plantInfoUnsubscribe) {
