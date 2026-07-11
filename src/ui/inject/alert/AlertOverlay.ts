@@ -14,13 +14,14 @@ import type { AvailableItem } from "./alertData";
 import { alertOverlayCss } from "./styles.css";
 import { getHudStateValue, DEFAULT_HUD_STATE } from "../../hud/state/state";
 import { THEMES } from "../../theme/definitions";
+import type { ScreenRect } from "../core/pixiRailButton";
 
 export interface AlertOverlayOptions {
   /** Items to display */
   items: AvailableItem[];
 
-  /** Anchor element for positioning (the alert button) */
-  anchorElement: HTMLElement;
+  /** Returns the alert button's current on-screen rect (it's a Pixi node, not a DOM element). */
+  getAnchorRect: () => ScreenRect | null;
 
   /** Called when close button clicked */
   onClose?: () => void;
@@ -126,8 +127,7 @@ function createEmptyState(): HTMLDivElement {
  * horizontally to the left of the anchor button.
  * On small screens, fills available width dynamically.
  */
-function positionOverlay(overlay: HTMLElement, anchor: HTMLElement): void {
-  const anchorRect = anchor.getBoundingClientRect();
+function positionOverlay(overlay: HTMLElement, anchorRect: ScreenRect): void {
   const gap = 8;
   const vw = window.innerWidth;
 
@@ -157,8 +157,12 @@ function positionOverlay(overlay: HTMLElement, anchor: HTMLElement): void {
 /**
  * Create alert overlay component
  */
+function isPointInRect(rect: ScreenRect, clientX: number, clientY: number): boolean {
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
 export function createAlertOverlay(options: AlertOverlayOptions): AlertOverlayHandle {
-  const { items, anchorElement, onClose, onBuyAll } = options;
+  const { items, getAnchorRect, onClose, onBuyAll } = options;
 
   // Root container
   const root = element("div", { className: "alert-overlay" }) as HTMLDivElement;
@@ -222,20 +226,22 @@ export function createAlertOverlay(options: AlertOverlayOptions): AlertOverlayHa
   updateItems(items);
 
   // Position overlay relative to anchor
-  positionOverlay(root, anchorElement);
+  const reposition = () => {
+    const anchorRect = getAnchorRect();
+    if (anchorRect) positionOverlay(root, anchorRect);
+  };
+  reposition();
 
   // Reposition on window resize
-  const handleResize = () => {
-    positionOverlay(root, anchorElement);
-  };
-  window.addEventListener("resize", handleResize);
+  window.addEventListener("resize", reposition);
 
   // Click outside to close
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as Node;
-    if (!root.contains(target) && !anchorElement.contains(target)) {
-      onClose?.();
-    }
+    if (root.contains(target)) return;
+    const anchorRect = getAnchorRect();
+    if (anchorRect && isPointInRect(anchorRect, e.clientX, e.clientY)) return;
+    onClose?.();
   };
   document.addEventListener("click", handleClickOutside, { capture: true });
 
@@ -243,7 +249,7 @@ export function createAlertOverlay(options: AlertOverlayOptions): AlertOverlayHa
     root,
     updateItems,
     destroy() {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", reposition);
       document.removeEventListener("click", handleClickOutside, { capture: true });
       root.remove();
     },

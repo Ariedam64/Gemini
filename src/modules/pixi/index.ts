@@ -10,6 +10,7 @@ import { highlightMutation, watchMutation, stopWatchMutation } from "./logic/mut
 import { fadeSpecies, clearSpeciesFade, clearFades, watchFadeSpecies, stopWatchFadeSpecies } from "./logic/fades";
 import { inspectTile } from "./logic/inspect";
 import { drawOverlayBox, stopOverlay } from "./logic/overlays";
+import { findAcrossBranches } from "./logic/utils";
 import { pageWindow } from "../../utils/windowContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -124,5 +125,10 @@ export const MGPixi = {
   stopWatchFadeSpecies: (keyOrSpecies: string) => {
     ensureReady();
     return stopWatchFadeSpecies(keyOrSpecies);
+  },
+
+  findByLabel: (label: string) => {
+    ensureReady();
+    return findAcrossBranches(state.stage, (node: any) => node?.label === label);
   },
 };

@@ -1,44 +1,31 @@
 /**
- * HarvestLocker Crop Card Injection — DOM logic
+ * HarvestLocker Crop Card Injection — Pixi logic
  *
- * Adds a red border + lock icon to the game's crop detail card
- * when the current crop's next harvest slot is locked by HarvestLocker rules.
- *
- * Per ui/ui.inject.md:
- * - No Shadow DOM
- * - All observers/listeners tracked and cleaned up
- * - Styles injected via <style> element with cleanup
+ * Draws a purple lock border + icon on the game's Pixi-rendered garden info
+ * card when the current crop's next harvest slot is locked by HarvestLocker
+ * rules. The card used to be DOM (matched via `.css-qnqsp4`); it now renders
+ * natively in Pixi (see ../../core/gardenInfoCardPixi.ts).
  */
 
-import { onAdded, onRemoved } from '../../../../utils/dom';
 import { EVENTS } from '../../../../utils/storage';
-import { getCurrentTile } from '../../../../globals/variables/currentTile';
 import { isSlotLocked } from '../../../../features/harvestLocker/logic/core';
-import { harvestLockerInjectCss } from './styles.css';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Selectors — update here if the game changes class names
-// ─────────────────────────────────────────────────────────────────────────────
-
-const CROP_CARD_CLASS = 'css-qnqsp4';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-const LOCKED_CLASS   = 'gemini-qol-harvestLocker-locked';
-const LOCK_ICON_ID   = 'gemini-qol-harvestLocker-lock-icon';
-const STYLE_ID       = 'gemini-qol-harvestLocker-styles';
-
-// Feather Icons "lock" — same icon set the game uses (matches stroke style of clock icon)
-const LOCK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+import { myOwnCurrentDirtTileIndexAtom, myCurrentGardenObjectAtom, mySelectedSlotIdAtom } from '../../../../atoms';
+import type { GardenTileObject, GrowSlot, Unsubscribe } from '../../../../atoms/types';
+import { startGardenInfoLockIndicator, type GardenInfoLockIndicatorController } from '../../core/gardenInfoLockIndicator';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
 
-let currentCard: HTMLElement | null = null;
-let stylesInjected = false;
+let indicator: GardenInfoLockIndicatorController | null = null;
+
+// `myOwnCurrentDirtTileIndexAtom`/`myCurrentGardenObjectAtom`/`mySelectedSlotIdAtom`
+// mirror whatever tile/object/slot the game itself is showing in the info
+// card — unlike `currentTile` (derived from the player's own position on the
+// map), these are correct regardless of where the player is standing.
+let currentTileIndex: number | null = null;
+let currentGardenObject: GardenTileObject | null = null;
+let currentSelectedSlotId: number | null = null;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cleanup Tracking (per ui/ui.inject.md pattern)
@@ -62,76 +49,34 @@ function runCleanups(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Style Injection
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ensureStyles(): void {
-    if (stylesInjected) return;
-    if (document.getElementById(STYLE_ID)) {
-        stylesInjected = true;
-        return;
-    }
-
-    const styleEl = document.createElement('style');
-    styleEl.id = STYLE_ID;
-    styleEl.textContent = harvestLockerInjectCss;
-    document.head.appendChild(styleEl);
-    stylesInjected = true;
-}
-
-function removeStyles(): void {
-    document.getElementById(STYLE_ID)?.remove();
-    stylesInjected = false;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Overlay Management
-// ─────────────────────────────────────────────────────────────────────────────
-
-function applyOverlay(card: HTMLElement): void {
-    card.classList.add(LOCKED_CLASS);
-
-    if (!card.querySelector(`#${LOCK_ICON_ID}`)) {
-        const icon = document.createElement('div');
-        icon.id = LOCK_ICON_ID;
-        icon.innerHTML = LOCK_SVG;
-        card.appendChild(icon);
-    }
-}
-
-function removeOverlay(card: HTMLElement): void {
-    card.classList.remove(LOCKED_CLASS);
-    card.querySelector(`#${LOCK_ICON_ID}`)?.remove();
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Lock Evaluation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function evaluate(): void {
-    if (!currentCard) return;
-
-    const data = getCurrentTile().get();
-
-    if (
-        !data.plant ||
-        data.position.localIndex === null ||
-        data.plant.nextHarvestSlotIndex === null
-    ) {
-        removeOverlay(currentCard);
-        return;
+/**
+ * Array index of the slot currently shown in the card. `mySelectedSlotIdAtom`
+ * holds the sub-slot's stable `slotId`, NOT its position in `slots[]` (same
+ * resolution as the price badge — see cropValueIndicator/render.ts), so it
+ * must be resolved by id. Falls back to the first slot when nothing matches.
+ */
+function findSelectedSlotIndex(slots: GrowSlot[], selectedSlotId: number | null): number | null {
+    if (!slots.length) return null;
+    if (selectedSlotId != null) {
+        const idx = slots.findIndex((slot) => slot.slotId === selectedSlotId);
+        if (idx >= 0) return idx;
     }
+    return 0;
+}
+
+function isLocked(): boolean {
+    if (currentTileIndex === null || !currentGardenObject || currentGardenObject.objectType !== 'plant') {
+        return false;
+    }
+
+    const slotIndex = findSelectedSlotIndex(currentGardenObject.slots ?? [], currentSelectedSlotId);
+    if (slotIndex === null) return false;
 
     // tileIndex dans le garden = localIndex (pas globalIndex)
-    const tileId = String(data.position.localIndex);
-    const slotIndex = data.plant.nextHarvestSlotIndex;
-    const locked = isSlotLocked(tileId, slotIndex);
-
-    if (locked) {
-        applyOverlay(currentCard);
-    } else {
-        removeOverlay(currentCard);
-    }
+    return isSlotLocked(String(currentTileIndex), slotIndex);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -139,32 +84,46 @@ function evaluate(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function startWatching(): void {
-    ensureStyles();
+    indicator = startGardenInfoLockIndicator({ isLocked });
 
-    // Watch for crop card appearing in DOM
-    const unwatchAdded = onAdded(`.${CROP_CARD_CLASS}`, (el) => {
-        currentCard = el as HTMLElement;
-        evaluate();
-    });
-    addCleanup(() => unwatchAdded.disconnect());
+    let unsubTileIndex: Unsubscribe | null = null;
+    void myOwnCurrentDirtTileIndexAtom
+        .onChangeNow((next) => {
+            currentTileIndex = next;
+            indicator?.recheck();
+        })
+        .then((unsub) => {
+            if (indicator) unsubTileIndex = unsub;
+            else unsub();
+        });
+    addCleanup(() => unsubTileIndex?.());
 
-    // Watch for crop card being removed from DOM
-    const unwatchRemoved = onRemoved(`.${CROP_CARD_CLASS}`, (el) => {
-        if (currentCard === el) {
-            removeOverlay(el as HTMLElement);
-            currentCard = null;
-        }
-    });
-    addCleanup(() => unwatchRemoved.disconnect());
+    let unsubObject: Unsubscribe | null = null;
+    void myCurrentGardenObjectAtom
+        .onChangeNow((next) => {
+            currentGardenObject = next;
+            indicator?.recheck();
+        })
+        .then((unsub) => {
+            if (indicator) unsubObject = unsub;
+            else unsub();
+        });
+    addCleanup(() => unsubObject?.());
 
-    // Re-evaluate when plant info changes (tile navigation, mutations applied)
-    const unsubPlant = getCurrentTile().subscribePlantInfo(() => {
-        evaluate();
-    });
-    addCleanup(unsubPlant);
+    let unsubSlotId: Unsubscribe | null = null;
+    void mySelectedSlotIdAtom
+        .onChangeNow((next) => {
+            currentSelectedSlotId = next;
+            indicator?.recheck();
+        })
+        .then((unsub) => {
+            if (indicator) unsubSlotId = unsub;
+            else unsub();
+        });
+    addCleanup(() => unsubSlotId?.());
 
     // Re-evaluate when HarvestLocker rules or config change
-    const onLocksUpdated = () => evaluate();
+    const onLocksUpdated = () => indicator?.recheck();
     window.addEventListener(EVENTS.HARVEST_LOCKER_LOCKS_UPDATED, onLocksUpdated);
     addCleanup(() => window.removeEventListener(EVENTS.HARVEST_LOCKER_LOCKS_UPDATED, onLocksUpdated));
 
@@ -172,13 +131,13 @@ export function startWatching(): void {
 }
 
 export function stopWatching(): void {
-    if (currentCard) {
-        removeOverlay(currentCard);
-        currentCard = null;
-    }
+    indicator?.stop();
+    indicator = null;
 
     runCleanups();
-    removeStyles();
+    currentTileIndex = null;
+    currentGardenObject = null;
+    currentSelectedSlotId = null;
 
     console.log('[HarvestLocker Inject] Stopped');
 }

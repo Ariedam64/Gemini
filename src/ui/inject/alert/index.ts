@@ -350,7 +350,7 @@ export function startAlertInjector(): AlertInjectorHandle {
       return;
     }
 
-    if (!buttonHandle?.root) {
+    if (!buttonHandle) {
       return;
     }
 
@@ -360,7 +360,7 @@ export function startAlertInjector(): AlertInjectorHandle {
     // Create overlay
     overlayHandle = createAlertOverlay({
       items,
-      anchorElement: buttonHandle.root,
+      getAnchorRect: () => buttonHandle!.getScreenRect(),
       onClose: closeOverlay,
       onBuyAll: (item) => {
         // Call the appropriate buyAll function based on shop type
@@ -463,7 +463,6 @@ export function startAlertInjector(): AlertInjectorHandle {
   // Initialize button
   buttonHandle = startInjectAlertButton({
     onClick: toggleOverlay,
-    ariaLabel: "Alerts",
   });
 
   // Subscribe to availability changes
