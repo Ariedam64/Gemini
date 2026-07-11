@@ -12,6 +12,6 @@ export interface PetHungerNotifierConfig {
 export const STORAGE_KEY = FEATURE_KEYS.PET_HUNGER_NOTIFIER;
 
 export const DEFAULT_CONFIG: PetHungerNotifierConfig = {
-  enabled: false,
+  enabled: true,
   threshold: 5,
 };

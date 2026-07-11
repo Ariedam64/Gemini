@@ -99,6 +99,12 @@ export const DEV_KEYS = {
     AUTO_RELOAD: 'dev:auto-reload',
 } as const;
 
+/** Keys tracking one-time storage migrations (so they only ever run once per user) */
+export const MIGRATION_KEYS = {
+    /** Forces every feature's `enabled` flag to true, once, for existing users still on old opt-in defaults */
+    FORCE_ENABLE_FEATURES_V1: 'migration:forceEnableFeatures:v1',
+} as const;
+
 /**
  * All storage keys in one object for convenience
  */
@@ -110,6 +116,7 @@ export const KEYS = {
     FEATURE: FEATURE_KEYS,
     INJECT: INJECT_KEYS,
     DEV: DEV_KEYS,
+    MIGRATION: MIGRATION_KEYS,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -278,5 +285,56 @@ export function migrateStorageKeys(): void {
         }
     } catch (error) {
         console.error('[Gemini Storage] Migration failed:', error);
+    }
+}
+
+/**
+ * Storage keys for every feature whose `enabled` default just flipped from
+ * false to true. Existing users already have a saved value (often `false`,
+ * from the old opt-in default) that would otherwise keep overriding the new
+ * default forever — this is what actually forces them over, once.
+ *
+ * Two value shapes exist depending on how the feature is toggled:
+ * - Feature configs (`{ enabled, ...rest }`) — most features.
+ * - Plain booleans — QOL injections toggled via the registry (src/ui/inject/core/registry.ts).
+ */
+const FORCE_ENABLE_FEATURE_KEYS: string[] = [
+    FEATURE_KEYS.CROP_VALUE_INDICATOR,
+    'feature:growthTimers:config', // not registered in FEATURE_KEYS (see src/features/growthTimers/state.ts)
+    FEATURE_KEYS.PET_HUNGER_NOTIFIER,
+    FEATURE_KEYS.PET_TEAM,
+    FEATURE_KEYS.SHOP_NOTIFIER,
+    FEATURE_KEYS.WEATHER_NOTIFIER,
+    FEATURE_KEYS.XP_TRACKER,
+    FEATURE_KEYS.AUTO_STOCK_SEED_SILO,
+    FEATURE_KEYS.AUTO_STOCK_DECOR_SHED,
+];
+
+/**
+ * One-time migration: forces every key in `FORCE_ENABLE_FEATURE_KEYS` to an
+ * enabled state, regardless of what a user previously saved. Guarded by
+ * `MIGRATION_KEYS.FORCE_ENABLE_FEATURES_V1` so it only ever runs once —
+ * after that, users are free to disable features again and have it stick.
+ */
+export function forceEnableFeaturesOnce(): void {
+    if (storageGet(MIGRATION_KEYS.FORCE_ENABLE_FEATURES_V1, false)) return;
+
+    try {
+        for (const key of FORCE_ENABLE_FEATURE_KEYS) {
+            const stored = storageGet<unknown>(key, undefined);
+            if (stored === undefined) continue; // nothing saved yet, the new default already applies
+
+            if (typeof stored === 'boolean') {
+                storageSet(key, true);
+            } else if (stored && typeof stored === 'object') {
+                storageSet(key, { ...(stored as Record<string, unknown>), enabled: true });
+            }
+        }
+
+        console.log('[Gemini Storage] Forced all features to enabled (one-time migration).');
+    } catch (error) {
+        console.error('[Gemini Storage] forceEnableFeaturesOnce failed:', error);
+    } finally {
+        storageSet(MIGRATION_KEYS.FORCE_ENABLE_FEATURES_V1, true);
     }
 }

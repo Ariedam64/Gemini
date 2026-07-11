@@ -183,7 +183,7 @@ export const STORAGE_KEY = FEATURE_KEYS.XP_TRACKER;
 
 /** Default configuration */
 export const DEFAULT_CONFIG: XpTrackerConfig = {
-    enabled: false,
+    enabled: true,
     sortBy: 'closestToMax',
     filterSpecies: [],
     filterHasXpBoost: false,

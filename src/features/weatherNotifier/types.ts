@@ -21,6 +21,6 @@ export const STORAGE_KEY = FEATURE_KEYS.WEATHER_NOTIFIER;
  * Default configuration
  */
 export const DEFAULT_CONFIG: WeatherNotifierConfig = {
-  enabled: false,
+  enabled: true,
   trackedWeathers: [],
 };

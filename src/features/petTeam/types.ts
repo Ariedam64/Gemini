@@ -51,7 +51,7 @@ export const STORAGE_KEY = FEATURE_KEYS.PET_TEAM;
 
 /** Default configuration */
 export const DEFAULT_CONFIG: PetTeamConfig = {
-    enabled: false,
+    enabled: true,
     teams: [],
     activeTeamId: null,
 };

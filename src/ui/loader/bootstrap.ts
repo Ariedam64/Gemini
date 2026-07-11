@@ -238,7 +238,7 @@ export function initFeatures(loader: LoaderController): void {
       description: 'Shows coin value in crop tooltips',
       injection: MGCropValueIndicator.render,
       storageKey: FEATURE_KEYS.CROP_VALUE_INDICATOR,
-      defaultEnabled: false,
+      defaultEnabled: true,
     });
 
     // EggLockerInject and DecorLockerInject are now managed directly by their features
@@ -253,7 +253,7 @@ export function initFeatures(loader: LoaderController): void {
         isEnabled: MGAutoStockSeedSilo.isEnabled.bind(MGAutoStockSeedSilo),
       },
       storageKey: FEATURE_KEYS.AUTO_STOCK_SEED_SILO,
-      defaultEnabled: false,
+      defaultEnabled: true,
     });
 
     registry.register({
@@ -266,7 +266,7 @@ export function initFeatures(loader: LoaderController): void {
         isEnabled: MGAutoStockDecorShed.isEnabled.bind(MGAutoStockDecorShed),
       },
       storageKey: FEATURE_KEYS.AUTO_STOCK_DECOR_SHED,
-      defaultEnabled: false,
+      defaultEnabled: true,
     });
 
     // Initialize all enabled injections

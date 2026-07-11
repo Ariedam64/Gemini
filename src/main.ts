@@ -12,7 +12,7 @@ import {
   startInjectGamePanelButton,
   startAlertInjector,
 } from "./ui/loader";
-import { migrateStorageKeys } from "./utils/storage";
+import { migrateStorageKeys, forceEnableFeaturesOnce } from "./utils/storage";
 import { installPerfDebug } from "./utils/perfDebug";
 
 import { installReactDevToolsHook } from "./atoms/core/bridge";
@@ -28,6 +28,9 @@ installReactDevToolsHook();
 
   // Migrate old storage keys before anything else
   migrateStorageKeys();
+
+  // One-time: force every feature to enabled for users still on old opt-in defaults
+  forceEnableFeaturesOnce();
 
   const loader = createLoader({
     title: "Gemini is loading",

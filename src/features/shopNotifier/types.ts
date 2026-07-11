@@ -28,6 +28,6 @@ export const DEFAULT_TRACKED_ITEMS: TrackedItemsByShop = {
 };
 
 export const DEFAULT_CONFIG: ShopNotifierConfig = {
-  enabled: false,
+  enabled: true,
   trackedItems: DEFAULT_TRACKED_ITEMS,
 };

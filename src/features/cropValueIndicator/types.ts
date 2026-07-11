@@ -12,5 +12,5 @@ export interface CropValueIndicatorConfig {
 export const STORAGE_KEY = FEATURE_KEYS.CROP_VALUE_INDICATOR;
 
 export const DEFAULT_CONFIG: CropValueIndicatorConfig = {
-  enabled: false,
+  enabled: true,
 };

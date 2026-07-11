@@ -145,7 +145,7 @@ export interface GrowthTimersConfig {
  * Default configuration
  */
 export const DEFAULT_CONFIG: GrowthTimersConfig = {
-    enabled: false,
+    enabled: true,
     updateIntervalMs: 5000, // 5 seconds (will adjust for mobile)
     showHistory: true,
     historyLimit: 10,
