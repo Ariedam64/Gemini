@@ -23,8 +23,12 @@ handle(ServerToClientMessageType.InappropriateContentRejected, (p, ctx) => {
   if (ctx.debug) { console.log("[WS][STC] InappropriateContentRejected", p.data); }
 });
 
+handle(ServerToClientMessageType.RoomFrame, (p, ctx) => {
+  if (ctx.debug) { console.log("[WS][STC] RoomFrame", p.data); }
+});
+
 handle(ServerToClientMessageType.PartialState, (p, ctx) => {
-  if (ctx.debug) { console.log("[WS][STC] PartialState", p.data); }
+  if (ctx.debug) { console.log("[WS][STC] PartialState (legacy)", p.data); }
 });
 
 handle(ServerToClientMessageType.Pong, (p, ctx) => {

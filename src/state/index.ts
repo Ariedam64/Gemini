@@ -2,7 +2,7 @@
  * WebSocket-based game state module.
  *
  * Replaces Jotai atom polling with event-driven state from WS messages.
- * Zero polling, zero setInterval — updates arrive in real-time via PartialState patches.
+ * Zero polling, zero setInterval — updates arrive in real-time via RoomFrame patches.
  *
  * Usage:
  *   import { WSState } from "../state";
@@ -32,6 +32,8 @@ export type {
   Unsubscribe,
   WelcomeMessage,
   PartialStateMessage,
+  RoomFrameMessage,
+  StatePatchMessage,
   Patch,
 } from "./types";
 

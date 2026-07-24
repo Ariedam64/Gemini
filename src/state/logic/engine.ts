@@ -7,9 +7,8 @@ import type {
   RoomState,
   GameStateData,
   UserSlotData,
-  Patch,
   WelcomeMessage,
-  PartialStateMessage,
+  StatePatchMessage,
   StateChannel,
   StateChangeCallback,
   Unsubscribe,
@@ -104,8 +103,9 @@ function handleWelcome(msg: WelcomeMessage): void {
   scheduleFlush();
 }
 
-function handlePartialState(msg: PartialStateMessage): void {
-  const patches = msg.patches;
+/** Handles both `RoomFrame` (state.patches) and legacy `PartialState` (top-level patches). */
+function handleStatePatches(msg: StatePatchMessage): void {
+  const patches = "patches" in msg ? msg.patches : msg.state?.patches;
   if (!Array.isArray(patches) || patches.length === 0) return;
 
   const affectedChannels = new Set<StateChannel>();
@@ -148,8 +148,8 @@ export function handleMessage(msg: unknown): void {
 
   if (typed.type === "Welcome") {
     handleWelcome(msg as WelcomeMessage);
-  } else if (typed.type === "PartialState") {
-    handlePartialState(msg as PartialStateMessage);
+  } else if (typed.type === "RoomFrame" || typed.type === "PartialState") {
+    handleStatePatches(msg as StatePatchMessage);
   }
 }
 

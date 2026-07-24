@@ -10,6 +10,7 @@ Transports capture, protocol serialization, and middleware system for intercepti
 - `handlers/`: Incoming message event listeners.
 
 ## Changelog
+- **2026-07-24**: Netcode change — `PartialState` replaced by `RoomFrame` (patches now at `message.state.patches` instead of top-level `message.patches`). State engine and message pre-filter updated to support both formats.
 - **2024-12-31**: Improved `PartialState` parsing in WS Trace. Corrected coordinate extraction in move packets.
 - **2024-12-10**: Initial transport capture and API mapping.
 

@@ -1,6 +1,6 @@
 /**
  * WebSocket-based game state types.
- * Mirrors the game's PartialState/Welcome message format.
+ * Mirrors the game's RoomFrame/Welcome message format.
  */
 
 // Re-export shared types from atoms (they define the canonical game shapes)
@@ -49,10 +49,21 @@ export interface WelcomeMessage {
   };
 }
 
+/** Legacy format (pre-netcode-change). Kept for backward compatibility. */
 export interface PartialStateMessage {
   type: "PartialState";
   patches: Patch[];
 }
+
+/** Current format: patches now live under `state.patches` instead of top-level. */
+export interface RoomFrameMessage {
+  type: "RoomFrame";
+  state?: {
+    patches: Patch[];
+  };
+}
+
+export type StatePatchMessage = PartialStateMessage | RoomFrameMessage;
 
 export interface Patch {
   op: "add" | "replace" | "remove";

@@ -16,6 +16,8 @@
 
 export const ServerToClientMessageType = {
   Welcome: "Welcome",
+  RoomFrame: "RoomFrame",
+  /** @deprecated Replaced by RoomFrame (state.patches). Kept for backward compatibility. */
   PartialState: "PartialState",
   ServerErrorMessage: "ServerErrorMessage",
   Config: "Config",

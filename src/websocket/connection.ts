@@ -74,14 +74,18 @@ function track(ws: WebSocket, debug: boolean) {
   });
 
   // Forward incoming messages to the WS state engine (zero-polling state updates).
-  // Only parse messages that look like Welcome or PartialState to avoid wasting
-  // CPU on pings, pongs, and other high-frequency non-state messages.
+  // Only parse messages that look like Welcome or RoomFrame (formerly PartialState)
+  // to avoid wasting CPU on pings, pongs, and other high-frequency non-state messages.
   ws.addEventListener("message", (e) => {
     const raw = e.data;
     if (typeof raw !== "string") return;
     // Fast pre-check: only parse if the message contains a state-related type
     if (raw.charCodeAt(1) !== 34) return; // first char after { must be " (key start)
-    if (!raw.startsWith('{"type":"Welcome"') && !raw.startsWith('{"type":"PartialState"')) return;
+    if (
+      !raw.startsWith('{"type":"Welcome"') &&
+      !raw.startsWith('{"type":"RoomFrame"') &&
+      !raw.startsWith('{"type":"PartialState"')
+    ) return;
     try {
       handleWSStateMessage(JSON.parse(raw));
     } catch { /* parse error — skip */ }
