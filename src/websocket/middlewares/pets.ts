@@ -17,12 +17,6 @@ middleware(ClientToServerMessageType.FeedPet, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.PetPositions, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Pets] PetPositions"); }
-  const shouldBlock = false; // <-- put your condition here
-  return shouldBlock ? false : true;
-});
-
 middleware(ClientToServerMessageType.SwapPet, (_msg, ctx) => {
   if (ctx.debug) { console.log("[MW][Pets] SwapPet"); }
   const shouldBlock = false;

@@ -6,7 +6,7 @@
  */
 
 import { decodeImage } from '@rive-app/canvas';
-import { getAssetBaseUrl } from '../../cosmetic/avatar/logic/query';
+import { resolveCosmeticUrl } from '../../cosmetic/avatar/logic/catalog';
 import type { AvatarOutfit, RiveFileCacheEntry } from '../types';
 
 const BLANK_PATH_SUFFIX = '_Blank.png';
@@ -30,12 +30,14 @@ function getTransparentPng(): Promise<Uint8Array> {
     });
 }
 
-async function applyImageAsset(asset: unknown, filename: string, assetBase: string): Promise<void> {
+async function applyImageAsset(asset: unknown, filename: string): Promise<void> {
     let buffer: Uint8Array;
     if (filename.includes(BLANK_PATH_SUFFIX)) {
         buffer = await getTransparentPng();
     } else {
-        const arrayBuffer = await fetch(`${assetBase}${filename}`).then(res => res.arrayBuffer());
+        const url = resolveCosmeticUrl(filename);
+        if (!url) throw new Error(`[MGRiveLoader] Unknown cosmetic: ${filename}`);
+        const arrayBuffer = await fetch(url).then(res => res.arrayBuffer());
         buffer = new Uint8Array(arrayBuffer);
     }
     const image = await decodeImage(buffer);
@@ -56,26 +58,25 @@ export async function applyOutfit(
     outfit: AvatarOutfit
 ): Promise<void> {
     const { imageAssets } = cacheEntry;
-    const assetBase = getAssetBaseUrl();
     const tasks: Promise<void>[] = [];
 
     if (outfit.top && imageAssets.Top) {
         tasks.push(
-            applyImageAsset(imageAssets.Top, outfit.top, assetBase)
+            applyImageAsset(imageAssets.Top, outfit.top)
                 .catch(err => console.warn('[MGRiveLoader] Failed to load Top:', err))
         );
     }
 
     if (outfit.mid && imageAssets.Mid) {
         tasks.push(
-            applyImageAsset(imageAssets.Mid, outfit.mid, assetBase)
+            applyImageAsset(imageAssets.Mid, outfit.mid)
                 .catch(err => console.warn('[MGRiveLoader] Failed to load Mid:', err))
         );
     }
 
     if (outfit.bottom && imageAssets.Bottom) {
         tasks.push(
-            applyImageAsset(imageAssets.Bottom, outfit.bottom, assetBase)
+            applyImageAsset(imageAssets.Bottom, outfit.bottom)
                 .catch(err => console.warn('[MGRiveLoader] Failed to load Bottom:', err))
         );
     }

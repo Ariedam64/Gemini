@@ -9,7 +9,7 @@ import { Rive } from '@rive-app/canvas';
 import type { RiveInstanceHandle, AvatarOutfit } from '../types';
 import { loadRiveFile } from './loader';
 import { applyOutfit } from './outfit';
-import { findAvatarRiveFile } from './discovery';
+import { findRiveFile } from './catalog';
 
 /**
  * Create options for Rive instance
@@ -45,7 +45,7 @@ export async function createRiveInstance(
     // Determine .riv URL
     let riveUrl = providedUrl;
     if (!riveUrl) {
-        const avatarFile = await findAvatarRiveFile();
+        const avatarFile = await findRiveFile('avatar');
         if (!avatarFile) {
             throw new Error('[MGRiveLoader] Could not find avatar .riv file');
         }

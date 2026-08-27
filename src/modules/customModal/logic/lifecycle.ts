@@ -24,8 +24,19 @@ import {
   restoreAllAtoms,
 } from "./proxy";
 
+const MODAL_ATOM_LABEL = "activeModalAtom";
+
 let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 let lastKnownModalValue: QuinoaModal = null;
+
+/** Reads the modal atom, treating an unavailable atom as "no modal open". */
+async function readActiveModal(): Promise<QuinoaModal> {
+  try {
+    return await Store.select<QuinoaModal>(MODAL_ATOM_LABEL);
+  } catch {
+    return null;
+  }
+}
 
 export async function init(): Promise<void> {
   const state = getState();
@@ -33,11 +44,14 @@ export async function init(): Promise<void> {
     return;
   }
 
-  lastKnownModalValue = await Store.select<QuinoaModal>("activeModalAtom");
+  // The game registers its atoms after we boot, so seed the poll baseline only
+  // once the label exists — reading it too early used to throw and kill init().
+  await Store.waitFor(MODAL_ATOM_LABEL);
+  lastKnownModalValue = await readActiveModal();
 
   pollIntervalId = setInterval(async () => {
     try {
-      const current = await Store.select<QuinoaModal>("activeModalAtom");
+      const current = await Store.select<QuinoaModal>(MODAL_ATOM_LABEL);
       const prev = lastKnownModalValue;
 
       if (prev !== current) {

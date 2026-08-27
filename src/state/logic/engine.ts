@@ -14,6 +14,7 @@ import type {
   Unsubscribe,
 } from "../types";
 import { applyPatch } from "./jsonPatch";
+import { slotBelongsTo } from "./identity";
 
 // ─── Internal State ───────────────────────────────────────────────────────────
 
@@ -84,12 +85,28 @@ function addAffectedChannels(path: string, out: Set<StateChannel>): void {
 // ─── Message Handlers ─────────────────────────────────────────────────────────
 
 function handleWelcome(msg: WelcomeMessage): void {
+  // Authoritative source for who we are. It used to be read only from the
+  // socket URL's `playerId` query parameter, so the day the game stopped
+  // putting it there, `myPlayerId` stayed null — and with it every slot lookup,
+  // which is to say the garden, inventory, pets, stats and locks all at once.
+  if (msg.selfPlayerId) myPlayerId = msg.selfPlayerId;
+
   const fullState = msg.fullState;
   if (!fullState) return;
 
   roomState = (fullState.data as RoomState) || null;
   gameState = (fullState.child?.data as GameStateData) || null;
   welcomed = true;
+
+  // Without an identity no slot resolves, and everything downstream reports
+  // empty rather than broken. Say it once, loudly, instead of leaving it to be
+  // rediscovered from a blank garden.
+  if (!myPlayerId) {
+    console.warn(
+      "[Gemini][State] No player id: neither Welcome.selfPlayerId nor the " +
+      "socket URL provided one. Garden, inventory, pets and locks will all be empty."
+    );
+  }
 
   // Use throttled notification (same as PartialState) to avoid blocking
   // the main thread on the massive Welcome payload.
@@ -182,8 +199,7 @@ export function setMyPlayerId(id: string): void {
 export function getMySlotIndex(): number | null {
   if (!myPlayerId || !gameState?.userSlots) return null;
   for (let i = 0; i < gameState.userSlots.length; i++) {
-    const slot = gameState.userSlots[i];
-    if (slot && (slot.playerId === myPlayerId || slot.databaseUserId === myPlayerId)) {
+    if (slotBelongsTo(gameState.userSlots[i], myPlayerId)) {
       return i;
     }
   }

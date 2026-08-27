@@ -1,11 +1,11 @@
 // src/modules/data/types.ts
 // Type definitions for MGData module
 
-export type DataKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants" | "weather";
+export type DataKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants" | "weather" | "enums";
 export type DataBag = Record<DataKey, Record<string, unknown> | null>;
 
 /** Keys as returned by the API (some differ from our internal DataKey names) */
-export type ApiResponseKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants" | "weathers";
+export type ApiResponseKey = "items" | "decor" | "mutations" | "eggs" | "pets" | "abilities" | "plants" | "weathers" | "enums";
 
 /** Mapping from API keys to internal DataKey names */
 export const API_KEY_MAP: Record<ApiResponseKey, DataKey> = {
@@ -17,6 +17,7 @@ export const API_KEY_MAP: Record<ApiResponseKey, DataKey> = {
   abilities: "abilities",
   plants: "plants",
   weathers: "weather",
+  enums: "enums",
 };
 
 /** Ability color as returned by the API (single string: hex like "#B49600" or CSS gradient) */

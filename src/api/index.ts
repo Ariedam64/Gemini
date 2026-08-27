@@ -3,6 +3,7 @@ import { Store } from "../atoms/store";
 import { WSState } from "../state";
 import { Globals, getGlobals, initGlobals, destroyGlobals } from "../globals";
 import * as WebSocketAPI from "../websocket/api";
+import { getInfo as getCommandSequenceInfo } from "../websocket/commandSequence";
 import { getNextFreeStorageIndex, findStorageById } from "../utils/gameStorage";
 import {
   MGVersion,
@@ -44,6 +45,9 @@ export const GeminiAPI = {
     subscribe: Store.subscribe.bind(Store),
     subscribeImmediate: Store.subscribeImmediate.bind(Store),
     getCapturedInfo: Store.getCapturedInfo,
+    /** Whether the game has registered this atom — for diagnosing renames. */
+    has: Store.has.bind(Store),
+    waitFor: Store.waitFor.bind(Store),
   },
 
   Globals,
@@ -96,13 +100,14 @@ export const GeminiAPI = {
     kickPlayer: WebSocketAPI.kickPlayer,
     setPlayerData: WebSocketAPI.setPlayerData,
     usurpHost: WebSocketAPI.usurpHost,
-    reportSpeakingStart: WebSocketAPI.reportSpeakingStart,
+    markChatRead: WebSocketAPI.markChatRead,
 
     setSelectedGame: WebSocketAPI.setSelectedGame,
     voteForGame: WebSocketAPI.voteForGame,
     restartGame: WebSocketAPI.restartGame,
     ping: WebSocketAPI.ping,
     checkWeatherStatus: WebSocketAPI.checkWeatherStatus,
+    quinoaTutorialSkipped: WebSocketAPI.quinoaTutorialSkipped,
 
     move: WebSocketAPI.move,
     playerPosition: WebSocketAPI.playerPosition,
@@ -117,6 +122,7 @@ export const GeminiAPI = {
     putItemInStorage: WebSocketAPI.putItemInStorage,
     retrieveItemFromStorage: WebSocketAPI.retrieveItemFromStorage,
     moveStorageItem: WebSocketAPI.moveStorageItem,
+    swapItemWithStorage: WebSocketAPI.swapItemWithStorage,
     logItems: WebSocketAPI.logItems,
 
     plantSeed: WebSocketAPI.plantSeed,
@@ -139,18 +145,41 @@ export const GeminiAPI = {
     pickupDecor: WebSocketAPI.pickupDecor,
     placeDecor: WebSocketAPI.placeDecor,
     removeGardenObject: WebSocketAPI.removeGardenObject,
+    preserve: WebSocketAPI.preserve,
+    displayCrop: WebSocketAPI.displayCrop,
+    pickupDisplayedCrop: WebSocketAPI.pickupDisplayedCrop,
 
     placePet: WebSocketAPI.placePet,
     feedPet: WebSocketAPI.feedPet,
-    petPositions: WebSocketAPI.petPositions,
     swapPet: WebSocketAPI.swapPet,
     swapPetFromStorage: WebSocketAPI.swapPetFromStorage,
     pickupPet: WebSocketAPI.pickupPet,
     movePetSlot: WebSocketAPI.movePetSlot,
     namePet: WebSocketAPI.namePet,
     sellPet: WebSocketAPI.sellPet,
+    ridePet: WebSocketAPI.ridePet,
+    dismountPet: WebSocketAPI.dismountPet,
+    dawnCapture: WebSocketAPI.dawnCapture,
+    thundercharge: WebSocketAPI.thundercharge,
+    requestPetGreet: WebSocketAPI.requestPetGreet,
+    replenishPotion: WebSocketAPI.replenishPotion,
+    xpPotion: WebSocketAPI.xpPotion,
+    equipPetCosmetic: WebSocketAPI.equipPetCosmetic,
+    upgradePetHutch: WebSocketAPI.upgradePetHutch,
+    upgradeSeedSilo: WebSocketAPI.upgradeSeedSilo,
+    upgradeDecorShed: WebSocketAPI.upgradeDecorShed,
+
+    savePetTeam: WebSocketAPI.savePetTeam,
+    applyPetTeam: WebSocketAPI.applyPetTeam,
+    deletePetTeam: WebSocketAPI.deletePetTeam,
+    movePetTeam: WebSocketAPI.movePetTeam,
+    setPetTeamEmblem: WebSocketAPI.setPetTeamEmblem,
+
     throwSnowball: WebSocketAPI.throwSnowball,
     checkFriendBonus: WebSocketAPI.checkFriendBonus,
+
+    /** Where the shared command counter stands. For diagnosing invalid_sequence. */
+    commandSequenceInfo: getCommandSequenceInfo,
   },
 
   WSState,

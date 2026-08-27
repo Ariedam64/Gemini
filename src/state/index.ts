@@ -26,6 +26,8 @@ export {
   reset,
 } from "./logic/engine";
 
+export { getSlotOwnerId, getAccountId, slotBelongsTo } from "./logic/identity";
+
 export type {
   StateChannel,
   StateChangeCallback,

@@ -61,26 +61,51 @@ export interface RiveInstanceHandle {
 }
 
 /**
- * Known .riv files in the game
+ * A state machine input, with the type that decides how it is driven.
+ *
+ * A `trigger` is fired, a `boolean` and a `number` are set. Getting it wrong
+ * does nothing at all and raises no error, which is why this is worth knowing
+ * rather than guessing.
+ */
+export interface RiveStateMachineInput {
+    name: string;
+    type: 'trigger' | 'boolean' | 'number';
+}
+
+export interface RiveStateMachine {
+    name: string;
+    inputs: RiveStateMachineInput[];
+}
+
+export interface RiveAnimation {
+    name: string;
+    frames: number;
+    fps: number;
+    durationMs: number;
+}
+
+export interface RiveArtboard {
+    name: string;
+    width: number;
+    height: number;
+    animations: RiveAnimation[];
+    stateMachines: RiveStateMachine[];
+}
+
+/**
+ * A .riv file published by the MG API.
  */
 export interface RiveFileInfo {
-    /** File identifier */
+    /** Catalog key: `avatar`, `pets`, `decor`, `currency`, ... */
     name: string;
-    /** Full URL */
+    /** Fetchable URL, proxied by the API so CORS headers are present. */
     url: string;
     /** Type/category */
     type: 'avatar' | 'emote' | 'ui' | 'other';
+    /** Whether the file can actually be parsed by a Rive runtime. */
+    loadable: boolean;
+    /** Versioned game URL. Not fetchable from a browser — for reference only. */
+    origin?: string;
+    /** Inventory of what the file contains. Empty if the API could not read it. */
+    artboards: RiveArtboard[];
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Known .riv file patterns to search for
- */
-export const RIVE_FILE_PATTERNS = {
-    AVATAR: /avatarelements[^"'`\s]*\.riv/,
-    EMOTES: /emotes[^"'`\s]*\.riv/,
-    UI: /(giftbox|currency|bread|donut|streak|countdown|loader)[^"'`\s]*\.riv/,
-} as const;

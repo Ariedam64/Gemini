@@ -53,18 +53,20 @@ function runCleanups(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Array index of the slot currently shown in the card. `mySelectedSlotIdAtom`
- * holds the sub-slot's stable `slotId`, NOT its position in `slots[]` (same
- * resolution as the price badge — see cropValueIndicator/render.ts), so it
- * must be resolved by id. Falls back to the first slot when nothing matches.
+ * Stable `slotId` of the slot currently shown in the card.
+ *
+ * `mySelectedSlotIdAtom` already holds a `slotId`, which is also the key locks
+ * are stored under, so it is used as-is once confirmed to exist on the plant.
+ * Falls back to the first slot's id when nothing matches.
  */
-function findSelectedSlotIndex(slots: GrowSlot[], selectedSlotId: number | null): number | null {
+function findSelectedSlotId(slots: GrowSlot[], selectedSlotId: number | null): number | null {
     if (!slots.length) return null;
-    if (selectedSlotId != null) {
-        const idx = slots.findIndex((slot) => slot.slotId === selectedSlotId);
-        if (idx >= 0) return idx;
+
+    if (selectedSlotId != null && slots.some((slot) => slot.slotId === selectedSlotId)) {
+        return selectedSlotId;
     }
-    return 0;
+
+    return slots[0].slotId ?? 0;
 }
 
 function isLocked(): boolean {
@@ -72,11 +74,11 @@ function isLocked(): boolean {
         return false;
     }
 
-    const slotIndex = findSelectedSlotIndex(currentGardenObject.slots ?? [], currentSelectedSlotId);
-    if (slotIndex === null) return false;
+    const slotId = findSelectedSlotId(currentGardenObject.slots ?? [], currentSelectedSlotId);
+    if (slotId === null) return false;
 
     // tileIndex dans le garden = localIndex (pas globalIndex)
-    return isSlotLocked(String(currentTileIndex), slotIndex);
+    return isSlotLocked(String(currentTileIndex), slotId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,13 @@
 // src/modules/data/logic/abilityFormatter.ts
 // Format pet ability activity logs into human-readable descriptions
 
+import { state } from "../state";
+
+/** Ability definitions from the API, or null until game data has loaded. */
+function getAbilities(): Record<string, unknown> | null {
+  return state.data.abilities as Record<string, unknown> | null;
+}
+
 /**
  * Activity log entry structure from the game
  */
@@ -11,68 +18,36 @@ export interface ActivityLogEntry {
 }
 
 /**
- * Pet ability action types (from ActivityLogSchema)
+ * Ability ids we deliberately keep out of the logs.
+ *
+ * The two "Kisser" abilities (Dawnbinder, Amberbinder) are weather-triggered
+ * and fire continuously while their weather lasts: in a captured state they
+ * accounted for 19 of 25 entries, burying everything else.
  */
-export const PET_ABILITY_ACTIONS = [
-  // Coin Finders
-  'CoinFinderI',
-  'CoinFinderII',
-  'CoinFinderIII',
-  // Seed Finders
-  'SeedFinderI',
-  'SeedFinderII',
-  'SeedFinderIII',
-  'SeedFinderIV',
-  // Hunger Restore
-  'HungerRestore',
-  'HungerRestoreII',
-  // Double Harvest/Hatch
-  'DoubleHarvest',
-  'DoubleHatch',
-  // Produce Eater
-  'ProduceEater',
-  // Pet Hatch Size Boost
-  'PetHatchSizeBoost',
-  'PetHatchSizeBoostII',
-  // Pet Age Boost
-  'PetAgeBoost',
-  'PetAgeBoostII',
-  // Pet Refund
-  'PetRefund',
-  'PetRefundII',
-  // Produce Refund
-  'ProduceRefund',
-  // Sell Boost
-  'SellBoostI',
-  'SellBoostII',
-  'SellBoostIII',
-  'SellBoostIV',
-  // Gold/Rainbow/Rain
-  'GoldGranter',
-  'RainbowGranter',
-  'RainDance',
-  // Pet XP Boost
-  'PetXpBoost',
-  'PetXpBoostII',
-  // Egg Growth Boost
-  'EggGrowthBoost',
-  'EggGrowthBoostII_NEW',
-  'EggGrowthBoostII',
-  // Plant Growth Boost
-  'PlantGrowthBoost',
-  'PlantGrowthBoostII',
-  // Produce Scale Boost
-  'ProduceScaleBoost',
-  'ProduceScaleBoostII',
-] as const;
+const EXCLUDED_ABILITY_IDS = new Set<string>([
+  'DawnKisser',
+  'MoonKisser',
+]);
 
-export type PetAbilityAction = (typeof PET_ABILITY_ACTIONS)[number];
+export type PetAbilityAction = string;
 
 /**
- * Check if an action is a pet ability trigger
+ * Check if an action is a pet ability trigger.
+ *
+ * The set comes from `MGData.get("abilities")` rather than a list kept here.
+ * The hardcoded list this replaces held 35 ids while the game shipped 81, so
+ * every ability added since was dropped from the logs without a word — the
+ * whole of a captured state's entries, in one case.
+ *
+ * Returns false while game data is still loading. Nothing is lost: a log only
+ * advances the processed-timestamp watermark once it converts, so entries
+ * skipped now are picked up on the next state change.
  */
 export function isPetAbilityAction(action: string): action is PetAbilityAction {
-  return PET_ABILITY_ACTIONS.includes(action as PetAbilityAction);
+  if (EXCLUDED_ABILITY_IDS.has(action)) return false;
+
+  const abilities = getAbilities();
+  return !!abilities && action in abilities;
 }
 
 /**

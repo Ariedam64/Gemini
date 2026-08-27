@@ -35,41 +35,46 @@ export async function loadRiveFile(url: string): Promise<RiveFileCacheEntry> {
     // Storage for captured image assets (game pattern)
     const imageAssets: Record<string, ImageAsset> = {};
 
-    // Create RiveFile with asset loader to capture image assets
-    let riveFile: RiveFile | null = null;
-
-    await new Promise<void>((resolve, reject) => {
-        riveFile = new RiveFile({
-            buffer,
-            assetLoader: (asset: FileAsset) => {
-                // Capture dynamic image asset references (game pattern)
-                if ((asset as any).isImage && DYNAMIC_IMAGE_ASSETS.includes(asset.name)) {
-                    imageAssets[asset.name] = asset as ImageAsset;
-                    console.log(`[MGRiveLoader] Captured image asset: ${asset.name}`);
-                    return true; // We'll provide the image later with setRenderImage()
-                }
-                return false;
-            },
-            onLoad: () => {
-                console.log(`[MGRiveLoader] RiveFile loaded: ${url}`);
-                resolve();
-            },
-            onLoadError: (err) => {
-                console.error(`[MGRiveLoader] RiveFile load error:`, err);
-                reject(err);
-            },
-        });
-
-        // IMPORTANT: Must call init() to actually load the file! (like the game does)
-        riveFile.init().catch((err) => {
-            console.error(`[MGRiveLoader] Failed to initialize RiveFile:`, err);
-            reject(err);
-        });
+    // The load callbacks are handed to the constructor, so the promise has to
+    // exist before the file does. Settling it from outside keeps `riveFile` a
+    // plain const, which is also what lets TypeScript see its real type.
+    let onLoaded!: () => void;
+    let onFailed!: (error: unknown) => void;
+    const loaded = new Promise<void>((resolve, reject) => {
+        onLoaded = resolve;
+        onFailed = reject;
     });
 
-    if (!riveFile) {
-        throw new Error(`[MGRiveLoader] Failed to create RiveFile for ${url}`);
-    }
+    const dynamicAssetNames: readonly string[] = DYNAMIC_IMAGE_ASSETS;
+
+    const riveFile = new RiveFile({
+        buffer,
+        assetLoader: (asset: FileAsset) => {
+            // Capture dynamic image asset references (game pattern)
+            if ((asset as any).isImage && dynamicAssetNames.includes(asset.name)) {
+                imageAssets[asset.name] = asset as ImageAsset;
+                console.log(`[MGRiveLoader] Captured image asset: ${asset.name}`);
+                return true; // We'll provide the image later with setRenderImage()
+            }
+            return false;
+        },
+        onLoad: () => {
+            console.log(`[MGRiveLoader] RiveFile loaded: ${url}`);
+            onLoaded();
+        },
+        onLoadError: (err) => {
+            console.error(`[MGRiveLoader] RiveFile load error:`, err);
+            onFailed(err);
+        },
+    });
+
+    // IMPORTANT: Must call init() to actually load the file! (like the game does)
+    riveFile.init().catch((err) => {
+        console.error(`[MGRiveLoader] Failed to initialize RiveFile:`, err);
+        onFailed(err);
+    });
+
+    await loaded;
 
     // Increment ref count (like the game does) so RiveFile is not destroyed
     riveFile.getInstance();

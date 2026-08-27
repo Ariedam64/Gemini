@@ -9,6 +9,7 @@ import { SearchBar, SearchBarHandle } from "../../../../components/SearchBar/Sea
 import { TableHandle } from "../../../../components/Table/Table";
 import { element } from "../../../../styles/helpers";
 import type { ShopType } from "../../../../../globals/core/types";
+import { MGData } from "../../../../../modules/data";
 import {
   buildAllRows,
   SHOP_TYPE_LABELS,
@@ -206,12 +207,12 @@ export function createShopsCard(options?: ShopsCardOptions): ShopsCardPart {
     const container = element("div", { className: "shops-card-filters" });
 
     // Shop type select
-    const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+    const shopTypes = MGData.getShopTypes();
     const selectOptions = [
       { value: "all", label: "All Shops" },
-      ...shopTypes.map((type) => ({
+      ...shopTypes.map((type: string) => ({
         value: type,
-        label: SHOP_TYPE_LABELS[type],
+        label: MGData.getShopLabel(type),
       })),
     ];
 

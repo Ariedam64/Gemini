@@ -5,6 +5,7 @@
  */
 
 import { list, listUrls, get, debug, listAsync } from "./logic/query";
+import { loadCatalog, isCatalogLoaded } from "./logic/catalog";
 import { set, blank } from "./logic/state";
 import { toCanvas, clearImageCache } from "./logic/render";
 import { render, clearOverride, getOverride } from "./logic/override";
@@ -35,16 +36,18 @@ export const Avatar = {
     // ============================================================
 
     /**
-     * Initialize avatar module (loads ownership data)
-     * Safe to call multiple times
+     * Initialize avatar module: cosmetic catalog + ownership data.
+     * Safe to call multiple times.
      */
-    init: initOwnership,
+    init: async (): Promise<void> => {
+        await Promise.all([loadCatalog(), initOwnership()]);
+    },
 
     /**
-     * Check if ownership data is loaded
-     * @returns true if ownership system is ready
+     * Check if the module is ready
+     * @returns true once the catalog and the ownership system are loaded
      */
-    isReady: () => isLoaded(),
+    isReady: () => isCatalogLoaded() && isLoaded(),
 
     // ============================================================
     // Query Functions

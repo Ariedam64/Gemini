@@ -20,6 +20,7 @@ import { resolveKey } from "./utils";
 import { ensureImageLoaded, ensureImagesLoaded } from "./loader";
 import { computeVariantSignature, buildMutationPipeline, MUT_META, FLOATING_MUTATION_ICONS } from "./mutations/constants";
 import { applyFilterOnto } from "./mutations/filters";
+import { loadComposedSprite } from "./mutations/composedApi";
 import {
   baseNameOf,
   mutationAliases,
@@ -487,42 +488,54 @@ export async function spriteToCanvas(
   }
 
   const mutations = options.mutations || [];
-
-  // Lazy-load the base image and any mutation images in parallel
   const frameIds = state.animationFrameIds.get(key);
-  if (frameIds?.length) {
-    // Animation: load all frame images
-    await ensureImagesLoaded(frameIds, state);
-  } else {
-    // Single frame: load the base image
-    await ensureImageLoaded(key, state);
+
+  // A mutated still comes pre-composed from the API: one cached PNG instead of
+  // loading every layer and stacking them here, and pixel-identical to what
+  // the API serves elsewhere. Animations keep the local path — the endpoint
+  // composes a single frame, not a sequence.
+  let baseCanvas: HTMLCanvasElement | null = null;
+  if (mutations.length > 0 && !frameIds?.length) {
+    const composed = await loadComposedSprite(key, mutations);
+    if (composed) baseCanvas = toCanvasElement(composed);
   }
 
-  // Pre-load mutation images if needed
-  if (mutations.length > 0) {
-    await ensureMutationImagesLoaded(key, mutations, state);
-  }
+  if (!baseCanvas) {
+    // Lazy-load the base image and any mutation images in parallel
+    if (frameIds?.length) {
+      // Animation: load all frame images
+      await ensureImagesLoaded(frameIds, state);
+    } else {
+      // Single frame: load the base image
+      await ensureImageLoaded(key, state);
+    }
 
-  // Get the source image
-  const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
-  let sourceImg: unknown;
-  if (frameIds?.length) {
-    // Resolve animation frames from loaded textures
-    const frames = frameIds
-      .map((fid) => state.textures.get(fid))
-      .filter(Boolean);
-    sourceImg = frames.length > 0 ? frames[idx % frames.length] : null;
-  } else {
-    sourceImg = state.textures.get(key);
-  }
-  if (!sourceImg) throw new Error(`Unknown sprite/anim key: ${key}`);
+    // Pre-load mutation images if needed
+    if (mutations.length > 0) {
+      await ensureMutationImagesLoaded(key, mutations, state);
+    }
 
-  // Convert source to canvas
-  let baseCanvas = toCanvasElement(sourceImg);
+    // Get the source image
+    const idx = Math.max(0, (options.frameIndex ?? 0) | 0);
+    let sourceImg: unknown;
+    if (frameIds?.length) {
+      // Resolve animation frames from loaded textures
+      const frames = frameIds
+        .map((fid) => state.textures.get(fid))
+        .filter(Boolean);
+      sourceImg = frames.length > 0 ? frames[idx % frames.length] : null;
+    } else {
+      sourceImg = state.textures.get(key);
+    }
+    if (!sourceImg) throw new Error(`Unknown sprite/anim key: ${key}`);
 
-  // Apply mutations if any (sync — all images already loaded above)
-  if (mutations.length > 0) {
-    baseCanvas = applyMutationsToCanvas(baseCanvas, key, mutations, state.textures, state.spriteMeta);
+    // Convert source to canvas
+    baseCanvas = toCanvasElement(sourceImg);
+
+    // Apply mutations if any (sync — all images already loaded above)
+    if (mutations.length > 0) {
+      baseCanvas = applyMutationsToCanvas(baseCanvas, key, mutations, state.textures, state.spriteMeta);
+    }
   }
 
   // Apply scaling and padding

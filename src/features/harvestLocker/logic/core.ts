@@ -74,6 +74,12 @@ export function updateLockConfig(config: HarvestLockerConfig): void {
 /**
  * Check if a slot is locked
  */
+/**
+ * Whether a slot is locked.
+ *
+ * `slotsIndex` is the slot's stable `slotId` — the value `HarvestCrop` carries
+ * on the wire — not its position in `slots[]`.
+ */
 export function isSlotLocked(slot: string, slotsIndex: number): boolean {
     const slotId = `${slot}-${slotsIndex}`;
     return lockedSlots.has(slotId);
@@ -104,10 +110,16 @@ function evaluateLocks(garden: unknown): void {
         return;
     }
 
-    // Evaluate rule-based locks for each plant slot
+    // Evaluate rule-based locks for each plant slot.
+    //
+    // Keyed on the slot's own `slotId`, not its position in `slots[]`. That is
+    // what `HarvestCrop.slotsIndex` carries on the wire, so keying on the array
+    // index meant the middleware looked up an id that was never stored and no
+    // harvest was ever blocked. Ids also go sparse as fruit is picked
+    // (0,2,3,5,7,…), so an index-keyed lock drifts onto a different fruit.
     garden.plants.all.forEach((plant) => {
         plant.slots.forEach((slot, slotIndex) => {
-            const slotId = `${plant.tileIndex}-${slotIndex}`;
+            const slotId = `${plant.tileIndex}-${slot.slotId ?? slotIndex}`;
 
             // Get applicable rules (species rules override overall)
             const rules = getRulesForSpecies(slot.species);
@@ -274,6 +286,8 @@ function isValidGarden(garden: unknown): garden is {
                 species: string;
                 targetScale: number;
                 mutations: string[];
+                /** Stable id from the game; see the note in `evaluateLocks`. */
+                slotId?: number;
             }>;
         }>;
     };

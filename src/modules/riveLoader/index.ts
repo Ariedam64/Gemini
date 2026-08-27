@@ -2,7 +2,7 @@
  * MGRiveLoader Module
  *
  * Manages Rive animation files (.riv) and instances with dynamic cosmetic loading.
- * Provides caching, discovery, and outfit management for Rive avatars.
+ * Provides caching, cataloging, and outfit management for Rive avatars.
  *
  * @example
  * ```typescript
@@ -26,7 +26,7 @@
  * ```
  */
 
-import { discoverRiveFiles, findAvatarRiveFile, removeFetchInterceptor } from './logic/discovery';
+import { loadRiveCatalog, findRiveFile, getInputType } from './logic/catalog';
 import { loadRiveFile } from './logic/loader';
 import { createRiveInstance, updateInstanceOutfit, type CreateRiveInstanceOptions } from './logic/instance';
 import { isReady as checkReady, setReady, getDiscoveredFiles } from './state';
@@ -50,7 +50,7 @@ let initialized = false;
 
 /**
  * Initialize the module
- * Discovers available .riv files from game scripts
+ * Loads the .riv catalog from the MG API
  * Idempotent - safe to call multiple times
  */
 async function init(): Promise<void> {
@@ -58,8 +58,7 @@ async function init(): Promise<void> {
     initialized = true;
 
     try {
-        // Discover .riv files
-        await discoverRiveFiles();
+        await loadRiveCatalog();
         setReady(true);
         console.log('[MGRiveLoader] Initialized');
     } catch (err) {
@@ -77,7 +76,7 @@ function isReady(): boolean {
 }
 
 /**
- * List discovered .riv files
+ * List the .riv files in the catalog
  */
 function list() {
     return getDiscoveredFiles();
@@ -95,7 +94,7 @@ async function getRiveFile(url: string) {
  * Get the avatar .riv file specifically
  */
 async function getAvatarRiveFile() {
-    const file = await findAvatarRiveFile();
+    const file = await findRiveFile('avatar');
     if (!file) return null;
     return await loadRiveFile(file.url);
 }
@@ -123,8 +122,9 @@ export const MGRiveLoader = {
     init,
     isReady,
 
-    // Discovery
+    // Catalog
     list,
+    getInputType,
 
     // Loading
     getRiveFile,

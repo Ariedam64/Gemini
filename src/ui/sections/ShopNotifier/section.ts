@@ -10,8 +10,7 @@ import { shopNotifierCss } from "./styles.css";
 import { initSectionState } from "./state";
 import { createShopCard } from "./parts";
 import type { ShopType } from "../../../globals/core/types";
-
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+import { MGData } from "../../../modules/data";
 
 export class ShopNotifierSection extends BaseSection {
   private sectionElement: HTMLElement | null = null;
@@ -57,8 +56,8 @@ export class ShopNotifierSection extends BaseSection {
   private buildParts(): void {
     if (!this.sectionElement) return;
 
-    // Shop cards for each shop type
-    for (const shopType of SHOP_TYPES) {
+    // One card per shop the game currently has, not a list frozen in the code
+    for (const shopType of MGData.getShopTypes()) {
       const shopCard = createShopCard({ shopType });
       this.shopCards.set(shopType, shopCard);
       this.sectionElement.appendChild(shopCard.root);

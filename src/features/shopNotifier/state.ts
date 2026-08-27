@@ -7,26 +7,35 @@ import type { ShopType } from "../../globals/core/types";
 import { DEFAULT_CONFIG, DEFAULT_TRACKED_ITEMS, STORAGE_KEY } from "./types";
 import type { ShopNotifierConfig, TrackedItem, TrackedItemsByShop } from "./types";
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+/**
+ * Shops that always have an entry, so callers can index them without guarding.
+ * Any other shop the game has is kept too — see `normalizeTrackedItems`.
+ */
+const BASE_SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
 
+/**
+ * Rebuild the tracked-items map from storage.
+ *
+ * Shop keys beyond the base five are preserved rather than dropped: the game
+ * added `snow`, `thunder` and `apology`, and a normalizer that only knew five
+ * would silently erase a user's selections for the rest on every load.
+ */
 function normalizeTrackedItems(items?: Partial<Record<ShopType, string[]>> | null): TrackedItemsByShop {
-  return {
-    seed: Array.isArray(items?.seed) ? [...items.seed] : [],
-    tool: Array.isArray(items?.tool) ? [...items.tool] : [],
-    egg: Array.isArray(items?.egg) ? [...items.egg] : [],
-    decor: Array.isArray(items?.decor) ? [...items.decor] : [],
-    dawn: Array.isArray(items?.dawn) ? [...items.dawn] : [],
-  };
+  const normalized = {} as TrackedItemsByShop;
+
+  for (const shopType of BASE_SHOP_TYPES) normalized[shopType] = [];
+
+  for (const [shopType, ids] of Object.entries(items ?? {})) {
+    if (Array.isArray(ids)) normalized[shopType] = [...ids];
+  }
+
+  return normalized;
 }
 
 function cloneTrackedItems(items: TrackedItemsByShop): TrackedItemsByShop {
-  return {
-    seed: [...items.seed],
-    tool: [...items.tool],
-    egg: [...items.egg],
-    decor: [...items.decor],
-    dawn: [...items.dawn],
-  };
+  const cloned = {} as TrackedItemsByShop;
+  for (const [shopType, ids] of Object.entries(items)) cloned[shopType] = [...ids];
+  return cloned;
 }
 
 /**
@@ -96,8 +105,8 @@ export function getTrackedItems(): TrackedItem[] {
   const tracked = getTrackedItemsByShop();
   const items: TrackedItem[] = [];
 
-  for (const shopType of SHOP_TYPES) {
-    for (const itemId of tracked[shopType]) {
+  for (const [shopType, itemIds] of Object.entries(tracked)) {
+    for (const itemId of itemIds) {
       items.push({ shopType, itemId });
     }
   }

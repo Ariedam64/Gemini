@@ -6,6 +6,9 @@ import {
   getRoomState,
   getSelectedGrowSlotIndex,
   setSelectedGrowSlotIndex,
+  getSlotOwnerId,
+  getAccountId,
+  slotBelongsTo,
 } from "../../state";
 import { Store } from "../../atoms/store";
 import { deepEqual } from "../core/reactive";
@@ -262,18 +265,17 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
     }
 
     const isInMyGarden = currentGardenTile !== null && myPid !== null
-      ? (() => {
-          const ownerSlot = gameState?.userSlots?.[currentGardenTile.userSlotIdx];
-          return ownerSlot?.playerId === myPid || ownerSlot?.databaseUserId === myPid;
-        })()
+      ? slotBelongsTo(gameState?.userSlots?.[currentGardenTile.userSlotIdx], myPid)
       : false;
 
     let gardenName: GardenPlayer | null = null;
     if (currentGardenTile) {
       const ownerSlot = gameState?.userSlots?.[currentGardenTile.userSlotIdx];
       if (ownerSlot) {
+        const ownerId = getSlotOwnerId(ownerSlot);
+        const ownerAccountId = getAccountId(ownerSlot);
         const roomPlayer = getRoomState()?.players?.find(
-          (p) => p.id === ownerSlot.playerId || p.databaseUserId === ownerSlot.databaseUserId
+          (p) => p.id === ownerId || (!!ownerAccountId && getAccountId(p) === ownerAccountId)
         );
         if (roomPlayer) gardenName = roomPlayer as unknown as GardenPlayer;
       }

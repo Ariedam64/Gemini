@@ -19,7 +19,27 @@ type ShopsSources = {
   purchases: ShopPurchases;
 };
 
-const SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+/**
+ * Shops that are always reported, even when the state omits them.
+ *
+ * They back `byType.seed` and friends, which consumers read without guarding.
+ */
+const KNOWN_SHOP_TYPES: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+
+/**
+ * Every shop to build, in a stable order: the known ones first, then whatever
+ * else the state carries.
+ *
+ * This list used to be hardcoded at five while the game served eight — `snow`,
+ * `thunder` and `apology` existed but no restock of theirs was ever seen.
+ */
+function resolveShopTypes(rawShops: RawShops | null): ShopType[] {
+  const extra = Object.keys(rawShops ?? {})
+    .filter((type) => !KNOWN_SHOP_TYPES.includes(type))
+    .sort();
+
+  return [...KNOWN_SHOP_TYPES, ...extra];
+}
 
 /**
  * Resolve a stable item id from the raw shop inventory entry.
@@ -100,17 +120,14 @@ function buildData(sources: ShopsSources): ShopsData {
   const rawShops = sources.shops;
   const purchases = sources.purchases ?? {};
 
-  const shops: Shop[] = SHOP_TYPES.map((type) =>
-    buildShop(type, rawShops?.[type], purchases)
+  const shops: Shop[] = resolveShopTypes(rawShops).map((type) =>
+    buildShop(type, rawShops?.[type as keyof RawShops], purchases)
   );
 
-  const byType = {
-    seed: shops[0],
-    tool: shops[1],
-    egg: shops[2],
-    decor: shops[3],
-    dawn: shops[4],
-  };
+  const byType = shops.reduce((acc, shop) => {
+    acc[shop.type] = shop;
+    return acc;
+  }, {} as Record<ShopType, Shop>);
 
   const shopsWithRestock = shops.filter((s) => s.restockAt !== null);
   let nextRestock: ShopsData["nextRestock"] = null;
@@ -133,7 +150,7 @@ function buildData(sources: ShopsSources): ShopsData {
 }
 
 const initialData: ShopsData = {
-  all: SHOP_TYPES.map((type) => ({
+  all: KNOWN_SHOP_TYPES.map((type) => ({
     type,
     items: [],
     availableCount: 0,
@@ -180,9 +197,11 @@ function detectRestockForType(prev: Shop, next: Shop): ShopRestockEvent | null {
 function detectPurchaseEvents(prev: ShopsData, next: ShopsData): ShopPurchaseEvent[] {
   const events: ShopPurchaseEvent[] = [];
 
-  for (const shopType of SHOP_TYPES) {
+  for (const nextShop of next.all) {
+    const shopType = nextShop.type;
+    // A shop the previous snapshot did not have yet has nothing to diff against.
     const prevShop = prev.byType[shopType];
-    const nextShop = next.byType[shopType];
+    if (!prevShop) continue;
 
     const prevItemMap = new Map(prevShop.items.map((i) => [i.id, i]));
 
@@ -206,9 +225,10 @@ function detectPurchaseEvents(prev: ShopsData, next: ShopsData): ShopPurchaseEve
 function detectAvailabilityChanges(prev: ShopsData, next: ShopsData): ShopAvailabilityChange[] {
   const changes: ShopAvailabilityChange[] = [];
 
-  for (const shopType of SHOP_TYPES) {
+  for (const nextShop of next.all) {
+    const shopType = nextShop.type;
     const prevShop = prev.byType[shopType];
-    const nextShop = next.byType[shopType];
+    if (!prevShop) continue;
 
     const prevItemMap = new Map(prevShop.items.map((i) => [i.id, i]));
 
@@ -284,7 +304,9 @@ function createShopsGlobal(): ShopsGlobal {
       }
     }
 
-    const restockListeners: Record<ShopType, Set<(event: ShopRestockEvent) => void>> = {
+    // Only the five long-standing shops have a dedicated listener set; a shop
+    // the game added later still reaches subscribers through `listeners.all`.
+    const restockListeners: Partial<Record<ShopType, Set<(event: ShopRestockEvent) => void>>> = {
       seed: listeners.seedRestock,
       tool: listeners.toolRestock,
       egg: listeners.eggRestock,
@@ -292,15 +314,15 @@ function createShopsGlobal(): ShopsGlobal {
       dawn: listeners.dawnRestock,
     };
 
-    for (const shopType of SHOP_TYPES) {
-      const restockEvent = detectRestockForType(
-        previousData.byType[shopType],
-        currentData.byType[shopType]
-      );
-      if (restockEvent) {
-        for (const cb of restockListeners[shopType]) {
-          cb(restockEvent);
-        }
+    for (const currentShop of currentData.all) {
+      const previousShop = previousData.byType[currentShop.type];
+      if (!previousShop) continue;
+
+      const restockEvent = detectRestockForType(previousShop, currentShop);
+      if (!restockEvent) continue;
+
+      for (const cb of restockListeners[currentShop.type] ?? []) {
+        cb(restockEvent);
       }
     }
 

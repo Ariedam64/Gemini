@@ -1,10 +1,12 @@
-// src/modules/cosmetic/avatar/query.ts
+// src/modules/cosmetic/avatar/logic/query.ts
 /**
  * Avatar query functions (list, get, debug)
  */
 
-import { CRITICAL_DEFAULTS } from "./criticalDefaults";
 import { getCurrentAvatarState } from "./internal";
+import { getCatalog, loadCatalog, resolveCosmeticUrl } from "./catalog";
+
+export { resolveCosmeticUrl } from "./catalog";
 import {
     CosmeticInfo,
     CurrentAvatar,
@@ -15,26 +17,8 @@ import {
     BLANK_PATHS,
 } from "../types";
 
-import { pageWindow } from "../../../../utils/windowContext";
 import { isOwned, initOwnership } from './ownership';
 import { isDevBuild } from '../../../../utils/buildMode';
-
-const discoveredItems: CosmeticInfo[] = [];
-let isDiscovered = false;
-let discoveryStarted = false;
-
-function ensureDiscoveryStarted() {
-    if (discoveryStarted) return;
-    discoveryStarted = true;
-    discoverFromManifest().then(() => {
-        // Discovery complete
-    }).catch(() => {
-        // Discovery failed, fallbacks will be used
-    });
-}
-
-// Start discovery immediately
-ensureDiscoveryStarted();
 
 let ownershipInitialized = false;
 
@@ -42,32 +26,6 @@ async function ensureOwnershipReady() {
     if (ownershipInitialized) return;
     await initOwnership();
     ownershipInitialized = true;
-}
-
-/**
- * Get the base URL for cosmetic assets with version hash
- */
-export function getAssetBaseUrl(): string {
-    try {
-        // Try to find version hash from loaded script tags
-        const scripts = Array.from(pageWindow.document.querySelectorAll("script"));
-        const versionedScript = scripts.find((s) => s.src.includes("/version/"));
-
-        if (versionedScript) {
-            // Extract: "https://magicgarden.gg/version/f72ae33/assets/..."
-            const match = versionedScript.src.match(/(https:\/\/.+?\/version\/[^/]+)/);
-            if (match) {
-                return `${match[1]}/assets/cosmetic/`;
-            }
-        }
-
-        // Fallback: try to construct from window.location.origin
-        console.warn("[Avatar] Could not find versioned asset path, using fallback");
-        return `${pageWindow.location.origin}/assets/cosmetic/`;
-    } catch (err) {
-        console.error("[Avatar] Failed to get asset base URL:", err);
-        return "https://magicgarden.gg/assets/cosmetic/"; // Last resort
-    }
 }
 
 /**
@@ -117,158 +75,68 @@ function applyOwnershipFilter(items: CosmeticInfo[], options?: ListOptions): Cos
         if (item.availability === 'default') {
             return true;
         }
-        return isOwned(item.filename as string);
+        return isOwned(item.filename);
     });
 }
 
 /**
- * Discover items from game manifest
+ * Build the synthetic "None" entries for each slot.
+ *
+ * These are not catalog items: they let the picker clear a slot. Only shown in
+ * dev builds, and skipped when the blank asset is already a real catalog entry.
  */
-async function discoverFromManifest(): Promise<void> {
-    if (isDiscovered) return;
-    try {
-        const baseUrl = getAssetBaseUrl();
-        // The manifest is usually in the same assets folder
-        const manifestUrl = baseUrl.replace(/\/cosmetic\/$/, "/manifest.json");
+function buildNoneOptions(items: CosmeticInfo[], options?: ListOptions): CosmeticInfo[] {
+    if (!isDevBuild()) return [];
 
-        const response = await fetch(manifestUrl);
-        if (!response.ok) return;
+    const known = new Set(items.map((item) => item.filename));
+    const slots = options?.type
+        ? (Array.isArray(options.type) ? options.type : [options.type])
+        : ["Top", "Mid", "Bottom", "Expression"];
 
-        const manifest = await response.json();
-        const bundles = manifest?.bundles || [];
-        const cosmeticBundle = bundles.find((b: any) => b.name === "cosmetic" || b.name === "cosmetics");
-
-        if (!cosmeticBundle) return;
-
-        // Start with critical defaults pre-seeded to avoid duplicates
-        const seen = new Set<string>(CRITICAL_DEFAULTS.map(i => i.filename as string));
-
-        for (const asset of cosmeticBundle.assets || []) {
-            for (const src of asset.src || []) {
-                if (typeof src !== "string") continue;
-
-                // Match: cosmetic/Bottom_WizardRobe.png or cosmetics/Trader_Top.png
-                const match = /^(cosmetic|cosmetics)\/(.+)\.png$/i.exec(src);
-                if (!match) continue;
-
-                const folder = match[1];
-                const baseName = match[2];
-                const filename = `${baseName}.png`;
-                if (seen.has(filename)) continue;
-
-                const parts = baseName.split("_");
-                if (parts.length < 2) continue;
-
-                const type = parts[0] as CosmeticType;
-                // Add spaces between camelCase words in the name
-                const displayName = parts.slice(1).join(" ")
-                    .replace(/([a-z])([A-Z])/g, '$1 $2');
-
-                // Ensure we don't double up the folder if the filename already has it or if we handle it via url
-                discoveredItems.push({
-                    id: filename,
-                    filename: filename as any,
-                    type,
-                    displayName,
-                    availability: "purchasable" as any,
-                    price: 0,
-                    // Construct URL relative to assets folder
-                    url: `${baseUrl.replace(/\/cosmetic\/$/, `/${folder}/`)}${filename}`
-                });
-                seen.add(filename);
-            }
-        }
-
-        isDiscovered = true;
-        console.log(`[Avatar] Discovered ${discoveredItems.length} new items from manifest`);
-    } catch (err) {
-        console.error("[Avatar] Discovery failed:", err);
-    }
-}
-
-/**
- * List all cosmetic items with metadata
- */
-export function list(options?: ListOptions): CosmeticInfo[] {
-    const baseUrl = getAssetBaseUrl();
-
-    // Priority 1: Discovered items from manifest (primary source)
-    const discoveredWithUrls: CosmeticInfo[] = discoveredItems.map((item) => ({
-        ...item,
-        url: item.url || `${baseUrl}${item.filename}`,
-    }));
-
-    // Priority 2: Critical defaults (fallback if discovery fails/incomplete)
-    const defaultsWithUrls: CosmeticInfo[] = CRITICAL_DEFAULTS.map((item) => ({
-        ...item,
-        url: `${baseUrl}${item.filename}`,
-    }));
-
-    // Deduplicate: Use Set to track filenames
-    const seen = new Set<string>();
-    const items: CosmeticInfo[] = [];
-
-    // Add discovered items first
-    for (const item of discoveredWithUrls) {
-        if (!seen.has(item.filename as string)) {
-            items.push(item);
-            seen.add(item.filename as string);
-        }
-    }
-
-    // Add defaults for any missing types
-    for (const item of defaultsWithUrls) {
-        if (!seen.has(item.filename as string)) {
-            items.push(item);
-            seen.add(item.filename as string);
-        }
-    }
-
-    // Add "None" option (only if not already in items, to avoid duplicates)
     const noneOptions: CosmeticInfo[] = [];
-    if (isDevBuild()) {
-        const typesToNone = options?.type
-            ? (Array.isArray(options.type) ? options.type : [options.type])
-            : ["Top", "Mid", "Bottom", "Expression"];
+    for (const slot of slots) {
+        const filename = BLANK_PATHS[slot] || ALT_ASSET_PATH;
+        if (known.has(filename)) continue;
 
-        typesToNone.forEach(t => {
-            const noneFilename = BLANK_PATHS[t] || ALT_ASSET_PATH;
-            // Only add if not already in items (dedup against seen set)
-            if (!seen.has(noneFilename)) {
-                noneOptions.push({
-                    id: `None_${t}`,
-                    filename: noneFilename as any,
-                    type: t as any,
-                    displayName: "None",
-                    availability: "default",
-                    price: 0,
-                    url: noneFilename ? `${baseUrl}${noneFilename}` : ""
-                });
-            }
+        noneOptions.push({
+            id: `None_${slot}`,
+            filename,
+            type: slot as CosmeticType,
+            displayName: "None",
+            availability: "default",
+            price: 0,
+            url: resolveCosmeticUrl(filename),
         });
     }
-
-    const combined = [...noneOptions, ...items];
-
-    let filtered = filterCosmetics(combined, options);
-    filtered = applyOwnershipFilter(filtered, options);
-
-    return filtered;
+    return noneOptions;
 }
 
 /**
- * Initialize ownership before returning list (async version)
+ * List all cosmetic items with metadata.
+ *
+ * Synchronous, and therefore empty until the catalog has loaded — use
+ * {@link listAsync} when the caller can wait.
+ */
+export function list(options?: ListOptions): CosmeticInfo[] {
+    const items = [...getCatalog()];
+    const combined = [...buildNoneOptions(items, options), ...items];
+
+    return applyOwnershipFilter(filterCosmetics(combined, options), options);
+}
+
+/**
+ * List cosmetics, waiting for the catalog and ownership data first.
  */
 export async function listAsync(options?: ListOptions): Promise<CosmeticInfo[]> {
-    await ensureOwnershipReady();
+    await Promise.all([loadCatalog(), ensureOwnershipReady()]);
     return list(options);
 }
 
 /**
- * Preload discovered items
+ * Preload the cosmetic catalog.
  */
 export async function preloadDiscovery(): Promise<void> {
-    await discoverFromManifest();
+    await loadCatalog();
 }
 
 /**
@@ -300,7 +168,7 @@ export async function get(): Promise<CurrentAvatar> {
 export async function debug(): Promise<AvatarDebugInfo> {
     const current = await getCurrentAvatarState();
     const currentParsed = await get();
-    const items = list();
+    const items = await listAsync();
 
     // Count items by type
     const counts = {} as Record<CosmeticType, number>;
@@ -323,4 +191,17 @@ export async function debug(): Promise<AvatarDebugInfo> {
         allItems: items,
         assetBaseUrl: getAssetBaseUrl(),
     };
+}
+
+/**
+ * Base URL the cosmetic assets are served from.
+ *
+ * Reported for debugging only. The catalog carries absolute URLs, so nothing
+ * builds a path from this any more; it is read back off the first entry rather
+ * than scraped from the page.
+ */
+export function getAssetBaseUrl(): string {
+    const first = getCatalog()[0];
+    if (!first?.url) return "";
+    return first.url.slice(0, first.url.lastIndexOf("/") + 1);
 }

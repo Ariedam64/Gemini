@@ -6,7 +6,7 @@
 
 import type { AvatarOutfit } from "../types";
 import { pageWindow } from "../../../../utils/windowContext";
-import { getAssetBaseUrl } from "./query";
+import { resolveCosmeticUrl } from "./catalog";
 import { outfitToArray } from "./internal";
 
 // State
@@ -17,7 +17,7 @@ let styleElement: HTMLStyleElement | null = null;
 let pendingProcess: ReturnType<typeof setTimeout> | null = null;
 
 function getCosmeticURL(filename: string): string {
-    return getAssetBaseUrl() + filename;
+    return resolveCosmeticUrl(filename);
 }
 
 /**

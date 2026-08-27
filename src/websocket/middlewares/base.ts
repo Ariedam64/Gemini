@@ -1,5 +1,7 @@
 // src/Websocket/middlewares/base.ts
 
+import { unwrapCommandEnvelope } from "../protocol";
+
 export type MiddlewareCtx = {
   ws: WebSocket | null;
   pageWindow: any;
@@ -21,6 +23,18 @@ const registry: OutgoingMiddleware[] = [];
 
 export function getRegisteredMiddlewares(): OutgoingMiddleware[] {
   return registry.slice();
+}
+
+/**
+ * Register a middleware that inspects the raw outgoing message.
+ *
+ * Prefer {@link middleware} for anything keyed on a message type. This escape
+ * hatch exists for the few interceptors that must see the wire shape itself,
+ * such as the `QuinoaCommand` envelope rather than the command inside it.
+ */
+export function registerMiddleware(mw: OutgoingMiddleware): OutgoingMiddleware {
+  register(mw);
+  return mw;
 }
 
 function register(mw: OutgoingMiddleware) {
@@ -59,7 +73,7 @@ function getMessageType(msg: unknown): string | undefined {
   if (typeof msg === "string") {
     const parsed = safeJsonParse(msg);
     if (parsed !== undefined) return getMessageType(parsed);
-    // Sometimes the type itself is sent as a string: sendMessage("PetPositions", payload)
+    // Sometimes the type itself is sent as a string: sendMessage("Emote", payload)
     return msg;
   }
 
@@ -68,6 +82,12 @@ function getMessageType(msg: unknown): string | undefined {
 
   // Common: { type: "Type", ... } (or variants)
   if (typeof msg === "object") {
+    // Gameplay actions now travel inside a QuinoaCommand envelope. Report the
+    // inner command type, so middlewares stay keyed on the action they mean
+    // (HarvestCrop, PurchaseShopItem, ...) whether the game or we sent it.
+    const command = unwrapCommandEnvelope(msg);
+    if (command) return command.type;
+
     const m = msg as any;
     return m.type ?? m.Type ?? m.kind ?? m.messageType;
   }
@@ -106,10 +126,19 @@ export function middleware(type: string, a: any, b?: any): OutgoingMiddleware {
     const t = getMessageType(message);
     if (t !== type) return;
 
-    const r = handler(message, ctx);
+    // Inside an envelope, the handler sees the command — same shape it saw when
+    // actions were flat — and a replacement goes back into the envelope.
+    const command = unwrapCommandEnvelope(message);
+    const r = handler(command ?? message, ctx);
 
     // Native middleware result passthrough.
-    if (r && typeof r === "object" && "kind" in r) return r as OutgoingMiddlewareResult;
+    if (r && typeof r === "object" && "kind" in r) {
+      const res = r as OutgoingMiddlewareResult;
+      if (command && res && res.kind === "replace") {
+        return { kind: "replace", message: { ...(message as object), command: res.message } };
+      }
+      return res;
+    }
 
     // Boolean override.
     if (typeof r === "boolean") return r ? undefined : { kind: "drop" };

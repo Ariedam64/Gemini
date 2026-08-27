@@ -53,7 +53,6 @@ export function example2_WithInitialOutfit(container: HTMLElement): AvatarBuilde
 export function example3_CustomSizing(container: HTMLElement): AvatarBuilderHandle {
     const builder = createAvatarBuilder({
         width: '600px',
-        previewHeight: '500px',
         onChange: ({ slot, item }) => {
             console.log('Cosmetic changed:', slot, item);
         }
@@ -255,7 +254,6 @@ export function example7_MultipleBuilders(container: HTMLElement): {
         builderContainer.appendChild(label);
 
         const builder = createAvatarBuilder({
-            previewHeight: '300px',
             onChange: ({ slot, item }) => {
                 console.log(`Avatar ${i + 1}: ${slot} = ${item.displayName}`);
             }

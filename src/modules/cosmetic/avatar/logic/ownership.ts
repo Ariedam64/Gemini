@@ -19,6 +19,9 @@ const state: OwnershipState = {
   error: null,
 };
 
+/** How long to wait for the game to register the auth atom before giving up. */
+const AUTH_ATOM_TIMEOUT_MS = 15_000;
+
 const listeners: (() => void)[] = [];
 
 function notify() {
@@ -38,6 +41,11 @@ export async function initOwnership(): Promise<void> {
     await waitForStore();
     const { Store } = await import('../../../../atoms/store');
 
+    // The game registers its atoms after we boot. Reading too early threw, and
+    // the catch below turned that into "not authenticated" — an empty cosmetic
+    // list for an authenticated player. Bounded: if the atom never shows up we
+    // fall through to the same read as before rather than waiting forever.
+    await Store.waitFor('isUserAuthenticatedAtom', AUTH_ATOM_TIMEOUT_MS);
     const isAuth = await Store.select('isUserAuthenticatedAtom');
 
     if (!isAuth) {

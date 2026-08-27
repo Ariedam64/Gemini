@@ -9,27 +9,9 @@
 
 import type { DataBag } from "../types";
 import { state } from "../state";
+import { singularizeSpriteCategory } from "../../../utils/spriteCategory";
 
 const SPRITE_URL_PATTERN = /\/assets\/sprites\/(.+?)\.png/;
-
-/**
- * Special plural → singular overrides for compound categories.
- */
-const CATEGORY_SINGULAR: Record<string, string> = {
-  "mutation-overlays": "mutation-overlay",
-};
-
-/**
- * Singularize a category name to match sprite catalog keys.
- * e.g. "seeds" -> "seed", "mutation-overlays" -> "mutation-overlay"
- */
-function singularizeCategory(cat: string): string {
-  const override = CATEGORY_SINGULAR[cat];
-  if (override) return override;
-  // Strip trailing "s" if present
-  if (cat.endsWith("s") && cat.length > 1) return cat.slice(0, -1);
-  return cat;
-}
 
 /**
  * Extract a sprite path from an API sprite URL, converting to catalog key format
@@ -45,7 +27,7 @@ function extractSpritePath(url: string | undefined): string | null {
   if (slashIdx > 0) {
     const cat = rawPath.slice(0, slashIdx);
     const rest = rawPath.slice(slashIdx);
-    return `sprite/${singularizeCategory(cat)}${rest}`;
+    return `sprite/${singularizeSpriteCategory(cat)}${rest}`;
   }
   return `sprite/${rawPath}`;
 }

@@ -20,20 +20,25 @@ type ViewOptions<TSrc, T> = {
   write?: WriteMode<TSrc, T>;
 };
 
-// Registry: one active subscription per view
-const activeSubscriptions = new Map<string, Unsubscribe>();
+/**
+ * Live subscriptions per view, so `stopOnChange()` can end them all.
+ *
+ * This used to hold a single unsubscribe per label and cancel it whenever
+ * someone else subscribed — which made a view usable by exactly one caller at
+ * a time. Views are shared: the harvest, egg and decor lock indicators and the
+ * crop price badge all watch `mySelectedSlotIdAtom` and friends, so whichever
+ * happened to subscribe last silently muted every other one. Nothing errored;
+ * the losers simply never received a value again.
+ */
+const activeSubscriptions = new Map<string, Set<Unsubscribe>>();
 
 function attachManagedSubscription(label: string, unsub: Unsubscribe): Unsubscribe {
-  const prev = activeSubscriptions.get(label);
-  if (prev) {
-    try {
-      prev();
-    } catch {
-      // Ignore cleanup errors
-    }
+  let subscriptions = activeSubscriptions.get(label);
+  if (!subscriptions) {
+    subscriptions = new Set();
+    activeSubscriptions.set(label, subscriptions);
   }
-
-  activeSubscriptions.set(label, unsub);
+  subscriptions.add(unsub);
 
   return () => {
     try {
@@ -41,9 +46,11 @@ function attachManagedSubscription(label: string, unsub: Unsubscribe): Unsubscri
     } catch {
       // Ignore cleanup errors
     }
-    if (activeSubscriptions.get(label) === unsub) {
-      activeSubscriptions.delete(label);
-    }
+
+    const current = activeSubscriptions.get(label);
+    if (!current) return;
+    current.delete(unsub);
+    if (!current.size) activeSubscriptions.delete(label);
   };
 }
 
@@ -116,16 +123,25 @@ export function makeView<TSrc = unknown, T = unknown>(
     return attachManagedSubscription(viewLabel, rawUnsub);
   }
 
+  /**
+   * Stop every live subscription on this view.
+   *
+   * Blunt by design and by name: it ends other callers' subscriptions too.
+   * Prefer the unsubscribe returned by `onChange`/`onChangeNow`, which only
+   * ends your own.
+   */
   function stopOnChange(): void {
-    const unsub = activeSubscriptions.get(viewLabel);
-    if (unsub) {
+    const subscriptions = activeSubscriptions.get(viewLabel);
+    if (!subscriptions) return;
+
+    for (const unsub of subscriptions) {
       try {
         unsub();
       } catch {
         // Ignore cleanup errors
       }
-      activeSubscriptions.delete(viewLabel);
     }
+    activeSubscriptions.delete(viewLabel);
   }
 
   function asSignature<K extends string | number = string>(

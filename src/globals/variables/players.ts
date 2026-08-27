@@ -1,4 +1,11 @@
-import { subscribe as wsSubscribe, getRoomState, getGameState, getMySlotIndex } from "../../state";
+import {
+  subscribe as wsSubscribe,
+  getRoomState,
+  getGameState,
+  getMySlotIndex,
+  getSlotOwnerId,
+  getAccountId,
+} from "../../state";
 import { deepEqual } from "../core/reactive";
 import type {
   PlayersGlobal,
@@ -23,14 +30,21 @@ type RawPlayer = {
   emoteData: {
     emoteType: number;
   };
-  databaseUserId: string;
+  databaseUserId?: string;
+  /** Renamed from `databaseUserId`. Read both through `getAccountId`. */
+  discordUserId?: string;
   guildId: string | null;
 };
 
 type RawUserSlot = {
-  type: string;
-  playerId: string;
-  databaseUserId: string;
+  /** @deprecated Dropped from the payload; slots no longer declare a type. */
+  type?: string;
+  /** Renamed from `playerId`. Read both through `getSlotOwnerId`. */
+  userId?: string;
+  /** Null on every slot since the `userId` rename. */
+  playerId?: string | null;
+  databaseUserId?: string;
+  discordUserId?: string;
   data: {
     schemaVersion: number;
     coinsCount: number;
@@ -86,7 +100,7 @@ function buildPlayer(
     // Identité
     id: raw.id,
     name: raw.name,
-    discordId: raw.databaseUserId,
+    discordId: getAccountId(raw) ?? "",
     discordAvatarUrl: raw.discordAvatarUrl,
     guildId: raw.guildId,
 
@@ -158,9 +172,13 @@ function buildData(sources: PlayersSources): PlayersData {
   const userSlotMap = new Map<string, { slot: RawUserSlot; index: number }>();
   if (Array.isArray(userSlots)) {
     userSlots.forEach((slot, index) => {
-      if (slot?.type === "user" && slot?.playerId) {
-        userSlotMap.set(slot.playerId, { slot, index });
-      }
+      // The slot used to carry `type: "user"` and no longer carries a type at
+      // all, so testing for it rejected every slot — and every player then lost
+      // its index, coins, inventory, stats and logs. Having an owner is what
+      // makes a slot a player's; empty seats are null.
+      if (!slot) return;
+      const ownerId = getSlotOwnerId(slot);
+      if (ownerId) userSlotMap.set(ownerId, { slot, index });
     });
   }
 

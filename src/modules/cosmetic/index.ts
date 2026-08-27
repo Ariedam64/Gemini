@@ -8,6 +8,7 @@ import { categories, list, url } from "./logic/query";
 import { create, show, clear } from "./logic/display";
 import { attach } from "./logic/overlay";
 import { Avatar } from "./avatar";
+import { loadCatalog as loadAvatarCatalog } from "./avatar/logic/catalog";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -18,7 +19,28 @@ function ensureReady(): void {
 }
 
 export const MGCosmetic = {
-  init: initCosmeticSystem,
+  /**
+   * Initialize the cosmetic system and the avatar catalog.
+   *
+   * The avatar catalog has to load here: `Avatar.list()` and
+   * `resolveCosmeticUrl()` are synchronous, so anything rendering cosmetics
+   * gets an empty list unless the catalog is already in memory. It used to be
+   * filled by an import-time side effect, which is why nothing ever called an
+   * init for it.
+   *
+   * The two run independently — a missing cosmetic bundle in the game manifest
+   * must not cost us the avatar catalog, and the reverse. Ownership stays lazy
+   * (see `listAsync`): it needs an authenticated session and must not hold up
+   * module loading.
+   */
+  init: async (): Promise<boolean> => {
+    const [systemReady] = await Promise.allSettled([
+      initCosmeticSystem(),
+      loadAvatarCatalog(),
+    ]);
+    if (systemReady.status === "rejected") throw systemReady.reason;
+    return systemReady.value;
+  },
   isReady,
 
   categories: () => {

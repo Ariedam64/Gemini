@@ -25,6 +25,8 @@ export const ServerToClientMessageType = {
   Emote: "Emote",
   CurrencyTransaction: "CurrencyTransaction",
   Pong: "Pong",
+  /** Reply to a QuinoaCommand envelope, keyed by its requestId. */
+  QuinoaCommandResult: "QuinoaCommandResult",
 } as const;
 
 export type ServerToClientMessageType =
@@ -48,6 +50,7 @@ export const ClientToServerMessageType = {
   KickPlayer: "KickPlayer",
   SetPlayerData: "SetPlayerData",
   UsurpHost: "UsurpHost",
+  MarkChatRead: "MarkChatRead",
 
   // Session / game / heartbeat
   SetSelectedGame: "SetSelectedGame",
@@ -57,6 +60,7 @@ export const ClientToServerMessageType = {
   PlayerPosition: "PlayerPosition",
   Teleport: "Teleport",
   CheckWeatherStatus: "CheckWeatherStatus",
+  QuinoaTutorialSkipped: "QuinoaTutorialSkipped",
 
   // Inventory / storage
   MoveInventoryItem: "MoveInventoryItem",
@@ -65,6 +69,7 @@ export const ClientToServerMessageType = {
   PutItemInStorage: "PutItemInStorage",
   RetrieveItemFromStorage: "RetrieveItemFromStorage",
   MoveStorageItem: "MoveStorageItem",
+  SwapItemWithStorage: "SwapItemWithStorage",
   LogItems: "LogItems",
 
   // Inventory / items
@@ -86,25 +91,41 @@ export const ClientToServerMessageType = {
   PickupDecor: "PickupDecor",
   PlaceDecor: "PlaceDecor",
   RemoveGardenObject: "RemoveGardenObject",
+  Preserve: "Preserve",
+  DisplayCrop: "DisplayCrop",
+  PickupDisplayedCrop: "PickupDisplayedCrop",
 
   // Pets
   PlacePet: "PlacePet",
   FeedPet: "FeedPet",
-  PetPositions: "PetPositions",
   SwapPet: "SwapPet",
   SwapPetFromStorage: "SwapPetFromStorage",
   PickupPet: "PickupPet",
   MovePetSlot: "MovePetSlot",
   NamePet: "NamePet",
   SellPet: "SellPet",
+  RidePet: "RidePet",
+  DismountPet: "DismountPet",
+  DawnCapture: "DawnCapture",
+  Thundercharge: "Thundercharge",
+  RequestPetGreet: "RequestPetGreet",
+  ReplenishPotion: "ReplenishPotion",
+  XPPotion: "XPPotion",
+  EquipPetCosmetic: "EquipPetCosmetic",
   UpgradePetHutch: "UpgradePetHutch",
+  UpgradeSeedSilo: "UpgradeSeedSilo",
+  UpgradeDecorShed: "UpgradeDecorShed",
+
+  // Pet teams
+  SavePetTeam: "SavePetTeam",
+  ApplyPetTeam: "ApplyPetTeam",
+  DeletePetTeam: "DeletePetTeam",
+  MovePetTeam: "MovePetTeam",
+  SetPetTeamEmblem: "SetPetTeamEmblem",
 
   // Seasonal / misc
   ThrowSnowball: "ThrowSnowball",
   CheckFriendBonus: "CheckFriendBonus",
-
-  // Voice / Discord
-  ReportSpeakingStart: "ReportSpeakingStart",
 } as const;
 
 export type ClientToServerMessageType =
@@ -115,6 +136,51 @@ export type ClientToServerMessage = {
   type: ClientToServerMessageType;
   [key: string]: unknown;
 };
+
+// -----------------------------
+// QuinoaCommand envelope
+// -----------------------------
+
+/**
+ * Message type of the envelope that carries a gameplay command.
+ *
+ * See `commandSequence.ts` for why the sequence number matters, and `api.ts`
+ * for which actions travel inside it.
+ */
+export const COMMAND_ENVELOPE_TYPE = "QuinoaCommand";
+
+export type QuinoaCommandEnvelope = {
+  scopePath: string[];
+  type: typeof COMMAND_ENVELOPE_TYPE;
+  requestId: string;
+  commandSequence: number;
+  command: { type: string; [key: string]: unknown };
+};
+
+/**
+ * The two Quinoa messages that never were commands.
+ *
+ * `Ping` has its own `Pong` reply and `PlayerPosition` feeds the movement
+ * snapshot channel (QuinoaMovementSnapshot/Batch), so neither goes near the
+ * command pipeline — wrapping one would break it in the other direction.
+ */
+export const RAW_QUINOA_MESSAGE_TYPES: ReadonlySet<string> = new Set<string>([
+  ClientToServerMessageType.Ping,
+  ClientToServerMessageType.PlayerPosition,
+]);
+
+/** Reads the inner command out of an envelope, or `null` for anything else. */
+export function unwrapCommandEnvelope(
+  message: unknown
+): QuinoaCommandEnvelope["command"] | null {
+  if (!message || typeof message !== "object") return null;
+
+  const envelope = message as Partial<QuinoaCommandEnvelope>;
+  if (envelope.type !== COMMAND_ENVELOPE_TYPE) return null;
+  if (!envelope.command || typeof envelope.command !== "object") return null;
+
+  return envelope.command;
+}
 
 // -----------------------------
 // WebSocket close codes (server initiated)

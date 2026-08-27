@@ -24,14 +24,6 @@ export interface ShopCardOptions {
   shopType: ShopType;
 }
 
-const SHOP_LABELS: Record<ShopType, string> = {
-  seed: "Seeds",
-  tool: "Tools",
-  egg: "Eggs",
-  decor: "Decor",
-  dawn: "Dawn",
-};
-
 const ITEM_EMOJI: Record<string, string> = {
   Seed: "🌱",
   Tool: "🔧",
@@ -39,7 +31,10 @@ const ITEM_EMOJI: Record<string, string> = {
   Decor: "🎨",
 };
 
-const SHOP_FALLBACK_EMOJI: Record<ShopType, string> = {
+/** Shown when a shop has no icon of its own - shops get added over time. */
+const GENERIC_SHOP_EMOJI = "🛒";
+
+const SHOP_FALLBACK_EMOJI: Record<string, string> = {
   seed: "🌱",
   tool: "🔧",
   egg: "🥚",
@@ -67,7 +62,7 @@ interface ShopItemRow extends ShopItem {
 }
 
 function getEmoji(itemType: string, shopType: ShopType): string {
-  return ITEM_EMOJI[itemType] ?? SHOP_FALLBACK_EMOJI[shopType];
+  return ITEM_EMOJI[itemType] ?? SHOP_FALLBACK_EMOJI[shopType] ?? GENERIC_SHOP_EMOJI;
 }
 
 function getTrackedIdSet(shopType: ShopType): Set<string> {
@@ -226,7 +221,7 @@ export function createShopCard(options: ShopCardOptions): ShopCardPart {
     root = Card(
       {
         id: `shop-card-${shopType}`,
-        title: SHOP_LABELS[shopType],
+        title: MGData.getShopLabel(shopType),
         expandable: true,
         defaultExpanded: true,
         stateKey: `shop-${shopType}`,

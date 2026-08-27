@@ -5,7 +5,7 @@
 
 import { element } from "../../styles/helpers";
 import { avatarBuilderStyles } from "./avatarBuilder.css";
-import { listAsync, getAssetBaseUrl } from "../../../modules/cosmetic/avatar/logic/query";
+import { listAsync, resolveCosmeticUrl } from "../../../modules/cosmetic/avatar/logic/query";
 import type { AvatarOutfit, CosmeticInfo } from "../../../modules/cosmetic/avatar/types";
 import { ALT_ASSET_PATH } from "../../../modules/cosmetic/avatar/types";
 import { MGRiveLoader } from "../../../modules/riveLoader";
@@ -206,7 +206,6 @@ export function createAvatarBuilder(options: AvatarBuilderOptions = {}): AvatarB
         } else {
             // Use static PNG layers
             previewContainer.innerHTML = "";
-            const assetBase = getAssetBaseUrl();
 
             const layerOrder: { slot: SlotType; zIndex: number }[] = [
                 { slot: 'bottom', zIndex: 1 },
@@ -225,7 +224,7 @@ export function createAvatarBuilder(options: AvatarBuilderOptions = {}): AvatarB
                 if (isBlank || isAltPath) return;
 
                 const img = element("img", {
-                    src: `${assetBase}${filename}`,
+                    src: resolveCosmeticUrl(filename),
                     className: `avatar-builder-layer ${slot === activeSlot ? 'active' : ''}`,
                     style: { zIndex: String(zIndex) },
                     onerror: () => (img as HTMLImageElement).style.display = "none"

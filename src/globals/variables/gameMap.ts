@@ -169,17 +169,13 @@ function createGameMapGlobal(): GameMapGlobal {
 
     // Best-effort only: `tileSize` is carried on `GameMapData` for API
     // completeness but nothing actually reads it, and the game doesn't
-    // currently expose an atom under this label — a failed subscribe here
-    // must not block `tryBuild()` on `map` forever.
-    try {
-      const unsub2 = await Store.subscribe("tileSizeAtom", (value: unknown) => {
-        sources.tileSize = value as number;
-        tryBuild();
-      });
-      unsubscribes.push(unsub2);
-    } catch (error) {
-      console.warn("[gameMap] tileSizeAtom unavailable, defaulting tileSize to 0:", error);
-    }
+    // currently expose an atom under this label. The subscription simply never
+    // attaches, which is fine — `tryBuild()` only ever waits on `map`.
+    const unsub2 = await Store.subscribe("tileSizeAtom", (value: unknown) => {
+      sources.tileSize = value as number;
+      tryBuild();
+    });
+    unsubscribes.push(unsub2);
   }
 
   init();

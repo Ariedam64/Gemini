@@ -21,7 +21,10 @@ export const SHOP_TYPE_LABELS: Record<ShopType, string> = {
 /**
  * Emoji icons for shop types (fallback when sprite is unavailable)
  */
-export const ITEM_EMOJI: Record<ShopType, string> = {
+/** Shown when a shop has no icon of its own - shops get added over time. */
+export const GENERIC_SHOP_EMOJI = "🛒";
+
+export const ITEM_EMOJI: Record<string, string> = {
   seed: "🌱",
   tool: "🔧",
   egg: "🥚",
@@ -35,7 +38,7 @@ function resolveItemEmoji(itemType: string, shopType: ShopType): string {
     case "Tool": return ITEM_EMOJI.tool;
     case "Egg": return ITEM_EMOJI.egg;
     case "Decor": return ITEM_EMOJI.decor;
-    default: return ITEM_EMOJI[shopType];
+    default: return ITEM_EMOJI[shopType] ?? GENERIC_SHOP_EMOJI;
   }
 }
 

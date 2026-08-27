@@ -8,7 +8,7 @@ import { element } from "../../../../styles/helpers";
 import { MGAvatarLoadouts } from "../../../../../modules/cosmetic/avatar/logic/loadouts";
 import type { AvatarLoadout } from "../../../../../modules/cosmetic/avatar/logic/loadouts";
 import { Avatar } from "../../../../../modules/cosmetic/avatar";
-import { getAssetBaseUrl } from "../../../../../modules/cosmetic/avatar/logic/query";
+import { resolveCosmeticUrl } from "../../../../../modules/cosmetic/avatar/logic/query";
 import { outfitsLoadoutCardCss } from "./outfitsLoadoutCard.css";
 
 const LONG_PRESS_DELAY_MS = 500;
@@ -54,25 +54,23 @@ export function createOutfitsLoadoutList(options: OutfitsLoadoutListOptions = {}
             return;
         }
 
-        const baseUrl = getAssetBaseUrl();
-
         if (layout === "grid") {
             const grid = element("div", { className: "outfits-loadout-grid" }) as HTMLDivElement;
             loadouts.forEach(loadout => {
-                grid.appendChild(createOutfitCard(loadout, baseUrl));
+                grid.appendChild(createOutfitCard(loadout));
             });
             listEl.appendChild(grid);
         } else {
             const carousel = element("div", { className: "outfits-loadout-carousel" }) as HTMLDivElement;
             loadouts.forEach(loadout => {
-                carousel.appendChild(createOutfitCard(loadout, baseUrl));
+                carousel.appendChild(createOutfitCard(loadout));
             });
             attachDragScroll(carousel);
             listEl.appendChild(carousel);
         }
     }
 
-    function createOutfitCard(loadout: AvatarLoadout, baseUrl: string): HTMLElement {
+    function createOutfitCard(loadout: AvatarLoadout): HTMLElement {
         const card = element("div", { className: "outfits-loadout-card" }) as HTMLDivElement;
 
         let suppressClick = false;
@@ -152,7 +150,7 @@ export function createOutfitsLoadoutList(options: OutfitsLoadoutListOptions = {}
                 className: "outfits-loadout-layer",
                 style: { zIndex: String(index + 1) },
             }) as HTMLImageElement;
-            img.src = `${baseUrl}${filename}`;
+            img.src = resolveCosmeticUrl(filename);
             img.onerror = () => img.remove();
             preview.appendChild(img);
         });

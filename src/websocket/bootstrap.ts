@@ -13,6 +13,11 @@ import "./middlewares/pets"
 import "./middlewares/session"
 import "./middlewares/social"
 
+// Registration order is the execution order, and this one must run last: it
+// commits a command's number, which a middleware that drops the message would
+// otherwise waste — leaving a gap the server never forgives.
+import "./middlewares/commandSequence"
+
 
 /**
  * WebSocket bootstrap:

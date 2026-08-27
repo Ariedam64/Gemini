@@ -20,6 +20,7 @@ function createInitialState(): DataState {
       eggs: null,
       pets: null,
       abilities: null,
+      enums: null,
       plants: null,
       weather: null,
     },

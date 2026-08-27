@@ -29,12 +29,6 @@ middleware(ClientToServerMessageType.KickPlayer, (_msg, ctx) => {
   return shouldBlock ? false : true;
 });
 
-middleware(ClientToServerMessageType.ReportSpeakingStart, (_msg, ctx) => {
-  if (ctx.debug) { console.log("[MW][Voice] ReportSpeakingStart"); }
-  const shouldBlock = false;
-  return shouldBlock ? false : true;
-});
-
 middleware(ClientToServerMessageType.SetPlayerData, (_msg, ctx) => {
   if (ctx.debug) { console.log("[MW][Social] SetPlayerData"); }
   const shouldBlock = false;

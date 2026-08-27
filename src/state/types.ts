@@ -39,6 +39,13 @@ export type {
 
 export interface WelcomeMessage {
   type: "Welcome";
+  /** Room-player id of the connection this Welcome answers. */
+  selfPlayerId?: string;
+  /**
+   * Last command sequence the server executed. The next QuinoaCommand we send
+   * must be this plus one — see `websocket/commandSequence.ts`.
+   */
+  executedCommandSequence?: number;
   fullState: {
     scope: string;
     data: RoomState;
@@ -109,7 +116,9 @@ export interface RoomPlayer {
   cosmetic: Record<string, unknown>;
   emoteData: Record<string, unknown>;
   secondsRemainingUntilChatEnabled: number;
-  databaseUserId: string;
+  /** @deprecated Renamed to `discordUserId`. Read both via `getAccountId`. */
+  databaseUserId?: string;
+  discordUserId?: string;
   guildId: string | null;
 }
 
@@ -133,8 +142,13 @@ export interface ShopData {
 }
 
 export interface UserSlotData {
-  playerId: string;
-  databaseUserId: string;
+  /** Owner of the slot. Renamed from `playerId`; read via `getSlotOwnerId`. */
+  userId?: string;
+  /** @deprecated Null on every slot since the `userId` rename. */
+  playerId?: string | null;
+  /** @deprecated Renamed to `discordUserId`. Read both via `getAccountId`. */
+  databaseUserId?: string;
+  discordUserId?: string;
   position: import("../atoms/types").GridPosition | null;
   petSlotInfos: Record<string, import("../atoms/types").PetSlotInfo>;
   notAuthoritative_selectedItemIndex: number | null;

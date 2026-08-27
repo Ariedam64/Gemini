@@ -14,6 +14,7 @@
 
 import { pageWindow } from "../utils/windowContext";
 import { handleMessage as handleWSStateMessage, setMyPlayerId } from "../state";
+import { seedFromWelcome } from "./commandSequence";
 
 export type BestWsResult = {
   ws: WebSocket | null;
@@ -87,7 +88,13 @@ function track(ws: WebSocket, debug: boolean) {
       !raw.startsWith('{"type":"PartialState"')
     ) return;
     try {
-      handleWSStateMessage(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+
+      // Welcome re-seeds the command counter on every connect, so a reconnect
+      // needs no special handling of its own.
+      if (parsed?.type === "Welcome") seedFromWelcome(parsed.executedCommandSequence);
+
+      handleWSStateMessage(parsed);
     } catch { /* parse error — skip */ }
   });
 

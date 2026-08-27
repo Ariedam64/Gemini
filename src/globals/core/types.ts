@@ -398,7 +398,15 @@ export type PlayersGlobal = {
 // SHOPS GLOBAL
 // =============================================================================
 
-export type ShopType = "seed" | "tool" | "egg" | "decor" | "dawn";
+/**
+ * A shop key as it appears in the game state.
+ *
+ * The known five are spelled out so they keep autocomplete and so
+ * `byType.seed` stays typed, but the game adds shops (`snow`, `thunder`,
+ * `apology` arrived together) and the open end lets those through instead of
+ * failing to compile — or, worse, being silently dropped.
+ */
+export type ShopType = "seed" | "tool" | "egg" | "decor" | "dawn" | (string & {});
 
 export type ShopItem = {
   id: string;

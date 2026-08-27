@@ -11,7 +11,13 @@
 import { state } from "../state";
 
 /** Lowercase shop identifier matching the live shop snapshot's keys. */
-export type ShopCatalogShop = "seed" | "tool" | "egg" | "decor" | "dawn";
+/**
+ * A shop key an item can be sold in.
+ *
+ * Open-ended on purpose: the game keeps adding shops, and `/data` already
+ * reports `snow`, `thunder` and `apology` alongside the original five.
+ */
+export type ShopCatalogShop = "seed" | "tool" | "egg" | "decor" | "dawn" | (string & {});
 
 /** Item type as reported by the game inventory payloads. */
 export type ShopCatalogItemType = "Seed" | "Tool" | "Egg" | "Decor";
@@ -26,19 +32,24 @@ export interface ShopCatalogEntry {
   spriteId: string | null;
 }
 
-const API_TO_SHOP: Record<string, ShopCatalogShop> = {
-  Seed: "seed",
-  Tool: "tool",
-  Egg: "egg",
-  Decor: "decor",
-  Dawn: "dawn",
-};
+/**
+ * Normalize one `eligibleShops` entry to a shop key.
+ *
+ * The API spells these both ways — `Snow` and `snow` both occur — and the shop
+ * keys in the game state are lowercase. Lowercasing covers both, and covers
+ * shops added later; the fixed map this replaced knew five of the eight the API
+ * already served, so items for the rest never reached the catalog at all.
+ */
+function toShopKey(value: unknown): ShopCatalogShop | null {
+  const key = String(value ?? "").toLowerCase();
+  return key.length > 0 ? key : null;
+}
 
 function resolveShops(eligible: unknown): ShopCatalogShop[] {
   if (!Array.isArray(eligible) || eligible.length === 0) return [];
   const out: ShopCatalogShop[] = [];
   for (const value of eligible) {
-    const mapped = API_TO_SHOP[String(value)];
+    const mapped = toShopKey(value);
     if (mapped && !out.includes(mapped)) out.push(mapped);
   }
   return out;

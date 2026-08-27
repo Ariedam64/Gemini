@@ -5,12 +5,13 @@ import { fetchGameData } from "./logic/fetch";
 import { resolveSprites } from "./logic/sprites";
 import { getData, getAllData, hasData, waitForData, waitForAnyData } from "./logic/accessors";
 import { getShopCatalog } from "./logic/shopCatalog";
+import { getShopTypes, getShopLabel } from "./logic/shopTypes";
 import { state } from "./state";
 
 export type { DataKey, DataBag, AbilityColor } from "./types";
 export type { ActivityLogEntry, PetAbilityAction } from "./logic/abilityFormatter";
 export type { ShopCatalogEntry, ShopCatalogShop, ShopCatalogItemType } from "./logic/shopCatalog";
-export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction, PET_ABILITY_ACTIONS } from "./logic/abilityFormatter";
+export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction } from "./logic/abilityFormatter";
 
 /**
  * MGData module - Game data from MG API
@@ -69,6 +70,16 @@ export const MGData = {
    * Wait for any data to be available
    */
   waitForAny: waitForAnyData,
+
+  /**
+   * Every shop key the game currently has, lowercase
+   */
+  getShopTypes,
+
+  /**
+   * Human-readable name for a shop key
+   */
+  getShopLabel,
 
   /**
    * Resolve sprite IDs for all data

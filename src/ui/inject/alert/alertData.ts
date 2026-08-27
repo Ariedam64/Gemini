@@ -123,7 +123,7 @@ export function getAvailableTrackedItems(): AvailableItem[] {
   const shops = getShops();
   const shopsData = shops.get();
 
-  const shopTypes: ShopType[] = ["seed", "tool", "egg", "decor", "dawn"];
+  const shopTypes = MGData.getShopTypes();
   const allAvailable: AvailableItem[] = [];
 
   for (const shopType of shopTypes) {

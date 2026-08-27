@@ -10,7 +10,7 @@ export { MGEnvironment } from "./environment";
 export { MGCustomModal } from "./customModal";
 
 // Re-export data utilities
-export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction, PET_ABILITY_ACTIONS } from "./data";
+export { formatAbilityLog, filterPetAbilityLogs, isPetAbilityAction } from "./data";
 export type { ActivityLogEntry, PetAbilityAction } from "./data";
 
 // Rendering modules
