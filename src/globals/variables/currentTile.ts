@@ -180,7 +180,7 @@ function isPlantInfoChanged(prev: PlantInfo | null, next: PlantInfo | null): boo
   if (prev.nextHarvestSlotIndex !== next.nextHarvestSlotIndex) return true;
   if (prev.slots.length !== next.slots.length) return true;
   if (!deepEqual(prev.sortedSlotIndices, next.sortedSlotIndices)) return true;
-  // Check if slot data changed (targetScale, mutations, etc.)
+  // Check if slot data changed (size, mutations, etc.)
   return !deepEqual(prev.slots, next.slots);
 }
 

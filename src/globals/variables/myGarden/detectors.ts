@@ -98,7 +98,7 @@ export function detectCropMutations(
           species: slot.species,
           startTime: slot.startTime,
           endTime: slot.endTime,
-          targetScale: slot.targetScale,
+          size: slot.size,
           mutations: [...slot.mutations],
           isMature: now >= slot.endTime,
           fruitCount: 1, // Each CropInfo = 1 fruit slot
@@ -144,7 +144,7 @@ export function detectCropHarvests(
           species: prevSlot.species,
           startTime: prevSlot.startTime,
           endTime: prevSlot.endTime,
-          targetScale: prevSlot.targetScale,
+          size: prevSlot.size,
           mutations: [...prevSlot.mutations],
           isMature: true,
           fruitCount: 1, // Each CropInfo = 1 fruit slot
@@ -168,7 +168,7 @@ export function detectCropHarvests(
           species: slot.species,
           startTime: slot.startTime,
           endTime: slot.endTime,
-          targetScale: slot.targetScale,
+          size: slot.size,
           mutations: [...slot.mutations],
           isMature: true,
           fruitCount: 1, // Each CropInfo = 1 fruit slot

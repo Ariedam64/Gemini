@@ -38,7 +38,7 @@ function updateCropValue(): void {
 
   currentCropValue = calculateCropSellPrice(
     currentSlot.species,
-    currentSlot.targetScale,
+    currentSlot.size,
     currentSlot.mutations || []
   );
 }

@@ -137,7 +137,7 @@ export function createExistingRuleSelector(
         });
 
         if (rule.sizeCondition?.enabled) {
-            row.appendChild(createTag(`Size ≥ ${rule.sizeCondition.minPercentage}%`));
+            row.appendChild(createTag(`Size ≥ ${rule.sizeCondition.minPercentage}`));
         }
 
         if (rule.mutationCondition?.enabled) {

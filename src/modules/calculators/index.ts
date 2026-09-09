@@ -24,6 +24,8 @@ export * from './logic/petHutch';
 
 import {
   calculateCropSize,
+  calculateCropSizeMultiplier,
+  calculateCropWeight,
   calculateCropSellPrice,
   calculateCropProgress,
   isCropReady,
@@ -71,6 +73,8 @@ export const MGCalculators = {
   // ─── Crop Calculators ───
   crop: {
     calculateSize: calculateCropSize,
+    calculateSizeMultiplier: calculateCropSizeMultiplier,
+    calculateWeight: calculateCropWeight,
     calculateSellPrice: calculateCropSellPrice,
     calculateProgress: calculateCropProgress,
     isReady: isCropReady,

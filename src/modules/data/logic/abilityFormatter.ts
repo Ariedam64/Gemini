@@ -216,9 +216,10 @@ export function formatAbilityLog(log: ActivityLogEntry): string {
     // ========== Produce Scale Boost ==========
     case 'ProduceScaleBoost':
     case 'ProduceScaleBoostII': {
-      const percentage = params.scaleIncreasePercentage || 0;
+      // Crop Size is a whole number in [50, 100]: the boost adds points, not a percentage.
+      const points = params.sizeIncrease ?? params.scaleIncreasePercentage ?? 0;
       const numPlants = params.numPlantsAffected || 0;
-      return `Boosted ${numPlants} ${numPlants === 1 ? 'crop' : 'crops'} size by +${percentage.toFixed(0)}%`;
+      return `Boosted ${numPlants} ${numPlants === 1 ? 'crop' : 'crops'} size by +${points.toFixed(0)}`;
     }
 
     default:

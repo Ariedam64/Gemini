@@ -172,7 +172,7 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
 
         valueDisplayEl = element("span", {
             style: "font-size: 12px; font-weight: 600; color: var(--accent);",
-        }, `${percentage}%`);
+        }, `${percentage}`);
 
         labelContainer.appendChild(labelText);
         labelContainer.appendChild(valueDisplayEl);
@@ -188,7 +188,7 @@ export function createSizeSection(options: SizeSectionOptions): SizeSectionHandl
             onInput: (value) => {
                 // Live update during drag
                 percentage = value;
-                if (valueDisplayEl) valueDisplayEl.textContent = `${value}%`;
+                if (valueDisplayEl) valueDisplayEl.textContent = `${value}`;
                 if (descriptionEl) descriptionEl.textContent = getDescriptionText();
             },
             onChange: (value) => {

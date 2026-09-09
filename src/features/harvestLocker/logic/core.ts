@@ -4,7 +4,7 @@
  */
 
 import { getMyGarden } from '../../../globals/variables/myGarden';
-import { MGData } from '../../../modules/data';
+import { calculateCropSize } from '../../../modules/calculators/logic/crop';
 import { EVENTS } from '../../../utils/storage';
 import type { HarvestLockerConfig, HarvestRule } from '../types';
 
@@ -160,7 +160,7 @@ function getRulesForSpecies(species: string): HarvestRule[] {
  * - Otherwise → ALLOW (not locked)
  */
 function evaluateRules(
-    slot: { species: string; targetScale: number; mutations: string[] },
+    slot: { species: string; size: number; mutations: string[] },
     rules: HarvestRule[]
 ): boolean {
     const lockRules = rules.filter(r => r.mode === 'lock');
@@ -188,7 +188,7 @@ function evaluateRules(
  * Check if a slot matches a rule's conditions
  */
 function ruleMatches(
-    slot: { species: string; targetScale: number; mutations: string[] },
+    slot: { species: string; size: number; mutations: string[] },
     rule: HarvestRule
 ): boolean {
     const conditions: boolean[] = [];
@@ -249,30 +249,13 @@ function evaluateMutationCondition(
 }
 
 /**
- * Calculate scale percentage (0-100) relative to baseTileScale and maxScale
+ * Crop Size of a slot (50-100) — the same whole number the game shows.
+ *
+ * A slot carries it directly in `size`; `calculateCropSize` only has to clamp
+ * it (and still converts a pre-rework fractional scale, if one shows up).
  */
-function calculateScalePercentage(slot: { species: string; targetScale: number }): number {
-    const plantsData = MGData.get('plants') as Record<string, unknown> | null;
-    const plantData = plantsData?.[slot.species];
-
-    if (!plantData || typeof plantData !== 'object' || !('crop' in plantData)) {
-        return 0;
-    }
-
-    const crop = (plantData as { crop: unknown }).crop;
-    if (typeof crop !== 'object' || !crop) {
-        return 0;
-    }
-
-    const { baseTileScale, maxScale } = crop as { baseTileScale: number; maxScale: number };
-    const range = maxScale - baseTileScale;
-
-    if (range === 0) {
-        return 100;
-    }
-
-    const scaleAboveBase = slot.targetScale - baseTileScale;
-    return (scaleAboveBase / range) * 100;
+function calculateScalePercentage(slot: { species: string; size: number }): number {
+    return calculateCropSize(slot.species, slot.size);
 }
 
 /**
@@ -284,7 +267,7 @@ function isValidGarden(garden: unknown): garden is {
             tileIndex: string;
             slots: Array<{
                 species: string;
-                targetScale: number;
+                size: number;
                 mutations: string[];
                 /** Stable id from the game; see the note in `evaluateLocks`. */
                 slotId?: number;

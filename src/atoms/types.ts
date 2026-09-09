@@ -173,7 +173,8 @@ export type GrowSlot = {
   species: string;
   startTime: number;
   endTime: number;
-  targetScale: number;
+  /** Whole-number Crop Size in [50, 100]. */
+  size: number;
   mutations: string[];
   // Stable per-slot identifier from the game. NOTE: this is NOT the slot's index
   // in the slots[] array — the selected-slot atom references this id, so callers

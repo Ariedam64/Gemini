@@ -584,7 +584,8 @@ export type CropInfo = {
   species: string;
   startTime: number;
   endTime: number;
-  targetScale: number;
+  /** Whole-number Crop Size in [50, 100]. */
+  size: number;
   mutations: string[];
   isMature: boolean;
   fruitCount: number; // Multi-harvest fruit count (1 for single-fruit plants)

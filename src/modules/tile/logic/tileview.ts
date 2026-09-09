@@ -33,7 +33,7 @@ export function getTileViewAt(
 export function patchPlantSlot(slot: any, patch: PlantSlotPatch): void {
   if ("startTime" in patch) slot.startTime = Number(patch.startTime);
   if ("endTime" in patch) slot.endTime = Number(patch.endTime);
-  if ("targetScale" in patch) slot.targetScale = Number(patch.targetScale);
+  if ("size" in patch) slot.size = Number(patch.size);
 
   if ("mutations" in patch) {
     if (!Array.isArray(patch.mutations)) {

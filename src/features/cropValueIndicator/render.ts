@@ -118,7 +118,7 @@ function resolveCurrentSlot(): GrowSlot | null {
 function calculateCurrentPrice(): number {
   const slot = resolveCurrentSlot();
   if (!slot) return 0;
-  return calculateCropSellPrice(slot.species, slot.targetScale, slot.mutations || []);
+  return calculateCropSellPrice(slot.species, slot.size, slot.mutations || []);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

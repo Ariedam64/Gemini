@@ -61,7 +61,7 @@ export function buildCropInfo(
     species: slot.species,
     startTime: slot.startTime,
     endTime: slot.endTime,
-    targetScale: slot.targetScale,
+    size: slot.size,
     mutations: [...slot.mutations],
     isMature: now >= slot.endTime,
     fruitCount,

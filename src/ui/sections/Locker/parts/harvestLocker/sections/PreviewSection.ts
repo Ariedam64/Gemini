@@ -84,7 +84,7 @@ export function createPreviewSection(options: PreviewSectionOptions): PreviewSec
         `,
     });
     if (state.sizeEnabled && state.sizePercentage !== undefined) {
-        sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}%`;
+        sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}`;
         sizeBadgeEl.style.display = "";
     }
 
@@ -127,7 +127,7 @@ export function createPreviewSection(options: PreviewSectionOptions): PreviewSec
 
         // Update size badge visibility
         if (state.sizeEnabled && state.sizePercentage !== undefined) {
-            sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}%`;
+            sizeBadgeEl.textContent = `size ${(state.sizeMode ?? "max") === "max" ? "≥" : "≤"} ${state.sizePercentage}`;
             sizeBadgeEl.style.display = "";
         } else {
             sizeBadgeEl.style.display = "none";

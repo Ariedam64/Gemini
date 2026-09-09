@@ -63,7 +63,8 @@ export interface TileTransform {
 export interface PlantSlotPatch {
   startTime?: number;
   endTime?: number;
-  targetScale?: number;
+  /** Whole-number Crop Size in [50, 100]. */
+  size?: number;
   mutations?: string[];
 }
 
