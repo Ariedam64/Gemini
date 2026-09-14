@@ -211,7 +211,15 @@ export const myCurrentSortedGrowSlotIndicesAtom = myCurrentSortedGrowSlotIdsAtom
  * prefer {@link myCurrentGrowSlotIdAtom}, which the game already resolved.
  */
 export const mySelectedSlotIdAtom = makeAtom<number | null>("mySelectedSlotIdAtom");
-/** slotId of the fruit the info card is actually showing (v1125+). */
+/**
+ * slotId of the fruit the info card is actually showing.
+ *
+ * v1169 moved crop selection into `data/tile/cropSelection.ts`: this defaults
+ * to the first of the plant's sortedSlotIds and, when the stored pick was
+ * harvested away, slides to the next id upwards (else the lowest).
+ */
+export const selectedCropSlotIdAtom = makeAtom<number | null>("selectedCropSlotIdAtom");
+/** @deprecated v1125-only name; v1169 replaced it with {@link selectedCropSlotIdAtom}. */
 export const myCurrentGrowSlotIdAtom = makeAtom<number | null>("myCurrentGrowSlotIdAtom");
 
 export const myCurrentGrowSlotsAtom = makeAtom<GrowSlot[] | null>("myCurrentGrowSlotsAtom");

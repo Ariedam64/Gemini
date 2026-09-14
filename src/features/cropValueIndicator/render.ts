@@ -17,7 +17,7 @@ import { watchGardenInfoCard, type GardenInfoCardGeometry } from '../../ui/injec
 import { MGPixi } from '../../modules/pixi';
 import { findGraphicsCtor, findGenericTextCtor, findGenericSpriteCtors } from '../../modules/pixi/logic/utils';
 import { calculateCropSellPrice } from '../../modules/calculators/logic/crop';
-import { myCurrentGardenObjectAtom, myCurrentGrowSlotIdAtom, mySelectedSlotIdAtom } from '../../atoms';
+import { myCurrentGardenObjectAtom, selectedCropSlotIdAtom, mySelectedSlotIdAtom } from '../../atoms';
 import { resolveGrowSlot } from '../../utils/growSlot';
 import type { GardenTileObject, GrowSlot, Unsubscribe } from '../../atoms/types';
 import { MGSprite } from '../../modules/sprite';
@@ -263,7 +263,7 @@ export const render = {
     // The already-resolved id the info card shows. Watched on top of the raw
     // cursor so the badge follows the fruit even when the cursor points at a
     // slotId that harvesting removed.
-    void myCurrentGrowSlotIdAtom
+    void selectedCropSlotIdAtom
       .onChangeNow((next) => {
         currentResolvedSlotId = next;
         sync();

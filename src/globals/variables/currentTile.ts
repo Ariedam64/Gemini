@@ -355,7 +355,7 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
     // The id the game already resolved. Either value lands on the right slot
     // through resolveGrowSlot, but only this one moves when the cursor points
     // at a slotId that harvesting removed.
-    Store.subscribe("myCurrentGrowSlotIdAtom", (value: unknown) => {
+    Store.subscribe("selectedCropSlotIdAtom", (value: unknown) => {
       if (value == null) return;
       setSelectedGrowSlotIndex(value as number);
       scheduleFlush();

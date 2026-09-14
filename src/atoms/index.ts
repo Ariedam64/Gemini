@@ -216,6 +216,7 @@ export {
   myCurrentSortedGrowSlotIdsAtom,
   myCurrentSortedGrowSlotIndicesAtom,
   mySelectedSlotIdAtom,
+  selectedCropSlotIdAtom,
   myCurrentGrowSlotIdAtom,
   myCurrentGrowSlotsAtom,
   myCurrentGrowSlotAtom,
