@@ -199,9 +199,23 @@ export const myOwnCurrentGardenObjectTypeView = makeView<GardenTileObject | null
 
 // Grow slots
 export const myCurrentStablePlantObjectInfoAtom = makeAtom<unknown>("myCurrentStablePlantObjectInfoAtom");
-export const myCurrentSortedGrowSlotIndicesAtom = makeAtom<number[] | null>("myCurrentSortedGrowSlotIndicesAtom");
+
+/** Cycle order of the current plant's slotIds (v1125 renamed `…IndicesAtom`). */
+export const myCurrentSortedGrowSlotIdsAtom = makeAtom<number[] | null>("myCurrentSortedGrowSlotIdsAtom");
+/** @deprecated Pre-v1125 name of {@link myCurrentSortedGrowSlotIdsAtom}. */
+export const myCurrentSortedGrowSlotIndicesAtom = myCurrentSortedGrowSlotIdsAtom;
+
+/**
+ * Raw selection cursor. It starts at 0 and keeps pointing at slotIds that
+ * harvesting removed, so it only lands on a slot through `resolveGrowSlot` —
+ * prefer {@link myCurrentGrowSlotIdAtom}, which the game already resolved.
+ */
 export const mySelectedSlotIdAtom = makeAtom<number | null>("mySelectedSlotIdAtom");
+/** slotId of the fruit the info card is actually showing (v1125+). */
+export const myCurrentGrowSlotIdAtom = makeAtom<number | null>("myCurrentGrowSlotIdAtom");
+
 export const myCurrentGrowSlotsAtom = makeAtom<GrowSlot[] | null>("myCurrentGrowSlotsAtom");
+/** @deprecated The game dropped this atom in v1125; it never resolves. */
 export const myCurrentGrowSlotAtom = makeAtom<GrowSlot | null>("myCurrentGrowSlotAtom");
 export const secondsUntilCurrentGrowSlotMaturesAtom = makeAtom<string>("secondsUntilCurrentGrowSlotMaturesAtom");
 export const isCurrentGrowSlotMatureAtom = makeAtom<boolean>("isCurrentGrowSlotMatureAtom");

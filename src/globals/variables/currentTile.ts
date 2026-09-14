@@ -11,6 +11,7 @@ import {
   slotBelongsTo,
 } from "../../state";
 import { Store } from "../../atoms/store";
+import { resolveGrowSlotIndex } from "../../utils/growSlot";
 import { deepEqual } from "../core/reactive";
 import { getGameMap } from "./gameMap";
 import type {
@@ -113,13 +114,12 @@ function buildPlantInfo(sources: CurrentTileSources): PlantInfo | null {
   const slots = plant.slots ?? [];
   const sorted = sources.sortedSlotIndices ?? [];
 
-  // The game's `mySelectedSlotIdAtom` (read into currentGrowSlotIndex) is a
-  // slotId — the stable per-slot id — NOT the slot's index in slots[]. Resolve
-  // it to a real array index so `slots[currentSlotIndex]` points at the selected
-  // crop. (null when nothing is selected or the id no longer exists.)
-  const selectedSlotId = sources.currentGrowSlotIndex;
-  const resolvedIndex =
-    selectedSlotId !== null ? slots.findIndex((slot) => slot.slotId === selectedSlotId) : -1;
+  // currentGrowSlotIndex is a slotId — the stable per-slot id — NOT the slot's
+  // index in slots[]. It is also only a cursor: it starts at 0 and survives the
+  // harvest of the fruit it points at, so it needs the game's own resolution
+  // (see resolveGrowSlot) rather than a strict id match, which would strand the
+  // selection on slots[0].
+  const resolvedIndex = resolveGrowSlotIndex(slots, sources.currentGrowSlotIndex);
 
   return {
     species: plant.species,
@@ -349,6 +349,15 @@ function createCurrentTileGlobal(): CurrentTileGlobalWithSubscriptions {
 
     Store.subscribe("mySelectedSlotIdAtom", (value: unknown) => {
       setSelectedGrowSlotIndex(value as number | null);
+      scheduleFlush();
+    }).then((unsub) => unsubscribes.push(unsub));
+
+    // The id the game already resolved. Either value lands on the right slot
+    // through resolveGrowSlot, but only this one moves when the cursor points
+    // at a slotId that harvesting removed.
+    Store.subscribe("myCurrentGrowSlotIdAtom", (value: unknown) => {
+      if (value == null) return;
+      setSelectedGrowSlotIndex(value as number);
       scheduleFlush();
     }).then((unsub) => unsubscribes.push(unsub));
 

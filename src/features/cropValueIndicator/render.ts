@@ -17,7 +17,8 @@ import { watchGardenInfoCard, type GardenInfoCardGeometry } from '../../ui/injec
 import { MGPixi } from '../../modules/pixi';
 import { findGraphicsCtor, findGenericTextCtor, findGenericSpriteCtors } from '../../modules/pixi/logic/utils';
 import { calculateCropSellPrice } from '../../modules/calculators/logic/crop';
-import { myCurrentGardenObjectAtom, mySelectedSlotIdAtom } from '../../atoms';
+import { myCurrentGardenObjectAtom, myCurrentGrowSlotIdAtom, mySelectedSlotIdAtom } from '../../atoms';
+import { resolveGrowSlot } from '../../utils/growSlot';
 import type { GardenTileObject, GrowSlot, Unsubscribe } from '../../atoms/types';
 import { MGSprite } from '../../modules/sprite';
 
@@ -51,8 +52,10 @@ let iconRetryScheduled = false;
 let offCard: (() => void) | null = null;
 let gardenObjectUnsubscribe: Unsubscribe | null = null;
 let selectedSlotIdUnsubscribe: Unsubscribe | null = null;
+let resolvedSlotIdUnsubscribe: Unsubscribe | null = null;
 let currentGardenObject: GardenTileObject | null = null;
 let currentSelectedSlotId: number | null = null;
+let currentResolvedSlotId: number | null = null;
 
 // Coin texture is decoded once (via the game's own sprite catalog, per
 // core.md rule 1) and shared across every card the badge is drawn on.
@@ -90,20 +93,16 @@ function ensureCoinTexture(): Promise<any> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Resolve the slot currently shown in the tooltip: `mySelectedSlotIdAtom`
- * holds a stable `slotId`, not an index into `slots[]`, so it must be
- * resolved by id (falling back to the first slot when nothing matches,
- * e.g. a single-crop tile with no selection).
+ * Resolve the slot currently shown in the tooltip. Both atoms hold a stable
+ * `slotId`, not an index into `slots[]`, and the raw cursor can point at an
+ * id that no longer exists — see `resolveGrowSlot` for how the game lands on
+ * a slot from there.
  */
 function resolveCurrentSlot(): GrowSlot | null {
   if (!currentGardenObject || currentGardenObject.objectType !== 'plant') return null;
   const slots = currentGardenObject.slots ?? [];
   if (!slots.length) return null;
-  if (currentSelectedSlotId != null) {
-    const match = slots.find((slot) => slot.slotId === currentSelectedSlotId);
-    if (match) return match;
-  }
-  return slots[0];
+  return resolveGrowSlot(slots, currentResolvedSlotId ?? currentSelectedSlotId);
 }
 
 /**
@@ -260,6 +259,19 @@ export const render = {
         if (running) selectedSlotIdUnsubscribe = unsub;
         else unsub();
       });
+
+    // The already-resolved id the info card shows. Watched on top of the raw
+    // cursor so the badge follows the fruit even when the cursor points at a
+    // slotId that harvesting removed.
+    void myCurrentGrowSlotIdAtom
+      .onChangeNow((next) => {
+        currentResolvedSlotId = next;
+        sync();
+      })
+      .then((unsub) => {
+        if (running) resolvedSlotIdUnsubscribe = unsub;
+        else unsub();
+      });
   },
 
   /**
@@ -280,6 +292,9 @@ export const render = {
     selectedSlotIdUnsubscribe?.();
     selectedSlotIdUnsubscribe = null;
     currentSelectedSlotId = null;
+    resolvedSlotIdUnsubscribe?.();
+    resolvedSlotIdUnsubscribe = null;
+    currentResolvedSlotId = null;
 
     detachValueNode();
     currentCard = null;
