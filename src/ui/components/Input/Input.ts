@@ -88,6 +88,14 @@ function __lgRegisterSoftBlock(el: HTMLElement) {
   };
 }
 
+/**
+ * Keep the game from reacting to keys typed in `el` (a textarea, say) while
+ * it has the focus, as every Input does. Returns the unregister.
+ */
+export function blockGameKeysWhileFocused(el: HTMLElement): () => void {
+  return __lgRegisterSoftBlock(el);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 function buildRegex(mode: InputMode, spaces: boolean, dashes: boolean, underscore: boolean) {

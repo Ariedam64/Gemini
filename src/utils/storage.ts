@@ -46,6 +46,12 @@ export const MODULE_KEYS = {
     AUDIO_CUSTOM_SOUNDS: 'module:audio:customSounds',
     /** Audio module notification settings */
     AUDIO_NOTIFICATION_SETTINGS: 'module:audio:notificationSettings',
+    /** Bug reports sent from this browser, each with the follow token that reads its status */
+    BUG_REPORT_SENT: 'module:bugReport:sent',
+    /** Bug report being written, not sent yet */
+    BUG_REPORT_DRAFT: 'module:bugReport:draft',
+    /** Contact left on the last bug report, offered again on the next one */
+    BUG_REPORT_CONTACT: 'module:bugReport:contact',
 } as const;
 
 /** Keys for global variables persistent state */

@@ -9,6 +9,9 @@
 const RELEASES_API_URL =
   "https://api.github.com/repos/Ariedam64/Gemini/releases/latest";
 
+/** Where players download the latest build. */
+export const RELEASES_PAGE_URL = "https://github.com/Ariedam64/Gemini/releases/latest";
+
 const CHECK_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 export function getLocalVersion(): string {
@@ -16,6 +19,30 @@ export function getLocalVersion(): string {
     return GM_info?.script?.version ?? "0.0.0";
   } catch {
     return "0.0.0";
+  }
+}
+
+/** GM_info.scriptHandler when the MG AFK Android app injects Gemini. */
+const AFK_APP_SCRIPT_HANDLER = "MgAfk WebView";
+
+/**
+ * True inside the MG AFK app, which downloads the latest release itself each
+ * time the game opens: there, updating means reopening the game.
+ */
+export function isAfkAppBuild(): boolean {
+  try {
+    return GM_info?.scriptHandler === AFK_APP_SCRIPT_HANDLER;
+  } catch {
+    return false;
+  }
+}
+
+/** Open the releases page in a new tab, through the userscript manager when it can. */
+export function openReleasesPage(): void {
+  try {
+    GM_openInTab(RELEASES_PAGE_URL, { active: true });
+  } catch {
+    window.open(RELEASES_PAGE_URL, "_blank");
   }
 }
 

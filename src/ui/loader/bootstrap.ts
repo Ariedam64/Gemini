@@ -12,6 +12,7 @@ import { initGlobals } from "../../globals";
 import { exposeGeminiAPI } from "../../api";
 import { MGData } from "../../modules/data";
 import { MGSprite } from "../../modules/sprite";
+import { MGBugReport } from "../../modules/bugReport";
 import { migrateStorageKeys, FEATURE_KEYS, INJECT_KEYS } from "../../utils/storage";
 import { MGAntiAfk } from "../../features/antiAfk";
 import { MGPetTeam } from "../../features/petTeam";
@@ -115,7 +116,10 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
     initialWidth: state.width,
     initialOpen: state.isOpen,
     onWidthChange: (px) => saveHudStateValue("width", px),
-    onOpenChange: (isOpen) => saveHudStateValue("isOpen", isOpen),
+    onOpenChange: (isOpen) => {
+      saveHudStateValue("isOpen", isOpen);
+      MGBugReport.breadcrumb(isOpen ? "opened the HUD" : "closed the HUD");
+    },
 
     themes: THEMES,
     initialTheme: state.theme,
@@ -131,7 +135,10 @@ export async function initHUD(loader: LoaderController): Promise<Hud> {
         }),
 
     initialTab: state.activeTab,
-    onTabChange: (id) => saveHudStateValue("activeTab", id),
+    onTabChange: (id) => {
+      saveHudStateValue("activeTab", id);
+      MGBugReport.breadcrumb(`opened ${id}`);
+    },
   });
 
   await yieldToMain();

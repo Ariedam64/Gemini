@@ -195,5 +195,33 @@ export const hudCss = `
     background: color-mix(in oklab, var(--accent) 22%, transparent);
     border-color: var(--accent);
   }
+
+  .gemini-footer__report-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: color-mix(in oklab, var(--fg) 50%, transparent);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color .15s ease, background .15s ease;
+  }
+
+  .gemini-footer__report-btn:hover {
+    color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 10%, transparent);
+  }
+
+  .gemini-footer__report-btn:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--accent) 55%, transparent);
+    outline-offset: 1px;
+  }
 }
 `;

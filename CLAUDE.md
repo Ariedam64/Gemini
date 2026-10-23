@@ -74,7 +74,8 @@ src/
 │   ├── tile/            # MGTile - map/tile utilities
 │   ├── pixi/            # MGPixi - Pixi.js integration
 │   ├── audio/           # MGAudio - audio management
-│   └── cosmetic/        # MGCosmetic - player cosmetics
+│   ├── cosmetic/        # MGCosmetic - player cosmetics
+│   └── bugReport/       # MGBugReport - in-mod bug reports (core/ is copied from Arie's Mod, never edited here)
 ├── features/            # Optional features (toggleable)
 │   ├── autoFavorite/    # Auto-favorite mutations
 │   ├── journalChecker/  # Journal completion checker

@@ -1,13 +1,16 @@
 /**
- * HUD Footer - version info + update notification
+ * HUD Footer - version info + update notification + bug report
  *
- * Normal state:   Gemini · v1.0.1
- * Update state:   Gemini · v1.0.1 → v1.0.2   [Update ↗]
+ * Normal state:   Gemini · v1.0.1 · Report a bug
+ * Update state:   Gemini · v1.0.1 → v1.0.2   [Update ↗] · Report a bug
  */
 
-import { getLocalVersion, type VersionInfo } from "../../utils/version";
+import { getLocalVersion, openReleasesPage, RELEASES_PAGE_URL, type VersionInfo } from "../../utils/version";
 
-const UPDATE_URL = "https://github.com/Ariedam64/Gemini/releases/latest";
+export interface HudFooterOptions {
+  /** Opens the bug report window. Without it, the footer has no report button. */
+  onReportBug?: () => void;
+}
 
 export interface HudFooterHandle {
   root: HTMLDivElement;
@@ -15,7 +18,7 @@ export interface HudFooterHandle {
   destroy(): void;
 }
 
-export function createHudFooter(): HudFooterHandle {
+export function createHudFooter(options: HudFooterOptions = {}): HudFooterHandle {
   const root = document.createElement("div");
   root.className = "gemini-footer";
 
@@ -34,20 +37,37 @@ export function createHudFooter(): HudFooterHandle {
   const updateBtn = document.createElement("a");
   updateBtn.className = "gemini-footer__update-btn";
   updateBtn.textContent = "Update ↗";
-  updateBtn.href = UPDATE_URL;
+  updateBtn.href = RELEASES_PAGE_URL;
   updateBtn.target = "_blank";
   updateBtn.rel = "noopener noreferrer";
   updateBtn.style.display = "none";
   updateBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    try {
-      GM_openInTab(UPDATE_URL, { active: true });
-    } catch {
-      window.open(UPDATE_URL, "_blank");
-    }
+    openReleasesPage();
   });
 
   root.append(label, sep, versionSpan, updateBtn);
+
+  const { onReportBug } = options;
+  let reportBtn: HTMLButtonElement | null = null;
+  const handleReportClick = (e: MouseEvent): void => {
+    e.preventDefault();
+    onReportBug?.();
+  };
+  if (onReportBug) {
+    const reportSep = document.createElement("span");
+    reportSep.className = "gemini-footer__sep";
+    reportSep.textContent = "·";
+
+    reportBtn = document.createElement("button");
+    reportBtn.type = "button";
+    reportBtn.className = "gemini-footer__report-btn";
+    reportBtn.textContent = "Report a bug";
+    reportBtn.title = "Tell the developer about a problem, and follow the answer";
+    reportBtn.addEventListener("click", handleReportClick);
+
+    root.append(reportSep, reportBtn);
+  }
 
   function update(info: VersionInfo): void {
     if (info.hasUpdate && info.remote) {
@@ -65,6 +85,7 @@ export function createHudFooter(): HudFooterHandle {
     root,
     update,
     destroy() {
+      reportBtn?.removeEventListener("click", handleReportClick);
       root.remove();
     },
   };

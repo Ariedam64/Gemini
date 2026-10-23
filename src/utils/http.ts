@@ -6,6 +6,93 @@
 // preferred; native fetch is the fallback for environments that do not inject
 // it (Discord activities, dev builds outside a userscript manager).
 
+export interface TextRequest {
+  method: "GET" | "POST";
+  url: string;
+  headers?: Record<string, string>;
+  /** Always a string: the MG AFK app's GM_xmlhttpRequest turns any other body into "[object ...]". */
+  body?: string;
+  timeoutMs: number;
+}
+
+export interface TextResponse {
+  status: number;
+  body: string;
+}
+
+/**
+ * Send a request and resolve with any status and the body as text. Rejects
+ * on a network failure, and with a "timed out" error once `timeoutMs` has
+ * passed: the MG AFK app's GM_xmlhttpRequest ignores `timeout`, so the timer
+ * here is the one that counts.
+ */
+export function requestText(request: TextRequest): Promise<TextResponse> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let abort: (() => void) | null = null;
+
+    const finish = (outcome: () => void): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      outcome();
+    };
+    const fail = (message: string) => finish(() => reject(new Error(message)));
+    const timer = setTimeout(() => {
+      fail(`Request timed out: ${request.url}`);
+      try {
+        abort?.();
+      } catch {
+        // Nothing left to cancel.
+      }
+    }, request.timeoutMs);
+
+    if (typeof GM_xmlhttpRequest === "undefined") {
+      const controller = new AbortController();
+      abort = () => controller.abort();
+      fetch(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        credentials: "omit",
+        signal: controller.signal,
+      })
+        .then(async (response) => {
+          const body = await response.text();
+          finish(() => resolve({ status: response.status, body }));
+        })
+        .catch(() => fail(`Network error: ${request.url}`));
+      return;
+    }
+
+    try {
+      const handle = GM_xmlhttpRequest({
+        method: request.method,
+        url: request.url,
+        headers: request.headers,
+        data: request.body,
+        timeout: request.timeoutMs,
+        anonymous: true,
+        onload(response) {
+          finish(() => resolve({ status: response.status, body: response.responseText ?? "" }));
+        },
+        onerror() {
+          fail(`Network error: ${request.url}`);
+        },
+        ontimeout() {
+          fail(`Request timed out: ${request.url}`);
+        },
+        onabort() {
+          fail(`Request aborted: ${request.url}`);
+        },
+      });
+      abort = () => handle?.abort?.();
+    } catch {
+      fail(`Network error: ${request.url}`);
+    }
+  });
+}
+
 /** Fetch and parse JSON from a URL. Rejects on non-2xx or network failure. */
 export function fetchJson<T>(url: string): Promise<T> {
   return new Promise((resolve, reject) => {

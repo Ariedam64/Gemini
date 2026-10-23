@@ -30,6 +30,9 @@ export { MGCalculators } from "./calculators";
 // Action modules
 export { MGShopActions } from "./shopActions";
 
+// Support modules
+export { MGBugReport } from "./bugReport";
+
 // Re-import for initialization
 import { MGData } from "./data";
 import { MGCustomModal } from "./customModal";
@@ -40,6 +43,7 @@ import { MGAudio } from "./audio";
 import { MGCosmetic } from "./cosmetic";
 import { MGShopActions } from "./shopActions";
 import { MGRiveLoader } from "./riveLoader";
+import { MGBugReport } from "./bugReport";
 
 export type ModuleInitProgress = {
   name: string;
@@ -60,6 +64,9 @@ export async function initAllModules(
     { name: "Audio", init: () => MGAudio.init() },
     { name: "Cosmetics", init: () => MGCosmetic.init() },
     { name: "ShopActions", init: () => MGShopActions.init() },
+    // The console capture already runs since boot (main.ts); this adds the
+    // game window trail, without holding up the loader for it.
+    { name: "BugReport", init: () => { void MGBugReport.watchGame(); } },
   ];
 
   await Promise.all(

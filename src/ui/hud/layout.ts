@@ -9,8 +9,9 @@ import { HudLayoutElements } from "./types";
 export function createHudLayout(options: {
   shadow: ShadowRoot;
   initialOpen: boolean;
+  onReportBug?: () => void;
 }): HudLayoutElements {
-  const { shadow, initialOpen } = options;
+  const { shadow, initialOpen, onReportBug } = options;
 
   // Main panel container
   const panel = element("div", {
@@ -36,8 +37,8 @@ export function createHudLayout(options: {
     title: "Resize",
   }) as HTMLDivElement;
 
-  // Footer (version info + update button)
-  const footerHandle = createHudFooter();
+  // Footer (version info + update button + bug report)
+  const footerHandle = createHudFooter({ onReportBug });
   const footer = footerHandle.root;
 
   // Close button (cross) aligned to the right in the tab bar

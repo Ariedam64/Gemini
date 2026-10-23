@@ -8,6 +8,7 @@ import { SectionManager } from "../sections";
 import { pageWindow } from "../../utils/windowContext";
 import { storageGet, FEATURE_KEYS, EVENTS } from "../../utils/storage";
 import { startVersionChecker } from "../../utils/version";
+import { openBugReportModal } from "../components/BugReportModal";
 
 /* ================================ Shadow DOM Host ================================ */
 
@@ -175,6 +176,8 @@ export async function createHUD(opts: HudOptions): Promise<Hud> {
   const { panel, tabbar, content, footer, resizer, closeButton, wrapper } = createHudLayout({
     shadow,
     initialOpen,
+    // Clicked once the HUD is up, so the sections below exist by then.
+    onReportBug: () => openBugReportModal({ areas: sections.map((section) => section.label) }),
   });
 
   // ===== 2b. Version Checker =====

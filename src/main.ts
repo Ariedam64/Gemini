@@ -14,10 +14,13 @@ import {
 } from "./ui/loader";
 import { migrateStorageKeys, forceEnableFeaturesOnce } from "./utils/storage";
 import { installPerfDebug } from "./utils/perfDebug";
+import { MGBugReport } from "./modules/bugReport";
 
 import { installReactDevToolsHook } from "./atoms/core/bridge";
 
 // Early setup (Literal Synchronous Entry Point)
+// Console errors from the very start, for bug reports (kept in memory only)
+MGBugReport.init();
 installPerfDebug();
 
 // Early setup
