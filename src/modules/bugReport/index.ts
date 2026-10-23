@@ -5,7 +5,8 @@
 // (src/lib/bugReport): do not edit it here, change it there and copy it again.
 // This module adds what is Gemini's own: the transport, the console capture
 // started at boot, the context read from the game, the game frame, and the
-// storage of drafts and sent reports.
+// storage of drafts (with the follow token of a report on its way) and sent
+// reports.
 
 import { isReady } from "./state";
 import { installDiagnostics, recordBreadcrumb, startGameTrail, stopDiagnostics } from "./logic/diagnostics";

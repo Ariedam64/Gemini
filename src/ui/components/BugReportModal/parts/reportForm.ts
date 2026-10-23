@@ -220,6 +220,10 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
     saveButton.hidden = true;
     const values = fields.read();
     if (!validate(values)) return;
+    // Saved as sent, not after the typing pause: a page closed before the
+    // answer keeps the text that goes with the pending follow token.
+    cancelDraftSave();
+    MGBugReport.draft.save(toDraft(values));
     sendButton.setLoading(true);
     try {
       if (shots.pending()) {
@@ -234,7 +238,8 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
         if (!destroyed) progress.textContent = progressText(step);
       });
       if (result.ok) {
-        // Even when the window was closed meanwhile: the report is in, its draft must go.
+        // Even when the window was closed meanwhile: the report is in, its
+        // draft must go, and its follow token with it.
         cancelDraftSave();
         MGBugReport.draft.clear();
         MGBugReport.draft.rememberContact(values.contact);

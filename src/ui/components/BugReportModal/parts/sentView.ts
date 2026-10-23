@@ -1,8 +1,9 @@
 /**
  * Bug Report Modal - what the New report tab shows once a report went through
  *
- * Its reference to copy, a word on screenshots that did not make it, and the
- * way on (the buttons go in the modal footer).
+ * Its reference to copy, a word when an earlier try had already arrived or
+ * when screenshots did not make it, and the way on (the buttons go in the
+ * modal footer).
  */
 
 import { element } from "../../../styles/helpers";
@@ -55,6 +56,17 @@ export function createSentView(options: SentViewOptions): SentViewHandle {
       "Mention this reference if you talk about it on Discord. Its status, and any reply, show up in My reports.",
     ),
   );
+
+  if (options.result.resumed) {
+    // The answer to an earlier try was lost, but that try had arrived: the server kept its text.
+    root.appendChild(
+      element(
+        "p",
+        { className: "bug-report__note" },
+        "Your earlier try had already arrived, so the report keeps the text you sent then.",
+      ),
+    );
+  }
 
   if (attachmentFailures.length) {
     const count = attachmentFailures.length;

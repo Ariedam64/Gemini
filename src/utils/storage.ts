@@ -52,6 +52,8 @@ export const MODULE_KEYS = {
     BUG_REPORT_DRAFT: 'module:bugReport:draft',
     /** Contact left on the last bug report, offered again on the next one */
     BUG_REPORT_CONTACT: 'module:bugReport:contact',
+    /** Follow token of the bug report being sent, kept until a try goes through so a retry gets the same report */
+    BUG_REPORT_PENDING_TOKEN: 'module:bugReport:pendingToken',
 } as const;
 
 /** Keys for global variables persistent state */
