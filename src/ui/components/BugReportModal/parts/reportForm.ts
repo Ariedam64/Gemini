@@ -3,7 +3,7 @@
  *
  * The form, its screenshots and attached data, and what happens on Send. A
  * report that cannot be sent is never lost: the draft stays, and it can be
- * saved to a file to share by hand.
+ * saved to a file, or copied where no file can be saved, to share by hand.
  */
 
 import { element } from "../../../styles/helpers";
@@ -24,13 +24,16 @@ import {
   type BugReportPayload,
   type SubmitProgress,
 } from "../../../../modules/bugReport";
+import { MGEnvironment } from "../../../../modules/environment";
+import { copyText } from "../../../../utils/clipboard";
+import { isAfkAppBuild } from "../../../../utils/version";
 import { createAttachedData } from "./attachedData";
 import { createErrorBox, createNotice, createUpdateButton, howToUpdate } from "./dom";
 import { createReportFields, type FormValues } from "./fields";
 import { createScreenshots } from "./screenshots";
 import { createSentView } from "./sentView";
 
-/** Errors after which the report is worth keeping in a file. */
+/** Errors after which the report is worth keeping by hand. */
 const SAVE_WORTHY: ReadonlySet<BugReportError["kind"]> = new Set([
   "offline",
   "timeout",
@@ -131,7 +134,13 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
   const attached = createAttachedData({ onPreview: preview });
 
   const progress = element("span", { className: "bug-report__progress", role: "status" });
-  const saveButton = Button({ label: "Save report to a file", onClick: saveToFile });
+  // The MG AFK app's WebView drops downloads and the Discord activity frame
+  // blocks them, so there the report is copied for the player to paste.
+  const copyInstead = isAfkAppBuild() || MGEnvironment.isDiscord();
+  const saveButton = Button({
+    label: copyInstead ? "Copy report" : "Save report to a file",
+    onClick: () => void keepReport(),
+  });
   saveButton.hidden = true;
   const sendButton = Button({ label: "Send report", variant: "primary", onClick: () => void send() });
   const formActions: HTMLElement[] = [progress, saveButton, sendButton];
@@ -218,6 +227,8 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
   async function send(): Promise<void> {
     errors.clear();
     saveButton.hidden = true;
+    // What the button keeps is this try's report, never an earlier one.
+    lastAttempt = null;
     const values = fields.read();
     if (!validate(values)) return;
     // Saved as sent, not after the typing pause: a page closed before the
@@ -261,7 +272,8 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
       if (destroyed) return;
       progress.textContent = "";
       errors.show(`Something went wrong while sending (${error instanceof Error ? error.message : String(error)}).`);
-      saveButton.hidden = false;
+      // Before the report was put together there is nothing to keep.
+      saveButton.hidden = !lastAttempt;
     } finally {
       sendButton.setLoading(false);
     }
@@ -294,10 +306,25 @@ export function createReportForm(options: ReportFormOptions): ReportFormHandle {
     attached.showPreview(body, shots.summary(), note);
   }
 
-  function saveToFile(): void {
+  /** Saves the last try to a file, or copies it where no file can be saved. */
+  async function keepReport(): Promise<void> {
     if (!lastAttempt) return;
     const prepared = prepareBugReport(lastAttempt.payload);
     const report = prepared.ok ? prepared.payload : lastAttempt.payload;
+    if (copyInstead) {
+      // The text alone: screenshots as base64 would not paste anywhere useful.
+      // No prompt to copy by hand either, a whole report does not fit in one.
+      const rootNode = root.getRootNode();
+      const copied = await copyText(JSON.stringify({ report }, null, 2), {
+        injectionRoot: rootNode instanceof ShadowRoot ? rootNode : null,
+        disablePromptFallback: true,
+      });
+      if (destroyed) return;
+      progress.textContent = copied.ok
+        ? "Copied. You can paste it on Discord, or try sending again later."
+        : "The report could not be copied. Your draft is kept, try sending again later.";
+      return;
+    }
     const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
     const file = { report, screenshots: lastAttempt.attachments };
     downloadText(`${BUG_REPORT_PROJECT.id}-bug-report-${stamp}.json`, JSON.stringify(file, null, 2), root);

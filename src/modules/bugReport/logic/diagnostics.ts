@@ -10,6 +10,7 @@
 
 import { createLogCapture, type Breadcrumb, type LogEntry } from "../core";
 import { state } from "../state";
+import { modalNameOf } from "./gameModal";
 import { activeModalAtom } from "../../../atoms";
 import { isIsolatedContext, pageWindow, sandboxWindow } from "../../../utils/windowContext";
 
@@ -22,7 +23,8 @@ export function installDiagnostics(): void {
   const capture = createLogCapture({ maxLogs: MAX_LOGS, maxBreadcrumbs: MAX_BREADCRUMBS });
   state.cleanups.push(capture.install(pageWindow));
   // A manager that sandboxes the script gives it a console and events of its
-  // own; the capture skips whatever it already wraps.
+  // own. The capture skips a console it already wraps, and an error heard on
+  // both windows (two objects over one DOM window) is recorded once.
   if (isIsolatedContext) state.cleanups.push(capture.install(sandboxWindow));
   state.capture = capture;
 }
@@ -37,9 +39,14 @@ export async function startGameTrail(): Promise<void> {
   if (trailStarted || !state.capture) return;
   trailStarted = true;
   try {
-    const unsubscribe = await activeModalAtom.onChange((modal) => {
-      recordBreadcrumb(modal ? `game window ${modal}` : "game window closed");
-    });
+    const unsubscribe = await activeModalAtom.onChange(
+      (modal) => {
+        const name = modalNameOf(modal);
+        recordBreadcrumb(name ? `game window ${name}` : "game window closed");
+      },
+      // The game writes a new object on each open and close: only a new name is news.
+      (a, b) => modalNameOf(a) === modalNameOf(b),
+    );
     state.cleanups.push(unsubscribe);
   } catch {
     // The atom was renamed by a game update: no trail, nothing else lost.

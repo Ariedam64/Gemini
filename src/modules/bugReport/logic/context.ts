@@ -9,6 +9,7 @@ import { isVersionBelow, type BugReportContext } from "../core";
 import { state } from "../state";
 import { BUG_REPORT_PROJECT, type AttachedData, type AutoFields, type ModVersionStatus } from "../types";
 import { recentBreadcrumbs, recentLogs } from "./diagnostics";
+import { modalNameOf } from "./gameModal";
 import { readReportedSettings } from "./settings";
 import { activeModalAtom } from "../../../atoms";
 import { getPlayers } from "../../../globals";
@@ -145,7 +146,7 @@ export async function collectAutoFields(attached: AttachedData): Promise<AutoFie
     mod: { latestVersion: version.remote, behind: version.behind },
     game: {
       ...roomInfo(),
-      activeModal: typeof activeModal === "string" ? activeModal : null,
+      activeModal: modalNameOf(activeModal),
       // Health signals: a game connection Gemini never followed or a renderer
       // it never found explains a whole class of "nothing works" reports.
       roomStateReady: WSState.isReady(),

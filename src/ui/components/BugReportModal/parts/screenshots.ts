@@ -5,6 +5,9 @@
  * where the browser allows it, and images added from a file, dropped or
  * pasted. Every one is shrunk by the core's normalizer before it shows here,
  * so what the player sees is exactly what gets sent.
+ *
+ * The MG AFK app's WebView opens no file picker and has no Ctrl+V, so there
+ * only the game view is offered.
  */
 
 import { element } from "../../../styles/helpers";
@@ -23,6 +26,7 @@ import {
   type NormalizedImage,
 } from "../../../../modules/bugReport";
 import { MGEnvironment } from "../../../../modules/environment";
+import { isAfkAppBuild } from "../../../../utils/version";
 import { formatKb } from "./dom";
 
 interface Shot {
@@ -122,8 +126,10 @@ export function createScreenshots(options: ScreenshotsOptions): ScreenshotsHandl
   });
   // Blocked inside the Discord activity (and it would show Discord itself), missing on phones.
   const screenAvailable = canCaptureScreen() && !MGEnvironment.isDiscord() && !MGEnvironment.isMobile();
+  // The MG AFK app never opens the picker behind a file input: the button would do nothing.
+  const uploadAvailable = !isAfkAppBuild();
 
-  const bar = element("div", { className: "bug-report__shot-bar" }, addButton, gameButton);
+  const bar = element("div", { className: "bug-report__shot-bar" }, ...(uploadAvailable ? [addButton] : []), gameButton);
   if (screenAvailable) bar.append(screenButton);
   bar.append(counter);
 
@@ -142,10 +148,16 @@ export function createScreenshots(options: ScreenshotsOptions): ScreenshotsHandl
     screenButton.setDisabled(full);
     gameButton.setDisabled(full);
     gameButton.hidden = shots.some((shot) => shot.kind === "game");
-    counter.textContent = shots.length
-      ? `${shots.length} of ${MAX_SHOTS}.${full ? "" : " You can also paste an image with Ctrl+V."}`
-      : "Paste an image with Ctrl+V, or add one.";
+    counter.textContent = counterText(full);
     renderLarge();
+  }
+
+  function counterText(full: boolean): string {
+    // Only the game view can be added there, so a count would promise room for more.
+    if (!uploadAvailable) return "";
+    if (!shots.length) return "Paste an image with Ctrl+V, or add one.";
+    const count = `${shots.length} of ${MAX_SHOTS}.`;
+    return full ? count : `${count} You can also paste an image with Ctrl+V.`;
   }
 
   function tile(shot: Shot): HTMLElement {
