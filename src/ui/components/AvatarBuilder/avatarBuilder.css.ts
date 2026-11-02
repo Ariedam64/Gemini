@@ -124,6 +124,13 @@ export const avatarBuilderStyles = `
         -webkit-backdrop-filter: blur(8px);
     }
 
+    .avatar-builder-item-sale {
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--accent);
+        text-align: center;
+    }
+
     /* === Dots Indicator === */
     .avatar-builder-dots-indicator {
         margin-top: 4px;

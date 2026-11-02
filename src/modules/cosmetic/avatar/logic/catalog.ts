@@ -4,12 +4,17 @@
  *
  * Replaces two local sources that no longer hold: a hardcoded defaults list,
  * and a walk of the game's `manifest.json` that guessed each item's type from
- * its filename. Both are gone; the API is the single source.
+ * its filename. Both are gone; the API is the source.
+ *
+ * Items come from `/assets/cosmetics`. Their sale metadata (price, end date,
+ * Spooky Shop flags) comes from `/data/avatar-cosmetics`, joined by id; that
+ * second request may fail on its own without emptying the catalog.
  */
 
 import { fetchJson } from "../../../../utils/http";
 import { MG_API } from "../../../../utils/mgApi";
 import type { CosmeticAvailability, CosmeticInfo, CosmeticType } from "../types";
+import { enrichWithSaleData, sortNewSpookyFirst, type ApiAvatarCosmeticMeta } from "./sale";
 
 /** One entry as the API serves it. */
 interface ApiCosmetic {
@@ -70,11 +75,18 @@ export function loadCatalog(): Promise<CosmeticInfo[]> {
   if (catalog.length > 0) return Promise.resolve(catalog);
   if (loadPromise) return loadPromise;
 
-  loadPromise = fetchJson<ApiCosmeticsResponse>(MG_API.cosmetics)
-    .then((response) => {
-      catalog = (response.categories ?? []).flatMap((category) =>
+  loadPromise = Promise.all([
+    fetchJson<ApiCosmeticsResponse>(MG_API.cosmetics),
+    fetchJson<Record<string, ApiAvatarCosmeticMeta>>(MG_API.avatarCosmetics).catch((error) => {
+      console.warn("[Avatar] Sale metadata unavailable:", error);
+      return null;
+    }),
+  ])
+    .then(([response, meta]) => {
+      const base = (response.categories ?? []).flatMap((category) =>
         (category.items ?? []).map(toCosmeticInfo)
       );
+      catalog = sortNewSpookyFirst(enrichWithSaleData(base, meta));
       loadPromise = null;
       console.log(`[Avatar] Catalog loaded: ${catalog.length} cosmetics`);
       return catalog;

@@ -41,8 +41,16 @@ export interface CosmeticItem {
     type: CosmeticType;
     displayName: string;
     availability: CosmeticAvailability;
-    /** Always 0: the API does not price cosmetics. Kept for API compatibility. */
+    /** `cost.amount` when `/data/avatar-cosmetics` gives it, otherwise 0. */
     price: number;
+    /** Sale price, from `/data/avatar-cosmetics`. Absent when not for sale. */
+    cost?: { currency: string; amount: number };
+    /** End of the sale, ISO string, from `/data/avatar-cosmetics`. */
+    expiryDate?: string;
+    /** New at the Spooky Shop. */
+    newAtSpookyShop?: boolean;
+    /** Sold at the Spooky Shop. */
+    soldAtSpookyShop?: boolean;
 }
 
 /**

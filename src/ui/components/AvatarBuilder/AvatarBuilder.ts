@@ -6,6 +6,7 @@
 import { element } from "../../styles/helpers";
 import { avatarBuilderStyles } from "./avatarBuilder.css";
 import { listAsync, resolveCosmeticUrl } from "../../../modules/cosmetic/avatar/logic/query";
+import { describeSale } from "../../../modules/cosmetic/avatar/logic/sale";
 import type { AvatarOutfit, CosmeticInfo } from "../../../modules/cosmetic/avatar/types";
 import { ALT_ASSET_PATH } from "../../../modules/cosmetic/avatar/types";
 import { MGRiveLoader } from "../../../modules/riveLoader";
@@ -81,6 +82,7 @@ export function createAvatarBuilder(options: AvatarBuilderOptions = {}): AvatarB
     // DOM References
     let previewContainer: HTMLDivElement;
     let itemNameEl: HTMLDivElement;
+    let itemSaleEl: HTMLDivElement;
     let dotsIndicatorEl: HTMLDivElement;
     let categoryButtons: Record<SlotType, HTMLButtonElement> = {} as any;
     let isDragging = false;
@@ -142,6 +144,11 @@ export function createAvatarBuilder(options: AvatarBuilderOptions = {}): AvatarB
     // Item name
     itemNameEl = element("div", { className: "avatar-builder-item-name" }, "Loading...") as HTMLDivElement;
     previewArea.appendChild(itemNameEl);
+
+    // Sale line (Spooky Shop novelty, price, end date), hidden when empty
+    itemSaleEl = element("div", { className: "avatar-builder-item-sale" }) as HTMLDivElement;
+    itemSaleEl.style.display = "none";
+    previewArea.appendChild(itemSaleEl);
 
     // Dots indicator
     dotsIndicatorEl = element("div", { className: "avatar-builder-dots-indicator" }) as HTMLDivElement;
@@ -280,10 +287,15 @@ export function createAvatarBuilder(options: AvatarBuilderOptions = {}): AvatarB
         const index = currentIndices[activeSlot];
         if (!items || items.length === 0) {
             itemNameEl.textContent = "Loading...";
+            itemSaleEl.textContent = "";
+            itemSaleEl.style.display = "none";
             return;
         }
         const item = items[index];
         itemNameEl.textContent = item?.displayName || "Unknown";
+        const sale = item ? describeSale(item) : null;
+        itemSaleEl.textContent = sale ?? "";
+        itemSaleEl.style.display = sale ? "" : "none";
     }
 
     function updateDotsIndicator() {

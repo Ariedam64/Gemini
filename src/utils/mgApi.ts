@@ -28,6 +28,9 @@ export const MG_API = {
   /** Player avatar cosmetics, with absolute versioned asset URLs. */
   cosmetics: `${MG_API_ORIGIN}/assets/cosmetics?full=1`,
 
+  /** Avatar cosmetic sale metadata (cost, expiryDate, Spooky Shop flags), keyed by id without .png. */
+  avatarCosmetics: `${MG_API_ORIGIN}/data/avatar-cosmetics`,
+
   /** Rive files and the inventory of what is inside them. */
   rive: `${MG_API_ORIGIN}/assets/rive?full=1`,
 
