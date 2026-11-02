@@ -10,7 +10,8 @@
     "devtools": "vite build --watch --mode development",
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check:avatar-spooky": "vitest run --config vitest.checks.config.ts src/modules/cosmetic/avatar/logic/sale.check.test.ts"
   },
   "keywords": [],
   "author": "",
