@@ -11,7 +11,8 @@
     "test": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check:avatar-spooky": "vitest run --config vitest.checks.config.ts src/modules/cosmetic/avatar/logic/sale.check.test.ts"
+    "check:avatar-spooky": "vitest run --config vitest.checks.config.ts src/modules/cosmetic/avatar/logic/sale.check.test.ts",
+    "check:manifest-rgba8": "vitest run --config vitest.checks.config.ts src/modules/manifest/logic/filename.check.test.ts"
   },
   "keywords": [],
   "author": "",
