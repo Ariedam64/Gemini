@@ -2,12 +2,10 @@
 // Manifest loading and parsing logic
 
 import { getJSON } from "../../utils/network";
-import { joinPath } from "../../utils/path";
 import { MGAssets } from "../../assets";
 import type { Manifest, ManifestBundle, ManifestLoadOptions } from "../types";
 import { getCachedManifest, setCachedManifest } from "../state";
-
-const MANIFEST_FILENAME = "manifest.json";
+import { isManifestFile, manifestUrl } from "./filename";
 
 let defaultManifest: Manifest | null = null;
 
@@ -27,7 +25,8 @@ export function isModuleReady(): boolean {
 }
 
 /**
- * Load manifest.json from given base URL or default assets base
+ * Load manifest.rgba8.json from given base URL or default assets base.
+ * One request per base URL: the promise is cached, even if it rejects.
  */
 export async function loadManifest(options: ManifestLoadOptions = {}): Promise<Manifest> {
   const baseUrl = options.baseUrl ?? await MGAssets.base();
@@ -35,7 +34,7 @@ export async function loadManifest(options: ManifestLoadOptions = {}): Promise<M
   const cached = getCachedManifest(baseUrl);
   if (cached) return cached;
 
-  const promise = getJSON<Manifest>(joinPath(baseUrl, MANIFEST_FILENAME));
+  const promise = getJSON<Manifest>(manifestUrl(baseUrl));
   setCachedManifest(baseUrl, promise);
 
   return promise;
@@ -49,7 +48,7 @@ export function getBundleByName(manifest: Manifest, bundleName: string): Manifes
 }
 
 /**
- * List all JSON files from a bundle (excluding manifest.json)
+ * List all JSON files from a bundle (excluding the manifest itself)
  */
 export function extractJsonFiles(bundle: ManifestBundle | null): string[] {
   if (!bundle) return [];
@@ -58,7 +57,7 @@ export function extractJsonFiles(bundle: ManifestBundle | null): string[] {
 
   for (const asset of bundle.assets) {
     for (const src of asset.src ?? []) {
-      if (typeof src === "string" && src.endsWith(".json") && src !== MANIFEST_FILENAME) {
+      if (typeof src === "string" && src.endsWith(".json") && !isManifestFile(src)) {
         jsonFiles.add(src);
       }
     }

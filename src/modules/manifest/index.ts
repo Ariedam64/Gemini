@@ -1,5 +1,5 @@
 // src/modules/manifest/index.ts
-// MGManifest - Loads and parses the game manifest.json
+// MGManifest - Loads and parses the game manifest.rgba8.json
 
 import { initializeManifest, isModuleReady, loadManifest, getBundleByName, extractJsonFiles } from "./logic/loading";
 
@@ -8,7 +8,7 @@ export type { Manifest, ManifestAsset, ManifestBundle, ManifestLoadOptions } fro
 /**
  * MGManifest module - Manifest loading and parsing
  *
- * Loads and caches the game's manifest.json file which contains
+ * Loads and caches the game's manifest.rgba8.json file which contains
  * asset bundle information (sprites, audio, data files, etc.).
  *
  * @example
@@ -44,8 +44,8 @@ export const MGManifest = {
   isReady: isModuleReady,
 
   /**
-   * Load manifest.json from base URL
-   * Auto-caches by base URL
+   * Load manifest.rgba8.json from base URL
+   * Auto-caches by base URL (one request per base URL, even on failure)
    *
    * @param options - Load options (optional base URL)
    * @returns Parsed manifest object
@@ -62,7 +62,7 @@ export const MGManifest = {
   getBundle: getBundleByName,
 
   /**
-   * List all JSON files from a bundle (excluding manifest.json)
+   * List all JSON files from a bundle (excluding the manifest itself)
    *
    * @param bundle - The bundle to extract JSON files from
    * @returns Array of JSON file paths
