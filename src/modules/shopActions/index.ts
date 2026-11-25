@@ -6,6 +6,7 @@ import { buyEgg, buyAllEggs } from "./logic/egg";
 import { buyDecor, buyAllDecors } from "./logic/decor";
 import { buyTool, buyAllTools } from "./logic/tool";
 import { buyDawnItem, buyAllDawnItems } from "./logic/dawn";
+import { buyShopItem, buyAllShopItems } from "./logic/generic";
 
 export type { PurchaseResult, BulkPurchaseResult, ShopType } from "./types";
 
@@ -53,6 +54,17 @@ export const MGShopActions = {
   isReady(): boolean {
     return initialized;
   },
+
+  /**
+   * Buy a single item from any shop by key (weather shops included).
+   * The item type is resolved from the current shop snapshot.
+   */
+  buy: buyShopItem,
+
+  /**
+   * Buy all available copies of an item from any shop by key (weather shops included).
+   */
+  buyAll: buyAllShopItems,
 
   /**
    * Seed shop actions

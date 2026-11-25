@@ -12,6 +12,7 @@ import type {
   SubscribeOptions,
   Unsubscribe,
 } from "../core/types";
+import { collectRestockEvents } from "./shopsRestock";
 import type { Shops as RawShops, Shop as RawShop, ShopPurchases, ShopPurchase, ShopInventoryItem } from "../../atoms/types";
 
 type ShopsSources = {
@@ -178,22 +179,6 @@ function getStableKey(data: ShopsData): string {
   });
 }
 
-function detectRestockForType(prev: Shop, next: Shop): ShopRestockEvent | null {
-  const prevSeconds = prev.secondsUntilRestock;
-  const nextSeconds = next.secondsUntilRestock;
-
-  const hasRestocked =
-    (prevSeconds > 0 && prevSeconds <= 5 && nextSeconds > prevSeconds) ||
-    (prevSeconds > 0 && nextSeconds === 0 && next.items.some((item) => item.purchased === 0));
-
-  if (!hasRestocked) return null;
-
-  return {
-    shop: next,
-    previousItems: prev.items,
-  };
-}
-
 function detectPurchaseEvents(prev: ShopsData, next: ShopsData): ShopPurchaseEvent[] {
   const events: ShopPurchaseEvent[] = [];
 
@@ -256,6 +241,7 @@ type ListenerSets = {
   eggRestock: Set<(event: ShopRestockEvent) => void>;
   decorRestock: Set<(event: ShopRestockEvent) => void>;
   dawnRestock: Set<(event: ShopRestockEvent) => void>;
+  anyRestock: Set<(type: ShopType, event: ShopRestockEvent) => void>;
   purchase: Set<(event: ShopPurchaseEvent) => void>;
   availability: Set<(event: ShopAvailabilityChange) => void>;
 };
@@ -274,6 +260,7 @@ function createShopsGlobal(): ShopsGlobal {
     eggRestock: new Set(),
     decorRestock: new Set(),
     dawnRestock: new Set(),
+    anyRestock: new Set(),
     purchase: new Set(),
     availability: new Set(),
   };
@@ -304,8 +291,8 @@ function createShopsGlobal(): ShopsGlobal {
       }
     }
 
-    // Only the five long-standing shops have a dedicated listener set; a shop
-    // the game added later still reaches subscribers through `listeners.all`.
+    // Only the five long-standing shops have a dedicated listener set; every
+    // shop, weather shops included, reaches `subscribeRestock`.
     const restockListeners: Partial<Record<ShopType, Set<(event: ShopRestockEvent) => void>>> = {
       seed: listeners.seedRestock,
       tool: listeners.toolRestock,
@@ -314,15 +301,12 @@ function createShopsGlobal(): ShopsGlobal {
       dawn: listeners.dawnRestock,
     };
 
-    for (const currentShop of currentData.all) {
-      const previousShop = previousData.byType[currentShop.type];
-      if (!previousShop) continue;
-
-      const restockEvent = detectRestockForType(previousShop, currentShop);
-      if (!restockEvent) continue;
-
-      for (const cb of restockListeners[currentShop.type] ?? []) {
-        cb(restockEvent);
+    for (const { type, event } of collectRestockEvents(previousData, currentData)) {
+      for (const cb of restockListeners[type] ?? []) {
+        cb(event);
+      }
+      for (const cb of listeners.anyRestock) {
+        cb(type, event);
       }
     }
 
@@ -446,6 +430,11 @@ function createShopsGlobal(): ShopsGlobal {
       return () => listeners.dawnRestock.delete(callback);
     },
 
+    subscribeRestock(callback: (type: ShopType, event: ShopRestockEvent) => void): Unsubscribe {
+      listeners.anyRestock.add(callback);
+      return () => listeners.anyRestock.delete(callback);
+    },
+
     subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe {
       listeners.purchase.add(callback);
       if (options?.immediate && initialized && initialized) {
@@ -484,6 +473,7 @@ function createShopsGlobal(): ShopsGlobal {
       listeners.eggRestock.clear();
       listeners.decorRestock.clear();
       listeners.dawnRestock.clear();
+      listeners.anyRestock.clear();
       listeners.purchase.clear();
       listeners.availability.clear();
       initialized = false;

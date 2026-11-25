@@ -470,6 +470,8 @@ export type ShopsGlobal = {
   subscribeEggRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeDecorRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeDawnRestock(callback: (event: ShopRestockEvent) => void, options?: SubscribeOptions): Unsubscribe;
+  /** Restock of any shop the state carries, weather shops included. */
+  subscribeRestock(callback: (type: ShopType, event: ShopRestockEvent) => void): Unsubscribe;
 
   subscribePurchase(callback: (event: ShopPurchaseEvent) => void, options?: SubscribeOptions): Unsubscribe;
   subscribeAvailability(callback: (event: ShopAvailabilityChange) => void, options?: SubscribeOptions): Unsubscribe;

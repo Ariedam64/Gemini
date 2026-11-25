@@ -363,21 +363,8 @@ export function startAlertInjector(): AlertInjectorHandle {
       getAnchorRect: () => buttonHandle!.getScreenRect(),
       onClose: closeOverlay,
       onBuyAll: (item) => {
-        // Call the appropriate buyAll function based on shop type
-        switch (item.shopType) {
-          case "seed":
-            MGShopActions.seed.buyAll(item.itemId);
-            break;
-          case "egg":
-            MGShopActions.egg.buyAll(item.itemId);
-            break;
-          case "decor":
-            MGShopActions.decor.buyAll(item.itemId);
-            break;
-          case "tool":
-            MGShopActions.tool.buyAll(item.itemId);
-            break;
-        }
+        // Any shop (dawn and weather shops included): the item type comes from the shop snapshot
+        MGShopActions.buyAll(item.shopType, item.itemId);
 
         // Overlay will be updated automatically via availability subscription
         // when the server sends back the shop updates

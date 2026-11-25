@@ -26,6 +26,7 @@ import {
   RAW_QUINOA_MESSAGE_TYPES,
 } from "./protocol";
 import { nextInjectedSequence, registerOurRequestId } from "./commandSequence";
+import { cropCleanserPayload } from "./payloads";
 import { pageWindow } from "../utils/windowContext";
 
 const DEFAULT_SCOPE_PATH = ["Room", "Quinoa"];
@@ -319,7 +320,8 @@ export function sellAllCrops(win: any = pageWindow): SendResult {
   return send(T.SellAllCrops, { scope: "Quinoa" }, win);
 }
 
-export type ShopId = "seed" | "tool" | "egg" | "decor" | "dawn";
+/** Open-ended: weather shops (rain, snow, amber, thunder...) come from the game data. */
+export type ShopId = "seed" | "tool" | "egg" | "decor" | "dawn" | (string & {});
 
 export type PurchaseItemPayload =
   | { itemType: "Seed"; species: string }
@@ -378,8 +380,13 @@ export function mutationPotion(tileObjectIdx: number, growSlotIdx: number, mutat
   return send(T.MutationPotion, { scope: "Quinoa", tileObjectIdx, growSlotIdx, mutation }, win);
 }
 
-export function cropCleanser(tileObjectIdx: number, growSlotIdx: number, win: any = pageWindow): SendResult {
-  return send(T.CropCleanser, { scope: "Quinoa", tileObjectIdx, growSlotIdx }, win);
+/**
+ * Cleans a plant's mutations with a cleanser tool.
+ * `toolId` is the cleanser used (e.g. `CropCleanser`, `HydroCleanser`,
+ * `LunarCleanser`); it is omitted from the message when not given.
+ */
+export function cropCleanser(tileObjectIdx: number, growSlotIdx: number, toolId?: string, win: any = pageWindow): SendResult {
+  return send(T.CropCleanser, cropCleanserPayload(tileObjectIdx, growSlotIdx, toolId), win);
 }
 
 /** Turns the harvested crop `itemId` into a preserve at the Preservation Station. */

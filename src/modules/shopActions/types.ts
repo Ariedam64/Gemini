@@ -1,7 +1,8 @@
 // src/modules/shopActions/types.ts
 // Type definitions for shop actions
 
-export type ShopType = "seed" | "egg" | "decor" | "tool" | "dawn";
+/** Open-ended: weather shops (rain, snow, amber, thunder...) come from the game data. */
+export type ShopType = "seed" | "egg" | "decor" | "tool" | "dawn" | (string & {});
 
 export interface PurchaseResult {
   ok: boolean;

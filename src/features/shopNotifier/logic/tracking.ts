@@ -10,7 +10,7 @@ let started = false;
 const cleanups: Unsubscribe[] = [];
 
 function getAvailableTrackedItems(shopType: ShopType, shop: Shop): Array<{ itemId: string; remaining: number }> {
-  const trackedIds = getTrackedItemsByShop()[shopType];
+  const trackedIds = getTrackedItemsByShop()[shopType] ?? [];
   if (!trackedIds.length) return [];
 
   const trackedSet = new Set(trackedIds);
@@ -48,13 +48,8 @@ export function startTracking(): void {
 
   const shops = getShops();
 
-  cleanups.push(
-    shops.subscribeSeedRestock((event) => handleRestock("seed", event)),
-    shops.subscribeToolRestock((event) => handleRestock("tool", event)),
-    shops.subscribeEggRestock((event) => handleRestock("egg", event)),
-    shops.subscribeDecorRestock((event) => handleRestock("decor", event)),
-    shops.subscribeDawnRestock((event) => handleRestock("dawn", event))
-  );
+  // One subscription for every shop, weather shops (rain, snow, amber...) included.
+  cleanups.push(shops.subscribeRestock((shopType, event) => handleRestock(shopType, event)));
 }
 
 /**
